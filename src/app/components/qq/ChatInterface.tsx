@@ -138,11 +138,11 @@ export default function ChatInterface({
     setQuotedMessage(undefined);
 
     // 触发AI回复
-    await triggerAiResponse(updatedChat, userMessage);
+    await triggerAiResponse(updatedChat);
   };
 
   // 触发AI回复的核心函数
-  const triggerAiResponse = async (updatedChat: ChatItem, userMessage: Message) => {
+  const triggerAiResponse = async (updatedChat: ChatItem) => {
     if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
       // 如果没有API配置，使用模拟回复
       if (chat.isGroup && chat.members) {
@@ -217,8 +217,8 @@ export default function ChatInterface({
         }
       }
 
-    } catch (error) {
-      console.error('AI回复失败:', error instanceof Error ? error.message : '未知错误');
+    } catch {
+      console.error('AI回复失败: 未知错误');
       // 回退到模拟回复
       if (chat.isGroup && chat.members) {
         await simulateGroupChat(updatedChat, []);
@@ -325,7 +325,7 @@ ${chat.settings.myPersona}
       }
       // 如果不是数组，包装成数组
       return [parsed];
-    } catch (error) {
+    } catch {
       // 如果解析失败，当作普通文本处理
       return [{ type: 'text', content }];
     }
@@ -491,9 +491,11 @@ ${chat.settings.myPersona}
         return (
           <div className="sticker-message">
             {msg.url && (
-              <img 
+              <Image 
                 src={msg.url} 
                 alt={msg.meaning || '表情'} 
+                width={80}
+                height={80}
                 className="sticker-image"
                 onError={(e) => {
                   // 如果图片加载失败，显示文字
@@ -522,22 +524,24 @@ ${chat.settings.myPersona}
             🎤 {msg.content}
           </div>
         );
-      case 'image':
-        return (
-          <div className="image-message">
-            <img 
-              src={msg.content} 
-              alt="用户图片" 
-              className="user-image"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.nextElementSibling?.classList.remove('fallback-hidden');
-              }}
-            />
-            <span className="image-fallback fallback-hidden">图片加载失败</span>
-          </div>
-        );
+              case 'image':
+          return (
+            <div className="image-message">
+              <Image 
+                src={msg.content} 
+                alt="用户图片" 
+                width={200}
+                height={200}
+                className="user-image"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('fallback-hidden');
+                }}
+              />
+              <span className="image-fallback fallback-hidden">图片加载失败</span>
+            </div>
+          );
       default:
         return <span>{msg.content}</span>;
     }
