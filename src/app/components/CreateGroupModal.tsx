@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChatItem, GroupMember } from '../types/chat';
+import { useState } from 'react';
+import Image from 'next/image';
+import { ChatItem } from '../types/chat';
 import './CreateGroupModal.css';
 
 interface CreateGroupModalProps {
@@ -17,146 +18,133 @@ export default function CreateGroupModal({
   onCreateGroup,
   availableContacts
 }: CreateGroupModalProps) {
+  const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState('');
   const [groupAvatar, setGroupAvatar] = useState('/avatars/default-avatar.svg');
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [myNickname, setMyNickname] = useState('');
-  const [step, setStep] = useState(1); // 1: 基本信息, 2: 选择成员
-
-  useEffect(() => {
-    if (!isOpen) {
-      resetForm();
-    }
-  }, [isOpen]);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   const resetForm = () => {
+    setStep(1);
     setGroupName('');
     setGroupAvatar('/avatars/default-avatar.svg');
-    setSelectedContacts([]);
     setMyNickname('');
-    setStep(1);
+    setSelectedContacts([]);
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setGroupAvatar(result);
-    };
-    reader.readAsDataURL(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setGroupAvatar(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleContactToggle = (contactId: string) => {
     setSelectedContacts(prev => 
-      prev.includes(contactId)
+      prev.includes(contactId) 
         ? prev.filter(id => id !== contactId)
         : [...prev, contactId]
     );
   };
 
   const handleCreateGroup = () => {
-    if (!groupName.trim()) {
-      alert('请输入群名称');
-      return;
-    }
+    if (!groupName.trim() || selectedContacts.length === 0) return;
 
-    if (selectedContacts.length === 0) {
-      alert('请至少选择一个群成员');
-      return;
-    }
+    const selectedContactObjects = availableContacts.filter(contact => 
+      selectedContacts.includes(contact.id)
+    );
 
-    // 创建群成员列表
-    const members: GroupMember[] = selectedContacts.map(contactId => {
-      const contact = availableContacts.find(c => c.id === contactId);
-      if (!contact) return null;
-
-      return {
-        id: `member_${Date.now()}_${Math.random()}`,
-        originalName: contact.name,
-        groupNickname: contact.name,
-        avatar: contact.avatar,
-        persona: contact.persona
-      };
-    }).filter(Boolean) as GroupMember[];
-
-    // 创建新群聊
     const newGroup: ChatItem = {
-      id: `group_${Date.now()}`,
-      name: groupName.trim(),
+      id: Date.now().toString(),
+      name: groupName,
       avatar: groupAvatar,
       lastMessage: '群聊已创建',
-      timestamp: new Date().toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
+      timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
       isGroup: true,
-      unreadCount: 0,
       messages: [],
-      persona: '这是一个群聊',
-      members: members,
-      groupAvatar: groupAvatar,
+      persona: '',
       settings: {
         aiPersona: '',
-        myPersona: '我是群主',
-        myNickname: myNickname.trim() || '群主',
+        myPersona: myNickname || '用户',
         maxMemory: 20,
         aiAvatar: '/avatars/default-avatar.svg',
         myAvatar: '/avatars/user-avatar.svg',
-        groupAvatar: groupAvatar,
-        background: '',
-        theme: 'default',
-        fontSize: 16,
+        background: 'default',
+        theme: 'light',
+        fontSize: 14,
         customCss: '',
         linkedWorldBookIds: [],
         aiAvatarLibrary: [],
         aiAvatarFrame: '',
         myAvatarFrame: ''
-      }
+      },
+      members: [
+        {
+          id: 'me',
+          originalName: '用户',
+          groupNickname: myNickname || '用户',
+          avatar: '/avatars/user-avatar.svg',
+          persona: '我是群主'
+        },
+        ...selectedContactObjects.map(contact => ({
+          id: contact.id,
+          originalName: contact.name,
+          groupNickname: contact.name,
+          avatar: contact.avatar,
+          persona: contact.persona
+        }))
+      ]
     };
 
     onCreateGroup(newGroup);
+    resetForm();
     onClose();
   };
 
   const handleNextStep = () => {
-    if (!groupName.trim()) {
-      alert('请输入群名称');
-      return;
+    if (groupName.trim()) {
+      setStep(2);
     }
-    setStep(2);
   };
 
   const handlePrevStep = () => {
     setStep(1);
   };
 
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="create-group-modal-overlay">
-      <div className="create-group-modal">
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>创建群聊</h3>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
-        <div className="modal-content">
+        <div className="modal-body">
           {step === 1 && (
             <div className="step-1">
               <div className="step-header">
-                <h4>第1步: 设置群信息</h4>
+                <h4>第1步: 群聊信息</h4>
+                <p>设置群聊的基本信息</p>
               </div>
 
               <div className="form-group">
-                <label>群名称 *</label>
+                <label>群聊名称</label>
                 <input
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="输入群名称"
+                  placeholder="输入群聊名称"
                   maxLength={20}
                 />
               </div>
@@ -164,10 +152,12 @@ export default function CreateGroupModal({
               <div className="form-group">
                 <label>群头像</label>
                 <div className="avatar-upload">
-                  <img 
+                  <Image 
                     src={groupAvatar} 
                     alt="群头像"
                     className="avatar-preview"
+                    width={60}
+                    height={60}
                   />
                   <input
                     type="file"
@@ -226,10 +216,12 @@ export default function CreateGroupModal({
                       onChange={() => handleContactToggle(contact.id)}
                     />
                     <label htmlFor={`contact-${contact.id}`} className="contact-label">
-                      <img 
+                      <Image 
                         src={contact.avatar} 
                         alt={contact.name} 
                         className="contact-avatar" 
+                        width={40}
+                        height={40}
                       />
                       <div className="contact-info">
                         <div className="contact-name">{contact.name}</div>

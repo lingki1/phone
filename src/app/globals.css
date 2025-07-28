@@ -10,11 +10,13 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100%;
 }
 
 body {
   background-color: #f0f2f5;
   color: #1f1f1f;
+  min-height: 100vh;
 }
 
 a {
@@ -43,4 +45,469 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计变量 */
+:root {
+  /* 基础变量 */
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  
+  /* 背景颜色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  
+  /* 文字颜色 */
+  --text-primary: #1f1f1f;
+  --text-secondary: #6c757d;
+  --text-muted: #8a8a8a;
+  
+  /* 边框颜色 */
+  --border-color: #dee2e6;
+  --border-light: #e9ecef;
+  
+  /* 阴影 */
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  
+  /* 圆角 */
+  --border-radius: 0.375rem;
+  --border-radius-sm: 0.25rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 1rem;
+  
+  /* 间距 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 3rem;
+  
+  /* 字体大小 */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  
+  /* 容器最大宽度 */
+  --container-max-width: 1200px;
+  --container-padding: 1rem;
+  
+  /* 移动端断点 */
+  --mobile-max: 767px;
+  --tablet-min: 768px;
+  --tablet-max: 1023px;
+  --desktop-min: 1024px;
+  --large-desktop-min: 1440px;
+}
+
+/* 基础响应式容器 */
+.container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+/* 移动端样式 (默认) */
+@media (max-width: 767px) {
+  :root {
+    --container-padding: 0.75rem;
+    --font-size-base: 0.875rem;
+  }
+  
+  .container {
+    padding: 0 var(--container-padding);
+  }
+  
+  /* 移动端隐藏元素 */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .tablet-only {
+    display: none !important;
+  }
+  
+  /* 移动端显示元素 */
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* 移动端字体大小调整 */
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: 0.875rem; }
+  h6 { font-size: 0.75rem; }
+}
+
+/* 平板端样式 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --container-padding: 1rem;
+    --font-size-base: 1rem;
+  }
+  
+  .container {
+    padding: 0 var(--container-padding);
+  }
+  
+  /* 平板端隐藏元素 */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: none !important;
+  }
+  
+  /* 平板端显示元素 */
+  .tablet-only {
+    display: block !important;
+  }
+  
+  /* 平板端字体大小调整 */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.125rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.875rem; }
+}
+
+/* 桌面端样式 */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 1.5rem;
+    --font-size-base: 1rem;
+  }
+  
+  .container {
+    padding: 0 var(--container-padding);
+  }
+  
+  /* 桌面端隐藏元素 */
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .tablet-only {
+    display: none !important;
+  }
+  
+  /* 桌面端显示元素 */
+  .desktop-only {
+    display: block !important;
+  }
+  
+  /* 桌面端字体大小调整 */
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem; }
+}
+
+/* 大屏幕桌面端样式 */
+@media (min-width: 1440px) {
+  :root {
+    --container-padding: 2rem;
+  }
+  
+  .container {
+    padding: 0 var(--container-padding);
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+  :root {
+    --container-padding: 0.5rem;
+    --font-size-base: 0.8125rem;
+  }
+  
+  .container {
+    padding: 0 var(--container-padding);
+  }
+  
+  /* 超小屏幕字体大小调整 */
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.125rem; }
+  h3 { font-size: 1rem; }
+  h4 { font-size: 0.875rem; }
+  h5 { font-size: 0.8125rem; }
+  h6 { font-size: 0.75rem; }
+}
+
+/* 横屏模式适配 */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --spacing-lg: 1rem;
+    --spacing-xl: 2rem;
+  }
+  
+  /* 横屏时减少垂直间距 */
+  .chat-list-page,
+  .chat-interface {
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* 高分辨率屏幕适配 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* 高分辨率屏幕的优化 */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #404040;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #808080;
+    --border-color: #404040;
+    --border-light: #2d2d2d;
+  }
+  
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #000000;
+    --text-secondary: #000000;
+  }
+  
+  .chat-list-item:hover {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .chat-list-page,
+  .chat-interface {
+    max-width: none;
+    height: auto;
+  }
+  
+  .bottom-navigation,
+  .chat-header .back-btn,
+  .chat-actions {
+    display: none !important;
+  }
+}
+
+/* 辅助功能支持 */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 应用容器 */
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: hidden;
+}
+
+/* 平板端和桌面端应用容器调整 - 全屏显示 */
+@media (min-width: 768px) {
+  .app-container {
+    background: #f0f2f5;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+}
+
+/* 移动端应用容器调整 */
+@media (max-width: 767px) {
+  .app-container {
+    background: #f0f2f5;
+  }
+}
+
+/* 工具类 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.d-none {
+  display: none !important;
+}
+
+.d-block {
+  display: block !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.d-inline-flex {
+  display: inline-flex !important;
+}
+
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+.flex-grow-1 {
+  flex-grow: 1 !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+.m-0 {
+  margin: 0 !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.rounded {
+  border-radius: var(--border-radius) !important;
+}
+
+.shadow {
+  box-shadow: var(--shadow) !important;
+}
+
+.border {
+  border: 1px solid var(--border-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
 }

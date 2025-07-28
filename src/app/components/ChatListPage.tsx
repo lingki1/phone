@@ -15,7 +15,11 @@ import { ChatItem, Message, ApiConfig } from '../types/chat';
 import { dataManager } from '../utils/dataManager';
 import './ChatListPage.css';
 
-export default function ChatListPage() {
+interface ChatListPageProps {
+  onBackToDesktop?: () => void;
+}
+
+export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
   const [activeView, setActiveView] = useState<'messages' | 'moments' | 'history'>('messages');
   const [currentScreen, setCurrentScreen] = useState<'list' | 'chat'>('list');
@@ -261,6 +265,7 @@ export default function ChatListPage() {
         onOpenApiSettings={() => setShowApiSettings(true)}
         onOpenAddFriend={() => setShowAddFriend(true)}
         onOpenCreateGroup={() => setShowCreateGroup(true)}
+        onBackToDesktop={onBackToDesktop}
       />
       
       {/* 聊天列表 */}

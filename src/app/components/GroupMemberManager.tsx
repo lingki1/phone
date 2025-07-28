@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { GroupMember, ChatItem } from '../types/chat';
 import './GroupMemberManager.css';
 
@@ -188,10 +189,12 @@ export default function GroupMemberManager({
                 <div className="member-items">
                   {chat.members?.map(member => (
                     <div key={member.id} className="member-item">
-                      <img 
+                      <Image 
                         src={member.avatar} 
                         alt={member.groupNickname}
                         className="member-avatar"
+                        width={40}
+                        height={40}
                       />
                       <div className="member-info">
                         <div className="member-name">{member.groupNickname}</div>
@@ -286,7 +289,7 @@ export default function GroupMemberManager({
                         }}
                       />
                       <label htmlFor={`contact-${contact.id}`} className="contact-label">
-                        <img src={contact.avatar} alt={contact.name} className="contact-avatar" />
+                        <Image src={contact.avatar} alt={contact.name} className="contact-avatar" width={32} height={32} />
                         <span className="contact-name">{contact.name}</span>
                       </label>
                     </div>
@@ -326,10 +329,12 @@ export default function GroupMemberManager({
                 <div className="form-group">
                   <label>成员头像</label>
                   <div className="avatar-upload">
-                    <img 
+                    <Image 
                       src={newMemberAvatar} 
                       alt="新成员头像"
                       className="avatar-preview"
+                      width={60}
+                      height={60}
                     />
                     <input
                       type="file"
@@ -407,10 +412,12 @@ export default function GroupMemberManager({
               <div className="form-group">
                 <label>头像</label>
                 <div className="avatar-upload">
-                  <img 
+                  <Image 
                     src={editingMember.avatar} 
                     alt="成员头像"
                     className="avatar-preview"
+                    width={60}
+                    height={60}
                   />
                   <input
                     type="file"

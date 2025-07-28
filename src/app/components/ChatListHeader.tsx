@@ -9,14 +9,24 @@ interface ChatListHeaderProps {
   onOpenApiSettings: () => void;
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
+  onBackToDesktop?: () => void;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenAddFriend, onOpenCreateGroup }: ChatListHeaderProps) {
+export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop }: ChatListHeaderProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
   return (
     <div className="chat-list-header">
+      {/* 返回按钮 */}
+      {onBackToDesktop && (
+        <div className="back-button" onClick={onBackToDesktop}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      )}
+
       {/* 用户头像 */}
       <div className="user-avatar-container">
         <Image 
