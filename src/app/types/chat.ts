@@ -82,6 +82,7 @@ export interface ChatSettings {
   aiAvatarLibrary: AvatarLibraryItem[];
   aiAvatarFrame: string;
   myAvatarFrame: string;
+  groupRules?: string; // 群规内容
 }
 
 // 头像库项目类型

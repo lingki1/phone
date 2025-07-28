@@ -231,6 +231,15 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onBack={() => setCurrentScreen('list')}
           onUpdateChat={handleUpdateChat}
           availableContacts={availableContacts}
+          onEditChat={(chat) => {
+            setEditingChat(chat);
+            setShowEditFriend(true);
+            setCurrentScreen('list');
+          }}
+          onDeleteChat={(chatId) => {
+            handleDeleteChat(chatId);
+            setCurrentScreen('list');
+          }}
         />
         
         {/* 群设置模态框 */}

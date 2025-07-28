@@ -526,10 +526,6 @@
 }
 
 /* 三点菜单样式 */
-.menu-container {
-  position: relative;
-}
-
 .menu-btn {
   background: none;
   border: none;
@@ -553,25 +549,38 @@
   color: var(--text-primary);
 }
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
+/* 全局遮罩层样式 */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  animation: fadeIn 0.2s ease;
+}
+
+/* 浮动菜单样式 */
+.floating-menu {
+  position: fixed;
   background: var(--bg-primary);
   border-radius: 8px;
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-heavy);
   border: 1px solid var(--border-color);
   min-width: 100px;
-  z-index: 1000;
   overflow: hidden;
-  margin-top: 4px;
-  animation: fadeIn 0.2s ease;
+  animation: slideIn 0.2s ease;
+  z-index: 10000;
 }
 
 .menu-item {
   display: block;
   width: 100%;
-  padding: 8px 12px;
+  padding: 12px 16px;
   background: none;
   border: none;
   text-align: left;
@@ -579,6 +588,11 @@
   font-size: 14px;
   color: var(--text-primary);
   transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
 }
 
 .menu-item:hover {
@@ -596,11 +610,20 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

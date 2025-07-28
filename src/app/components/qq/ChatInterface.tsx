@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import GroupMemberManager from './GroupMemberManager';
@@ -18,6 +18,8 @@ interface ChatInterfaceProps {
   onBack: () => void;
   onUpdateChat: (chat: ChatItem) => void;
   availableContacts: ChatItem[];
+  onEditChat?: (chat: ChatItem) => void;
+  onDeleteChat?: (chatId: string) => void;
 }
 
 export default function ChatInterface({ 
@@ -25,15 +27,19 @@ export default function ChatInterface({
   apiConfig, 
   onBack, 
   onUpdateChat,
-  availableContacts
+  availableContacts,
+  onEditChat,
+  onDeleteChat
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAiUser, setCurrentAiUser] = useState<{name: string, avatar: string} | null>(null);
   const [showMemberManager, setShowMemberManager] = useState(false);
   const [showMentionList, setShowMentionList] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
+  const [showChatMenu, setShowChatMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -144,16 +150,45 @@ export default function ChatInterface({
   // 触发AI回复的核心函数
   const triggerAiResponse = async (updatedChat: ChatItem) => {
     if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
-      // 如果没有API配置，使用模拟回复
-      if (chat.isGroup && chat.members) {
-        await simulateGroupChat(updatedChat, []);
-      } else {
-        await simulateSingleChat(updatedChat);
-      }
+      // 如果没有API配置，显示提示消息
+      const apiConfigMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。',
+        timestamp: Date.now(),
+        senderName: '系统',
+        senderAvatar: '/avatars/default-avatar.svg'
+      };
+
+      const chatWithMessage = {
+        ...updatedChat,
+        messages: [...updatedChat.messages, apiConfigMessage],
+        lastMessage: apiConfigMessage.content,
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      };
+      onUpdateChat(chatWithMessage);
       return;
     }
 
     setIsLoading(true);
+
+    // 在群聊中，随机选择一个AI用户来回复
+    if (chat.isGroup && chat.members) {
+      const aiMembers = chat.members.filter(m => m.originalName !== (chat.settings.myNickname || '我'));
+      if (aiMembers.length > 0) {
+        const randomMember = aiMembers[Math.floor(Math.random() * aiMembers.length)];
+        setCurrentAiUser({
+          name: randomMember.groupNickname,
+          avatar: randomMember.avatar
+        });
+      }
+    } else {
+      // 单聊中，使用AI角色的头像
+      setCurrentAiUser({
+        name: chat.name,
+        avatar: chat.settings.aiAvatar || chat.avatar
+      });
+    }
 
     try {
       const systemPrompt = buildSystemPrompt(updatedChat);
@@ -186,8 +221,10 @@ export default function ChatInterface({
       // 解析AI回复（支持多条消息）
       const messagesArray = parseAiResponse(aiResponseContent);
       
-      // 处理每条AI消息
+      // ★★★ 核心修复：处理每条AI消息，实现一条一条显示 ★★★
       let messageTimestamp = Date.now();
+      let currentChat = updatedChat;
+      
       for (const msgData of messagesArray) {
         if (!msgData || typeof msgData !== 'object') {
           console.warn("收到了格式不规范的AI指令，已跳过:", msgData);
@@ -206,27 +243,46 @@ export default function ChatInterface({
         // 创建AI消息对象
         const aiMessage = await createAiMessage(msgData, chat, messageTimestamp++);
         if (aiMessage) {
-          const chatWithMessage = {
-            ...updatedChat,
-            messages: [...updatedChat.messages, aiMessage],
+          // 更新聊天记录
+          currentChat = {
+            ...currentChat,
+            messages: [...currentChat.messages, aiMessage],
             lastMessage: aiMessage.content,
             timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
           };
-          onUpdateChat(chatWithMessage);
-          updatedChat = chatWithMessage; // 更新引用，确保下一条消息基于最新状态
+          
+          // 立即更新UI，显示这条消息
+          onUpdateChat(currentChat);
+          
+          // 添加延迟，模拟人类打字效果（除了最后一条消息）
+          if (messagesArray.indexOf(msgData) < messagesArray.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 500));
+          }
         }
       }
 
-    } catch {
-      console.error('AI回复失败: 未知错误');
-      // 回退到模拟回复
-      if (chat.isGroup && chat.members) {
-        await simulateGroupChat(updatedChat, []);
-      } else {
-        await simulateSingleChat(updatedChat);
-      }
+    } catch (error) {
+      console.error('AI回复失败:', error);
+      // API请求失败时显示错误提示
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'AI回复失败，请检查API配置是否正确，包括代理地址、API密钥和模型名称。',
+        timestamp: Date.now(),
+        senderName: '系统',
+        senderAvatar: '/avatars/default-avatar.svg'
+      };
+
+      const chatWithMessage = {
+        ...updatedChat,
+        messages: [...updatedChat.messages, errorMessage],
+        lastMessage: errorMessage.content,
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      };
+      onUpdateChat(chatWithMessage);
     } finally {
       setIsLoading(false);
+      setCurrentAiUser(null); // 清除当前AI用户信息
     }
   };
 
@@ -251,7 +307,7 @@ export default function ChatInterface({
 
 ## 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "name": "角色名", "message": "文本内容"}
-- **发送表情**: {"type": "sticker", "name": "角色名", "url": "表情URL", "meaning": "表情含义"}
+- **发送表情**: {"type": "sticker", "name": "角色名", "meaning": "表情含义"} (注意：不允许使用url字段，不能发送链接图片)
 - **发送图片**: {"type": "ai_image", "name": "角色名", "description": "图片描述"}
 - **发送语音**: {"type": "voice_message", "name": "角色名", "content": "语音内容"}
 - **拍一拍用户**: {"type": "pat_user", "name": "角色名", "suffix": "后缀"}
@@ -278,7 +334,7 @@ ${chat.settings.aiPersona}
 
 # 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "content": "文本内容"}
-- **发送表情**: {"type": "sticker", "url": "表情URL", "meaning": "表情含义"}
+- **发送表情**: {"type": "sticker", "meaning": "表情含义"} (注意：不允许使用url字段，不能发送链接图片)
 - **发送图片**: {"type": "ai_image", "description": "图片描述"}
 - **发送语音**: {"type": "voice_message", "content": "语音内容"}
 - **拍一拍用户**: {"type": "pat_user", "suffix": "后缀"}
@@ -315,20 +371,54 @@ ${chat.settings.myPersona}
     }).filter(Boolean);
   };
 
-  // 解析AI回复
+  // 解析AI回复（参考V0.03文件的强大解析逻辑）
   const parseAiResponse = (content: string) => {
-    try {
-      // 尝试解析JSON数组
-      const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) {
-        return parsed;
+    const trimmedContent = content.trim();
+
+    // 方案1：【最优先】尝试作为标准的、单一的JSON数组解析
+    // 这是最理想、最高效的情况
+    if (trimmedContent.startsWith('[') && trimmedContent.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmedContent);
+        if (Array.isArray(parsed)) {
+          console.log("解析成功：标准JSON数组格式。");
+          return parsed;
+        }
+      } catch {
+        // 如果解析失败，说明它虽然看起来像个数组，但内部格式有问题。
+        // 此时我们不报错，而是继续尝试下面的"强力解析"方案。
+        console.warn("标准JSON数组解析失败，将尝试强力解析...");
       }
-      // 如果不是数组，包装成数组
-      return [parsed];
-    } catch {
-      // 如果解析失败，当作普通文本处理
-      return [{ type: 'text', content }];
     }
+
+    // 方案2：【强力解析】使用正则表达式，从混乱的字符串中提取出所有独立的JSON对象
+    // 这能完美解决您遇到的 "(Timestamp: ...)[{...}](Timestamp: ...)[{...}]" 这种格式
+    const jsonMatches = trimmedContent.match(/{[^{}]*}/g);
+
+    if (jsonMatches) {
+      const results = [];
+      for (const match of jsonMatches) {
+        try {
+          // 尝试解析每一个被我们"揪"出来的JSON字符串
+          const parsedObject = JSON.parse(match);
+          results.push(parsedObject);
+        } catch {
+          // 如果某个片段不是有效的JSON，就忽略它，继续处理下一个
+          console.warn("跳过一个无效的JSON片段:", match);
+        }
+      }
+
+      // 如果我们成功提取出了至少一个有效的JSON对象，就返回这个结果
+      if (results.length > 0) {
+        console.log("解析成功：通过强力提取模式。");
+        return results;
+      }
+    }
+    
+    // 方案3：【最终备用】如果以上所有方法都失败了，说明AI返回的可能就是纯文本
+    // 我们将原始的、未处理的内容，包装成一个标准的文本消息对象返回，确保程序不会崩溃
+    console.error("所有解析方案均失败！将返回原始文本。");
+    return [{ type: 'text', content: content }];
   };
 
   // 创建AI消息对象
@@ -341,14 +431,30 @@ ${chat.settings.myPersona}
 
     switch (msgData.type) {
       case 'text':
-        content = String(msgData.content || msgData.message || '');
+        // 确保content字段是纯文本，不是JSON代码
+        const textContent = msgData.content || msgData.message || '';
+        content = String(textContent);
+        // 如果content看起来像JSON，尝试提取纯文本
+        if (content.startsWith('{') || content.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(content);
+            if (typeof parsed === 'object') {
+              // 如果是对象，尝试提取message或content字段
+              content = String(parsed.message || parsed.content || textContent);
+            }
+          } catch {
+            // 如果解析失败，保持原内容
+            content = String(textContent);
+          }
+        }
         type = 'text';
         break;
       case 'sticker':
         content = String(msgData.meaning || '表情');
         type = 'sticker';
         meaning = msgData.meaning ? String(msgData.meaning) : undefined;
-        url = msgData.url ? String(msgData.url) : undefined;
+        // AI回复不允许使用链接图片，所以不设置url
+        url = undefined;
         break;
       case 'ai_image':
         content = String(msgData.description || '图片');
@@ -363,7 +469,19 @@ ${chat.settings.myPersona}
         type = 'text';
         break;
       default:
-        content = String(msgData.content || msgData.message || '');
+        // 默认情况下也处理可能的JSON内容
+        const defaultContent = msgData.content || msgData.message || '';
+        content = String(defaultContent);
+        if (content.startsWith('{') || content.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(content);
+            if (typeof parsed === 'object') {
+              content = String(parsed.message || parsed.content || defaultContent);
+            }
+          } catch {
+            content = String(defaultContent);
+          }
+        }
         type = 'text';
     }
 
@@ -382,97 +500,32 @@ ${chat.settings.myPersona}
     return aiMessage;
   };
 
-  // 模拟单聊回复
-  const simulateSingleChat = async (chat: ChatItem) => {
-    const responses = [
-      '收到你的消息了！',
-      '嗯嗯，我在听',
-      '好的，我明白了',
-      '没问题',
-      '收到',
-      '我在',
-      '好的，继续',
-      '明白了'
-    ];
 
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    const aiMessage: Message = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: randomResponse,
-      timestamp: Date.now(),
-      senderName: chat.name,
-      senderAvatar: chat.settings.aiAvatar
-    };
-
-    const updatedChat = {
-      ...chat,
-      messages: [...chat.messages, aiMessage],
-      lastMessage: aiMessage.content,
-      timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    onUpdateChat(updatedChat);
-  };
-
-    // 模拟群聊回复（无API配置时）
-  const simulateGroupChat = async (updatedChat: ChatItem, mentionedMembers: GroupMember[]) => {
-    const membersToReply = mentionedMembers.length > 0 
-      ? mentionedMembers 
-      : getRandomMembers(chat.members!, 1, 2);
-
-    for (let i = 0; i < membersToReply.length; i++) {
-      const member = membersToReply[i];
-      const delay = (i + 1) * 1000; // 每个成员回复间隔1秒
-
-      setTimeout(() => {
-        const responses = [
-          '收到！',
-          '好的，我明白了',
-          '嗯嗯，我知道了',
-          '没问题',
-          '收到消息了',
-          '我在听',
-          '好的，继续',
-          '明白了',
-          '收到',
-          '我在'
-        ];
-
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        const memberReply: Message = {
-          id: (Date.now() + i + 1).toString(),
-          role: 'assistant',
-          content: randomResponse,
-          timestamp: Date.now() + delay,
-          senderName: member.groupNickname,
-          senderAvatar: member.avatar
-        };
-        
-        const chatWithReply = {
-          ...updatedChat,
-          messages: [...updatedChat.messages, memberReply],
-          lastMessage: memberReply.content,
-          timestamp: new Date(memberReply.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-        };
-        onUpdateChat(chatWithReply);
-      }, delay);
-    }
-  };
-
-  // 获取随机群成员
-  const getRandomMembers = (members: GroupMember[], min: number, max: number): GroupMember[] => {
-    const count = Math.floor(Math.random() * (max - min + 1)) + min;
-    const shuffled = [...members].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // 处理编辑聊天
+  const handleEditChat = () => {
+    setShowChatMenu(false);
+    // 这里需要调用父组件的编辑功能
+    // 由于当前组件没有直接访问编辑功能，我们需要通过props传递
+    if (onEditChat) {
+      onEditChat(chat);
+    }
+  };
+
+  // 处理删除聊天
+  const handleDeleteChat = () => {
+    setShowChatMenu(false);
+    if (confirm('确定要删除这个聊天吗？')) {
+      if (onDeleteChat) {
+        onDeleteChat(chat.id);
+      }
     }
   };
 
@@ -490,22 +543,8 @@ ${chat.settings.myPersona}
       case 'sticker':
         return (
           <div className="sticker-message">
-            {msg.url && (
-              <Image 
-                src={msg.url} 
-                alt={msg.meaning || '表情'} 
-                width={80}
-                height={80}
-                className="sticker-image"
-                onError={(e) => {
-                  // 如果图片加载失败，显示文字
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('fallback-hidden');
-                }}
-              />
-            )}
-            <span className={`sticker-fallback ${msg.url ? 'fallback-hidden' : ''}`}>
+            {/* AI回复不允许显示链接图片，只显示文字 */}
+            <span className="sticker-text">
               {msg.meaning || '表情'}
             </span>
           </div>
@@ -543,7 +582,14 @@ ${chat.settings.myPersona}
             </div>
           );
       default:
-        return <span>{msg.content}</span>;
+        // 处理换行符，将\n转换为<br>标签，就像V0.03文件一样
+        const contentWithBreaks = String(msg.content || '').split('\n').map((line, index) => (
+          <React.Fragment key={index}>
+            {line}
+            {index < String(msg.content || '').split('\n').length - 1 && <br />}
+          </React.Fragment>
+        ));
+        return <span>{contentWithBreaks}</span>;
     }
   };
 
@@ -577,9 +623,29 @@ ${chat.settings.myPersona}
               👥
             </button>
           )}
-          <button className="action-btn">⋯</button>
+          <button 
+            className="action-btn"
+            onClick={() => setShowChatMenu(!showChatMenu)}
+            title="更多操作"
+          >
+            ⋯
+          </button>
         </div>
       </div>
+
+      {/* 聊天菜单 */}
+      {showChatMenu && (
+        <div className="chat-menu-overlay" onClick={() => setShowChatMenu(false)}>
+          <div className="chat-menu" onClick={(e) => e.stopPropagation()}>
+            <button className="chat-menu-item" onClick={handleEditChat}>
+              <span>编辑</span>
+            </button>
+            <button className="chat-menu-item delete" onClick={handleDeleteChat}>
+              <span>删除</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 消息列表 */}
       <div className="messages-container">
@@ -588,56 +654,97 @@ ${chat.settings.myPersona}
             <p>开始和 {chat.name} 聊天吧！</p>
           </div>
         ) : (
-          chat.messages.map((msg) => (
-            <div 
-              key={msg.id} 
-              className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''}`}
-              onDoubleClick={() => handleQuoteMessage(msg)}
-            >
-              <div className="message-avatar">
-                <Image 
-                  src={msg.senderAvatar || (msg.role === 'user' ? chat.settings.myAvatar : chat.avatar)}
-                  alt={msg.senderName || (msg.role === 'user' ? (chat.settings.myNickname || '我') : chat.name)}
-                  width={30}
-                  height={30}
-                />
-              </div>
-              <div className="message-content">
-                {chat.isGroup && msg.senderName && (
-                  <div className="message-sender">{msg.senderName}</div>
-                )}
-                {msg.quote && (
-                  <div className="quoted-message">
-                    <div className="quote-header">
-                      <span className="quote-sender">{msg.quote.senderName}</span>
-                      <span className="quote-time">{formatTime(msg.quote.timestamp)}</span>
+          chat.messages.map((msg, index) => {
+            // 获取发送者信息
+            const getSenderInfo = () => {
+              if (msg.role === 'user') {
+                return {
+                  name: chat.settings.myNickname || '我',
+                  avatar: chat.settings.myAvatar || '/avatars/user-avatar.svg'
+                };
+              } else {
+                // AI消息，从群成员中查找对应的成员信息
+                if (chat.isGroup && chat.members && msg.senderName) {
+                  const member = chat.members.find(m => m.originalName === msg.senderName);
+                  if (member) {
+                    return {
+                      name: member.groupNickname,
+                      avatar: member.avatar
+                    };
+                  }
+                }
+                return {
+                  name: msg.senderName || chat.name,
+                  avatar: msg.senderAvatar || chat.avatar
+                };
+              }
+            };
+
+            const senderInfo = getSenderInfo();
+            
+            // 检查是否是连续消息（同一发送者的连续消息）
+            // 只有在时间间隔很短（30秒内）且内容类型相似时才认为是连续消息
+            const isConsecutiveMessage = index > 0 && 
+              chat.messages[index - 1].senderName === msg.senderName &&
+              chat.messages[index - 1].role === msg.role &&
+              Math.abs(msg.timestamp - chat.messages[index - 1].timestamp) < 30000; // 30秒内
+
+            return (
+              <div 
+                key={msg.id} 
+                className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''} ${isConsecutiveMessage ? 'consecutive' : ''}`}
+                onDoubleClick={() => handleQuoteMessage(msg)}
+              >
+                <div className="message-avatar">
+                  <Image 
+                    src={senderInfo.avatar}
+                    alt={senderInfo.name}
+                    width={36}
+                    height={36}
+                    className="avatar-image"
+                  />
+                </div>
+                <div className="message-content">
+                  {chat.isGroup && (
+                    <div className="message-sender">{senderInfo.name}</div>
+                  )}
+                  {msg.quote && (
+                    <div className="quoted-message">
+                      <div className="quote-header">
+                        <span className="quote-sender">{msg.quote.senderName}</span>
+                        <span className="quote-time">{formatTime(msg.quote.timestamp)}</span>
+                      </div>
+                      <div className="quote-content">{msg.quote.content}</div>
                     </div>
-                    <div className="quote-content">{msg.quote.content}</div>
+                  )}
+                  <div className="message-bubble">
+                    {renderMessageContent(msg)}
                   </div>
-                )}
-                <div className="message-bubble">
-                  {renderMessageContent(msg)}
-                </div>
-                <div className="message-time">
-                  {formatTime(msg.timestamp)}
+                  <div className="message-time">
+                    {formatTime(msg.timestamp)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         
         {/* AI正在输入指示器 */}
         {isLoading && (
-          <div className="message ai-message">
+          <div className={`message ai-message ${chat.isGroup ? 'group-message' : ''}`}>
             <div className="message-avatar">
               <Image 
-                src={chat.avatar}
-                alt={chat.name}
-                width={30}
-                height={30}
+                src={currentAiUser?.avatar || chat.avatar}
+                alt={currentAiUser?.name || chat.name}
+                width={36}
+                height={36}
+                className="avatar-image"
               />
             </div>
             <div className="message-content">
+              {chat.isGroup && (
+                <div className="message-sender">{currentAiUser?.name || chat.name}</div>
+              )}
               <div className="message-bubble typing-indicator">
                 <div className="typing-dots">
                   <span></span>

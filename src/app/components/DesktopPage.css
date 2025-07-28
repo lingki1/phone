@@ -52,24 +52,24 @@
 
 /* 时间显示区域 */
 .time-section {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 60px 20px;
+  padding: 40px 20px 20px 20px;
   color: white;
   text-align: center;
   position: relative;
   z-index: 10;
+  height: 40vh;
 }
 
 .current-time {
-  font-size: 5rem;
+  font-size: 4rem;
   font-weight: 200;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   background: linear-gradient(45deg, #fff, #f0f0f0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -77,15 +77,15 @@
 }
 
 .current-date {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 400;
   opacity: 0.9;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .greeting {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 300;
   opacity: 0.8;
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
@@ -95,13 +95,15 @@
 /* 应用方块网格 */
 .app-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 40px 24px;
-  max-height: 45vh;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 20px 24px 40px 24px;
+  flex: 1;
   overflow-y: auto;
   position: relative;
   z-index: 10;
+  justify-items: center;
+  align-content: start;
 }
 
 /* 应用方块基础样式 */
@@ -110,17 +112,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 24px;
+  border-radius: 18px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  min-height: 120px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  aspect-ratio: 1;
+  width: 100%;
   animation: fadeInUp 0.8s ease-out both;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .app-tile::before {
@@ -130,7 +134,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -140,12 +144,13 @@
 }
 
 .app-tile:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .app-tile:active {
-  transform: translateY(-4px) scale(0.98);
+  transform: translateY(-3px) scale(0.98);
   transition: all 0.1s ease;
 }
 
@@ -165,68 +170,81 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   opacity: 0.95;
   transition: all 0.3s ease;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .app-tile:hover .app-icon {
   opacity: 1;
-  transform: scale(1.1);
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .icon-emoji {
-  font-size: 32px;
+  font-size: 20px;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 /* 应用名称 */
 .app-name {
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 500;
   color: white;
   text-align: center;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  line-height: 1.2;
-  letter-spacing: 0.5px;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 通知徽章 */
 .notification-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: #ff4757;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 12px;
-  min-width: 20px;
-  height: 20px;
+  padding: 3px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+  box-shadow: 0 3px 8px rgba(255, 71, 87, 0.4);
   animation: pulse 2s infinite;
   z-index: 5;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* 开发中徽章 */
 .coming-soon-badge {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background: rgba(0, 0, 0, 0.6);
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* 应用覆盖层 */
@@ -236,13 +254,31 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .app-tile:hover .app-overlay {
+  opacity: 1;
+}
+
+/* 应用方块内部光效 */
+.app-tile::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.app-tile:hover::after {
   opacity: 1;
 }
 
@@ -353,39 +389,89 @@
 /* 响应式设计 */
 @media (max-width: 480px) {
   .current-time {
-    font-size: 3.5rem;
+    font-size: 3rem;
     letter-spacing: 2px;
   }
   
   .current-date {
-    font-size: 1.2rem;
-  }
-  
-  .greeting {
     font-size: 1rem;
   }
   
+  .greeting {
+    font-size: 0.9rem;
+  }
+  
   .app-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    padding: 24px 16px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 15px 16px;
   }
   
   .app-tile {
-    min-height: 100px;
-    border-radius: 20px;
+    border-radius: 12px;
+  }
+  
+  .icon-emoji {
+    font-size: 16px;
   }
   
   .app-name {
-    font-size: 13px;
+    font-size: 9px;
+  }
+  
+  .notification-badge {
+    top: 4px;
+    right: 4px;
+    font-size: 7px;
+    padding: 1px 3px;
+    min-width: 12px;
+    height: 12px;
+  }
+  
+  .coming-soon-badge {
+    bottom: 4px;
+    right: 4px;
+    font-size: 6px;
+    padding: 1px 3px;
   }
 }
 
 @media (min-width: 768px) {
   .app-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    padding: 50px 40px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    padding: 25px 40px 50px 40px;
+  }
+  
+  .current-time {
+    font-size: 5rem;
+    letter-spacing: 4px;
+  }
+  
+  .current-date {
+    font-size: 1.4rem;
+  }
+  
+  .greeting {
+    font-size: 1.1rem;
+  }
+  
+
+  
+  .icon-emoji {
+    font-size: 22px;
+  }
+  
+  .app-name {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    padding: 30px 50px 60px 50px;
   }
   
   .current-time {
@@ -398,36 +484,17 @@
   }
   
   .greeting {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
   
-  .app-tile {
-    min-height: 140px;
-  }
-}
 
-@media (min-width: 1024px) {
-  .app-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 28px;
-    padding: 60px 50px;
+  
+  .icon-emoji {
+    font-size: 24px;
   }
   
-  .current-time {
-    font-size: 7rem;
-    letter-spacing: 8px;
-  }
-  
-  .current-date {
-    font-size: 1.8rem;
-  }
-  
-  .greeting {
-    font-size: 1.4rem;
-  }
-  
-  .app-tile {
-    min-height: 160px;
+  .app-name {
+    font-size: 12px;
   }
 }
 
@@ -517,5 +584,422 @@
   
   .app-tile:hover {
     transform: none;
+  }
+} 
+
+/* 编辑模式指示器 */
+.edit-mode-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exit-edit-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.exit-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 编辑模式下的应用方块 */
+.app-tile.edit-mode {
+  cursor: grab;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.app-tile.edit-mode:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.app-tile.edit-mode:active {
+  cursor: grabbing;
+  transform: scale(1.02);
+}
+
+/* 拖拽状态 */
+.app-tile.dragging {
+  opacity: 0.3;
+  transform: scale(1.15) rotate(5deg);
+  z-index: 1000;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+/* 拖拽悬停效果 */
+.app-tile.edit-mode:not(.dragging):hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 拖拽目标高亮 */
+.app-tile.edit-mode.drag-over {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: scale(1.02);
+}
+
+/* 大小指示器 */
+.size-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+/* 不同大小的应用方块 */
+.app-tile.small {
+  max-width: 80px;
+  aspect-ratio: 1;
+}
+
+.app-tile.small .icon-emoji {
+  font-size: 16px;
+}
+
+.app-tile.small .app-name {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.app-tile.medium {
+  max-width: 120px;
+  aspect-ratio: 1;
+}
+
+.app-tile.medium .icon-emoji {
+  font-size: 20px;
+}
+
+.app-tile.medium .app-name {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.app-tile.large {
+  max-width: 160px;
+  aspect-ratio: 1;
+}
+
+.app-tile.large .icon-emoji {
+  font-size: 28px;
+}
+
+.app-tile.large .app-name {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* 拖拽时的网格样式 */
+.app-grid.dragging {
+  pointer-events: none;
+}
+
+.app-grid.dragging .app-tile:not(.dragging) {
+  pointer-events: auto;
+}
+
+/* 长按反馈 */
+.app-tile.edit-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.app-tile.edit-mode:hover::before {
+  opacity: 1;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .app-tile.small {
+    max-width: 60px;
+  }
+  
+  .app-tile.medium {
+    max-width: 80px;
+  }
+  
+  .app-tile.large {
+    max-width: 100px;
+  }
+  
+  .edit-mode-indicator {
+    top: 50px;
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-tile.small {
+    max-width: 100px;
+  }
+  
+  .app-tile.medium {
+    max-width: 140px;
+  }
+  
+  .app-tile.large {
+    max-width: 180px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-tile.small {
+    max-width: 120px;
+  }
+  
+  .app-tile.medium {
+    max-width: 160px;
+  }
+  
+  .app-tile.large {
+    max-width: 200px;
+  }
+} 
+
+/* 点击转场特效 */
+.app-tile.clicked {
+  animation: appClickTransition 0.3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes appClickTransition {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1) blur(0px);
+  }
+  
+  20% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 0.9;
+    filter: brightness(1.3) blur(1px);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+  }
+  
+  40% {
+    transform: scale(0.8) rotate(-3deg);
+    opacity: 0.7;
+    filter: brightness(1.5) blur(2px);
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.8);
+  }
+  
+  60% {
+    transform: scale(1.1) rotate(2deg);
+    opacity: 0.5;
+    filter: brightness(1.8) blur(3px);
+    box-shadow: 0 0 70px rgba(255, 255, 255, 1);
+  }
+  
+  80% {
+    transform: scale(0.9) rotate(-1deg);
+    opacity: 0.3;
+    filter: brightness(2) blur(4px);
+    box-shadow: 0 0 90px rgba(255, 255, 255, 1);
+  }
+  
+  100% {
+    transform: scale(0.1) rotate(0deg);
+    opacity: 0;
+    filter: brightness(2.5) blur(8px);
+    box-shadow: 0 0 120px rgba(255, 255, 255, 1);
+  }
+}
+
+/* 点击时的图标特效 */
+.app-tile.clicked .app-icon {
+  animation: iconPulse 0.3s ease-out forwards;
+}
+
+@keyframes iconPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+  
+  50% {
+    transform: scale(1.5);
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+  }
+  
+  100% {
+    transform: scale(2);
+    filter: drop-shadow(0 0 30px rgba(255, 255, 255, 1));
+  }
+}
+
+/* 点击时的文字特效 */
+.app-tile.clicked .app-name {
+  animation: textGlow 0.3s ease-out forwards;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    opacity: 0.9;
+  }
+  
+  50% {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    opacity: 1;
+  }
+  
+  100% {
+    text-shadow: 0 0 25px rgba(255, 255, 255, 1);
+    opacity: 0;
+  }
+}
+
+/* 点击时的背景特效 */
+.app-tile.clicked::before {
+  animation: backgroundRipple 0.3s ease-out forwards;
+}
+
+@keyframes backgroundRipple {
+  0% {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
+    opacity: 0;
+  }
+  
+  50% {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    opacity: 1;
+  }
+  
+  100% {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.3) 30%, transparent 70%);
+    opacity: 0;
+  }
+}
+
+/* 点击时的覆盖层特效 */
+.app-tile.clicked .app-overlay {
+  animation: overlayFlash 0.3s ease-out forwards;
+}
+
+@keyframes overlayFlash {
+  0% {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+    opacity: 0;
+  }
+  
+  30% {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+    opacity: 1;
+  }
+  
+  100% {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
+    opacity: 0;
+  }
+}
+
+/* 点击时的通知徽章特效 */
+.app-tile.clicked .notification-badge {
+  animation: badgePop 0.3s ease-out forwards;
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+  
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* 点击时的开发中徽章特效 */
+.app-tile.clicked .coming-soon-badge {
+  animation: badgeFade 0.3s ease-out forwards;
+}
+
+@keyframes badgeFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* 响应式调整点击特效 */
+@media (max-width: 480px) {
+  .app-tile.clicked {
+    animation-duration: 0.25s;
+  }
+  
+  .app-tile.clicked .app-icon {
+    animation-duration: 0.25s;
+  }
+  
+  .app-tile.clicked .app-name {
+    animation-duration: 0.25s;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-tile.clicked {
+    animation-duration: 0.35s;
+  }
+  
+  .app-tile.clicked .app-icon {
+    animation-duration: 0.35s;
+  }
+  
+  .app-tile.clicked .app-name {
+    animation-duration: 0.35s;
   }
 } 

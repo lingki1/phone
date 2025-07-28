@@ -663,9 +663,35 @@
   background: rgba(0, 0, 0, 0.3);
 } 
 
-/* 群聊消息样式 */
+/* 群聊消息样式 - 重新设计 */
 .group-message {
-  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.group-message .message-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+.group-message .avatar-image {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.group-message .message-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .group-message .message-sender {
@@ -688,37 +714,33 @@
   background-color: rgba(40, 167, 69, 0.1);
 }
 
-.group-message .message-avatar {
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-.group-message .message-content {
-  flex: 1;
-  min-width: 0;
-}
-
 .group-message .message-bubble {
-  border-radius: 12px;
-  padding: 8px 12px;
-  max-width: 80%;
+  border-radius: 18px;
+  padding: 10px 14px;
+  max-width: 70%;
   word-wrap: break-word;
+  word-break: break-word;
   position: relative;
+  line-height: 1.4;
 }
 
 .group-message.user-message .message-bubble {
   background-color: #007bff;
   color: white;
   margin-left: auto;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 6px;
+  align-self: flex-end;
+  min-width: fit-content;
+  max-width: 70%;
 }
 
 .group-message.ai-message .message-bubble {
   background-color: white;
   color: #333;
   border: 1px solid #e0e0e0;
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  align-self: flex-start;
 }
 
 .group-message .message-time {
@@ -736,21 +758,14 @@
   text-align: left;
 }
 
-/* 群聊消息的连续消息样式 */
-.group-message + .group-message.ai-message {
-  margin-top: 2px;
+/* 连续消息样式优化 - 保持头像和名字显示 */
+.group-message.consecutive {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
-.group-message + .group-message.ai-message .message-sender {
-  display: none;
-}
-
-.group-message + .group-message.ai-message .message-avatar {
-  visibility: hidden;
-}
-
-.group-message + .group-message.ai-message .message-bubble {
-  border-top-left-radius: 4px;
+.group-message.consecutive .message-bubble {
+  border-radius: 18px;
 }
 
 /* 群聊消息的引用样式 */
@@ -770,23 +785,57 @@
 
 /* 移动端群聊消息调整 */
 @media (max-width: 767px) {
+  .group-message {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .group-message .message-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
   .group-message .message-sender {
     font-size: 11px;
     max-width: 150px;
   }
-  
+
   .group-message .message-bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .group-message.user-message .message-bubble {
+    min-width: fit-content;
     max-width: 85%;
   }
 }
 
 @media (max-width: 480px) {
+  .group-message {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .group-message .message-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
   .group-message .message-sender {
     font-size: 10px;
     max-width: 120px;
   }
   
   .group-message .message-bubble {
+    max-width: 90%;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .group-message.user-message .message-bubble {
+    min-width: fit-content;
     max-width: 90%;
   }
   
@@ -844,53 +893,77 @@
   }
 }
 
-/* 深色模式支持 */
+/* 深色模式支持 - 强制保持白色主题 */
 @media (prefers-color-scheme: dark) {
   .chat-interface {
-    background-color: var(--bg-primary);
+    background-color: #f5f5f5 !important;
   }
   
   .chat-header {
-    background-color: rgba(45, 45, 45, 0.95);
-    border-bottom-color: var(--border-color);
+    background-color: rgba(247, 247, 247, 0.95) !important;
+    border-bottom-color: #e0e0e0 !important;
+  }
+  
+  .chat-header .back-btn {
+    color: #007bff !important;
+  }
+  
+  .chat-header .back-btn:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+  }
+  
+  .chat-name {
+    color: #1f1f1f !important;
+  }
+  
+  .chat-status {
+    color: #8a8a8a !important;
+  }
+  
+  .chat-actions .action-btn {
+    color: #666 !important;
+  }
+  
+  .chat-actions .action-btn:hover {
+    background-color: #f0f0f0 !important;
   }
   
   .input-container {
-    background-color: var(--bg-primary);
-    border-top-color: var(--border-color);
+    background-color: white !important;
+    border-top-color: #e0e0e0 !important;
   }
   
   .input-wrapper {
-    background-color: var(--bg-secondary);
-    border-color: var(--border-color);
+    background-color: #f8f9fa !important;
+    border-color: #e0e0e0 !important;
   }
   
   .ai-message .message-bubble {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--border-color);
+    background-color: white !important;
+    color: #1f1f1f !important;
+    border-color: #e0e0e0 !important;
   }
   
   .typing-indicator {
-    background-color: var(--bg-secondary) !important;
-    border-color: var(--border-color) !important;
+    background-color: white !important;
+    border-color: #e0e0e0 !important;
   }
   
   .mention-list {
-    background-color: var(--bg-primary);
-    border-color: var(--border-color);
+    background-color: white !important;
+    border-color: #e0e0e0 !important;
   }
   
   .mention-item:hover {
-    background-color: var(--bg-secondary);
+    background-color: #f8f9fa !important;
   }
   
   .quote-preview {
-    background-color: rgba(0, 123, 255, 0.2);
+    background-color: rgba(0, 123, 255, 0.1) !important;
   }
   
   .group-message .quoted-message {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(0, 0, 0, 0.05) !important;
   }
 }
 
@@ -971,5 +1044,111 @@
   
   .voice-message {
     color: #4dabf7;
+  }
+}
+
+/* 聊天菜单样式 */
+.chat-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+
+.chat-menu {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e8eaed;
+  min-width: 120px;
+  overflow: hidden;
+  animation: slideIn 0.2s ease;
+  z-index: 10000;
+}
+
+.chat-menu-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #202124;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.chat-menu-item:last-child {
+  border-bottom: none;
+}
+
+.chat-menu-item:hover {
+  background-color: #f8f9fa;
+}
+
+.chat-menu-item.delete {
+  color: #dc3545;
+}
+
+.chat-menu-item.delete:hover {
+  background-color: #fff5f5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 移动端聊天菜单调整 */
+@media (max-width: 767px) {
+  .chat-menu {
+    top: 70px;
+    right: 15px;
+    min-width: 100px;
+  }
+  
+  .chat-menu-item {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-menu {
+    top: 65px;
+    right: 10px;
+    min-width: 90px;
+  }
+  
+  .chat-menu-item {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 } 
