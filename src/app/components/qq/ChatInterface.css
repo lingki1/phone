@@ -892,4 +892,84 @@
   .group-message .quoted-message {
     background-color: rgba(255, 255, 255, 0.05);
   }
+}
+
+/* 特殊消息类型样式 */
+.sticker-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sticker-image {
+  max-width: 80px;
+  max-height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.sticker-fallback {
+  color: #666;
+  font-style: italic;
+}
+
+.fallback-hidden {
+  display: none;
+}
+
+.image-message {
+  display: flex;
+  align-items: center;
+}
+
+.image-placeholder {
+  background-color: #f0f0f0;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.user-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.image-fallback {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.voice-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* 深色模式下的特殊消息样式 */
+@media (prefers-color-scheme: dark) {
+  .image-placeholder {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #ccc;
+  }
+  
+  .sticker-fallback {
+    color: #ccc;
+  }
+  
+  .image-fallback {
+    color: #999;
+  }
+  
+  .voice-message {
+    color: #4dabf7;
+  }
 } 

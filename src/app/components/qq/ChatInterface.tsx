@@ -307,16 +307,50 @@ ${chat.settings.myPersona}
 
   // 处理AI消息
   const processAiMessage = async (msgData: Record<string, unknown>, chat: ChatItem) => {
+    // 根据消息类型处理内容
+    let content = '';
+    let type: Message['type'] = 'text';
+    let meaning: string | undefined;
+    let url: string | undefined;
+
+    switch (msgData.type) {
+      case 'text':
+        content = String(msgData.content || msgData.message || '');
+        type = 'text';
+        break;
+      case 'sticker':
+        content = String(msgData.meaning || '表情');
+        type = 'sticker';
+        meaning = msgData.meaning ? String(msgData.meaning) : undefined;
+        url = msgData.url ? String(msgData.url) : undefined;
+        break;
+      case 'ai_image':
+        content = String(msgData.description || '图片');
+        type = 'ai_image';
+        break;
+      case 'voice_message':
+        content = String(msgData.content || '语音消息');
+        type = 'voice_message';
+        break;
+      case 'pat_user':
+        content = `拍一拍${msgData.suffix ? String(msgData.suffix) : ''}`;
+        type = 'text';
+        break;
+      default:
+        content = String(msgData.content || msgData.message || '');
+        type = 'text';
+    }
+
     const aiMessage: Message = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: String(msgData.content || msgData.message || ''),
+      content,
       timestamp: Date.now(),
       senderName: String(msgData.name || chat.name),
       senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
-      type: (msgData.type as Message['type']) || 'text',
-      meaning: msgData.meaning ? String(msgData.meaning) : undefined,
-      url: msgData.url ? String(msgData.url) : undefined
+      type,
+      meaning,
+      url
     };
 
     const updatedChat = {
@@ -431,6 +465,65 @@ ${chat.settings.myPersona}
     });
   };
 
+  // 渲染消息内容
+  const renderMessageContent = (msg: Message) => {
+    switch (msg.type) {
+      case 'sticker':
+        return (
+          <div className="sticker-message">
+            {msg.url && (
+              <img 
+                src={msg.url} 
+                alt={msg.meaning || '表情'} 
+                className="sticker-image"
+                onError={(e) => {
+                  // 如果图片加载失败，显示文字
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('fallback-hidden');
+                }}
+              />
+            )}
+            <span className={`sticker-fallback ${msg.url ? 'fallback-hidden' : ''}`}>
+              {msg.meaning || '表情'}
+            </span>
+          </div>
+        );
+      case 'ai_image':
+        return (
+          <div className="image-message">
+            <div className="image-placeholder">
+              📷 {msg.content}
+            </div>
+          </div>
+        );
+      case 'voice_message':
+        return (
+          <div className="voice-message">
+            🎤 {msg.content}
+          </div>
+        );
+      case 'image':
+        return (
+          <div className="image-message">
+            <img 
+              src={msg.content} 
+              alt="用户图片" 
+              className="user-image"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('fallback-hidden');
+              }}
+            />
+            <span className="image-fallback fallback-hidden">图片加载失败</span>
+          </div>
+        );
+      default:
+        return <span>{msg.content}</span>;
+    }
+  };
+
   return (
     <div className="chat-interface">
       {/* 顶部导航栏 */}
@@ -500,7 +593,7 @@ ${chat.settings.myPersona}
                   </div>
                 )}
                 <div className="message-bubble">
-                  {msg.content}
+                  {renderMessageContent(msg)}
                 </div>
                 <div className="message-time">
                   {formatTime(msg.timestamp)}
