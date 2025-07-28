@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ChatListPage from './components/ChatListPage';
+import ChatListPage from './components/qq/ChatListPage';
 import DesktopPage from './components/DesktopPage';
 
 export default function Home() {
