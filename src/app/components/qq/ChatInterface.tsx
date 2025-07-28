@@ -187,8 +187,34 @@ export default function ChatInterface({
       const messagesArray = parseAiResponse(aiResponseContent);
       
       // 处理每条AI消息
+      let messageTimestamp = Date.now();
       for (const msgData of messagesArray) {
-        await processAiMessage(msgData, updatedChat);
+        if (!msgData || typeof msgData !== 'object') {
+          console.warn("收到了格式不规范的AI指令，已跳过:", msgData);
+          continue;
+        }
+        
+        if (!msgData.type) {
+          if (chat.isGroup && msgData.name && msgData.message) {
+            msgData.type = 'text';
+          } else {
+            console.warn("收到了格式不规范的AI指令（缺少type），已跳过:", msgData);
+            continue;
+          }
+        }
+
+        // 创建AI消息对象
+        const aiMessage = await createAiMessage(msgData, chat, messageTimestamp++);
+        if (aiMessage) {
+          const chatWithMessage = {
+            ...updatedChat,
+            messages: [...updatedChat.messages, aiMessage],
+            lastMessage: aiMessage.content,
+            timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+          };
+          onUpdateChat(chatWithMessage);
+          updatedChat = chatWithMessage; // 更新引用，确保下一条消息基于最新状态
+        }
       }
 
     } catch (error) {
@@ -305,8 +331,8 @@ ${chat.settings.myPersona}
     }
   };
 
-  // 处理AI消息
-  const processAiMessage = async (msgData: Record<string, unknown>, chat: ChatItem) => {
+  // 创建AI消息对象
+  const createAiMessage = async (msgData: Record<string, unknown>, chat: ChatItem, timestamp: number): Promise<Message | null> => {
     // 根据消息类型处理内容
     let content = '';
     let type: Message['type'] = 'text';
@@ -342,10 +368,10 @@ ${chat.settings.myPersona}
     }
 
     const aiMessage: Message = {
-      id: Date.now().toString(),
+      id: timestamp.toString(),
       role: 'assistant',
       content,
-      timestamp: Date.now(),
+      timestamp,
       senderName: String(msgData.name || chat.name),
       senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
       type,
@@ -353,14 +379,7 @@ ${chat.settings.myPersona}
       url
     };
 
-    const updatedChat = {
-      ...chat,
-      messages: [...chat.messages, aiMessage],
-      lastMessage: aiMessage.content,
-      timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    onUpdateChat(updatedChat);
+    return aiMessage;
   };
 
   // 模拟单聊回复
