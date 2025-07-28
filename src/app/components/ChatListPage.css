@@ -1,26 +1,36 @@
-/* 基础样式变量 */
+/* 基础样式变量 - 白色主题 */
 :root {
   --screen-width: 100%;
   --screen-height: 100vh;
-  --secondary-bg: #ffffff;
-  --border-color: #e0e0e0;
-  --text-primary: #1f1f1f;
-  --text-secondary: #8a8a8a;
-  --accent-color: #007bff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f4;
+  --border-color: #e8eaed;
+  --border-light: #f1f3f4;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --text-tertiary: #9aa0a6;
+  --accent-color: #1a73e8;
+  --accent-hover: #1557b0;
+  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* 主容器 */
+/* 主容器 - 覆盖app-container的影响 */
 .chat-list-page {
-  width: 100%;
-  height: 100vh;
-  max-width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--secondary-bg);
-  position: relative;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  width: 100% !important;
+  height: 100vh !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--bg-primary) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
 }
 
 /* 桌面端布局 - 全屏显示 */
@@ -44,22 +54,21 @@
   }
 }
 
-/* 顶部导航栏样式 */
+/* 顶部导航栏样式 - 强制白色主题 */
 .chat-list-header {
   position: relative;
   z-index: 15;
   flex-shrink: 0;
   padding: 15px 20px;
-  background-color: rgba(247, 247, 247, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-color);
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e8eaed !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 18px;
   font-weight: 600;
   position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* 移动端顶部导航栏调整 */
@@ -93,7 +102,7 @@
 }
 
 .back-button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-tertiary);
 }
 
 .back-button svg {
@@ -115,13 +124,13 @@
   cursor: pointer;
   border: 2px solid var(--border-color);
   transition: all 0.2s ease;
-  background-color: #f0f0f0;
+  background-color: var(--bg-secondary);
 }
 
 .user-avatar:hover {
   border-color: var(--accent-color);
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: var(--shadow-medium);
 }
 
 /* 移动端头像大小调整 */
@@ -145,9 +154,9 @@
   top: 100%;
   left: 0;
   margin-top: 8px;
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-heavy);
   border: 1px solid var(--border-color);
   min-width: 160px;
   opacity: 0;
@@ -169,7 +178,7 @@
   padding: 12px 16px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .dropdown-item:last-child {
@@ -185,7 +194,7 @@
 }
 
 .dropdown-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
 }
 
 .dropdown-item svg {
@@ -200,7 +209,7 @@
   font-weight: 500;
 }
 
-/* 群聊/单聊切换开关样式 - iOS风格 */
+/* 群聊/单聊切换开关样式 - 白色主题 */
 .chat-type-toggle {
   position: absolute;
   left: 50%;
@@ -210,13 +219,14 @@
   justify-content: center;
   align-items: center;
   gap: 0;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--bg-tertiary);
   border-radius: 20px;
   padding: 4px;
   width: 200px;
   height: 36px;
   box-sizing: border-box;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
 }
 
 .toggle-btn {
@@ -239,14 +249,14 @@
 }
 
 .toggle-btn.active {
-  background: #ffffff;
+  background: var(--bg-primary);
   color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-medium);
   font-weight: 600;
 }
 
 .toggle-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
@@ -306,7 +316,7 @@
 }
 
 .action-btn:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: var(--bg-tertiary);
   transform: scale(1.05);
 }
 
@@ -346,9 +356,9 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background-color: white;
+  background-color: var(--bg-primary);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-heavy);
   border: 1px solid var(--border-color);
   min-width: 160px;
   opacity: 0;
@@ -376,7 +386,7 @@
 
 .chat-list-empty {
   text-align: center;
-  color: #8a8a8a;
+  color: var(--text-secondary);
   margin-top: 50px;
   padding: 20px;
 }
@@ -386,16 +396,16 @@
   align-items: center;
   padding: 10px 15px;
   cursor: pointer;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
   position: relative;
   transition: all 0.2s ease;
   background-color: transparent;
 }
 
 .chat-list-item:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--bg-secondary);
   transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-light);
 }
 
 .chat-list-item .avatar {
@@ -404,7 +414,7 @@
   border-radius: 50%;
   margin-right: 12px;
   object-fit: cover;
-  background-color: #ccc;
+  background-color: var(--bg-tertiary);
   cursor: pointer;
 }
 
@@ -429,7 +439,7 @@
 .chat-list-item .group-tag {
   font-size: 10px;
   color: var(--accent-color);
-  background-color: #e7f3ff;
+  background-color: var(--bg-tertiary);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: bold;
@@ -469,7 +479,7 @@
   line-height: 18px;
   text-align: center;
   border-radius: 9px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-light);
 }
 
 /* 移动端聊天列表项调整 */
@@ -539,7 +549,7 @@
 }
 
 .menu-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
@@ -547,9 +557,9 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
+  background: var(--bg-primary);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-medium);
   border: 1px solid var(--border-color);
   min-width: 100px;
   z-index: 1000;
@@ -572,7 +582,7 @@
 }
 
 .menu-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-secondary);
 }
 
 .menu-item.delete {
@@ -594,7 +604,7 @@
   }
 }
 
-/* 底部导航栏样式 */
+/* 底部导航栏样式 - 强制白色主题 */
 .bottom-navigation {
   position: absolute;
   bottom: 0;
@@ -602,10 +612,9 @@
   width: 100%;
   z-index: 15;
   display: flex;
-  border-top: 1px solid var(--border-color);
-  background-color: rgba(247, 247, 247, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid #e8eaed !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -783,54 +792,93 @@
   }
 }
 
-/* 深色模式支持 */
-@media (prefers-color-scheme: dark) {
+/* 横屏模式适配 */
+@media (orientation: landscape) and (max-height: 500px) {
   .chat-list-page {
-    background-color: var(--bg-primary);
+    height: 100vh;
+    max-height: 100vh;
   }
-  
-  .chat-list-header {
-    background-color: rgba(45, 45, 45, 0.8);
-    border-bottom-color: var(--border-color);
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .chat-list-item:hover {
+    background-color: #000000;
+    color: #ffffff;
   }
-  
-  .chat-type-toggle {
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-  
-  .toggle-btn.active {
-    background: rgba(255, 255, 255, 0.9);
-    color: var(--text-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .toggle-btn:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.15);
+}
+
+/* 打印样式 */
+@media print {
+  .chat-list-page {
+    max-width: none;
+    height: auto;
   }
   
   .bottom-navigation {
-    background-color: rgba(45, 45, 45, 0.9);
-    border-top-color: var(--border-color);
+    display: none !important;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .chat-list-page *,
+  .chat-list-page *::before,
+  .chat-list-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 深色模式支持 - 保持白色主题 */
+@media (prefers-color-scheme: dark) {
+  .chat-list-page {
+    background-color: #ffffff !important;
+  }
+  
+  .chat-list-header {
+    background-color: #ffffff !important;
+    border-bottom-color: #e8eaed !important;
+  }
+  
+  .chat-type-toggle {
+    background: #f1f3f4 !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .toggle-btn.active {
+    background: #ffffff !important;
+    color: #202124 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .toggle-btn:hover:not(.active) {
+    background: #f8f9fa !important;
+  }
+  
+  .bottom-navigation {
+    background-color: #ffffff !important;
+    border-top-color: #e8eaed !important;
   }
   
   .chat-list-item {
-    border-bottom-color: var(--border-color);
+    border-bottom-color: #f1f3f4 !important;
   }
   
   .chat-list-item:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: #f8f9fa !important;
   }
   
   .dropdown-menu,
   .user-dropdown-menu,
   .add-dropdown-menu {
-    background-color: var(--bg-primary);
-    border-color: var(--border-color);
+    background-color: #ffffff !important;
+    border-color: #e8eaed !important;
   }
   
   .dropdown-item:hover,
   .menu-item:hover {
-    background-color: var(--bg-secondary);
+    background-color: #f8f9fa !important;
   }
 } 

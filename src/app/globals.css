@@ -14,8 +14,8 @@ body {
 }
 
 body {
-  background-color: #f0f2f5;
-  color: #1f1f1f;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
@@ -260,11 +260,10 @@ a {
   }
   
   /* 横屏时减少垂直间距 */
-  .chat-list-page,
-  .chat-interface {
-    height: 100vh;
-    max-height: 100vh;
-  }
+.chat-interface {
+  height: 100vh;
+  max-height: 100vh;
+}
 }
 
 /* 高分辨率屏幕适配 */
@@ -312,22 +311,15 @@ a {
     --border-color: #000000;
     --text-secondary: #000000;
   }
-  
-  .chat-list-item:hover {
-    background-color: #000000;
-    color: #ffffff;
-  }
 }
 
 /* 打印样式 */
 @media print {
-  .chat-list-page,
   .chat-interface {
     max-width: none;
     height: auto;
   }
   
-  .bottom-navigation,
   .chat-header .back-btn,
   .chat-actions {
     display: none !important;
