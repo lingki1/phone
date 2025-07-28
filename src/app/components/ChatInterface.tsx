@@ -151,7 +151,7 @@ export default function ChatInterface({
       }
 
       // 如果有API配置，让群成员使用AI回复
-      if (mentionedMembers.length > 0) {
+        if (mentionedMembers.length > 0) {
         await handleAIGroupChat(updatedChat, mentionedMembers, userMessage);
       } else {
         // 如果没有@任何人，随机选择1-2个成员回复
@@ -190,99 +190,99 @@ export default function ChatInterface({
 
         const randomResponse = responses[Math.floor(Math.random() * responses.length)];
         
-        const memberReply: Message = {
+          const memberReply: Message = {
           id: (Date.now() + i + 1).toString(),
-          role: 'assistant',
+            role: 'assistant',
           content: randomResponse,
           timestamp: Date.now() + delay,
           senderName: member.groupNickname,
           senderAvatar: member.avatar
-        };
-
-        const chatWithReply = {
-          ...updatedChat,
-          messages: [...updatedChat.messages, memberReply],
-          lastMessage: memberReply.content,
-          timestamp: new Date(memberReply.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-        };
-        onUpdateChat(chatWithReply);
+          };
+          
+          const chatWithReply = {
+            ...updatedChat,
+            messages: [...updatedChat.messages, memberReply],
+            lastMessage: memberReply.content,
+            timestamp: new Date(memberReply.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+          };
+          onUpdateChat(chatWithReply);
       }, delay);
-    }
+        }
   };
 
   // 处理AI群聊回复
   const handleAIGroupChat = async (updatedChat: ChatItem, membersToReply: GroupMember[], userMessage: Message) => {
-    setIsLoading(true);
-
-    try {
+        setIsLoading(true);
+        
+        try {
       for (let i = 0; i < membersToReply.length; i++) {
         const member = membersToReply[i];
         const delay = (i + 1) * 2000; // 每个成员回复间隔2秒
-
+          
         setTimeout(async () => {
           try {
             // 构建消息历史，包含群聊上下文
             const recentMessages = chat.messages.slice(-10);
-            const messages = [
-              {
-                role: 'system',
+          const messages = [
+            {
+              role: 'system',
                 content: `${member.persona}\n\n你现在在一个群聊中，群聊名称：${chat.name}。你是群成员"${member.groupNickname}"。请根据你的角色人设回复消息。回复要自然、符合角色特点，不要太长。记住你是${member.groupNickname}，不是用户。`
-              },
+            },
               ...recentMessages.map(msg => ({
-                role: msg.role === 'user' ? 'user' : 'assistant',
-                content: `${msg.senderName ? `[${msg.senderName}]: ` : ''}${msg.content}`
-              })),
-              {
-                role: 'user',
+              role: msg.role === 'user' ? 'user' : 'assistant',
+              content: `${msg.senderName ? `[${msg.senderName}]: ` : ''}${msg.content}`
+            })),
+            {
+              role: 'user',
                 content: `[${userMessage.senderName}]: ${userMessage.content}`
-              }
-            ];
+            }
+          ];
 
-            const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiConfig.apiKey}`
-              },
-              body: JSON.stringify({
-                model: apiConfig.model,
-                messages: messages,
+          const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiConfig.apiKey}`
+            },
+            body: JSON.stringify({
+              model: apiConfig.model,
+              messages: messages,
                 temperature: 0.8,
                 max_tokens: 150
-              })
-            });
+            })
+          });
 
-            if (response.ok) {
-              const data = await response.json();
-              const aiResponse = data.choices[0]?.message?.content || '收到！';
+          if (response.ok) {
+            const data = await response.json();
+            const aiResponse = data.choices[0]?.message?.content || '收到！';
 
-              const memberReply: Message = {
+            const memberReply: Message = {
                 id: (Date.now() + i + 1).toString(),
-                role: 'assistant',
-                content: aiResponse,
+              role: 'assistant',
+              content: aiResponse,
                 timestamp: Date.now() + delay,
                 senderName: member.groupNickname,
                 senderAvatar: member.avatar
-              };
+            };
 
-              const finalChat = {
-                ...updatedChat,
-                messages: [...updatedChat.messages, memberReply],
-                lastMessage: memberReply.content,
-                timestamp: new Date(memberReply.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-              };
-              onUpdateChat(finalChat);
-            }
-          } catch (error) {
+            const finalChat = {
+              ...updatedChat,
+              messages: [...updatedChat.messages, memberReply],
+              lastMessage: memberReply.content,
+              timestamp: new Date(memberReply.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+            };
+            onUpdateChat(finalChat);
+          }
+        } catch (error) {
             console.error(`群成员${member.groupNickname}AI回复失败:`, error);
           }
         }, delay);
       }
     } catch (error) {
       console.error('群聊AI回复失败:', error);
-    } finally {
-      setIsLoading(false);
-    }
+        } finally {
+          setIsLoading(false);
+        }
   };
 
   // 处理单聊
@@ -371,7 +371,7 @@ export default function ChatInterface({
       onUpdateChat(chatWithError);
     } finally {
       setIsLoading(false);
-    }
+      }
   };
 
   // 获取随机群成员

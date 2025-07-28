@@ -49,12 +49,12 @@ export default function GroupMemberManager({
     if (!memberToRemove) return;
     
     if (confirm(`确定要移除 ${memberToRemove.groupNickname} 吗？移除后该成员将无法继续参与群聊。`)) {
-      const updatedMembers = chat.members.filter(m => m.id !== memberId);
-      const updatedChat = {
-        ...chat,
-        members: updatedMembers
-      };
-      onUpdateChat(updatedChat);
+    const updatedMembers = chat.members.filter(m => m.id !== memberId);
+    const updatedChat = {
+      ...chat,
+      members: updatedMembers
+    };
+    onUpdateChat(updatedChat);
     }
   };
 

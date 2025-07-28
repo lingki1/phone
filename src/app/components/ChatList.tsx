@@ -111,30 +111,30 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat 
                 {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
               </div>
             )}
-                          <div className="menu-container">
-                <button 
-                  className="menu-btn"
-                  onClick={(e) => handleMenuClick(e, chat.id)}
-                >
-                  ⋯
-                </button>
-                {activeMenuId === chat.id && (
-                  <div className="dropdown-menu">
-                    <button 
-                      className="menu-item"
-                      onClick={(e) => handleEditClick(e, chat.id)}
-                    >
-                      编辑
-                    </button>
-                    <button 
-                      className="menu-item delete"
-                      onClick={(e) => handleDeleteClick(e, chat.id)}
-                    >
-                      删除
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="menu-container">
+              <button 
+                className="menu-btn"
+                onClick={(e) => handleMenuClick(e, chat.id)}
+              >
+                ⋯
+              </button>
+              {activeMenuId === chat.id && (
+                <div className="dropdown-menu">
+                  <button 
+                    className="menu-item"
+                    onClick={(e) => handleEditClick(e, chat.id)}
+                  >
+                    编辑
+                  </button>
+                  <button 
+                    className="menu-item delete"
+                    onClick={(e) => handleDeleteClick(e, chat.id)}
+                  >
+                    删除
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}
