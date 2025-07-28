@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { ChatItem } from '../types/chat';
+import { ChatItem } from '../../types/chat';
 import './CreateGroupModal.css';
 
 interface CreateGroupModalProps {

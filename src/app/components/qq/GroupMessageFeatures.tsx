@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Message, ChatItem, PollMessage, RedPacketMessage } from '../types/chat';
+import { Message, ChatItem, PollMessage, RedPacketMessage } from '../../types/chat';
 import './GroupMessageFeatures.css';
 
 interface GroupMessageFeaturesProps {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Message, ChatItem, GroupMember, QuoteMessage } from '../types/chat';
+import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import GroupMemberManager from './GroupMemberManager';
 import './ChatInterface.css';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChatItem } from '../types/chat';
+import { ChatItem } from '../../types/chat';
 import './AddFriendModal.css';
 
 interface EditFriendModalProps {
