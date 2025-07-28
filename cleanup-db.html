@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清理聊天数据库</title>
+</head>
+<body>
+    <h1>清理聊天数据库</h1>
+    <p>点击按钮清理所有预设的聊天数据</p>
+    <button onclick="cleanupDB()">清理数据库</button>
+    <div id="result"></div>
+
+    <script>
+        function cleanupDB() {
+            const resultDiv = document.getElementById('result');
+            
+            // 删除IndexedDB数据库
+            const deleteRequest = indexedDB.deleteDatabase('ChatAppDB');
+            
+            deleteRequest.onerror = function(event) {
+                resultDiv.innerHTML = '<p style="color: red;">清理失败: ' + event.target.error + '</p>';
+            };
+            
+            deleteRequest.onsuccess = function() {
+                resultDiv.innerHTML = '<p style="color: green;">数据库清理成功！请刷新应用页面。</p>';
+                // 同时清理localStorage
+                localStorage.removeItem('chats');
+                localStorage.removeItem('apiConfig');
+            };
+            
+            deleteRequest.onblocked = function() {
+                resultDiv.innerHTML = '<p style="color: orange;">数据库被占用，请关闭其他标签页后重试</p>';
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lingki AI 聊天应用
 
-## Getting Started
+这是一个基于 Next.js 的聊天列表页面，复刻了原始 HTML 应用的设计和功能。
 
-First, run the development server:
+## 功能特性
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 聊天列表页面
+- ✅ **顶部导航栏**：包含全部/单聊/群聊切换、添加菜单和用户头像
+- ✅ **用户下拉菜单**：包含API设置、外观设置、字体设置、世界书、回忆、收藏等选项
+- ✅ **聊天列表**：显示所有聊天会话，支持分组显示
+- ✅ **底部导航栏**：包含消息、动态、聊天历史等选项
+
+### 界面特点
+- 📱 响应式设计，适配不同屏幕尺寸
+- 🎨 现代化 UI 设计，毛玻璃效果和平滑动画
+- 🔄 实时切换单聊/群聊/全部视图
+- 📊 未读消息计数显示
+- 👆 支持头像点击（拍一拍功能）
+
+## 技术栈
+
+- **框架**: Next.js 15.4.3
+- **语言**: TypeScript
+- **样式**: CSS Modules
+- **图标**: SVG 图标
+
+## 项目结构
+
+```
+src/
+├── app/
+│   ├── components/
+│   │   ├── ChatListPage.tsx      # 主页面组件
+│   │   ├── ChatListHeader.tsx    # 顶部导航栏
+│   │   ├── ChatList.tsx          # 聊天列表
+│   │   ├── BottomNavigation.tsx  # 底部导航栏
+│   │   └── ChatListPage.css      # 样式文件
+│   ├── globals.css               # 全局样式
+│   └── page.tsx                  # 入口页面
+└── public/
+    └── avatars/                  # 头像资源
+        ├── default-avatar.svg
+        └── user-avatar.svg
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 运行项目
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 安装依赖
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 启动开发服务器
+npm run dev
 
-## Learn More
+# 构建生产版本
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 开发说明
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+该项目完全复刻了原始 HTML 文件中的聊天列表页面设计，包括：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **布局结构**：三段式布局（顶部导航 + 聊天列表 + 底部导航）
+2. **交互功能**：下拉菜单、标签切换、列表滚动等
+3. **视觉效果**：毛玻璃背景、悬停动画、过渡效果等
+4. **响应式适配**：支持多种屏幕尺寸的设备
 
-## Deploy on Vercel
+## 后续扩展
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] 添加聊天界面页面
+- [ ] 实现动态（QZone）页面
+- [ ] 添加设置页面功能
+- [ ] 集成真实的数据存储
+- [ ] 添加推送通知功能
