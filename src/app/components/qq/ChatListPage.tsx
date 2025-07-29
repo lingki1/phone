@@ -10,7 +10,7 @@ import CreateGroupModal from './CreateGroupModal';
 
 import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
-import { ChatItem, Message, ApiConfig } from '../../types/chat';
+import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import './ChatListPage.css';
 
@@ -264,9 +264,16 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onUpdateChat={handleUpdateChat}
           availableContacts={availableContacts}
           onEditChat={(chat) => {
-            setEditingChat(chat);
-            setFriendModalMode('edit');
-            setShowFriendModal(true);
+            if (chat.isGroup) {
+              // 群聊编辑：打开创建群聊模态框进行编辑
+              setEditingChat(chat);
+              setShowCreateGroup(true);
+            } else {
+              // 单聊编辑：打开好友编辑模态框
+              setEditingChat(chat);
+              setFriendModalMode('edit');
+              setShowFriendModal(true);
+            }
             setCurrentScreen('list');
           }}
           onDeleteChat={(chatId) => {
