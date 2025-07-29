@@ -252,6 +252,8 @@
 }
 
 .message-avatar img {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -291,6 +293,11 @@
 @media (max-width: 480px) {
   .message-sender {
     font-size: 11px;
+  }
+  
+  .message-avatar img {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -673,8 +680,8 @@
 
 .group-message .message-avatar {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
   background-color: #f0f0f0;
@@ -791,8 +798,8 @@
   }
 
   .group-message .message-avatar {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
   .group-message .message-sender {
@@ -804,6 +811,11 @@
     max-width: 85%;
     padding: 8px 12px;
     font-size: 14px;
+  }
+  
+  .message-avatar img {
+    width: 30px;
+    height: 30px;
   }
 
   .group-message.user-message .message-bubble {
