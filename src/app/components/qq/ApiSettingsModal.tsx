@@ -123,51 +123,54 @@ export default function ApiSettingsModal({
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="api-settings-modal">
         <div className="modal-header">
-          <h2>API 设置</h2>
+          <h2>🤖 AI 连接配置</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
         <div className="modal-body">
           <div className="tip-box">
-            <p>💡 提示: 若要使用&quot;发送图片&quot;功能, 请务必选择支持Vision(视觉)的模型, 如 
+            <p>🎯 <strong>小贴士</strong>: 想要体验图片识别功能？记得选择支持视觉的AI模型哦！推荐使用 
               <code>gpt-4o</code> 或 <code>gpt-4-vision-preview</code>。
             </p>
           </div>
 
           <div className="form-group">
-            <label htmlFor="proxy-url">反代地址 (不需要添加/v1噢~)</label>
+            <label htmlFor="proxy-url">🌐 服务器地址</label>
             <input
               type="text"
               id="proxy-url"
               value={config.proxyUrl}
               onChange={(e) => handleInputChange('proxyUrl', e.target.value)}
-              placeholder="例如: https://api.openai.com"
+              placeholder="输入你的AI服务地址，例如: https://api.openai.com"
             />
+            <small className="field-hint">💡 不需要添加 /v1 后缀，系统会自动处理</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="api-key">密钥 (API Key)</label>
+            <label htmlFor="api-key">🔑 访问密钥</label>
             <input
               type="password"
               id="api-key"
               value={config.apiKey}
               onChange={(e) => handleInputChange('apiKey', e.target.value)}
-              placeholder="sk-..."
+              placeholder="输入你的API密钥，以 sk- 开头"
             />
+            <small className="field-hint">🔒 密钥会被安全保存，不会泄露给他人</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="model-select">模型</label>
+            <label htmlFor="model-select">🧠 AI 模型选择</label>
             <select
               id="model-select"
               value={config.model}
               onChange={(e) => handleInputChange('model', e.target.value)}
             >
-              <option value="">请选择模型</option>
+              <option value="">点击选择你喜欢的AI模型</option>
               {models.map(model => (
                 <option key={model} value={model}>{model}</option>
               ))}
             </select>
+            <small className="field-hint">✨ 不同模型有不同的特点和能力</small>
           </div>
 
           <button 
@@ -175,7 +178,7 @@ export default function ApiSettingsModal({
             onClick={fetchModels}
             disabled={isLoadingModels}
           >
-            {isLoadingModels ? '拉取中...' : '拉取模型'}
+            {isLoadingModels ? '🔄 正在获取模型列表...' : '📋 获取可用模型'}
           </button>
 
           <hr className="divider" />
@@ -183,9 +186,9 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="background-activity-switch">
-                启用后台角色活动
+                🎭 智能角色活跃模式
                 <p className="warning-text">
-                  警告：此功能会显著增加API调用和费用！
+                  ⚠️ 注意：开启后AI会主动互动，可能增加使用费用
                 </p>
               </label>
             </div>
@@ -200,9 +203,9 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="background-interval-input">
-                后台活动检测间隔 (秒)
+                ⏰ 活跃检测频率
                 <p className="info-text">
-                  建议值 60-300。值越大，费用越低，但角色反应越慢。
+                  推荐 60-300 秒，数值越大越省费用，但响应会稍慢
                 </p>
               </label>
             </div>
@@ -219,9 +222,9 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="block-cooldown-input">
-                AI被拉黑后冷静期 (小时)
+                🕐 AI 冷静恢复时间
                 <p className="info-text">
-                  被拉黑超过这个时间后，AI才有几率重新申请好友。
+                  被拒绝后，AI需要等待多久才能重新申请好友
                 </p>
               </label>
             </div>
@@ -238,8 +241,8 @@ export default function ApiSettingsModal({
         </div>
 
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onClose}>取消</button>
-          <button className="save-btn" onClick={handleSave}>保存设置</button>
+          <button className="cancel-btn" onClick={onClose}>❌ 取消</button>
+          <button className="save-btn" onClick={handleSave}>✅ 保存配置</button>
         </div>
       </div>
     </div>
