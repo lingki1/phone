@@ -26,7 +26,7 @@ interface ChatListPageProps {
 
 export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
-  const [activeView, setActiveView] = useState<'messages' | 'moments' | 'history'>('messages');
+  const [activeView, setActiveView] = useState<'messages' | 'moments' | 'me'>('messages');
   const [currentScreen, setCurrentScreen] = useState<'list' | 'chat'>('list');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
@@ -55,6 +55,9 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   // 聊天数据状态
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 搜索状态
+  const [searchQuery, setSearchQuery] = useState('');
 
   // 初始化数据库和加载数据
   useEffect(() => {
@@ -67,9 +70,16 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         setApiConfig(savedApiConfig);
         
         // 加载个人设置
-        const savedPersonalSettings = localStorage.getItem('personalSettings');
-        if (savedPersonalSettings) {
-          setPersonalSettings(JSON.parse(savedPersonalSettings));
+        try {
+          const savedPersonalSettings = await dataManager.getPersonalSettings();
+          setPersonalSettings(savedPersonalSettings);
+        } catch (error) {
+          console.error('Failed to load personal settings from database:', error);
+          // 回退到localStorage
+          const savedPersonalSettings = localStorage.getItem('personalSettings');
+          if (savedPersonalSettings) {
+            setPersonalSettings(JSON.parse(savedPersonalSettings));
+          }
         }
         
         // 加载聊天数据
@@ -102,9 +112,15 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   };
 
   // 保存个人设置
-  const handleSavePersonalSettings = (settings: PersonalSettings) => {
+  const handleSavePersonalSettings = async (settings: PersonalSettings) => {
     setPersonalSettings(settings);
-    localStorage.setItem('personalSettings', JSON.stringify(settings));
+    try {
+      await dataManager.savePersonalSettings(settings);
+    } catch (error) {
+      console.error('Failed to save personal settings to database:', error);
+      // 回退到localStorage
+      localStorage.setItem('personalSettings', JSON.stringify(settings));
+    }
   };
 
   // 添加好友
@@ -232,12 +248,43 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setEditingChat(null);
   };
 
-  // 根据当前选中的标签过滤聊天列表
+  // 根据当前选中的标签和搜索查询过滤聊天列表
   const filteredChats = chats.filter(chat => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'single') return !chat.isGroup;
-    if (activeTab === 'group') return chat.isGroup;
-    return true;
+    // 首先根据标签过滤
+    let matchesTab = false;
+    if (activeTab === 'all') matchesTab = true;
+    else if (activeTab === 'single') matchesTab = !chat.isGroup;
+    else if (activeTab === 'group') matchesTab = chat.isGroup;
+    
+    if (!matchesTab) return false;
+    
+    // 如果没有搜索查询，直接返回
+    if (!searchQuery.trim()) return true;
+    
+    // 搜索逻辑：角色名字、人设、聊天记录内容
+    const query = searchQuery.toLowerCase();
+    
+    // 搜索角色名字
+    if (chat.name.toLowerCase().includes(query)) return true;
+    
+    // 搜索人设
+    if (chat.persona && chat.persona.toLowerCase().includes(query)) return true;
+    
+    // 搜索聊天记录内容
+    if (chat.messages && chat.messages.some(msg => 
+      msg.content && msg.content.toLowerCase().includes(query)
+    )) return true;
+    
+    // 搜索群成员名字（如果是群聊）
+    if (chat.isGroup && chat.members) {
+      if (chat.members.some(member => 
+        member.originalName.toLowerCase().includes(query) ||
+        member.groupNickname.toLowerCase().includes(query) ||
+        (member.persona && member.persona.toLowerCase().includes(query))
+      )) return true;
+    }
+    
+    return false;
   });
 
   // 获取当前选中的聊天
@@ -282,6 +329,31 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onBackToDesktop={onBackToDesktop}
         personalSettings={personalSettings}
       />
+      
+      {/* 搜索框 */}
+      <div className="search-container">
+        <div className="search-box">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="搜索角色、人设、聊天内容..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button 
+              className="clear-search-btn"
+              onClick={() => setSearchQuery('')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="m15 9-6 6"/>
+                <path d="m9 9 6 6"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
       
       {/* 聊天列表 */}
       <ChatList 

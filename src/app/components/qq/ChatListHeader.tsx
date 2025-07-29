@@ -87,30 +87,6 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
               </svg>
               <span>个人设置</span>
             </div>
-            <div className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2.5-9H20v2h-1v16c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V4H4V2h4.5l1-1h5l1 1H20z" fill="currentColor"/>
-              </svg>
-              <span>字体设置</span>
-            </div>
-            <div className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
-              </svg>
-              <span>世界书</span>
-            </div>
-            <div className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
-              </svg>
-              <span>回忆</span>
-            </div>
-            <div className="dropdown-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" fill="currentColor"/>
-              </svg>
-              <span>收藏</span>
-            </div>
           </div>
         )}
       </div>

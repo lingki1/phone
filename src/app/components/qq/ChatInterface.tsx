@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
+import { dataManager } from '../../utils/dataManager';
 import GroupMemberManager from './GroupMemberManager';
 import './ChatInterface.css';
 
@@ -44,6 +45,7 @@ export default function ChatInterface({
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
   const [editingMessage, setEditingMessage] = useState<{id: string, content: string} | null>(null);
+  const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -56,6 +58,27 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages]);
+
+  // 加载数据库中的个人信息
+  useEffect(() => {
+    const loadPersonalSettings = async () => {
+      try {
+        await dataManager.initDB();
+        const settings = await dataManager.getPersonalSettings();
+        setDbPersonalSettings(settings);
+      } catch (error) {
+        console.error('Failed to load personal settings from database:', error);
+        // 如果数据库加载失败，使用传入的personalSettings作为后备
+        setDbPersonalSettings(personalSettings || {
+          userAvatar: '/avatars/user-avatar.svg',
+          userNickname: '用户',
+          userBio: ''
+        });
+      }
+    };
+    
+    loadPersonalSettings();
+  }, [personalSettings]);
 
   // 处理@提及功能
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -296,8 +319,9 @@ export default function ChatInterface({
   const buildSystemPrompt = (chat: ChatItem): string => {
     const now = new Date();
     const currentTime = now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' });
-    const myNickname = personalSettings?.userNickname || chat.settings.myNickname || '我';
-    const myPersona = personalSettings?.userBio || chat.settings.myPersona || '用户';
+    // 优先使用数据库中的个人信息，后备使用传入的personalSettings
+    const myNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
+    const myPersona = dbPersonalSettings?.userBio || personalSettings?.userBio || chat.settings.myPersona || '用户';
 
     if (chat.isGroup && chat.members) {
       // 群聊系统提示词
@@ -359,7 +383,8 @@ ${myPersona}
     const globalSettings = localStorage.getItem('globalSettings');
     const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
     const historySlice = chat.messages.slice(-maxMemory);
-    const myNickname = personalSettings?.userNickname || chat.settings.myNickname || '我';
+    // 优先使用数据库中的个人信息，后备使用传入的personalSettings
+    const myNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
 
     return historySlice.map(msg => {
       const sender = msg.role === 'user' ? myNickname : msg.senderName;
@@ -686,8 +711,8 @@ ${myPersona}
             const getSenderInfo = () => {
               if (msg.role === 'user') {
                 return {
-                  name: personalSettings?.userNickname || chat.settings.myNickname || '我',
-                  avatar: personalSettings?.userAvatar || chat.settings.myAvatar || '/avatars/user-avatar.svg'
+                  name: dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我',
+                  avatar: dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || '/avatars/user-avatar.svg'
                 };
               } else {
                 // AI消息，从群成员中查找对应的成员信息
@@ -910,10 +935,18 @@ ${myPersona}
           onUpdateChat={onUpdateChat}
           availableContacts={availableContacts}
           personalSettings={personalSettings}
-          onUpdatePersonalSettings={(settings) => {
-            // 更新个人设置到localStorage
-            localStorage.setItem('personalSettings', JSON.stringify(settings));
-            console.log('个人设置已更新:', settings);
+          onUpdatePersonalSettings={async (settings) => {
+            try {
+              // 更新个人设置到数据库
+              await dataManager.initDB();
+              await dataManager.savePersonalSettings(settings);
+              setDbPersonalSettings(settings);
+              console.log('个人设置已更新到数据库:', settings);
+            } catch (error) {
+              console.error('Failed to save personal settings to database:', error);
+              // 如果数据库保存失败，回退到localStorage
+              localStorage.setItem('personalSettings', JSON.stringify(settings));
+            }
           }}
         />
       )}

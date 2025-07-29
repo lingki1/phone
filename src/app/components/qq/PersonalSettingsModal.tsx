@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { dataManager } from '../../utils/dataManager';
 import './PersonalSettingsModal.css';
 
 interface PersonalSettings {
@@ -78,10 +79,21 @@ export default function PersonalSettingsModal({
     fileInputRef.current?.click();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!settings.userNickname.trim()) {
       alert('请输入用户昵称');
       return;
+    }
+    
+    try {
+      // 保存到数据库
+      await dataManager.initDB();
+      await dataManager.savePersonalSettings(settings);
+      console.log('个人设置已保存到数据库:', settings);
+    } catch (error) {
+      console.error('Failed to save personal settings to database:', error);
+      // 如果数据库保存失败，回退到localStorage
+      localStorage.setItem('personalSettings', JSON.stringify(settings));
     }
     
     onSave(settings);

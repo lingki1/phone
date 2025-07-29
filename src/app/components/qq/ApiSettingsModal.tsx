@@ -123,19 +123,19 @@ export default function ApiSettingsModal({
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="api-settings-modal">
         <div className="modal-header">
-          <h2>🤖 AI 连接配置</h2>
+          <h2>AI 连接配置</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
         <div className="modal-body">
           <div className="tip-box">
-            <p>🎯 <strong>小贴士</strong>:视频功能正在测试中推荐使用 
+            <p><strong>提示</strong>: 视频功能正在测试中，推荐使用 
               <code>gemini-2.5-live</code> 或 <code>gpt-4-vision-preview</code>。
             </p>
           </div>
 
           <div className="form-group">
-            <label htmlFor="proxy-url">🌐 服务器地址</label>
+            <label htmlFor="proxy-url">服务器地址</label>
             <input
               type="text"
               id="proxy-url"
@@ -143,11 +143,11 @@ export default function ApiSettingsModal({
               onChange={(e) => handleInputChange('proxyUrl', e.target.value)}
               placeholder="输入你的AI服务地址，例如: https://api.openai.com"
             />
-            <small className="field-hint">💡 不需要添加 /v1 后缀，系统会自动处理</small>
+            <small className="field-hint">不需要添加 /v1 后缀，系统会自动处理</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="api-key">🔑 访问密钥</label>
+            <label htmlFor="api-key">访问密钥</label>
             <input
               type="password"
               id="api-key"
@@ -155,11 +155,11 @@ export default function ApiSettingsModal({
               onChange={(e) => handleInputChange('apiKey', e.target.value)}
               placeholder="输入你的API密钥，以 sk- 开头"
             />
-            <small className="field-hint">🔒 密钥会被安全保存，不会泄露给他人</small>
+            <small className="field-hint">密钥会被安全保存，不会泄露给他人</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="model-select">🧠 AI 模型选择</label>
+            <label htmlFor="model-select">AI 模型选择</label>
             <select
               id="model-select"
               value={config.model}
@@ -170,7 +170,7 @@ export default function ApiSettingsModal({
                 <option key={model} value={model}>{model}</option>
               ))}
             </select>
-            <small className="field-hint">✨ 不同模型有不同的特点和能力</small>
+            <small className="field-hint">不同模型有不同的特点和能力</small>
           </div>
 
           <button 
@@ -178,7 +178,7 @@ export default function ApiSettingsModal({
             onClick={fetchModels}
             disabled={isLoadingModels}
           >
-            {isLoadingModels ? '🔄 正在获取模型列表...' : '📋 获取可用模型'}
+            {isLoadingModels ? '正在获取模型列表...' : '获取可用模型'}
           </button>
 
           <hr className="divider" />
@@ -186,9 +186,9 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="background-activity-switch">
-                🎭 智能角色活跃模式
+                智能角色活跃模式
                 <p className="warning-text">
-                  ⚠️ 注意：开启后AI会主动互动，可能增加使用费用
+                  注意：开启后AI会主动互动，可能增加使用费用
                 </p>
               </label>
             </div>
@@ -203,7 +203,7 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="background-interval-input">
-                ⏰ 活跃检测频率
+                活跃检测频率
                 <p className="info-text">
                   推荐 60-300 秒，数值越大越省费用，但响应会稍慢
                 </p>
@@ -222,7 +222,7 @@ export default function ApiSettingsModal({
           <div className="form-group toggle-group">
             <div className="toggle-label">
               <label htmlFor="max-memory-input">
-                📚 最大聊天记录
+                最大聊天记录
                 <p className="info-text">
                   每个聊天保留的最大消息数量，数值越大记忆越完整但性能稍慢
                 </p>
@@ -241,8 +241,8 @@ export default function ApiSettingsModal({
         </div>
 
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onClose}>❌ 取消</button>
-          <button className="save-btn" onClick={handleSave}>✅ 保存配置</button>
+          <button className="cancel-btn" onClick={onClose}>取消</button>
+          <button className="save-btn" onClick={handleSave}>保存配置</button>
         </div>
       </div>
     </div>
