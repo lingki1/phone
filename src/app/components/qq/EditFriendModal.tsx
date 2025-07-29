@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { ChatItem } from '../../types/chat';
 import './AddFriendModal.css';
 
@@ -19,13 +20,52 @@ export default function EditFriendModal({
 }: EditFriendModalProps) {
   const [friendName, setFriendName] = useState('');
   const [friendPersona, setFriendPersona] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chat && isVisible) {
       setFriendName(chat.name);
       setFriendPersona(chat.persona || '');
+      setAvatarPreview(chat.avatar || '');
     }
   }, [chat, isVisible]);
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // 验证文件类型
+      if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件');
+        return;
+      }
+      
+      // 验证文件大小 (限制为 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('图片大小不能超过 5MB');
+        return;
+      }
+
+      setIsUploading(true);
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setAvatarPreview(result);
+        setIsUploading(false);
+      };
+      reader.onerror = () => {
+        alert('读取文件失败');
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleSubmit = () => {
     if (!friendName.trim()) {
@@ -39,9 +79,11 @@ export default function EditFriendModal({
       ...chat,
       name: friendName.trim(),
       persona: friendPersona.trim(),
+      avatar: avatarPreview || chat.avatar,
       settings: {
         ...chat.settings,
-        aiPersona: friendPersona.trim()
+        aiPersona: friendPersona.trim(),
+        aiAvatar: avatarPreview || chat.settings.aiAvatar
       }
     };
     
@@ -54,6 +96,7 @@ export default function EditFriendModal({
     if (chat) {
       setFriendName(chat.name);
       setFriendPersona(chat.persona || '');
+      setAvatarPreview(chat.avatar || '');
     }
     onClose();
   };
@@ -69,6 +112,49 @@ export default function EditFriendModal({
         </div>
         
         <div className="modal-body">
+          {/* 头像上传区域 */}
+          <div className="form-group">
+            <label>头像</label>
+            <div className="avatar-upload-container">
+              <div 
+                className={`avatar-preview ${isUploading ? 'uploading' : ''}`}
+                onClick={handleAvatarClick}
+              >
+                {avatarPreview ? (
+                  <Image 
+                    src={avatarPreview} 
+                    alt="头像预览" 
+                    width={100}
+                    height={100}
+                    className="avatar-image"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="avatar-placeholder">
+                    <span>📷</span>
+                    <span>点击上传头像</span>
+                  </div>
+                )}
+                {isUploading && (
+                  <div className="upload-overlay">
+                    <div className="upload-spinner"></div>
+                    <span>上传中...</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
+              />
+              <div className="avatar-tips">
+                <p>支持 JPG、PNG、GIF 格式，大小不超过 5MB</p>
+              </div>
+            </div>
+          </div>
+
           <div className="form-group">
             <label htmlFor="friend-name">好友名称</label>
             <input
