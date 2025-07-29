@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { GroupMember, ChatItem } from '../../types/chat';
+import PersonalSettingsModal from './PersonalSettingsModal';
 import './GroupMemberManager.css';
+
+interface PersonalSettings {
+  userAvatar: string;
+  userNickname: string;
+  userBio: string;
+}
 
 interface GroupMemberManagerProps {
   isOpen: boolean;
@@ -11,6 +18,8 @@ interface GroupMemberManagerProps {
   chat: ChatItem;
   onUpdateChat: (chat: ChatItem) => void;
   availableContacts: ChatItem[]; // 可添加的联系人列表
+  personalSettings?: PersonalSettings;
+  onUpdatePersonalSettings?: (settings: PersonalSettings) => void;
 }
 
 export default function GroupMemberManager({
@@ -18,10 +27,13 @@ export default function GroupMemberManager({
   onClose,
   chat,
   onUpdateChat,
-  availableContacts
+  availableContacts,
+  personalSettings,
+  onUpdatePersonalSettings
 }: GroupMemberManagerProps) {
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showPersonalSettings, setShowPersonalSettings] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberPersona, setNewMemberPersona] = useState('');
@@ -60,8 +72,14 @@ export default function GroupMemberManager({
   };
 
   // 编辑群成员
-  const handleEditMember = (member: GroupMember) => {
-    setEditingMember({ ...member });
+  const handleEditMember = (member: GroupMember, memberIndex: number) => {
+    // 如果是群主（第一个成员），打开个人设置
+    if (memberIndex === 0 && personalSettings && onUpdatePersonalSettings) {
+      setShowPersonalSettings(true);
+    } else {
+      // 其他成员使用普通编辑
+      setEditingMember({ ...member });
+    }
   };
 
   // 保存成员编辑
@@ -187,7 +205,7 @@ export default function GroupMemberManager({
                 </div>
                 
                 <div className="member-items">
-                  {chat.members?.map(member => (
+                  {chat.members?.map((member, index) => (
                     <div key={member.id} className="member-item">
                       <Image 
                         src={member.avatar} 
@@ -204,9 +222,9 @@ export default function GroupMemberManager({
                       <div className="member-actions">
                         <button 
                           className="edit-btn"
-                          onClick={() => handleEditMember(member)}
+                          onClick={() => handleEditMember(member, index)}
                         >
-                          编辑
+                          {index === 0 ? '个人设置' : '编辑'}
                         </button>
                         <button 
                           className="admin-btn"
@@ -453,6 +471,19 @@ export default function GroupMemberManager({
           )}
         </div>
       </div>
+
+      {/* 个人设置模态框 */}
+      {personalSettings && onUpdatePersonalSettings && (
+        <PersonalSettingsModal
+          isVisible={showPersonalSettings}
+          onClose={() => setShowPersonalSettings(false)}
+          onSave={(settings) => {
+            onUpdatePersonalSettings(settings);
+            setShowPersonalSettings(false);
+          }}
+          currentSettings={personalSettings}
+        />
+      )}
     </div>
   );
 } 

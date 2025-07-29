@@ -850,6 +850,12 @@ ${myPersona}
           chat={chat}
           onUpdateChat={onUpdateChat}
           availableContacts={availableContacts}
+          personalSettings={personalSettings}
+          onUpdatePersonalSettings={(settings) => {
+            // 更新个人设置到localStorage
+            localStorage.setItem('personalSettings', JSON.stringify(settings));
+            console.log('个人设置已更新:', settings);
+          }}
         />
       )}
     </div>
