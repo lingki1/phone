@@ -24,8 +24,6 @@ interface ChatInterfaceProps {
   onBack: () => void;
   onUpdateChat: (chat: ChatItem) => void;
   availableContacts: ChatItem[];
-  onEditChat?: (chat: ChatItem) => void;
-  onDeleteChat?: (chatId: string) => void;
   personalSettings?: PersonalSettings;
 }
 
@@ -35,8 +33,6 @@ export default function ChatInterface({
   onBack, 
   onUpdateChat,
   availableContacts,
-  onEditChat,
-  onDeleteChat,
   personalSettings
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
@@ -47,36 +43,11 @@ export default function ChatInterface({
   const [mentionFilter, setMentionFilter] = useState('');
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
-  const [showChatMenu, setShowChatMenu] = useState(false);
-  const [activeMessageMenu, setActiveMessageMenu] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<{id: string, content: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 添加点击空白区域关闭菜单的功能
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      
-      // 关闭聊天菜单
-      if (showChatMenu && !target.closest('.chat-actions')) {
-        setShowChatMenu(false);
-      }
-      
-      // 关闭消息菜单
-      if (activeMessageMenu && !target.closest('.message-menu')) {
-        setActiveMessageMenu(null);
-      }
-    };
 
-    // 添加事件监听器
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    // 清理事件监听器
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showChatMenu, activeMessageMenu]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -547,16 +518,9 @@ ${myPersona}
     }
   };
 
-  // 消息操作相关函数
-  const handleMessageMenuClick = (e: React.MouseEvent, messageId: string) => {
-    e.stopPropagation();
-    setActiveMessageMenu(activeMessageMenu === messageId ? null : messageId);
-  };
-
   // 编辑用户消息
   const handleEditMessage = (messageId: string, currentContent: string) => {
     setEditingMessage({ id: messageId, content: currentContent });
-    setActiveMessageMenu(null);
   };
 
   // 保存编辑的消息
@@ -588,7 +552,6 @@ ${myPersona}
         messages: chat.messages.filter(msg => msg.id !== messageId)
       };
       onUpdateChat(updatedChat);
-      setActiveMessageMenu(null);
     }
   };
 
@@ -605,30 +568,12 @@ ${myPersona}
       messages: messagesToKeep
     };
     onUpdateChat(updatedChat);
-    setActiveMessageMenu(null);
 
     // 重新触发AI回复
     await triggerAiResponse(updatedChat);
   };
 
-  // 处理编辑聊天
-  const handleEditChat = () => {
-    setShowChatMenu(false);
-    // 群聊编辑功能：调用父组件的编辑功能
-    if (onEditChat) {
-      onEditChat(chat);
-    }
-  };
 
-  // 处理删除聊天
-  const handleDeleteChat = () => {
-    setShowChatMenu(false);
-    if (confirm('确定要删除这个聊天吗？')) {
-      if (onDeleteChat) {
-        onDeleteChat(chat.id);
-      }
-    }
-  };
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -724,29 +669,10 @@ ${myPersona}
               👥
             </button>
           )}
-          <button 
-            className="action-btn"
-            onClick={() => setShowChatMenu(!showChatMenu)}
-            title="更多操作"
-          >
-            ⋯
-          </button>
         </div>
       </div>
 
-      {/* 聊天菜单 */}
-      {showChatMenu && (
-        <div className="chat-menu-overlay">
-          <div className="chat-menu">
-            <button className="chat-menu-item" onClick={handleEditChat}>
-              <span>编辑</span>
-            </button>
-            <button className="chat-menu-item delete" onClick={handleDeleteChat}>
-              <span>删除</span>
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* 消息列表 */}
       <div className="messages-container">
@@ -836,49 +762,55 @@ ${myPersona}
                   ) : (
                     <div className="message-bubble">
                       {renderMessageContent(msg)}
-                      {/* 消息操作菜单 */}
-                      <button 
-                        className="message-menu-btn"
-                        onClick={(e) => handleMessageMenuClick(e, msg.id)}
-                        title="消息操作"
-                      >
-                        ⋯
-                      </button>
                     </div>
                   )}
                   
                   <div className="message-time">
                     {formatTime(msg.timestamp)}
-                  </div>
-                </div>
-                
-                {/* 消息操作菜单 */}
-                {activeMessageMenu === msg.id && (
-                  <div className="message-menu">
+                                      {/* 消息操作图标 */}
+                  <div className="message-actions">
                     {msg.role === 'user' && (
                       <button 
-                        className="message-menu-item"
+                        className="message-action-btn edit-btn"
                         onClick={() => handleEditMessage(msg.id, msg.content)}
+                        title="编辑消息"
                       >
-                        ✏️ 编辑
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
                       </button>
                     )}
                     {msg.role === 'assistant' && (
                       <button 
-                        className="message-menu-item"
+                        className="message-action-btn regenerate-btn"
                         onClick={() => handleRegenerateAI(msg.id)}
+                        title="重新生成"
                       >
-                        🔄 重新生成
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                          <path d="M21 3v5h-5"/>
+                          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                          <path d="M3 21v-5h5"/>
+                        </svg>
                       </button>
                     )}
                     <button 
-                      className="message-menu-item delete"
+                      className="message-action-btn delete-btn"
                       onClick={() => handleDeleteMessage(msg.id)}
+                      title="删除消息"
                     >
-                      🗑️ 删除
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18"/>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                      </svg>
                     </button>
                   </div>
-                )}
+                  </div>
+                </div>
               </div>
             );
           })
@@ -985,6 +917,8 @@ ${myPersona}
           }}
         />
       )}
+
+
     </div>
   );
 } 

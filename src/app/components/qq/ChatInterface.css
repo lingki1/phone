@@ -240,6 +240,7 @@
   display: flex;
   gap: 10px;
   max-width: 80%;
+  position: relative;
 }
 
 .user-message {
@@ -266,6 +267,10 @@
 
 .user-message .message-content {
   align-items: flex-end;
+}
+
+.user-message .message-time {
+  flex-direction: row-reverse;
 }
 
 .ai-message .message-content {
@@ -358,6 +363,9 @@
   font-size: 11px;
   color: #8a8a8a;
   padding: 0 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 移动端消息气泡调整 */
@@ -1165,75 +1173,62 @@
   }
 }
 
-/* 消息编辑和操作菜单样式 */
+/* 消息编辑和操作图标样式 */
 .message-bubble {
   position: relative;
+  margin-bottom: 4px;
 }
 
-.message-menu-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 12px;
-  color: #666;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+.message-actions {
   display: flex;
+  gap: 4px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
   align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
 }
 
-.message:hover .message-menu-btn {
+.message:hover .message-actions {
   opacity: 1;
 }
 
-.message-menu-btn:hover {
-  background: rgba(255, 255, 255, 1);
-  color: #333;
-}
-
-.message-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 120px;
-  animation: slideIn 0.2s ease-out;
-}
-
-.message-menu-item {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  border: none;
+.message-action-btn {
   background: none;
-  text-align: left;
+  border: none;
+  color: #666;
   cursor: pointer;
-  font-size: 14px;
+  padding: 2px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+}
+
+.message-action-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.message-action-btn:hover {
+  background-color: #f0f0f0;
   color: #333;
-  transition: background-color 0.2s;
+  transform: scale(1.1);
 }
 
-.message-menu-item:hover {
-  background-color: #f5f5f5;
+.message-action-btn.edit-btn:hover {
+  color: #007bff;
+  background-color: #e3f2fd;
 }
 
-.message-menu-item.delete {
+.message-action-btn.regenerate-btn:hover {
+  color: #28a745;
+  background-color: #e8f5e8;
+}
+
+.message-action-btn.delete-btn:hover {
   color: #dc3545;
-}
-
-.message-menu-item.delete:hover {
   background-color: #f8d7da;
 }
 
@@ -1295,21 +1290,19 @@
   background-color: #545b62;
 }
 
-/* 群聊消息操作按钮位置调整 */
-.group-message .message-menu-btn {
-  top: 4px;
-  right: 4px;
-}
+
 
 /* 移动端适配 */
 @media (max-width: 767px) {
-  .message-menu {
-    min-width: 100px;
+  .message-action-btn {
+    min-width: 14px;
+    height: 14px;
+    padding: 1px;
   }
   
-  .message-menu-item {
-    padding: 8px 12px;
-    font-size: 13px;
+  .message-action-btn svg {
+    width: 10px;
+    height: 10px;
   }
   
   .message-edit-input {
@@ -1326,13 +1319,15 @@
 }
 
 @media (max-width: 480px) {
-  .message-menu {
-    min-width: 90px;
+  .message-action-btn {
+    min-width: 12px;
+    height: 12px;
+    padding: 1px;
   }
   
-  .message-menu-item {
-    padding: 6px 10px;
-    font-size: 12px;
+  .message-action-btn svg {
+    width: 8px;
+    height: 8px;
   }
   
   .message-edit-input {

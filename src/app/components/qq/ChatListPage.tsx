@@ -263,23 +263,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onBack={() => setCurrentScreen('list')}
           onUpdateChat={handleUpdateChat}
           availableContacts={availableContacts}
-          onEditChat={(chat) => {
-            if (chat.isGroup) {
-              // 群聊编辑：打开创建群聊模态框进行编辑
-              setEditingChat(chat);
-              setShowCreateGroup(true);
-            } else {
-              // 单聊编辑：打开好友编辑模态框
-              setEditingChat(chat);
-              setFriendModalMode('edit');
-              setShowFriendModal(true);
-            }
-            setCurrentScreen('list');
-          }}
-          onDeleteChat={(chatId) => {
-            handleDeleteChat(chatId);
-            setCurrentScreen('list');
-          }}
           personalSettings={personalSettings}
         />
       </>
