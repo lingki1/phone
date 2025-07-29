@@ -48,10 +48,12 @@ export default function ChatInterface({
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const [activeMessageMenu, setActiveMessageMenu] = useState<string | null>(null);
+  const [editingMessage, setEditingMessage] = useState<{id: string, content: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 添加点击空白区域关闭聊天菜单的功能
+  // 添加点击空白区域关闭菜单的功能
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -59,6 +61,11 @@ export default function ChatInterface({
       // 关闭聊天菜单
       if (showChatMenu && !target.closest('.chat-actions')) {
         setShowChatMenu(false);
+      }
+      
+      // 关闭消息菜单
+      if (activeMessageMenu && !target.closest('.message-menu')) {
+        setActiveMessageMenu(null);
       }
     };
 
@@ -69,7 +76,7 @@ export default function ChatInterface({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showChatMenu]);
+  }, [showChatMenu, activeMessageMenu]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -540,6 +547,70 @@ ${myPersona}
     }
   };
 
+  // 消息操作相关函数
+  const handleMessageMenuClick = (e: React.MouseEvent, messageId: string) => {
+    e.stopPropagation();
+    setActiveMessageMenu(activeMessageMenu === messageId ? null : messageId);
+  };
+
+  // 编辑用户消息
+  const handleEditMessage = (messageId: string, currentContent: string) => {
+    setEditingMessage({ id: messageId, content: currentContent });
+    setActiveMessageMenu(null);
+  };
+
+  // 保存编辑的消息
+  const handleSaveEdit = () => {
+    if (!editingMessage) return;
+
+    const updatedChat = {
+      ...chat,
+      messages: chat.messages.map(msg => 
+        msg.id === editingMessage.id 
+          ? { ...msg, content: editingMessage.content }
+          : msg
+      )
+    };
+    onUpdateChat(updatedChat);
+    setEditingMessage(null);
+  };
+
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+  };
+
+  // 删除消息
+  const handleDeleteMessage = (messageId: string) => {
+    if (confirm('确定要删除这条消息吗？')) {
+      const updatedChat = {
+        ...chat,
+        messages: chat.messages.filter(msg => msg.id !== messageId)
+      };
+      onUpdateChat(updatedChat);
+      setActiveMessageMenu(null);
+    }
+  };
+
+  // 重新生成AI回复
+  const handleRegenerateAI = async (messageId: string) => {
+    // 找到要重新生成的消息
+    const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex === -1) return;
+
+    // 删除该消息及之后的所有AI消息
+    const messagesToKeep = chat.messages.slice(0, messageIndex);
+    const updatedChat = {
+      ...chat,
+      messages: messagesToKeep
+    };
+    onUpdateChat(updatedChat);
+    setActiveMessageMenu(null);
+
+    // 重新触发AI回复
+    await triggerAiResponse(updatedChat);
+  };
+
   // 处理编辑聊天
   const handleEditChat = () => {
     setShowChatMenu(false);
@@ -747,13 +818,67 @@ ${myPersona}
                       <div className="quote-content">{msg.quote.content}</div>
                     </div>
                   )}
-                  <div className="message-bubble">
-                    {renderMessageContent(msg)}
-                  </div>
+                  
+                  {/* 编辑状态 */}
+                  {editingMessage?.id === msg.id ? (
+                    <div className="message-edit-container">
+                      <textarea
+                        value={editingMessage.content}
+                        onChange={(e) => setEditingMessage({...editingMessage, content: e.target.value})}
+                        className="message-edit-input"
+                        autoFocus
+                      />
+                      <div className="message-edit-actions">
+                        <button onClick={handleSaveEdit} className="edit-save-btn">✅ 保存</button>
+                        <button onClick={handleCancelEdit} className="edit-cancel-btn">❌ 取消</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="message-bubble">
+                      {renderMessageContent(msg)}
+                      {/* 消息操作菜单 */}
+                      <button 
+                        className="message-menu-btn"
+                        onClick={(e) => handleMessageMenuClick(e, msg.id)}
+                        title="消息操作"
+                      >
+                        ⋯
+                      </button>
+                    </div>
+                  )}
+                  
                   <div className="message-time">
                     {formatTime(msg.timestamp)}
                   </div>
                 </div>
+                
+                {/* 消息操作菜单 */}
+                {activeMessageMenu === msg.id && (
+                  <div className="message-menu">
+                    {msg.role === 'user' && (
+                      <button 
+                        className="message-menu-item"
+                        onClick={() => handleEditMessage(msg.id, msg.content)}
+                      >
+                        ✏️ 编辑
+                      </button>
+                    )}
+                    {msg.role === 'assistant' && (
+                      <button 
+                        className="message-menu-item"
+                        onClick={() => handleRegenerateAI(msg.id)}
+                      >
+                        🔄 重新生成
+                      </button>
+                    )}
+                    <button 
+                      className="message-menu-item delete"
+                      onClick={() => handleDeleteMessage(msg.id)}
+                    >
+                      🗑️ 删除
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })
