@@ -5,7 +5,6 @@ import ChatListHeader from './ChatListHeader';
 import ChatList from './ChatList';
 import BottomNavigation from './BottomNavigation';
 import ApiSettingsModal from './ApiSettingsModal';
-import AddFriendModal from './AddFriendModal';
 import ChatInterface from './ChatInterface';
 import CreateGroupModal from './CreateGroupModal';
 import GroupSettings from './GroupSettings';
@@ -27,11 +26,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   
   // 模态框状态
   const [showApiSettings, setShowApiSettings] = useState(false);
-  const [showAddFriend, setShowAddFriend] = useState(false);
+  const [showFriendModal, setShowFriendModal] = useState(false);
+  const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showGroupFeatures, setShowGroupFeatures] = useState(false);
-  const [showEditFriend, setShowEditFriend] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatItem | null>(null);
   
   // API配置状态
@@ -85,11 +84,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   };
 
   // 添加好友
-  const handleAddFriend = async (name: string, persona: string) => {
+  const handleAddFriend = async (name: string, persona: string, avatar?: string) => {
     const newChat: ChatItem = {
       id: Date.now().toString(),
       name,
-      avatar: '/avatars/default-avatar.svg',
+      avatar: avatar || '/avatars/default-avatar.svg',
       lastMessage: '开始聊天吧！',
       timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
       isGroup: false,
@@ -99,7 +98,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         aiPersona: persona,
         myPersona: '用户',
         maxMemory: 20,
-        aiAvatar: '/avatars/default-avatar.svg',
+        aiAvatar: avatar || '/avatars/default-avatar.svg',
         myAvatar: '/avatars/user-avatar.svg',
         background: 'default',
         theme: 'light',
@@ -189,14 +188,27 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     const chat = chats.find(c => c.id === chatId);
     if (chat && !chat.isGroup) {
       setEditingChat(chat);
-      setShowEditFriend(true);
+      setFriendModalMode('edit');
+      setShowFriendModal(true);
     }
   };
 
   // 更新好友信息
   const handleUpdateFriend = (updatedChat: ChatItem) => {
     handleUpdateChat(updatedChat);
-    setShowEditFriend(false);
+    setShowFriendModal(false);
+    setEditingChat(null);
+  };
+
+  // 打开添加好友模态框
+  const handleOpenAddFriend = () => {
+    setFriendModalMode('create');
+    setShowFriendModal(true);
+  };
+
+  // 关闭好友模态框
+  const handleCloseFriendModal = () => {
+    setShowFriendModal(false);
     setEditingChat(null);
   };
 
@@ -233,7 +245,8 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           availableContacts={availableContacts}
           onEditChat={(chat) => {
             setEditingChat(chat);
-            setShowEditFriend(true);
+            setFriendModalMode('edit');
+            setShowFriendModal(true);
             setCurrentScreen('list');
           }}
           onDeleteChat={(chatId) => {
@@ -272,7 +285,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenApiSettings={() => setShowApiSettings(true)}
-        onOpenAddFriend={() => setShowAddFriend(true)}
+        onOpenAddFriend={handleOpenAddFriend}
         onOpenCreateGroup={() => setShowCreateGroup(true)}
         onBackToDesktop={onBackToDesktop}
       />
@@ -299,11 +312,14 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         currentConfig={apiConfig}
       />
       
-      {/* 添加好友模态框 */}
-      <AddFriendModal
-        isVisible={showAddFriend}
-        onClose={() => setShowAddFriend(false)}
+      {/* 统一的好友模态框（创建/编辑） */}
+      <EditFriendModal
+        isVisible={showFriendModal}
+        mode={friendModalMode}
+        onClose={handleCloseFriendModal}
         onAddFriend={handleAddFriend}
+        onUpdateFriend={handleUpdateFriend}
+        chat={editingChat}
       />
       
       {/* 创建群聊模态框 */}
@@ -312,17 +328,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onClose={() => setShowCreateGroup(false)}
         onCreateGroup={handleCreateGroup}
         availableContacts={availableContacts}
-      />
-      
-      {/* 编辑好友模态框 */}
-      <EditFriendModal
-        isVisible={showEditFriend}
-        onClose={() => {
-          setShowEditFriend(false);
-          setEditingChat(null);
-        }}
-        onUpdateFriend={handleUpdateFriend}
-        chat={editingChat}
       />
     </div>
   );
