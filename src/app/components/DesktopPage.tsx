@@ -311,11 +311,11 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
 
     // 延迟执行应用打开，让动画有时间播放
     setTimeout(() => {
-      if (app.id === 'qq') {
-        onOpenApp('qq');
-      } else {
-        console.log(`打开应用: ${app.name}`);
-      }
+    if (app.id === 'qq') {
+      onOpenApp('qq');
+    } else {
+      console.log(`打开应用: ${app.name}`);
+    }
       // 清除点击状态
       setClickedApp(null);
     }, 300); // 300ms动画时长

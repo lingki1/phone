@@ -10,9 +10,16 @@ import CreateGroupModal from './CreateGroupModal';
 import GroupSettings from './GroupSettings';
 import GroupMessageFeatures from './GroupMessageFeatures';
 import EditFriendModal from './EditFriendModal';
+import PersonalSettingsModal from './PersonalSettingsModal';
 import { ChatItem, Message, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import './ChatListPage.css';
+
+interface PersonalSettings {
+  userAvatar: string;
+  userNickname: string;
+  userBio: string;
+}
 
 interface ChatListPageProps {
   onBackToDesktop?: () => void;
@@ -26,6 +33,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   
   // 模态框状态
   const [showApiSettings, setShowApiSettings] = useState(false);
+  const [showPersonalSettings, setShowPersonalSettings] = useState(false);
   const [showFriendModal, setShowFriendModal] = useState(false);
   const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -38,6 +46,13 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     proxyUrl: '',
     apiKey: '',
     model: ''
+  });
+  
+  // 个人设置状态
+  const [personalSettings, setPersonalSettings] = useState<PersonalSettings>({
+    userAvatar: '/avatars/user-avatar.svg',
+    userNickname: '用户',
+    userBio: ''
   });
   
   // 聊天数据状态
@@ -53,6 +68,12 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         // 加载API配置
         const savedApiConfig = await dataManager.getApiConfig();
         setApiConfig(savedApiConfig);
+        
+        // 加载个人设置
+        const savedPersonalSettings = localStorage.getItem('personalSettings');
+        if (savedPersonalSettings) {
+          setPersonalSettings(JSON.parse(savedPersonalSettings));
+        }
         
         // 加载聊天数据
         const savedChats = await dataManager.getAllChats();
@@ -83,6 +104,12 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     }
   };
 
+  // 保存个人设置
+  const handleSavePersonalSettings = (settings: PersonalSettings) => {
+    setPersonalSettings(settings);
+    localStorage.setItem('personalSettings', JSON.stringify(settings));
+  };
+
   // 添加好友
   const handleAddFriend = async (name: string, persona: string, avatar?: string) => {
     const newChat: ChatItem = {
@@ -96,10 +123,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       persona,
       settings: {
         aiPersona: persona,
-        myPersona: '用户',
+        myPersona: personalSettings.userBio || '用户',
+        myNickname: personalSettings.userNickname,
         maxMemory: 20,
         aiAvatar: avatar || '/avatars/default-avatar.svg',
-        myAvatar: '/avatars/user-avatar.svg',
+        myAvatar: personalSettings.userAvatar,
         background: 'default',
         theme: 'light',
         fontSize: 14,
@@ -253,6 +281,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             handleDeleteChat(chatId);
             setCurrentScreen('list');
           }}
+          personalSettings={personalSettings}
         />
         
         {/* 群设置模态框 */}
@@ -285,6 +314,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenApiSettings={() => setShowApiSettings(true)}
+        onOpenPersonalSettings={() => setShowPersonalSettings(true)}
         onOpenAddFriend={handleOpenAddFriend}
         onOpenCreateGroup={() => setShowCreateGroup(true)}
         onBackToDesktop={onBackToDesktop}
@@ -310,6 +340,14 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onClose={() => setShowApiSettings(false)}
         onSave={handleSaveApiConfig}
         currentConfig={apiConfig}
+      />
+      
+      {/* 个人设置模态框 */}
+      <PersonalSettingsModal
+        isVisible={showPersonalSettings}
+        onClose={() => setShowPersonalSettings(false)}
+        onSave={handleSavePersonalSettings}
+        currentSettings={personalSettings}
       />
       
       {/* 统一的好友模态框（创建/编辑） */}

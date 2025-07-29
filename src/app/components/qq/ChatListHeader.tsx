@@ -7,12 +7,13 @@ interface ChatListHeaderProps {
   activeTab: 'all' | 'single' | 'group';
   onTabChange: (tab: 'all' | 'single' | 'group') => void;
   onOpenApiSettings: () => void;
+  onOpenPersonalSettings: () => void;
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
   onBackToDesktop?: () => void;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop }: ChatListHeaderProps) {
+export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop }: ChatListHeaderProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
@@ -47,11 +48,11 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
               </svg>
               <span>API设置</span>
             </div>
-            <div className="dropdown-item">
+            <div className="dropdown-item" onClick={() => { setShowUserDropdown(false); onOpenPersonalSettings(); }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
               </svg>
-              <span>外观设置</span>
+              <span>个人设置</span>
             </div>
             <div className="dropdown-item">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

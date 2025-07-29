@@ -12,6 +12,12 @@ interface ApiConfig {
   model: string;
 }
 
+interface PersonalSettings {
+  userAvatar: string;
+  userNickname: string;
+  userBio: string;
+}
+
 interface ChatInterfaceProps {
   chat: ChatItem;
   apiConfig: ApiConfig;
@@ -20,6 +26,7 @@ interface ChatInterfaceProps {
   availableContacts: ChatItem[];
   onEditChat?: (chat: ChatItem) => void;
   onDeleteChat?: (chatId: string) => void;
+  personalSettings?: PersonalSettings;
 }
 
 export default function ChatInterface({ 
@@ -29,7 +36,8 @@ export default function ChatInterface({
   onUpdateChat,
   availableContacts,
   onEditChat,
-  onDeleteChat
+  onDeleteChat,
+  personalSettings
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -290,7 +298,8 @@ export default function ChatInterface({
   const buildSystemPrompt = (chat: ChatItem): string => {
     const now = new Date();
     const currentTime = now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' });
-    const myNickname = chat.settings.myNickname || '我';
+    const myNickname = personalSettings?.userNickname || chat.settings.myNickname || '我';
+    const myPersona = personalSettings?.userBio || chat.settings.myPersona || '用户';
 
     if (chat.isGroup && chat.members) {
       // 群聊系统提示词
@@ -316,7 +325,7 @@ export default function ChatInterface({
 ${membersList}
 
 # 用户的角色
-- **${myNickname}**: ${chat.settings.myPersona}
+- **${myNickname}**: ${myPersona}
 
 现在，请根据以上规则和对话历史，继续这场群聊。`;
     } else {
@@ -340,7 +349,7 @@ ${chat.settings.aiPersona}
 - **拍一拍用户**: {"type": "pat_user", "suffix": "后缀"}
 
 # 对话者的角色设定：
-${chat.settings.myPersona}
+${myPersona}
 
 现在，请根据以上规则和对话历史，继续进行对话。`;
     }
@@ -350,7 +359,7 @@ ${chat.settings.myPersona}
   const buildMessagesPayload = (chat: ChatItem) => {
     const maxMemory = 10;
     const historySlice = chat.messages.slice(-maxMemory);
-    const myNickname = chat.settings.myNickname || '我';
+    const myNickname = personalSettings?.userNickname || chat.settings.myNickname || '我';
 
     return historySlice.map(msg => {
       const sender = msg.role === 'user' ? myNickname : msg.senderName;
