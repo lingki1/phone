@@ -51,6 +51,26 @@ export default function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 添加点击空白区域关闭聊天菜单的功能
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // 关闭聊天菜单
+      if (showChatMenu && !target.closest('.chat-actions')) {
+        setShowChatMenu(false);
+      }
+    };
+
+    // 添加事件监听器
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // 清理事件监听器
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showChatMenu]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -644,8 +664,8 @@ ${myPersona}
 
       {/* 聊天菜单 */}
       {showChatMenu && (
-        <div className="chat-menu-overlay" onClick={() => setShowChatMenu(false)}>
-          <div className="chat-menu" onClick={(e) => e.stopPropagation()}>
+        <div className="chat-menu-overlay">
+          <div className="chat-menu">
             <button className="chat-menu-item" onClick={handleEditChat}>
               <span>编辑</span>
             </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface PersonalSettings {
@@ -24,6 +24,31 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
+  // 添加点击空白区域关闭菜单的功能
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // 关闭用户下拉菜单
+      if (showUserDropdown && !target.closest('.user-avatar-container')) {
+        setShowUserDropdown(false);
+      }
+      
+      // 关闭添加下拉菜单
+      if (showAddDropdown && !target.closest('.add-menu-container')) {
+        setShowAddDropdown(false);
+      }
+    };
+
+    // 添加事件监听器
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // 清理事件监听器
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown, showAddDropdown]);
+
   return (
     <div className="chat-list-header">
       {/* 返回按钮 */}
@@ -40,8 +65,8 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
         <Image 
           src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
           alt="用户头像" 
-          width={32}
-          height={32}
+          width={48}
+          height={48}
           className="user-avatar"
           onClick={() => setShowUserDropdown(!showUserDropdown)}
           unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
