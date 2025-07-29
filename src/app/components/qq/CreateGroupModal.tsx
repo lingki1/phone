@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChatItem } from '../../types/chat';
 import './CreateGroupModal.css';
@@ -9,14 +9,18 @@ interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateGroup: (group: ChatItem) => void;
+  onUpdateGroup?: (group: ChatItem) => void;
   availableContacts: ChatItem[];
+  editingGroup?: ChatItem | null;
 }
 
 export default function CreateGroupModal({
   isOpen,
   onClose,
   onCreateGroup,
-  availableContacts
+  onUpdateGroup,
+  availableContacts,
+  editingGroup
 }: CreateGroupModalProps) {
   const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState('');
@@ -35,6 +39,23 @@ export default function CreateGroupModal({
     setSelectedContacts([]);
     setSearchTerm('');
   };
+
+  // 初始化编辑模式
+  useEffect(() => {
+    if (isOpen && editingGroup) {
+      // 编辑模式：加载现有群聊数据
+      setGroupName(editingGroup.name);
+      setGroupAvatar(editingGroup.avatar);
+      setMyNickname(editingGroup.settings.myPersona || '');
+      setGroupRules(editingGroup.settings.groupRules || '');
+      // 设置已选择的成员
+      const existingMemberIds = editingGroup.members?.map(m => m.id).filter(id => id !== 'me') || [];
+      setSelectedContacts(existingMemberIds);
+    } else if (isOpen && !editingGroup) {
+      // 创建模式：重置表单
+      resetForm();
+    }
+  }, [isOpen, editingGroup]);
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -62,50 +83,84 @@ export default function CreateGroupModal({
       selectedContacts.includes(contact.id)
     );
 
-    const newGroup: ChatItem = {
-      id: Date.now().toString(),
-      name: groupName,
-      avatar: groupAvatar,
-      lastMessage: '群聊已创建',
-      timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-      isGroup: true,
-      messages: [],
-      persona: '',
-      settings: {
-        aiPersona: '',
-        myPersona: myNickname || '用户',
-        maxMemory: 20,
-        aiAvatar: '/avatars/default-avatar.svg',
-        myAvatar: '/avatars/user-avatar.svg',
-        background: 'default',
-        theme: 'light',
-        fontSize: 14,
-        customCss: '',
-        linkedWorldBookIds: [],
-        aiAvatarLibrary: [],
-        aiAvatarFrame: '',
-        myAvatarFrame: '',
-        groupRules: groupRules
-      },
-      members: [
-        {
-          id: 'me',
-          originalName: '用户',
-          groupNickname: myNickname || '用户',
-          avatar: '/avatars/user-avatar.svg',
-          persona: '我是群主'
+    if (editingGroup && onUpdateGroup) {
+      // 编辑模式：更新现有群聊
+      const updatedGroup: ChatItem = {
+        ...editingGroup,
+        name: groupName,
+        avatar: groupAvatar,
+        settings: {
+          ...editingGroup.settings,
+          myPersona: myNickname || '用户',
+          groupRules: groupRules
         },
-        ...selectedContactObjects.map(contact => ({
-          id: contact.id,
-          originalName: contact.name,
-          groupNickname: contact.name,
-          avatar: contact.avatar,
-          persona: contact.persona
-        }))
-      ]
-    };
+        members: [
+          {
+            id: 'me',
+            originalName: '用户',
+            groupNickname: myNickname || '用户',
+            avatar: '/avatars/user-avatar.svg',
+            persona: '我是群主'
+          },
+          ...selectedContactObjects.map(contact => ({
+            id: contact.id,
+            originalName: contact.name,
+            groupNickname: contact.name,
+            avatar: contact.avatar,
+            persona: contact.persona
+          }))
+        ]
+      };
 
-    onCreateGroup(newGroup);
+      onUpdateGroup(updatedGroup);
+    } else {
+      // 创建模式：创建新群聊
+      const newGroup: ChatItem = {
+        id: Date.now().toString(),
+        name: groupName,
+        avatar: groupAvatar,
+        lastMessage: '群聊已创建',
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        isGroup: true,
+        messages: [],
+        persona: '',
+        settings: {
+          aiPersona: '',
+          myPersona: myNickname || '用户',
+          maxMemory: 20,
+          aiAvatar: '/avatars/default-avatar.svg',
+          myAvatar: '/avatars/user-avatar.svg',
+          background: 'default',
+          theme: 'light',
+          fontSize: 14,
+          customCss: '',
+          linkedWorldBookIds: [],
+          aiAvatarLibrary: [],
+          aiAvatarFrame: '',
+          myAvatarFrame: '',
+          groupRules: groupRules
+        },
+        members: [
+          {
+            id: 'me',
+            originalName: '用户',
+            groupNickname: myNickname || '用户',
+            avatar: '/avatars/user-avatar.svg',
+            persona: '我是群主'
+          },
+          ...selectedContactObjects.map(contact => ({
+            id: contact.id,
+            originalName: contact.name,
+            groupNickname: contact.name,
+            avatar: contact.avatar,
+            persona: contact.persona
+          }))
+        ]
+      };
+
+      onCreateGroup(newGroup);
+    }
+
     resetForm();
     onClose();
   };
@@ -137,7 +192,7 @@ export default function CreateGroupModal({
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>创建群聊</h3>
+          <h3>{editingGroup ? '编辑群聊' : '创建群聊'}</h3>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
@@ -371,7 +426,7 @@ export default function CreateGroupModal({
                   onClick={handleCreateGroup}
                   disabled={selectedContacts.length === 0}
                 >
-                  创建群聊
+                  {editingGroup ? '保存修改' : '创建群聊'}
                 </button>
               </div>
             </div>

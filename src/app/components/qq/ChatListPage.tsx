@@ -7,8 +7,7 @@ import BottomNavigation from './BottomNavigation';
 import ApiSettingsModal from './ApiSettingsModal';
 import ChatInterface from './ChatInterface';
 import CreateGroupModal from './CreateGroupModal';
-import GroupSettings from './GroupSettings';
-import GroupMessageFeatures from './GroupMessageFeatures';
+
 import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import { ChatItem, Message, ApiConfig } from '../../types/chat';
@@ -37,8 +36,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [showFriendModal, setShowFriendModal] = useState(false);
   const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [showGroupFeatures, setShowGroupFeatures] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatItem | null>(null);
   
   // API配置状态
@@ -184,19 +181,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     }
   };
 
-  // 发送群功能消息
-  const handleSendGroupMessage = (message: Message) => {
-    if (!selectedChat) return;
-    
-    const updatedChat = {
-      ...selectedChat,
-      messages: [...selectedChat.messages, message],
-      lastMessage: message.content,
-      timestamp: new Date(message.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    handleUpdateChat(updatedChat);
-  };
+
 
   // 删除聊天
   const handleDeleteChat = async (chatId: string) => {
@@ -214,10 +199,17 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   // 编辑聊天
   const handleEditChat = (chatId: string) => {
     const chat = chats.find(c => c.id === chatId);
-    if (chat && !chat.isGroup) {
-      setEditingChat(chat);
-      setFriendModalMode('edit');
-      setShowFriendModal(true);
+    if (chat) {
+      if (chat.isGroup) {
+        // 群聊编辑：打开创建群聊模态框进行编辑
+        setEditingChat(chat);
+        setShowCreateGroup(true);
+      } else {
+        // 单聊编辑：打开好友编辑模态框
+        setEditingChat(chat);
+        setFriendModalMode('edit');
+        setShowFriendModal(true);
+      }
     }
   };
 
@@ -283,26 +275,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           }}
           personalSettings={personalSettings}
         />
-        
-        {/* 群设置模态框 */}
-        {selectedChat.isGroup && (
-          <GroupSettings
-            isOpen={showGroupSettings}
-            onClose={() => setShowGroupSettings(false)}
-            chat={selectedChat}
-            onUpdateChat={handleUpdateChat}
-          />
-        )}
-        
-        {/* 群功能模态框 */}
-        {selectedChat.isGroup && (
-          <GroupMessageFeatures
-            isOpen={showGroupFeatures}
-            onClose={() => setShowGroupFeatures(false)}
-            chat={selectedChat}
-            onSendMessage={handleSendGroupMessage}
-          />
-        )}
       </>
     );
   }
@@ -361,12 +333,17 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         chat={editingChat}
       />
       
-      {/* 创建群聊模态框 */}
+      {/* 创建/编辑群聊模态框 */}
       <CreateGroupModal
         isOpen={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
+        onClose={() => {
+          setShowCreateGroup(false);
+          setEditingChat(null);
+        }}
         onCreateGroup={handleCreateGroup}
+        onUpdateGroup={handleUpdateChat}
         availableContacts={availableContacts}
+        editingGroup={editingChat}
       />
     </div>
   );

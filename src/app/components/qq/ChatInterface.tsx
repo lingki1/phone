@@ -541,8 +541,7 @@ ${myPersona}
   // 处理编辑聊天
   const handleEditChat = () => {
     setShowChatMenu(false);
-    // 这里需要调用父组件的编辑功能
-    // 由于当前组件没有直接访问编辑功能，我们需要通过props传递
+    // 群聊编辑功能：调用父组件的编辑功能
     if (onEditChat) {
       onEditChat(chat);
     }
