@@ -377,7 +377,9 @@ ${myPersona}
 
   // 构建消息载荷
   const buildMessagesPayload = (chat: ChatItem) => {
-    const maxMemory = 10;
+    // 从全局设置获取最大记忆数量，如果没有设置则使用默认值
+    const globalSettings = localStorage.getItem('globalSettings');
+    const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
     const historySlice = chat.messages.slice(-maxMemory);
     const myNickname = personalSettings?.userNickname || chat.settings.myNickname || '我';
 

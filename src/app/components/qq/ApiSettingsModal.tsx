@@ -27,7 +27,7 @@ export default function ApiSettingsModal({
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [backgroundActivity, setBackgroundActivity] = useState(false);
   const [backgroundInterval, setBackgroundInterval] = useState(60);
-  const [blockCooldown, setBlockCooldown] = useState(1);
+  const [maxMemory, setMaxMemory] = useState(20);
 
   useEffect(() => {
     if (isVisible) {
@@ -38,7 +38,7 @@ export default function ApiSettingsModal({
         const settings = JSON.parse(savedSettings);
         setBackgroundActivity(settings.enableBackgroundActivity || false);
         setBackgroundInterval(settings.backgroundActivityInterval || 60);
-        setBlockCooldown(settings.blockCooldownHours || 1);
+        setMaxMemory(settings.maxMemory || 20);
       }
     }
   }, [isVisible, currentConfig]);
@@ -97,7 +97,7 @@ export default function ApiSettingsModal({
     const globalSettings = {
       enableBackgroundActivity: backgroundActivity,
       backgroundActivityInterval: backgroundInterval,
-      blockCooldownHours: blockCooldown
+      maxMemory: maxMemory
     };
     localStorage.setItem('globalSettings', JSON.stringify(globalSettings));
     
@@ -129,8 +129,8 @@ export default function ApiSettingsModal({
         
         <div className="modal-body">
           <div className="tip-box">
-            <p>🎯 <strong>小贴士</strong>: 想要体验图片识别功能？记得选择支持视觉的AI模型哦！推荐使用 
-              <code>gpt-4o</code> 或 <code>gpt-4-vision-preview</code>。
+            <p>🎯 <strong>小贴士</strong>:视频功能正在测试中推荐使用 
+              <code>gemini-2.5-live</code> 或 <code>gpt-4-vision-preview</code>。
             </p>
           </div>
 
@@ -221,20 +221,20 @@ export default function ApiSettingsModal({
 
           <div className="form-group toggle-group">
             <div className="toggle-label">
-              <label htmlFor="block-cooldown-input">
-                🕐 AI 冷静恢复时间
+              <label htmlFor="max-memory-input">
+                📚 最大聊天记录
                 <p className="info-text">
-                  被拒绝后，AI需要等待多久才能重新申请好友
+                  每个聊天保留的最大消息数量，数值越大记忆越完整但性能稍慢
                 </p>
               </label>
             </div>
             <input
               type="number"
-              id="block-cooldown-input"
-              min="0.1"
-              step="0.1"
-              value={blockCooldown}
-              onChange={(e) => setBlockCooldown(parseFloat(e.target.value) || 1)}
+              id="max-memory-input"
+              min="5"
+              max="100"
+              value={maxMemory}
+              onChange={(e) => setMaxMemory(parseInt(e.target.value) || 20)}
               className="number-input"
             />
           </div>
