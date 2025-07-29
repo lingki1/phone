@@ -318,6 +318,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onOpenAddFriend={handleOpenAddFriend}
         onOpenCreateGroup={() => setShowCreateGroup(true)}
         onBackToDesktop={onBackToDesktop}
+        personalSettings={personalSettings}
       />
       
       {/* 聊天列表 */}

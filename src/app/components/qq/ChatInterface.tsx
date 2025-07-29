@@ -668,8 +668,8 @@ ${myPersona}
             const getSenderInfo = () => {
               if (msg.role === 'user') {
                 return {
-                  name: chat.settings.myNickname || '我',
-                  avatar: chat.settings.myAvatar || '/avatars/user-avatar.svg'
+                  name: personalSettings?.userNickname || chat.settings.myNickname || '我',
+                  avatar: personalSettings?.userAvatar || chat.settings.myAvatar || '/avatars/user-avatar.svg'
                 };
               } else {
                 // AI消息，从群成员中查找对应的成员信息

@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
+interface PersonalSettings {
+  userAvatar: string;
+  userNickname: string;
+  userBio: string;
+}
+
 interface ChatListHeaderProps {
   activeTab: 'all' | 'single' | 'group';
   onTabChange: (tab: 'all' | 'single' | 'group') => void;
@@ -11,9 +17,10 @@ interface ChatListHeaderProps {
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
   onBackToDesktop?: () => void;
+  personalSettings?: PersonalSettings;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop }: ChatListHeaderProps) {
+export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop, personalSettings }: ChatListHeaderProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
@@ -31,12 +38,13 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
       {/* 用户头像 */}
       <div className="user-avatar-container">
         <Image 
-          src="/avatars/user-avatar.svg" 
+          src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
           alt="用户头像" 
           width={32}
           height={32}
           className="user-avatar"
           onClick={() => setShowUserDropdown(!showUserDropdown)}
+          unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
         />
         
         {/* 用户下拉菜单 */}
