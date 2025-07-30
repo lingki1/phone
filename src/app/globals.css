@@ -99,6 +99,28 @@ a {
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   
+  /* 主题变量 - 默认白色主题 */
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f8f9fa;
+  --theme-bg-tertiary: #e9ecef;
+  --theme-text-primary: #1f1f1f;
+  --theme-text-secondary: #6c757d;
+  --theme-text-tertiary: #8a8a8a;
+  --theme-accent-color: #007bff;
+  --theme-accent-hover: #0056b3;
+  --theme-border-color: #dee2e6;
+  --theme-border-light: #e9ecef;
+  --theme-shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --theme-shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --theme-shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --theme-message-user-bg: #007bff;
+  --theme-message-ai-bg: #ffffff;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #1f1f1f;
+  --theme-header-bg: rgba(247, 247, 247, 0.95);
+  --theme-nav-bg: #ffffff;
+  --theme-nav-active: #007bff;
+  
   /* 容器最大宽度 */
   --container-max-width: 1200px;
   --container-padding: 1rem;
@@ -502,4 +524,257 @@ a {
 
 .text-secondary {
   color: var(--text-secondary) !important;
+}
+/* ========== 主题系统 ========== */
+
+/* 深色主题 */
+.theme-dark {
+  --theme-bg-primary: #1a1a1a;
+  --theme-bg-secondary: #2d2d2d;
+  --theme-bg-tertiary: #404040;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #b0b0b0;
+  --theme-text-tertiary: #808080;
+  --theme-accent-color: #4dabf7;
+  --theme-accent-hover: #339af0;
+  --theme-border-color: #404040;
+  --theme-border-light: #2d2d2d;
+  --theme-shadow-light: 0 1px 3px rgba(255, 255, 255, 0.1);
+  --theme-shadow-medium: 0 2px 8px rgba(255, 255, 255, 0.15);
+  --theme-shadow-heavy: 0 4px 16px rgba(255, 255, 255, 0.2);
+  --theme-message-user-bg: #4dabf7;
+  --theme-message-ai-bg: #2d2d2d;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #ffffff;
+  --theme-header-bg: rgba(26, 26, 26, 0.95);
+  --theme-nav-bg: #1a1a1a;
+  --theme-nav-active: #4dabf7;
+}
+
+/* 男性主题 (深蓝商务风) */
+.theme-masculine {
+  --theme-bg-primary: #0f1419;
+  --theme-bg-secondary: #1a2332;
+  --theme-bg-tertiary: #253341;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #8fa3b3;
+  --theme-text-tertiary: #6b7d8f;
+  --theme-accent-color: #00d4ff;
+  --theme-accent-hover: #00b8e6;
+  --theme-border-color: #2d3e50;
+  --theme-border-light: #34495e;
+  --theme-shadow-light: 0 1px 3px rgba(0, 212, 255, 0.2);
+  --theme-shadow-medium: 0 2px 8px rgba(0, 212, 255, 0.25);
+  --theme-shadow-heavy: 0 4px 16px rgba(0, 212, 255, 0.3);
+  --theme-message-user-bg: #00d4ff;
+  --theme-message-ai-bg: #1a2332;
+  --theme-message-user-text: #0f1419;
+  --theme-message-ai-text: #ffffff;
+  --theme-header-bg: rgba(15, 20, 25, 0.95);
+  --theme-nav-bg: #0f1419;
+  --theme-nav-active: #00d4ff;
+}
+
+/* 女性主题 (粉色温柔风) */
+.theme-feminine {
+  --theme-bg-primary: #fdf2f8;
+  --theme-bg-secondary: #fce7f3;
+  --theme-bg-tertiary: #fbcfe8;
+  --theme-text-primary: #831843;
+  --theme-text-secondary: #be185d;
+  --theme-text-tertiary: #ec4899;
+  --theme-accent-color: #f472b6;
+  --theme-accent-hover: #ec4899;
+  --theme-border-color: #f9a8d4;
+  --theme-border-light: #fbb6ce;
+  --theme-shadow-light: 0 1px 3px rgba(244, 114, 182, 0.2);
+  --theme-shadow-medium: 0 2px 8px rgba(244, 114, 182, 0.25);
+  --theme-shadow-heavy: 0 4px 16px rgba(244, 114, 182, 0.3);
+  --theme-message-user-bg: #f472b6;
+  --theme-message-ai-bg: #fce7f3;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #831843;
+  --theme-header-bg: rgba(253, 242, 248, 0.95);
+  --theme-nav-bg: #fdf2f8;
+  --theme-nav-active: #f472b6;
+}
+
+/* 二次元主题 (紫色梦幻风) */
+.theme-anime {
+  --theme-bg-primary: #f3e8ff;
+  --theme-bg-secondary: #e9d5ff;
+  --theme-bg-tertiary: #ddd6fe;
+  --theme-text-primary: #581c87;
+  --theme-text-secondary: #7c3aed;
+  --theme-text-tertiary: #a855f7;
+  --theme-accent-color: #c084fc;
+  --theme-accent-hover: #a855f7;
+  --theme-border-color: #d8b4fe;
+  --theme-border-light: #e9d5ff;
+  --theme-shadow-light: 0 1px 3px rgba(192, 132, 252, 0.3);
+  --theme-shadow-medium: 0 2px 8px rgba(192, 132, 252, 0.35);
+  --theme-shadow-heavy: 0 4px 16px rgba(192, 132, 252, 0.4);
+  --theme-message-user-bg: linear-gradient(135deg, #c084fc, #a855f7);
+  --theme-message-ai-bg: #e9d5ff;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #581c87;
+  --theme-header-bg: rgba(243, 232, 255, 0.95);
+  --theme-nav-bg: #f3e8ff;
+  --theme-nav-active: #c084fc;
+}
+
+/* 可爱风格主题 (橙色活泼风) */
+.theme-cute {
+  --theme-bg-primary: #fff7ed;
+  --theme-bg-secondary: #ffedd5;
+  --theme-bg-tertiary: #fed7aa;
+  --theme-text-primary: #9a3412;
+  --theme-text-secondary: #ea580c;
+  --theme-text-tertiary: #fb923c;
+  --theme-accent-color: #ff8c42;
+  --theme-accent-hover: #ea580c;
+  --theme-border-color: #fdba74;
+  --theme-border-light: #fed7aa;
+  --theme-shadow-light: 0 1px 3px rgba(255, 140, 66, 0.2);
+  --theme-shadow-medium: 0 2px 8px rgba(255, 140, 66, 0.25);
+  --theme-shadow-heavy: 0 4px 16px rgba(255, 140, 66, 0.3);
+  --theme-message-user-bg: #ff8c42;
+  --theme-message-ai-bg: #ffedd5;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #9a3412;
+  --theme-header-bg: rgba(255, 247, 237, 0.95);
+  --theme-nav-bg: #fff7ed;
+  --theme-nav-active: #ff8c42;
+}
+
+/* 金属风格主题 (银灰科技风) */
+.theme-metal {
+  --theme-bg-primary: #f8fafc;
+  --theme-bg-secondary: #e2e8f0;
+  --theme-bg-tertiary: #cbd5e1;
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #334155;
+  --theme-text-tertiary: #64748b;
+  --theme-accent-color: #475569;
+  --theme-accent-hover: #334155;
+  --theme-border-color: #94a3b8;
+  --theme-border-light: #cbd5e1;
+  --theme-shadow-light: 0 1px 3px rgba(71, 85, 105, 0.3);
+  --theme-shadow-medium: 0 2px 8px rgba(71, 85, 105, 0.35);
+  --theme-shadow-heavy: 0 4px 16px rgba(71, 85, 105, 0.4);
+  --theme-message-user-bg: linear-gradient(135deg, #475569, #334155);
+  --theme-message-ai-bg: #e2e8f0;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #0f172a;
+  --theme-header-bg: rgba(248, 250, 252, 0.95);
+  --theme-nav-bg: #f8fafc;
+  --theme-nav-active: #475569;
+}
+
+/* 森林主题 (绿色自然风) */
+.theme-forest {
+  --theme-bg-primary: #f0fdf4;
+  --theme-bg-secondary: #dcfce7;
+  --theme-bg-tertiary: #bbf7d0;
+  --theme-text-primary: #14532d;
+  --theme-text-secondary: #166534;
+  --theme-text-tertiary: #22c55e;
+  --theme-accent-color: #16a34a;
+  --theme-accent-hover: #15803d;
+  --theme-border-color: #86efac;
+  --theme-border-light: #bbf7d0;
+  --theme-shadow-light: 0 1px 3px rgba(22, 163, 74, 0.2);
+  --theme-shadow-medium: 0 2px 8px rgba(22, 163, 74, 0.25);
+  --theme-shadow-heavy: 0 4px 16px rgba(22, 163, 74, 0.3);
+  --theme-message-user-bg: #16a34a;
+  --theme-message-ai-bg: #dcfce7;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #14532d;
+  --theme-header-bg: rgba(240, 253, 244, 0.95);
+  --theme-nav-bg: #f0fdf4;
+  --theme-nav-active: #16a34a;
+}
+
+/* 海洋主题 (蓝绿渐变风) */
+.theme-ocean {
+  --theme-bg-primary: #ecfeff;
+  --theme-bg-secondary: #cffafe;
+  --theme-bg-tertiary: #a5f3fc;
+  --theme-text-primary: #164e63;
+  --theme-text-secondary: #0891b2;
+  --theme-text-tertiary: #06b6d4;
+  --theme-accent-color: #0891b2;
+  --theme-accent-hover: #0e7490;
+  --theme-border-color: #67e8f9;
+  --theme-border-light: #a5f3fc;
+  --theme-shadow-light: 0 1px 3px rgba(8, 145, 178, 0.2);
+  --theme-shadow-medium: 0 2px 8px rgba(8, 145, 178, 0.25);
+  --theme-shadow-heavy: 0 4px 16px rgba(8, 145, 178, 0.3);
+  --theme-message-user-bg: linear-gradient(135deg, #0891b2, #06b6d4);
+  --theme-message-ai-bg: #cffafe;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #164e63;
+  --theme-header-bg: rgba(236, 254, 255, 0.95);
+  --theme-nav-bg: #ecfeff;
+  --theme-nav-active: #0891b2;
+}
+
+/* 夕阳主题 (橙红渐变风) */
+.theme-sunset {
+  --theme-bg-primary: #fef3c7;
+  --theme-bg-secondary: #fde68a;
+  --theme-bg-tertiary: #fcd34d;
+  --theme-text-primary: #92400e;
+  --theme-text-secondary: #d97706;
+  --theme-text-tertiary: #f59e0b;
+  --theme-accent-color: #f59e0b;
+  --theme-accent-hover: #d97706;
+  --theme-border-color: #fbbf24;
+  --theme-border-light: #fcd34d;
+  --theme-shadow-light: 0 1px 3px rgba(245, 158, 11, 0.3);
+  --theme-shadow-medium: 0 2px 8px rgba(245, 158, 11, 0.35);
+  --theme-shadow-heavy: 0 4px 16px rgba(245, 158, 11, 0.4);
+  --theme-message-user-bg: linear-gradient(135deg, #f59e0b, #d97706);
+  --theme-message-ai-bg: #fde68a;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #92400e;
+  --theme-header-bg: rgba(254, 243, 199, 0.95);
+  --theme-nav-bg: #fef3c7;
+  --theme-nav-active: #f59e0b;
+}
+
+/* 极简主题 (黑白简约风) */
+.theme-minimal {
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f9f9f9;
+  --theme-bg-tertiary: #f0f0f0;
+  --theme-text-primary: #000000;
+  --theme-text-secondary: #666666;
+  --theme-text-tertiary: #999999;
+  --theme-accent-color: #000000;
+  --theme-accent-hover: #333333;
+  --theme-border-color: #e0e0e0;
+  --theme-border-light: #f0f0f0;
+  --theme-shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --theme-shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --theme-shadow-heavy: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --theme-message-user-bg: #000000;
+  --theme-message-ai-bg: #f9f9f9;
+  --theme-message-user-text: #ffffff;
+  --theme-message-ai-text: #000000;
+  --theme-header-bg: rgba(255, 255, 255, 0.95);
+  --theme-nav-bg: #ffffff;
+  --theme-nav-active: #000000;
+}
+
+/* 主题切换动画 */
+* {
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* 减少动画偏好时禁用主题切换动画 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }

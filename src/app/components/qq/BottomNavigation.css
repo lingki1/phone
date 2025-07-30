@@ -1,4 +1,4 @@
-/* 底部导航栏样式 - 强制白色主题 */
+/* 底部导航栏样式 */
 .bottom-navigation {
   position: absolute;
   bottom: 0;
@@ -6,9 +6,9 @@
   width: 100%;
   z-index: 15;
   display: flex;
-  border-top: 1px solid #e8eaed !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border-top: 1px solid var(--theme-border-color, #e8eaed) !important;
+  background-color: var(--theme-nav-bg, #ffffff) !important;
+  box-shadow: var(--theme-shadow-light, 0 1px 3px rgba(0, 0, 0, 0.1)) !important;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -17,7 +17,7 @@
   text-align: center;
   padding: 12px 0;
   font-size: 14px;
-  color: #5f6368;
+  color: var(--theme-text-secondary, #5f6368);
   cursor: pointer;
   transition: color 0.2s;
   display: flex;
@@ -27,12 +27,12 @@
 }
 
 .nav-item.active {
-  color: #1a73e8;
+  color: var(--theme-nav-active, #1a73e8);
   font-weight: 600;
 }
 
 .nav-item.active .nav-icon svg {
-  stroke: #1a73e8;
+  stroke: var(--theme-nav-active, #1a73e8);
 }
 
 .nav-icon {
@@ -86,24 +86,10 @@
   }
 }
 
-/* 深色模式支持 - 保持白色主题 */
+/* 深色模式支持 - 使用主题变量 */
 @media (prefers-color-scheme: dark) {
-  .bottom-navigation {
-    background-color: #ffffff !important;
-    border-top-color: #e8eaed !important;
-  }
-  
-  .nav-item {
-    color: #5f6368 !important;
-  }
-  
-  .nav-item.active {
-    color: #1a73e8 !important;
-  }
-  
-  .nav-item.active .nav-icon svg {
-    stroke: #1a73e8 !important;
-  }
+  /* 深色模式下的样式现在由主题系统控制 */
+  /* 如果用户选择了深色主题，相应的CSS类会被应用 */
 }
 
 /* 减少动画偏好 */

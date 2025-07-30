@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { dataManager } from '../../../utils/dataManager';
+import ColorSettingsPage from '../../settings/ColorSettingsPage';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -21,9 +22,10 @@ export default function MePage({ onBackToDesktop: _ }: MePageProps) {
     userNickname: '用户',
     userBio: ''
   });
-  const [balance, setBalance] = useState<number>(0);
+  const [balance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showBalanceInfo, setShowBalanceInfo] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'main' | 'color-settings'>('main');
 
   // 加载个人信息
   useEffect(() => {
@@ -50,8 +52,11 @@ export default function MePage({ onBackToDesktop: _ }: MePageProps) {
   // 处理选项点击
   const handleOptionClick = (option: string) => {
     switch (option) {
+      case 'color-settings':
+        setCurrentPage('color-settings');
+        break;
       case 'settings':
-        // TODO: 打开设置页面
+        // TODO: 打开其他设置页面
         console.log('打开设置页面');
         break;
       case 'history':
@@ -61,6 +66,11 @@ export default function MePage({ onBackToDesktop: _ }: MePageProps) {
       default:
         break;
     }
+  };
+
+  // 处理返回主页面
+  const handleBackToMain = () => {
+    setCurrentPage('main');
   };
 
   // 处理余额信息显示
@@ -74,6 +84,11 @@ export default function MePage({ onBackToDesktop: _ }: MePageProps) {
         <div className="loading-spinner">加载中...</div>
       </div>
     );
+  }
+
+  // 如果当前页面是配色设置，显示配色设置页面
+  if (currentPage === 'color-settings') {
+    return <ColorSettingsPage onBack={handleBackToMain} />;
   }
 
   return (
@@ -139,6 +154,18 @@ export default function MePage({ onBackToDesktop: _ }: MePageProps) {
       {/* 选项列表 */}
       <div className="me-options">
         <div className="option-group">
+          <div 
+            className="option-item"
+            onClick={() => handleOptionClick('color-settings')}
+          >
+            <div className="option-icon">🎨</div>
+            <div className="option-content">
+              <div className="option-title">配色设置</div>
+              <div className="option-subtitle">选择你喜欢的主题配色</div>
+            </div>
+            <div className="option-arrow">›</div>
+          </div>
+
           <div 
             className="option-item"
             onClick={() => handleOptionClick('settings')}

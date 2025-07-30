@@ -40,7 +40,7 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
   const [appTiles, setAppTiles] = useState<AppTile[]>([
     {
       id: 'qq',
-      name: 'QQ',
+      name: 'QwQ',
       icon: '💬',
       color: '#12B7F5',
       gradient: 'linear-gradient(135deg, #12B7F5 0%, #0EA5E9 100%)',
@@ -77,7 +77,7 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
     },
     {
       id: 'weibo',
-      name: '微博',
+      name: '热点',
       icon: '📱',
       color: '#EC4899',
       gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',

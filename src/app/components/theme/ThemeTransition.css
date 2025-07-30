@@ -1,0 +1,285 @@
+/* 主题切换动画样式 */
+
+/* 全局主题过渡效果 */
+.theme-transition {
+  transition: 
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out,
+    border-color 0.3s ease-in-out,
+    box-shadow 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
+}
+
+/* 主题切换时的淡入淡出效果 */
+.theme-fade-enter {
+  opacity: 0;
+}
+
+.theme-fade-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.theme-fade-exit {
+  opacity: 1;
+}
+
+.theme-fade-exit-active {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* 主题预览时的高亮效果 */
+.theme-preview-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-preview-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease-in-out;
+}
+
+.theme-preview-highlight:hover::before {
+  left: 100%;
+}
+
+/* 主题切换加载状态 */
+.theme-switching {
+  position: relative;
+  pointer-events: none;
+}
+
+.theme-switching::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* 主题切换成功提示 */
+.theme-success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--theme-accent-color, #007bff);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: var(--theme-shadow-medium, 0 2px 8px rgba(0, 0, 0, 0.15));
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 主题错误提示 */
+.theme-error-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #dc3545;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 4.7s forwards;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 主题预览模式指示器 */
+.theme-preview-indicator {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 10000;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 主题切换按钮动画 */
+.theme-switch-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.theme-switch-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.theme-switch-button:active {
+  transform: translateY(0);
+}
+
+/* 主题选择器网格动画 */
+.theme-grid {
+  display: grid;
+  gap: 16px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-grid-item {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.theme-grid-item:nth-child(1) { animation-delay: 0.1s; }
+.theme-grid-item:nth-child(2) { animation-delay: 0.2s; }
+.theme-grid-item:nth-child(3) { animation-delay: 0.3s; }
+.theme-grid-item:nth-child(4) { animation-delay: 0.4s; }
+.theme-grid-item:nth-child(5) { animation-delay: 0.5s; }
+.theme-grid-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* 减少动画偏好时禁用所有动画 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-fade-enter-active,
+  .theme-fade-exit-active,
+  .theme-preview-highlight::before,
+  .theme-success-toast,
+  .theme-error-toast,
+  .theme-preview-indicator,
+  .theme-switch-button,
+  .theme-grid,
+  .theme-grid-item {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .theme-switch-button:hover {
+    transform: none !important;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .theme-success-toast {
+    border: 2px solid white;
+  }
+  
+  .theme-error-toast {
+    border: 2px solid white;
+  }
+  
+  .theme-preview-indicator {
+    border: 2px solid white;
+    background: black;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .theme-success-toast,
+  .theme-error-toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    text-align: center;
+  }
+  
+  .theme-preview-indicator {
+    left: 10px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  
+  .theme-grid {
+    gap: 12px;
+  }
+}
+
+/* 深色主题下的调整 */
+.theme-dark .theme-switching::after {
+  background: rgba(26, 26, 26, 0.8);
+}
+
+/* 主题切换时的页面遮罩 */
+.theme-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.theme-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.theme-dark .theme-overlay {
+  background: rgba(26, 26, 26, 0.8);
+}

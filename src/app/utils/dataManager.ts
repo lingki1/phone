@@ -2,10 +2,11 @@
 import { ChatItem, GroupMember, ApiConfig } from '../types/chat';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 2; // 升级数据库版本
+const DB_VERSION = 3; // 升级数据库版本以支持主题设置
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
+const THEME_SETTINGS_STORE = 'themeSettings';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -42,6 +43,11 @@ class DataManager {
         // 创建个人信息存储
         if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_STORE)) {
           db.createObjectStore(PERSONAL_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建主题设置存储
+        if (!db.objectStoreNames.contains(THEME_SETTINGS_STORE)) {
+          db.createObjectStore(THEME_SETTINGS_STORE, { keyPath: 'id' });
         }
       };
     });
@@ -260,13 +266,15 @@ class DataManager {
     const chats = await this.getAllChats();
     const apiConfig = await this.getApiConfig();
     const personalSettings = await this.getPersonalSettings();
+    const themeSettings = await this.getThemeSettings();
     
     const exportData = {
       chats,
       apiConfig,
       personalSettings,
+      themeSettings,
       exportTime: new Date().toISOString(),
-      version: '1.0'
+      version: '1.1'
     };
 
     return JSON.stringify(exportData, null, 2);
@@ -290,6 +298,10 @@ class DataManager {
       if (data.personalSettings) {
         await this.savePersonalSettings(data.personalSettings);
       }
+
+      if (data.themeSettings) {
+        await this.saveThemeSettings(data.themeSettings);
+      }
     } catch {
       throw new Error('Invalid import data format');
     }
@@ -300,20 +312,22 @@ class DataManager {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE], 'readwrite');
+      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE], 'readwrite');
       
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
       const personalStore = transaction.objectStore(PERSONAL_SETTINGS_STORE);
+      const themeStore = transaction.objectStore(THEME_SETTINGS_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
       const clearPersonal = personalStore.clear();
+      const clearTheme = themeStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 3) resolve();
+        if (completed === 4) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -324,6 +338,9 @@ class DataManager {
 
       clearPersonal.onerror = () => reject(new Error('Failed to clear personal settings'));
       clearPersonal.onsuccess = checkComplete;
+
+      clearTheme.onerror = () => reject(new Error('Failed to clear theme settings'));
+      clearTheme.onsuccess = checkComplete;
     });
   }
 
@@ -345,6 +362,50 @@ class DataManager {
       privateChats: privateChats.length,
       totalMessages
     };
+  }
+
+  // 保存主题设置
+  async saveThemeSettings(settings: {
+    selectedTheme: string;
+    lastUpdated: number;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([THEME_SETTINGS_STORE], 'readwrite');
+      const store = transaction.objectStore(THEME_SETTINGS_STORE);
+      const request = store.put({ ...settings, id: 'default' });
+
+      request.onerror = () => reject(new Error('Failed to save theme settings'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取主题设置
+  async getThemeSettings(): Promise<{
+    selectedTheme: string;
+    lastUpdated: number;
+  } | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([THEME_SETTINGS_STORE], 'readonly');
+      const store = transaction.objectStore(THEME_SETTINGS_STORE);
+      const request = store.get('default');
+
+      request.onerror = () => reject(new Error('Failed to get theme settings'));
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          resolve({
+            selectedTheme: result.selectedTheme || 'default',
+            lastUpdated: result.lastUpdated || Date.now()
+          });
+        } else {
+          resolve(null);
+        }
+      };
+    });
   }
 }
 

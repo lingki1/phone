@@ -1,0 +1,473 @@
+/* 主题预览组件样式 */
+.theme-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: var(--theme-bg-primary, #ffffff);
+  border: 2px solid var(--theme-border-light, #e9ecef);
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.theme-preview:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--theme-shadow-heavy, 0 8px 24px rgba(0, 0, 0, 0.15));
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+.theme-preview.selected {
+  border-color: var(--theme-accent-color, #007bff);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.theme-preview.previewing {
+  border-color: var(--theme-accent-color, #007bff);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  animation: pulse 2s infinite;
+}
+
+/* 主题卡片 */
+.theme-card {
+  position: relative;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 模拟聊天界面 */
+.mock-chat-interface {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+}
+
+/* 模拟头部 */
+.mock-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  gap: 8px;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+}
+
+.mock-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mock-title {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* 模拟消息 */
+.mock-messages {
+  flex: 1;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.mock-message {
+  display: flex;
+  max-width: 80%;
+}
+
+.mock-message.ai-message {
+  align-self: flex-start;
+}
+
+.mock-message.user-message {
+  align-self: flex-end;
+}
+
+.mock-message-bubble {
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.mock-message.ai-message .mock-message-bubble {
+  border-bottom-left-radius: 4px;
+}
+
+.mock-message.user-message .mock-message-bubble {
+  border-bottom-right-radius: 4px;
+}
+
+/* 模拟输入框 */
+.mock-input {
+  padding: 6px 10px;
+  border-top: 1px solid;
+  flex-shrink: 0;
+}
+
+.mock-input-field {
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid;
+  opacity: 0.7;
+}
+
+/* 选中指示器 */
+.selected-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--theme-accent-color, #007bff);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: bounceIn 0.5s ease-out;
+}
+
+/* 预览指示器 */
+.preview-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+/* 主题信息 */
+.theme-info {
+  padding: 12px;
+  background: var(--theme-bg-primary, #ffffff);
+}
+
+.theme-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+  margin-bottom: 4px;
+}
+
+.theme-description {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6c757d);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+/* 颜色调色板 */
+.color-palette {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--theme-bg-primary, #ffffff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: help;
+  transition: transform 0.2s ease;
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+/* 主题操作 */
+.theme-actions {
+  padding: 0 12px 12px;
+}
+
+.current-theme-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--theme-accent-color, #007bff);
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.apply-theme-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--theme-bg-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  color: var(--theme-text-primary, #1f1f1f);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.apply-theme-btn:hover {
+  background: var(--theme-accent-color, #007bff);
+  border-color: var(--theme-accent-color, #007bff);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.apply-theme-btn:active {
+  transform: translateY(0);
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .theme-preview {
+    border-radius: 10px;
+  }
+  
+  .theme-card {
+    height: 180px;
+    margin: 6px;
+  }
+  
+  .theme-info {
+    padding: 10px;
+  }
+  
+  .theme-name {
+    font-size: 13px;
+  }
+  
+  .theme-description {
+    font-size: 11px;
+  }
+  
+  .color-dot {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .apply-theme-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .selected-indicator {
+    width: 24px;
+    height: 24px;
+    top: 6px;
+    right: 6px;
+  }
+  
+  .preview-indicator {
+    top: 6px;
+    left: 6px;
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-card {
+    height: 160px;
+    margin: 4px;
+  }
+  
+  .mock-header {
+    padding: 6px 8px;
+  }
+  
+  .mock-avatar {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .mock-title {
+    font-size: 10px;
+  }
+  
+  .mock-messages {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  
+  .mock-message-bubble {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  
+  .mock-input {
+    padding: 4px 8px;
+  }
+  
+  .mock-input-field {
+    height: 12px;
+  }
+}
+
+/* 动画定义 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 网格项动画延迟 */
+.theme-preview:nth-child(1) { animation-delay: 0.1s; }
+.theme-preview:nth-child(2) { animation-delay: 0.2s; }
+.theme-preview:nth-child(3) { animation-delay: 0.3s; }
+.theme-preview:nth-child(4) { animation-delay: 0.4s; }
+.theme-preview:nth-child(5) { animation-delay: 0.5s; }
+.theme-preview:nth-child(6) { animation-delay: 0.6s; }
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-preview,
+  .selected-indicator,
+  .preview-indicator,
+  .apply-theme-btn,
+  .color-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .theme-preview:hover,
+  .apply-theme-btn:hover,
+  .color-dot:hover {
+    transform: none !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .theme-preview {
+    border-width: 3px;
+  }
+  
+  .selected-indicator {
+    border: 2px solid white;
+  }
+  
+  .preview-indicator {
+    border: 1px solid white;
+  }
+  
+  .apply-theme-btn {
+    border-width: 2px;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .theme-card {
+    height: 190px;
+  }
+  
+  .theme-name {
+    font-size: 13px;
+  }
+  
+  .theme-description {
+    font-size: 11px;
+  }
+}
+
+/* 桌面端优化 */
+@media (min-width: 1024px) {
+  .theme-preview:hover {
+    transform: translateY(-6px);
+  }
+  
+  .theme-card {
+    height: 220px;
+    margin: 10px;
+  }
+  
+  .theme-info {
+    padding: 14px;
+  }
+  
+  .theme-name {
+    font-size: 15px;
+  }
+  
+  .theme-description {
+    font-size: 13px;
+  }
+  
+  .color-dot {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .apply-theme-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* 特殊主题的额外样式 */
+.theme-preview[data-theme="anime"] .mock-message.user-message .mock-message-bubble {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+}
+
+.theme-preview[data-theme="metal"] .mock-message.user-message .mock-message-bubble {
+  background: linear-gradient(135deg, #475569, #334155);
+}
+
+.theme-preview[data-theme="ocean"] .mock-message.user-message .mock-message-bubble {
+  background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.theme-preview[data-theme="sunset"] .mock-message.user-message .mock-message-bubble {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}

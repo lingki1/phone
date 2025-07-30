@@ -7,7 +7,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--theme-bg-primary, #f5f5f5);
   position: relative;
   overflow: hidden;
   /* 确保在移动端浏览器中正确显示 */
@@ -41,10 +41,10 @@
   display: flex;
   align-items: center;
   padding: 15px 20px;
-  background-color: rgba(247, 247, 247, 0.95);
+  background-color: var(--theme-header-bg, rgba(247, 247, 247, 0.95));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--theme-border-color, #e0e0e0);
   z-index: 10;
   position: sticky;
   top: 0;
@@ -94,7 +94,7 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #007bff;
+  color: var(--theme-accent-color, #007bff);
   cursor: pointer;
   padding: 5px;
   margin-right: 15px;
@@ -103,7 +103,7 @@
 }
 
 .chat-header .back-btn:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: var(--theme-bg-tertiary, rgba(0, 123, 255, 0.1));
 }
 
 /* 移动端返回按钮调整 */
@@ -156,7 +156,7 @@
 .chat-name {
   font-weight: 600;
   font-size: 16px;
-  color: #1f1f1f;
+  color: var(--theme-text-primary, #1f1f1f);
 }
 
 /* 移动端聊天名称调整 */
@@ -174,7 +174,7 @@
 
 .chat-status {
   font-size: 12px;
-  color: #8a8a8a;
+  color: var(--theme-text-tertiary, #8a8a8a);
 }
 
 /* 移动端状态文字调整 */
@@ -193,7 +193,7 @@
   background: none;
   border: none;
   font-size: 20px;
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
@@ -201,7 +201,7 @@
 }
 
 .chat-actions .action-btn:hover {
-  background-color: #f0f0f0;
+  background-color: var(--theme-bg-tertiary, #f0f0f0);
 }
 
 /* 移动端操作按钮调整 */
@@ -258,7 +258,7 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #8a8a8a;
+  color: var(--theme-text-tertiary, #8a8a8a);
   font-size: 14px;
 }
 
@@ -314,7 +314,7 @@
 /* 群聊消息发送者显示 */
 .message-sender {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   font-weight: 500;
   margin-bottom: 2px;
   padding: 0 5px;
@@ -342,8 +342,8 @@
 
 /* 引用消息样式 */
 .quoted-message {
-  background-color: rgba(0, 123, 255, 0.1);
-  border-left: 3px solid #007bff;
+  background-color: var(--theme-bg-tertiary, rgba(0, 123, 255, 0.1));
+  border-left: 3px solid var(--theme-accent-color, #007bff);
   padding: 8px 12px;
   margin-bottom: 5px;
   border-radius: 8px;
@@ -358,16 +358,16 @@
 
 .quote-sender {
   font-weight: 500;
-  color: #007bff;
+  color: var(--theme-accent-color, #007bff);
 }
 
 .quote-time {
-  color: #8a8a8a;
+  color: var(--theme-text-tertiary, #8a8a8a);
   font-size: 11px;
 }
 
 .quote-content {
-  color: #555;
+  color: var(--theme-text-secondary, #555);
   line-height: 1.3;
 }
 
@@ -381,21 +381,21 @@
 }
 
 .user-message .message-bubble {
-  background-color: #007bff;
-  color: white;
+  background: var(--theme-message-user-bg, #007bff);
+  color: var(--theme-message-user-text, white);
   border-bottom-right-radius: 6px;
 }
 
 .ai-message .message-bubble {
-  background-color: white;
-  color: #1f1f1f;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-message-ai-bg, white);
+  color: var(--theme-message-ai-text, #1f1f1f);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
   border-bottom-left-radius: 6px;
 }
 
 .message-time {
   font-size: 11px;
-  color: #8a8a8a;
+  color: var(--theme-text-tertiary, #8a8a8a);
   padding: 0 5px;
   display: flex;
   align-items: center;
@@ -431,8 +431,8 @@
 
 /* 输入正在输入指示器 */
 .typing-indicator {
-  background-color: white !important;
-  border: 1px solid #e0e0e0 !important;
+  background: var(--theme-message-ai-bg, white) !important;
+  border: 1px solid var(--theme-border-color, #e0e0e0) !important;
   padding: 16px !important;
 }
 
@@ -445,7 +445,7 @@
 .typing-dots span {
   width: 6px;
   height: 6px;
-  background-color: #8a8a8a;
+  background-color: var(--theme-text-tertiary, #8a8a8a);
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out;
 }
@@ -472,8 +472,8 @@
 /* 输入区域 */
 .input-container {
   padding: 15px 20px;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
+  background-color: var(--theme-bg-primary, white);
+  border-top: 1px solid var(--theme-border-color, #e0e0e0);
   position: relative;
 }
 
@@ -495,8 +495,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: rgba(0, 123, 255, 0.1);
-  border-left: 3px solid #007bff;
+  background-color: var(--theme-bg-tertiary, rgba(0, 123, 255, 0.1));
+  border-left: 3px solid var(--theme-accent-color, #007bff);
   padding: 8px 12px;
   margin-bottom: 10px;
   border-radius: 8px;
@@ -509,19 +509,19 @@
 
 .quote-preview-sender {
   font-weight: 500;
-  color: #007bff;
+  color: var(--theme-accent-color, #007bff);
   margin-right: 8px;
 }
 
 .quote-preview-text {
-  color: #555;
+  color: var(--theme-text-secondary, #555);
 }
 
 .quote-cancel {
   background: none;
   border: none;
   font-size: 16px;
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
@@ -529,7 +529,7 @@
 }
 
 .quote-cancel:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--theme-bg-tertiary, rgba(0, 0, 0, 0.1));
 }
 
 /* @提及列表样式 */
@@ -538,10 +538,10 @@
   bottom: 100%;
   left: 20px;
   right: 20px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-bg-primary, white);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--theme-shadow-heavy, 0 4px 12px rgba(0, 0, 0, 0.15));
   max-height: 200px;
   overflow-y: auto;
   z-index: 100;
@@ -556,7 +556,7 @@
 }
 
 .mention-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--theme-bg-secondary, #f8f9fa);
 }
 
 .mention-item:first-child {
@@ -577,7 +577,7 @@
 
 .mention-name {
   font-size: 14px;
-  color: #333;
+  color: var(--theme-text-primary, #333);
   font-weight: 500;
 }
 
@@ -585,10 +585,10 @@
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  background-color: #f8f9fa;
+  background-color: var(--theme-bg-secondary, #f8f9fa);
   border-radius: 20px;
   padding: 8px 15px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
 }
 
 /* 移动端输入包装器调整 */
@@ -617,10 +617,11 @@
   max-height: 100px;
   min-height: 20px;
   font-family: inherit;
+  color: var(--theme-text-primary, #1f1f1f);
 }
 
 .input-wrapper textarea::placeholder {
-  color: #8a8a8a;
+  color: var(--theme-text-tertiary, #8a8a8a);
 }
 
 /* 移动端文本域调整 */
@@ -639,7 +640,7 @@
 }
 
 .send-btn {
-  background-color: #007bff;
+  background-color: var(--theme-accent-color, #007bff);
   color: white;
   border: none;
   border-radius: 15px;
@@ -652,11 +653,11 @@
 }
 
 .send-btn:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--theme-accent-hover, #0056b3);
 }
 
 .send-btn:disabled {
-  background-color: #6c757d;
+  background-color: var(--theme-text-secondary, #6c757d);
   cursor: not-allowed;
 }
 
@@ -746,10 +747,10 @@
 .group-message .message-sender {
   font-size: 12px;
   font-weight: 600;
-  color: #007bff;
+  color: var(--theme-accent-color, #007bff);
   margin-bottom: 4px;
   padding: 2px 8px;
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: var(--theme-bg-tertiary, rgba(0, 123, 255, 0.1));
   border-radius: 10px;
   display: inline-block;
   max-width: 200px;
@@ -759,8 +760,8 @@
 }
 
 .group-message.user-message .message-sender {
-  color: #28a745;
-  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--theme-accent-color, #28a745);
+  background-color: var(--theme-bg-tertiary, rgba(40, 167, 69, 0.1));
 }
 
 .group-message .message-bubble {
@@ -774,8 +775,8 @@
 }
 
 .group-message.user-message .message-bubble {
-  background-color: #007bff;
-  color: white;
+  background: var(--theme-message-user-bg, #007bff);
+  color: var(--theme-message-user-text, white);
   margin-left: auto;
   border-bottom-right-radius: 6px;
   align-self: flex-end;
@@ -784,17 +785,17 @@
 }
 
 .group-message.ai-message .message-bubble {
-  background-color: white;
-  color: #333;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-message-ai-bg, white);
+  color: var(--theme-message-ai-text, #333);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
   border-bottom-left-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow-light, 0 1px 3px rgba(0, 0, 0, 0.1));
   align-self: flex-start;
 }
 
 .group-message .message-time {
   font-size: 10px;
-  color: #999;
+  color: var(--theme-text-tertiary, #999);
   margin-top: 4px;
   text-align: right;
 }
@@ -819,8 +820,8 @@
 
 /* 群聊消息的引用样式 */
 .group-message .quoted-message {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-left: 3px solid #007bff;
+  background-color: var(--theme-bg-tertiary, rgba(0, 0, 0, 0.05));
+  border-left: 3px solid var(--theme-accent-color, #007bff);
   padding: 8px;
   margin-bottom: 8px;
   border-radius: 4px;
@@ -828,8 +829,8 @@
 }
 
 .group-message.user-message .quoted-message {
-  border-left-color: #28a745;
-  background-color: rgba(40, 167, 69, 0.1);
+  border-left-color: var(--theme-accent-color, #28a745);
+  background-color: var(--theme-bg-tertiary, rgba(40, 167, 69, 0.1));
 }
 
 /* 移动端群聊消息调整 */
@@ -947,80 +948,10 @@
   }
 }
 
-/* 深色模式支持 - 强制保持白色主题 */
+/* 深色模式支持 - 使用主题变量 */
 @media (prefers-color-scheme: dark) {
-  .chat-interface {
-    background-color: #f5f5f5 !important;
-  }
-  
-  .chat-header {
-    background-color: rgba(247, 247, 247, 0.95) !important;
-    border-bottom-color: #e0e0e0 !important;
-    position: sticky !important;
-    top: 0 !important;
-  }
-  
-  .chat-header .back-btn {
-    color: #007bff !important;
-  }
-  
-  .chat-header .back-btn:hover {
-    background-color: rgba(0, 123, 255, 0.1) !important;
-  }
-  
-  .chat-name {
-    color: #1f1f1f !important;
-  }
-  
-  .chat-status {
-    color: #8a8a8a !important;
-  }
-  
-  .chat-actions .action-btn {
-    color: #666 !important;
-  }
-  
-  .chat-actions .action-btn:hover {
-    background-color: #f0f0f0 !important;
-  }
-  
-  .input-container {
-    background-color: white !important;
-    border-top-color: #e0e0e0 !important;
-  }
-  
-  .input-wrapper {
-    background-color: #f8f9fa !important;
-    border-color: #e0e0e0 !important;
-  }
-  
-  .ai-message .message-bubble {
-    background-color: white !important;
-    color: #1f1f1f !important;
-    border-color: #e0e0e0 !important;
-  }
-  
-  .typing-indicator {
-    background-color: white !important;
-    border-color: #e0e0e0 !important;
-  }
-  
-  .mention-list {
-    background-color: white !important;
-    border-color: #e0e0e0 !important;
-  }
-  
-  .mention-item:hover {
-    background-color: #f8f9fa !important;
-  }
-  
-  .quote-preview {
-    background-color: rgba(0, 123, 255, 0.1) !important;
-  }
-  
-  .group-message .quoted-message {
-    background-color: rgba(0, 0, 0, 0.05) !important;
-  }
+  /* 深色模式下的样式现在由主题系统控制 */
+  /* 如果用户选择了深色主题，相应的CSS类会被应用 */
 }
 
 /* 特殊消息类型样式 */
@@ -1038,7 +969,7 @@
 }
 
 .sticker-fallback {
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   font-style: italic;
 }
 
@@ -1052,12 +983,12 @@
 }
 
 .image-placeholder {
-  background-color: #f0f0f0;
-  border: 2px dashed #ccc;
+  background-color: var(--theme-bg-tertiary, #f0f0f0);
+  border: 2px dashed var(--theme-border-color, #ccc);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   font-size: 14px;
 }
 
@@ -1069,7 +1000,7 @@
 }
 
 .image-fallback {
-  color: #999;
+  color: var(--theme-text-tertiary, #999);
   font-size: 12px;
   font-style: italic;
 }
@@ -1078,7 +1009,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #007bff;
+  color: var(--theme-accent-color, #007bff);
   font-weight: 500;
 }
 
@@ -1122,10 +1053,10 @@
   position: absolute;
   top: 80px;
   right: 20px;
-  background: #ffffff;
+  background: var(--theme-bg-primary, #ffffff);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  border: 1px solid #e8eaed;
+  box-shadow: var(--theme-shadow-heavy, 0 4px 16px rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--theme-border-color, #e8eaed);
   min-width: 120px;
   overflow: hidden;
   animation: slideIn 0.2s ease;
@@ -1141,9 +1072,9 @@
   text-align: left;
   cursor: pointer;
   font-size: 14px;
-  color: #202124;
+  color: var(--theme-text-primary, #202124);
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid var(--theme-border-light, #f1f3f4);
 }
 
 .chat-menu-item:last-child {
@@ -1151,7 +1082,7 @@
 }
 
 .chat-menu-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--theme-bg-secondary, #f8f9fa);
 }
 
 .chat-menu-item.delete {
@@ -1230,7 +1161,7 @@
 .message-action-btn {
   background: none;
   border: none;
-  color: #666;
+  color: var(--theme-text-secondary, #666);
   cursor: pointer;
   padding: 2px;
   border-radius: 3px;
@@ -1248,14 +1179,14 @@
 }
 
 .message-action-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--theme-bg-tertiary, #f0f0f0);
+  color: var(--theme-text-primary, #333);
   transform: scale(1.1);
 }
 
 .message-action-btn.edit-btn:hover {
-  color: #007bff;
-  background-color: #e3f2fd;
+  color: var(--theme-accent-color, #007bff);
+  background-color: var(--theme-bg-tertiary, #e3f2fd);
 }
 
 .message-action-btn.regenerate-btn:hover {
@@ -1276,19 +1207,20 @@
   width: 100%;
   min-height: 60px;
   padding: 12px;
-  border: 2px solid #007bff;
+  border: 2px solid var(--theme-accent-color, #007bff);
   border-radius: 12px;
   font-size: 14px;
   line-height: 1.4;
   resize: vertical;
-  background: white;
+  background: var(--theme-bg-primary, white);
+  color: var(--theme-text-primary, #1f1f1f);
   outline: none;
   font-family: inherit;
 }
 
 .message-edit-input:focus {
-  border-color: #0056b3;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: var(--theme-accent-hover, #0056b3);
+  box-shadow: 0 0 0 3px var(--theme-bg-tertiary, rgba(0, 123, 255, 0.1));
 }
 
 .message-edit-actions {

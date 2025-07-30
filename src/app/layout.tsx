@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import ThemeProvider, { ThemeErrorBoundary } from "./components/theme/ThemeProvider";
+import ThemeInitScript from "./components/theme/ThemeInitScript";
 
 export const metadata: Metadata = {
   title: "Lingki-AI",
@@ -40,9 +42,14 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#007bff" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
+        <ThemeInitScript />
       </head>
       <body>
-        {children}
+        <ThemeErrorBoundary>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </ThemeErrorBoundary>
       </body>
     </html>
   );
