@@ -1,13 +1,9 @@
 /* ChatListPage 使用主题变量 */
 
-/* 主容器 - 覆盖app-container的影响 */
+/* 主容器 - 使用flex布局自适应浏览器可视范围 */
 .chat-list-page {
   width: 100% !important;
-  /* 使用现代视口单位和 JavaScript 计算的视口高度 */
-  height: 100vh !important;
-  height: 100dvh !important; /* 动态视口高度 - 现代浏览器 */
-  height: 100svh !important; /* 小视口高度 - 最新标准 */
-  height: calc(var(--actual-vh, 100vh)) !important; /* JavaScript 计算的实际视口高度 */
+  height: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
   display: flex !important;
@@ -18,13 +14,9 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   justify-content: flex-start !important;
   align-items: stretch !important;
-  /* 确保在移动端浏览器中正确显示 */
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: 100svh;
-  min-height: calc(var(--actual-vh, 100vh));
-  /* 处理 iOS Safari 和 Chrome 移动端的视口问题 */
-  min-height: -webkit-fill-available;
+  /* 确保占满整个父容器 */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* 桌面端布局 - 全屏显示 */
@@ -84,22 +76,10 @@
     margin-left: -2px;
   }
   
-  /* 移动端特殊适配 */
+  /* 移动端特殊适配 - 移除固定高度，使用flex布局 */
   .chat-list-page {
-    height: 100vh !important;
-    height: 100dvh !important;
-    height: 100svh !important;
-    height: calc(var(--actual-vh, 100vh)) !important;
-    min-height: 100vh;
-    min-height: 100dvh;
-    min-height: 100svh;
-    min-height: calc(var(--actual-vh, 100vh));
-    /* 处理iOS Safari和Chrome移动端的视口问题 */
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
-    /* 确保在Chrome移动端地址栏显示/隐藏时保持全屏 */
-    height: 100%;
-    min-height: 100%;
+    height: 100% !important;
+    min-height: 0;
   }
 }
 
@@ -119,21 +99,10 @@
     margin-left: -1px;
   }
   
-  /* 超小屏幕特殊适配 */
+  /* 超小屏幕特殊适配 - 移除固定高度 */
   .chat-list-page {
-    height: 100vh !important;
-    height: 100dvh !important;
-    height: 100svh !important;
-    height: calc(var(--actual-vh, 100vh)) !important;
-    min-height: 100vh;
-    min-height: 100dvh;
-    min-height: 100svh;
-    min-height: calc(var(--actual-vh, 100vh));
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
-    /* 确保在Chrome移动端地址栏显示/隐藏时保持全屏 */
-    height: 100%;
-    min-height: 100%;
+    height: 100% !important;
+    min-height: 0;
   }
 }
 
@@ -947,4 +916,4 @@
 @media (prefers-color-scheme: dark) {
   /* 深色模式下的样式现在由主题系统控制 */
   /* 如果用户选择了深色主题，相应的CSS类会被应用 */
-} 
+}

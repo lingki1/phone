@@ -1,15 +1,7 @@
-/* 我页面样式 */
+/* 我页面样式 - 使用flex布局自适应 */
 .me-page {
   width: 100%;
-  /* 使用现代视口单位和 JavaScript 计算的视口高度 */
-  height: 100vh;
-  height: 100dvh;
-  height: 100svh;
-  height: calc(var(--actual-vh, 100vh));
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: 100svh;
-  min-height: calc(var(--actual-vh, 100vh));
+  height: 100%;
   background-color: var(--theme-bg-primary, #ffffff) !important;
   position: relative;
   overflow-y: auto;
@@ -17,28 +9,18 @@
   /* 确保底部有足够空间给底部导航 */
   padding-bottom: 85px;
   box-sizing: border-box;
-  /* 处理 iOS Safari 和 Chrome 移动端的视口问题 */
-  min-height: -webkit-fill-available;
+  /* 确保占满整个父容器 */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-/* 移动端特殊适配 */
+/* 移动端特殊适配 - 移除固定高度 */
 @media (max-width: 767px) {
   .me-page {
-    height: 100vh;
-    height: 100dvh;
-    height: 100svh;
-    height: calc(var(--actual-vh, 100vh));
-    min-height: 100vh;
-    min-height: 100dvh;
-    min-height: 100svh;
-    min-height: calc(var(--actual-vh, 100vh));
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
+    height: 100%;
     /* 移动端底部导航高度调整 */
     padding-bottom: 75px;
-    /* 确保在Chrome移动端地址栏显示/隐藏时保持全屏 */
-    height: 100%;
-    min-height: 100%;
+    min-height: 0;
   }
 }
 
@@ -446,4 +428,4 @@
 @media (prefers-color-scheme: dark) {
   /* 深色模式下的样式现在由主题系统控制 */
   /* 如果用户选择了深色主题，相应的CSS类会被应用 */
-} 
+}

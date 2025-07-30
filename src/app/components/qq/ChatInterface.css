@@ -1,8 +1,7 @@
-/* 聊天界面样式 */
+/* 聊天界面样式 - 使用flex布局自适应 */
 .chat-interface {
   width: 100%;
-  height: 100vh;
-  height: 100dvh; /* 使用动态视口高度 */
+  height: 100%;
   max-width: 100%;
   margin: 0 auto;
   display: flex;
@@ -10,9 +9,9 @@
   background-color: var(--theme-bg-primary, #f5f5f5);
   position: relative;
   overflow: hidden;
-  /* 确保在移动端浏览器中正确显示 */
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* 确保占满整个父容器 */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* 桌面端布局 - 全屏显示 */
@@ -60,15 +59,10 @@
     top: 0;
   }
   
-  /* 移动端特殊适配 */
+  /* 移动端特殊适配 - 移除固定高度 */
   .chat-interface {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 100vh;
-    min-height: 100dvh;
-    /* 处理iOS Safari的视口问题 */
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
+    height: 100%;
+    min-height: 0;
   }
 }
 
@@ -79,14 +73,10 @@
     top: 0;
   }
   
-  /* 超小屏幕特殊适配 */
+  /* 超小屏幕特殊适配 - 移除固定高度 */
   .chat-interface {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 100vh;
-    min-height: 100dvh;
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
+    height: 100%;
+    min-height: 0;
   }
 }
 
@@ -1309,4 +1299,4 @@
     padding: 4px 8px;
     font-size: 10px;
   }
-} 
+}
