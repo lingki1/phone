@@ -7,9 +7,9 @@ import BottomNavigation from './BottomNavigation';
 import ApiSettingsModal from './ApiSettingsModal';
 import ChatInterface from './ChatInterface';
 import CreateGroupModal from './CreateGroupModal';
-
 import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
+import MePage from './me/MePage';
 import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import './ChatListPage.css';
@@ -26,8 +26,8 @@ interface ChatListPageProps {
 
 export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
-  const [activeView, setActiveView] = useState<'messages' | 'moments' | 'me'>('messages');
-  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat'>('list');
+  const [activeView, setActiveView] = useState<string>('messages');
+  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'me'>('list');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
   // 模态框状态
@@ -182,6 +182,16 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setCurrentScreen('chat');
   };
 
+  // 处理底部导航切换
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+    if (view === 'me') {
+      setCurrentScreen('me');
+    } else {
+      setCurrentScreen('list');
+    }
+  };
+
   // 更新聊天数据
   const handleUpdateChat = async (updatedChat: ChatItem) => {
     const updatedChats = chats.map(chat => 
@@ -316,6 +326,18 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     );
   }
 
+  if (currentScreen === 'me') {
+    return (
+      <>
+        <MePage onBackToDesktop={onBackToDesktop} />
+        <BottomNavigation 
+          activeView={activeView}
+          onViewChange={handleViewChange}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="chat-list-page">
       {/* 顶部导航栏 */}
@@ -366,7 +388,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       {/* 底部导航栏 */}
       <BottomNavigation 
         activeView={activeView}
-        onViewChange={setActiveView}
+        onViewChange={handleViewChange}
       />
       
       {/* API设置模态框 */}

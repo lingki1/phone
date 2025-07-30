@@ -40,7 +40,7 @@ chmod +x deploy.sh
 
 ```bash
 # 构建并启动容器
-docker-compose -f docker-compose.simple.yml up -d --build
+docker compose -f docker-compose.simple.yml up -d --build
 
 # 查看日志
 docker-compose -f docker-compose.simple.yml logs -f

@@ -1,0 +1,500 @@
+/* 我页面样式 */
+.me-page {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #ffffff !important;
+  position: relative;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* 移动端特殊适配 */
+@media (max-width: 767px) {
+  .me-page {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* 加载状态 */
+.me-page.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff !important;
+}
+
+.loading-spinner {
+  color: #666;
+  font-size: 16px;
+}
+
+/* 顶部背景区域 */
+.me-header {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.me-background {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.me-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.me-profile-section {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: #202124;
+  padding: 20px;
+}
+
+.me-avatar-container {
+  margin-bottom: 15px;
+}
+
+.me-avatar {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 50%;
+  border: 2px solid #e8eaed;
+  object-fit: cover;
+  background-color: #f1f3f4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.me-info {
+  text-align: center;
+}
+
+.me-nickname {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #202124;
+}
+
+.me-bio {
+  font-size: 14px;
+  margin: 0;
+  color: #5f6368;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* 余额显示区域 */
+.me-balance-section {
+  padding: 20px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 3;
+}
+
+.balance-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8eaed;
+}
+
+.balance-icon {
+  font-size: 32px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.balance-info {
+  flex: 1;
+}
+
+.balance-label {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 4px;
+}
+
+.balance-amount {
+  font-size: 24px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.balance-action {
+  flex-shrink: 0;
+}
+
+.balance-info-btn {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
+}
+
+.balance-info-btn:hover {
+  background: #1557b0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.4);
+}
+
+.balance-info-btn:active {
+  transform: translateY(0);
+}
+
+/* 余额信息弹窗 */
+.balance-info-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.balance-info-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 90%;
+  width: 320px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+  border: 1px solid #e8eaed;
+}
+
+.balance-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.balance-info-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f1f3f4;
+  color: #5f6368;
+}
+
+.balance-info-body {
+  padding: 20px;
+}
+
+.balance-info-body p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5f6368;
+}
+
+.balance-info-body p:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 选项列表 */
+.me-options {
+  padding: 0 20px 20px 20px;
+}
+
+.option-group {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8eaed;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.option-item:hover {
+  background-color: #f8f9fa;
+}
+
+.option-item:active {
+  background-color: #f1f3f4;
+}
+
+.option-icon {
+  font-size: 24px;
+  margin-right: 15px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
+  margin-bottom: 2px;
+}
+
+.option-subtitle {
+  font-size: 12px;
+  color: #5f6368;
+}
+
+.option-arrow {
+  font-size: 18px;
+  color: #ccc;
+  font-weight: 300;
+  margin-left: 10px;
+}
+
+
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .me-header {
+    height: 180px;
+  }
+  
+  .me-nickname {
+    font-size: 22px;
+  }
+  
+  .me-bio {
+    font-size: 13px;
+    max-width: 180px;
+  }
+  
+  .me-avatar {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  
+  .balance-card {
+    padding: 16px;
+  }
+  
+  .balance-amount {
+    font-size: 22px;
+  }
+  
+  .option-item {
+    padding: 14px 16px;
+  }
+  
+  .option-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .me-header {
+    height: 160px;
+  }
+  
+  .me-nickname {
+    font-size: 20px;
+  }
+  
+  .me-bio {
+    font-size: 12px;
+    max-width: 160px;
+  }
+  
+  .me-avatar {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .balance-card {
+    padding: 14px;
+  }
+  
+  .balance-amount {
+    font-size: 20px;
+  }
+  
+  .option-item {
+    padding: 12px 14px;
+  }
+  
+  .option-title {
+    font-size: 14px;
+  }
+}
+
+/* 深色模式支持 - 保持白色主题 */
+@media (prefers-color-scheme: dark) {
+  .me-page {
+    background-color: #ffffff !important;
+  }
+  
+  .me-background {
+    background-color: #f8f9fa !important;
+    border-bottom-color: #e8eaed !important;
+  }
+  
+  .me-nickname {
+    color: #202124 !important;
+  }
+  
+  .me-bio {
+    color: #5f6368 !important;
+  }
+  
+  .balance-card {
+    background-color: #ffffff !important;
+    border-color: #e8eaed !important;
+  }
+  
+  .balance-amount {
+    color: #202124 !important;
+  }
+  
+  .balance-label {
+    color: #5f6368 !important;
+  }
+  
+  .option-group {
+    background-color: #ffffff !important;
+    border-color: #e8eaed !important;
+  }
+  
+  .option-item {
+    border-bottom-color: #e8eaed !important;
+  }
+  
+  .option-item:hover {
+    background-color: #f8f9fa !important;
+  }
+  
+  .option-item:active {
+    background-color: #f1f3f4 !important;
+  }
+  
+  .option-title {
+    color: #202124 !important;
+  }
+  
+  .option-subtitle {
+    color: #5f6368 !important;
+  }
+  
+  .balance-info-content {
+    background-color: #ffffff !important;
+    border-color: #e8eaed !important;
+  }
+  
+  .balance-info-header {
+    border-bottom-color: #e8eaed !important;
+  }
+  
+  .balance-info-header h3 {
+    color: #202124 !important;
+  }
+  
+  .balance-info-body p {
+    color: #5f6368 !important;
+  }
+  
+  .close-btn {
+    color: #5f6368 !important;
+  }
+  
+  .close-btn:hover {
+    background-color: #f1f3f4 !important;
+    color: #202124 !important;
+  }
+} 

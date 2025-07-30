@@ -21,6 +21,7 @@
 .chat-list-page {
   width: 100% !important;
   height: 100vh !important;
+  height: 100dvh !important; /* 使用动态视口高度 */
   max-width: 100% !important;
   margin: 0 !important;
   display: flex !important;
@@ -31,6 +32,9 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   justify-content: flex-start !important;
   align-items: stretch !important;
+  /* 确保在移动端浏览器中正确显示 */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* 桌面端布局 - 全屏显示 */
@@ -77,6 +81,26 @@
     padding: 12px 15px;
     font-size: 16px;
   }
+  
+  .back-button {
+    margin-left: -4px;
+    margin-right: 6px;
+  }
+  
+  .user-avatar-container {
+    margin-left: -2px;
+  }
+  
+  /* 移动端特殊适配 */
+  .chat-list-page {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* 处理iOS Safari的视口问题 */
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* 超小屏幕顶部导航栏调整 */
@@ -84,6 +108,25 @@
   .chat-list-header {
     padding: 10px 12px;
     font-size: 15px;
+  }
+  
+  .back-button {
+    margin-left: -2px;
+    margin-right: 4px;
+  }
+  
+  .user-avatar-container {
+    margin-left: -1px;
+  }
+  
+  /* 超小屏幕特殊适配 */
+  .chat-list-page {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
   }
 }
 
@@ -98,7 +141,8 @@
   cursor: pointer;
   color: var(--text-primary);
   transition: all 0.2s ease;
-  margin-right: 10px;
+  margin-right: 8px;
+  margin-left: -8px;
 }
 
 .back-button:hover {
@@ -114,6 +158,7 @@
 .user-avatar-container {
   position: relative;
   flex-shrink: 0;
+  margin-left: -4px;
 }
 
 .user-avatar {
@@ -740,75 +785,7 @@
   }
 }
 
-/* 底部导航栏样式 - 强制白色主题 */
-.bottom-navigation {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 15;
-  display: flex;
-  border-top: 1px solid #e8eaed !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nav-item {
-  flex: 1;
-  text-align: center;
-  padding: 12px 0;
-  font-size: 14px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: color 0.2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.nav-item.active {
-  color: var(--accent-color);
-  font-weight: 600;
-}
-
-.nav-item.active .nav-icon svg {
-  stroke: var(--accent-color);
-}
-
-.nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nav-label {
-  font-size: 12px;
-}
-
-/* 移动端底部导航调整 */
-@media (max-width: 767px) {
-  .nav-item {
-    padding: 10px 0;
-    font-size: 13px;
-  }
-  
-  .nav-label {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .nav-item {
-    padding: 8px 0;
-    font-size: 12px;
-  }
-  
-  .nav-label {
-    font-size: 10px;
-  }
-}
+/* 底部导航栏样式已移至 BottomNavigation.css */
 
 /* 响应式设计 */
 @media (max-width: 480px) {
@@ -919,13 +896,7 @@
     padding: 8px 15px;
   }
   
-  .bottom-navigation {
-    padding-bottom: 5px;
-  }
-  
-  .nav-item {
-    padding: 6px 0;
-  }
+  /* 底部导航样式已移至 BottomNavigation.css */
 }
 
 /* 横屏模式适配 */
@@ -951,9 +922,7 @@
     height: auto;
   }
   
-  .bottom-navigation {
-    display: none !important;
-  }
+  /* 底部导航样式已移至 BottomNavigation.css */
 }
 
 /* 减少动画偏好 */
@@ -993,10 +962,7 @@
     background: #f8f9fa !important;
   }
   
-  .bottom-navigation {
-    background-color: #ffffff !important;
-    border-top-color: #e8eaed !important;
-  }
+  /* 底部导航样式已移至 BottomNavigation.css */
   
   .chat-list-item {
     border-bottom-color: #f1f3f4 !important;
