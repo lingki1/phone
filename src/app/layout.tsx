@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ThemeProvider, { ThemeErrorBoundary } from "./components/theme/ThemeProvider";
 import ThemeInitScript from "./components/theme/ThemeInitScript";
+import ViewportHandler from "./components/utils/ViewportHandler";
 
 export const metadata: Metadata = {
   title: "Lingki-AI",
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body>
         <ThemeErrorBoundary>
           <ThemeProvider>
+            <ViewportHandler />
             {children}
           </ThemeProvider>
         </ThemeErrorBoundary>

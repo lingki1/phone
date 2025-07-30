@@ -16,7 +16,9 @@ interface MePageProps {
   onBackToDesktop?: () => void;
 }
 
-export default function MePage({ onBackToDesktop: _ }: MePageProps) {
+export default function MePage({ onBackToDesktop }: MePageProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = onBackToDesktop; // 暂时保留参数，避免 ESLint 警告
   const [personalSettings, setPersonalSettings] = useState<PersonalSettings>({
     userAvatar: '/avatars/user-avatar.svg',
     userNickname: '用户',

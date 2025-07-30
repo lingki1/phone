@@ -328,13 +328,13 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
   if (currentScreen === 'me') {
     return (
-      <>
+      <div className="chat-list-page">
         <MePage onBackToDesktop={onBackToDesktop} />
         <BottomNavigation 
           activeView={activeView}
           onViewChange={handleViewChange}
         />
-      </>
+      </div>
     );
   }
 
