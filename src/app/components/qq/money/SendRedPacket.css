@@ -1,0 +1,314 @@
+/* 发送红包组件样式 */
+.send-red-packet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.send-red-packet-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 头部样式 */
+.red-packet-header {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 12px 12px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.red-packet-header .close-btn {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.red-packet-header .close-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.red-packet-header .close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.red-packet-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.recipient-info {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* 红包预览区域 */
+.red-packet-preview {
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  display: flex;
+  justify-content: center;
+}
+
+.red-packet-bg {
+  background: #d63031;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 16px rgba(214, 48, 49, 0.3);
+  min-width: 200px;
+}
+
+.red-packet-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.red-packet-title {
+  font-size: 16px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.red-packet-amount {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* 金额输入区域 */
+.amount-input-section {
+  padding: 24px 20px;
+  background: #f8f9fa;
+}
+
+.balance-info {
+  text-align: center;
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 14px;
+}
+
+.amount-input-container {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.amount-input-container:focus-within {
+  border-color: #ff6b6b;
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-right: 8px;
+}
+
+.amount-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  background: transparent;
+}
+
+.amount-input::placeholder {
+  color: #adb5bd;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* 预设金额按钮 */
+.preset-amounts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.preset-btn {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-btn:hover:not(:disabled) {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.preset-btn.active {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: white;
+}
+
+.preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 祝福语输入区域 */
+.message-input-section {
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.message-input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.message-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.message-input:focus {
+  border-color: #ff6b6b;
+}
+
+.message-input:disabled {
+  background: #f8f9fa;
+  opacity: 0.7;
+}
+
+.message-length {
+  text-align: right;
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+/* 发送按钮区域 */
+.send-button-section {
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.send-button {
+  width: 100%;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.send-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #ff7979);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  transform: translateY(-1px);
+}
+
+.send-button:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .send-red-packet-overlay {
+    padding: 10px;
+  }
+  
+  .send-red-packet-modal {
+    max-height: 95vh;
+  }
+  
+  .red-packet-bg {
+    min-width: 160px;
+    padding: 20px;
+  }
+  
+  .red-packet-icon {
+    font-size: 40px;
+  }
+  
+  .red-packet-amount {
+    font-size: 24px;
+  }
+  
+  .preset-amounts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

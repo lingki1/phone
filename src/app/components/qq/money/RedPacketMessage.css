@@ -1,0 +1,310 @@
+/* 红包消息组件样式 */
+.red-packet-message {
+  position: relative;
+  max-width: 280px;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.red-packet-message:hover {
+  transform: translateY(-1px);
+}
+
+.red-packet-message.user {
+  margin-left: auto;
+}
+
+.red-packet-message.ai {
+  margin-right: auto;
+}
+
+/* 红包容器 */
+.red-packet-container {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 不同类型的红包样式 */
+.red-packet-message.red_packet_send .red-packet-container {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.red-packet-message.red_packet_receive.claimed .red-packet-container {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+.red-packet-message.red_packet_request .red-packet-container {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+/* 红包图标 */
+.red-packet-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* 红包内容 */
+.red-packet-content {
+  color: white;
+  text-align: center;
+}
+
+/* 红包头部 */
+.red-packet-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.red-packet-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.red-packet-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.red-packet-badge.claimed {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 金额显示 */
+.red-packet-amount {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffd700;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 祝福语/请求消息 */
+.red-packet-message-text {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 红包信息 */
+.red-packet-info {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.info-text {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* 时间信息 */
+.red-packet-time {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.claim-time {
+  margin-left: 4px;
+}
+
+/* 操作提示 */
+.red-packet-action {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+}
+
+.action-hint {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: pulse-hint 2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* 红包发光效果 */
+.red-packet-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #ff6b6b, #ff8e8e, #ff6b6b);
+  border-radius: 14px;
+  z-index: -1;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* 模态框样式 */
+.red-packet-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.red-packet-modal-content {
+  position: relative;
+  max-width: 400px;
+  width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* 用户消息样式调整 */
+.red-packet-message.user .red-packet-container {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.red-packet-message.user.red_packet_send .red-packet-container {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .red-packet-message {
+    max-width: 240px;
+  }
+  
+  .red-packet-container {
+    padding: 14px;
+  }
+  
+  .red-packet-amount {
+    font-size: 20px;
+  }
+  
+  .red-packet-title {
+    font-size: 14px;
+  }
+  
+  .red-packet-message-text {
+    font-size: 13px;
+    max-width: 180px;
+  }
+  
+  .red-packet-modal-overlay {
+    padding: 10px;
+  }
+}
+
+/* 特殊状态样式 */
+.red-packet-message.red_packet_receive.unclaimed {
+  animation: gentle-bounce 3s ease-in-out infinite;
+}
+
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* 已领取状态的特殊样式 */
+.red-packet-message.red_packet_receive.claimed .red-packet-amount {
+  color: #e9ecef;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.red-packet-message.red_packet_receive.claimed .action-hint {
+  display: none;
+}
+
+/* 请求红包的特殊样式 */
+.red-packet-message.red_packet_request .red-packet-icon {
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}

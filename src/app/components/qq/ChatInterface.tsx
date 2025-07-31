@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import GroupMemberManager from './GroupMemberManager';
+import SendRedPacket from './money/SendRedPacket';
+import RedPacketMessage from './money/RedPacketMessage';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -46,6 +48,8 @@ export default function ChatInterface({
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
   const [editingMessage, setEditingMessage] = useState<{id: string, content: string} | null>(null);
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
+  const [showSendRedPacket, setShowSendRedPacket] = useState(false);
+  const [currentBalance, setCurrentBalance] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -79,6 +83,22 @@ export default function ChatInterface({
     
     loadPersonalSettings();
   }, [personalSettings]);
+
+  // 加载用户余额
+  useEffect(() => {
+    const loadBalance = async () => {
+      try {
+        await dataManager.initDB();
+        const balance = await dataManager.getBalance();
+        setCurrentBalance(balance);
+      } catch (error) {
+        console.error('Failed to load balance:', error);
+        setCurrentBalance(0);
+      }
+    };
+    
+    loadBalance();
+  }, []);
 
   // 处理@提及功能
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -146,6 +166,179 @@ export default function ChatInterface({
   // 取消引用
   const cancelQuote = () => {
     setQuotedMessage(undefined);
+  };
+
+  // 发送红包处理函数
+  const handleSendRedPacket = async (amount: number, message: string) => {
+    try {
+      // 检查余额
+      if (amount > currentBalance) {
+        throw new Error('余额不足');
+      }
+
+      // 扣除余额
+      const newBalance = currentBalance - amount;
+      await dataManager.saveBalance(newBalance);
+      setCurrentBalance(newBalance);
+
+      // 创建红包消息
+      const redPacketMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `发送了一个红包`,
+        timestamp: Date.now(),
+        senderName: chat.isGroup ? (chat.settings.myNickname || '我') : undefined,
+        senderAvatar: chat.isGroup ? chat.settings.myAvatar : undefined,
+        type: 'red_packet_send',
+        redPacketData: {
+          id: `redpacket_${Date.now()}`,
+          amount: amount,
+          message: message,
+          senderName: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+          recipientName: chat.name,
+          isClaimed: false
+        }
+      };
+
+      // 添加交易记录
+      await dataManager.addTransaction({
+        id: `transaction_${Date.now()}`,
+        type: 'send',
+        amount: amount,
+        chatId: chat.id,
+        fromUser: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+        toUser: chat.name,
+        message: message,
+        timestamp: Date.now(),
+        status: 'completed'
+      });
+
+      // 更新聊天记录
+      const updatedChat = {
+        ...chat,
+        messages: [...chat.messages, redPacketMessage],
+        lastMessage: '发送了一个红包',
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      };
+      onUpdateChat(updatedChat);
+
+      // 触发AI回复
+      await triggerAiResponse(updatedChat);
+    } catch (error) {
+      console.error('Send red packet error:', error);
+      throw error;
+    }
+  };
+
+  // 领取红包处理函数
+  const handleClaimRedPacket = async (redPacketId: string) => {
+    try {
+      // 找到对应的红包消息
+      const redPacketMessage = chat.messages.find(msg => 
+        msg.redPacketData?.id === redPacketId
+      );
+
+      if (!redPacketMessage || !redPacketMessage.redPacketData) {
+        throw new Error('红包不存在');
+      }
+
+      if (redPacketMessage.redPacketData.isClaimed) {
+        throw new Error('红包已被领取');
+      }
+
+      // 增加余额
+      const newBalance = currentBalance + redPacketMessage.redPacketData.amount;
+      await dataManager.saveBalance(newBalance);
+      setCurrentBalance(newBalance);
+
+      // 更新红包状态
+      const updatedMessages = chat.messages.map(msg => {
+        if (msg.redPacketData?.id === redPacketId) {
+          return {
+            ...msg,
+            redPacketData: {
+              ...msg.redPacketData,
+              isClaimed: true,
+              claimedAt: Date.now()
+            }
+          };
+        }
+        return msg;
+      });
+
+      // 添加交易记录
+      await dataManager.addTransaction({
+        id: `transaction_${Date.now()}`,
+        type: 'receive',
+        amount: redPacketMessage.redPacketData.amount,
+        chatId: chat.id,
+        fromUser: redPacketMessage.redPacketData.senderName,
+        toUser: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+        message: redPacketMessage.redPacketData.message,
+        timestamp: Date.now(),
+        status: 'completed'
+      });
+
+      // 更新聊天记录
+      const updatedChat = {
+        ...chat,
+        messages: updatedMessages,
+        lastMessage: '领取了红包',
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      };
+      onUpdateChat(updatedChat);
+    } catch (error) {
+      console.error('Claim red packet error:', error);
+      throw error;
+    }
+  };
+
+  // AI接收红包处理函数
+  const handleAiAcceptRedPacket = async (redPacketId: string, thankMessage: string, aiName: string) => {
+    try {
+      // 找到对应的红包消息
+      const redPacketMessage = chat.messages.find(msg => 
+        msg.redPacketData?.id === redPacketId
+      );
+
+      if (!redPacketMessage || !redPacketMessage.redPacketData) {
+        console.warn('Red packet not found:', redPacketId);
+        return;
+      }
+
+      if (redPacketMessage.redPacketData.isClaimed) {
+        console.warn('Red packet already claimed:', redPacketId);
+        return;
+      }
+
+      // 更新红包状态为已领取
+      const updatedMessages = chat.messages.map(msg => {
+        if (msg.redPacketData?.id === redPacketId) {
+          return {
+            ...msg,
+            redPacketData: {
+              ...msg.redPacketData,
+              isClaimed: true,
+              claimedAt: Date.now()
+            }
+          };
+        }
+        return msg;
+      });
+
+      // 更新聊天记录
+      const updatedChat = {
+        ...chat,
+        messages: updatedMessages,
+        lastMessage: thankMessage,
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      };
+      onUpdateChat(updatedChat);
+
+      console.log(`AI ${aiName} accepted red packet ${redPacketId} with message: ${thankMessage}`);
+    } catch (error) {
+      console.error('AI accept red packet error:', error);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -342,6 +535,17 @@ export default function ChatInterface({
 - **发送图片**: {"type": "ai_image", "name": "角色名", "description": "图片描述"}
 - **发送语音**: {"type": "voice_message", "name": "角色名", "content": "语音内容"}
 - **拍一拍用户**: {"type": "pat_user", "name": "角色名", "suffix": "后缀"}
+- **发送红包**: {"type": "send_red_packet", "name": "角色名", "amount": 金额数字, "message": "祝福语"}
+- **请求红包**: {"type": "request_red_packet", "name": "角色名", "message": "请求消息"}
+- **接收红包**: {"type": "accept_red_packet", "name": "角色名", "red_packet_id": "红包ID", "message": "感谢消息"}
+- **拒绝红包**: {"type": "decline_red_packet", "name": "角色名", "red_packet_id": "红包ID", "message": "拒绝理由"}
+
+# 红包处理规则：
+- 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
+- 如果接收红包，使用accept_red_packet命令，并表达感谢
+- 如果拒绝红包，使用decline_red_packet命令，并说明理由
+- 红包ID会在对话历史中提供，格式为"redpacket_时间戳"
+- 你可以根据红包金额、祝福语、当前关系等因素做出判断
 
 # 群成员列表及人设
 ${membersList}
@@ -369,6 +573,17 @@ ${chat.settings.aiPersona}
 - **发送图片**: {"type": "ai_image", "description": "图片描述"}
 - **发送语音**: {"type": "voice_message", "content": "语音内容"}
 - **拍一拍用户**: {"type": "pat_user", "suffix": "后缀"}
+- **发送红包**: {"type": "send_red_packet", "amount": 金额数字, "message": "祝福语"}
+- **请求红包**: {"type": "request_red_packet", "message": "请求消息"}
+- **接收红包**: {"type": "accept_red_packet", "red_packet_id": "红包ID", "message": "感谢消息"}
+- **拒绝红包**: {"type": "decline_red_packet", "red_packet_id": "红包ID", "message": "拒绝理由"}
+
+# 红包处理规则：
+- 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
+- 如果接收红包，使用accept_red_packet命令，并表达感谢
+- 如果拒绝红包，使用decline_red_packet命令，并说明理由
+- 红包ID会在对话历史中提供，格式为"redpacket_时间戳"
+- 你可以根据红包金额、祝福语、当前关系等因素做出判断
 
 # 对话者的角色设定：
 ${myPersona}
@@ -397,6 +612,17 @@ ${myPersona}
         content = `[${sender} 发送了一条语音，内容是：'${msg.content}']`;
       } else if (msg.meaning) {
         content = `${sender}: [发送了一个表情，意思是: '${msg.meaning}']`;
+      } else if (msg.type === 'red_packet_send' && msg.redPacketData) {
+        // 红包发送消息，包含红包ID和详细信息
+        const redPacket = msg.redPacketData;
+        const status = redPacket.isClaimed ? '已被领取' : '待领取';
+        content = `${prefix}发送了一个红包 [红包ID: ${redPacket.id}, 金额: ¥${redPacket.amount}, 祝福语: "${redPacket.message}", 状态: ${status}]`;
+      } else if (msg.type === 'red_packet_receive' && msg.redPacketData) {
+        // AI发送给用户的红包
+        content = `${prefix}${msg.content} [金额: ¥${msg.redPacketData.amount}]`;
+      } else if (msg.type === 'red_packet_request' && msg.redPacketData) {
+        // AI请求红包
+        content = `${prefix}${msg.content} [${msg.redPacketData.message}]`;
       } else {
         content = `${prefix}${msg.content}`;
       }
@@ -500,6 +726,96 @@ ${myPersona}
         break;
       case 'pat_user':
         content = `拍一拍${msgData.suffix ? String(msgData.suffix) : ''}`;
+        type = 'text';
+        break;
+      case 'send_red_packet':
+        // AI发送红包命令
+        const amount = Number(msgData.amount) || 0;
+        const redPacketMessage = String(msgData.message || '恭喜发财！');
+        
+        if (amount > 0) {
+          // 增加用户余额
+          const newBalance = currentBalance + amount;
+          await dataManager.saveBalance(newBalance);
+          setCurrentBalance(newBalance);
+          
+          // 添加交易记录
+          await dataManager.addTransaction({
+            id: `transaction_${timestamp}`,
+            type: 'receive',
+            amount: amount,
+            chatId: chat.id,
+            fromUser: String(msgData.name || chat.name),
+            toUser: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+            message: redPacketMessage,
+            timestamp: timestamp,
+            status: 'completed'
+          });
+          
+          content = `发送了一个红包`;
+          type = 'red_packet_receive';
+          
+          // 返回带有红包数据的消息
+          return {
+            id: timestamp.toString(),
+            role: 'assistant',
+            content,
+            timestamp,
+            senderName: String(msgData.name || chat.name),
+            senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
+            type,
+            redPacketData: {
+              id: `redpacket_${timestamp}`,
+              amount: amount,
+              message: redPacketMessage,
+              senderName: String(msgData.name || chat.name),
+              recipientName: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+              isClaimed: false
+            }
+          };
+        }
+        break;
+      case 'request_red_packet':
+        // AI请求红包命令
+        content = `请求红包`;
+        type = 'red_packet_request';
+        
+        return {
+          id: timestamp.toString(),
+          role: 'assistant',
+          content,
+          timestamp,
+          senderName: String(msgData.name || chat.name),
+          senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
+          type,
+          redPacketData: {
+            id: `redpacket_request_${timestamp}`,
+            amount: 0,
+            message: String(msgData.message || '求红包～'),
+            senderName: String(msgData.name || chat.name),
+            recipientName: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+            isClaimed: false
+          }
+        };
+      case 'accept_red_packet':
+        // AI接收红包命令
+        const redPacketId = String(msgData.red_packet_id || '');
+        const acceptMessage = String(msgData.message || '谢谢红包！');
+        
+        if (redPacketId) {
+          // 找到对应的红包消息并处理接收逻辑
+          await handleAiAcceptRedPacket(redPacketId, acceptMessage, String(msgData.name || chat.name));
+        }
+        
+        content = acceptMessage;
+        type = 'text';
+        break;
+      case 'decline_red_packet':
+        // AI拒绝红包命令
+        const declineRedPacketId = String(msgData.red_packet_id || '');
+        const declineMessage = String(msgData.message || '不好意思，我不能收这个红包');
+        
+        content = declineMessage;
         type = 'text';
         break;
       default:
@@ -634,7 +950,18 @@ ${myPersona}
             🎤 {msg.content}
           </div>
         );
-              case 'image':
+      case 'red_packet_send':
+      case 'red_packet_receive':
+      case 'red_packet_request':
+        return (
+          <RedPacketMessage
+            message={msg}
+            onClaim={handleClaimRedPacket}
+            onSend={() => setShowSendRedPacket(true)}
+            isUserMessage={msg.role === 'user'}
+          />
+        );
+      case 'image':
           return (
             <div className="image-message">
               <Image 
@@ -917,6 +1244,14 @@ ${myPersona}
             disabled={isLoading}
           />
           <button 
+            className="red-packet-btn"
+            onClick={() => setShowSendRedPacket(true)}
+            disabled={isLoading}
+            title="发送红包"
+          >
+            🧧
+          </button>
+          <button 
             className="send-btn"
             onClick={handleSendMessage}
             disabled={!message.trim() || isLoading}
@@ -951,6 +1286,16 @@ ${myPersona}
         />
       )}
 
+      {/* 发送红包模态框 */}
+      {showSendRedPacket && (
+        <SendRedPacket
+          isOpen={showSendRedPacket}
+          onClose={() => setShowSendRedPacket(false)}
+          onSend={handleSendRedPacket}
+          currentBalance={currentBalance}
+          recipientName={chat.name}
+        />
+      )}
 
     </div>
   );

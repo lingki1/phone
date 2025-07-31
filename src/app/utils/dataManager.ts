@@ -2,11 +2,13 @@
 import { ChatItem, GroupMember, ApiConfig } from '../types/chat';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 3; // 升级数据库版本以支持主题设置
+const DB_VERSION = 4; // 升级数据库版本以支持货币系统
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
 const THEME_SETTINGS_STORE = 'themeSettings';
+const BALANCE_STORE = 'balance';
+const TRANSACTION_STORE = 'transactions';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -48,6 +50,19 @@ class DataManager {
         // 创建主题设置存储
         if (!db.objectStoreNames.contains(THEME_SETTINGS_STORE)) {
           db.createObjectStore(THEME_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建余额存储
+        if (!db.objectStoreNames.contains(BALANCE_STORE)) {
+          db.createObjectStore(BALANCE_STORE, { keyPath: 'id' });
+        }
+
+        // 创建交易记录存储
+        if (!db.objectStoreNames.contains(TRANSACTION_STORE)) {
+          const transactionStore = db.createObjectStore(TRANSACTION_STORE, { keyPath: 'id' });
+          transactionStore.createIndex('chatId', 'chatId', { unique: false });
+          transactionStore.createIndex('timestamp', 'timestamp', { unique: false });
+          transactionStore.createIndex('type', 'type', { unique: false });
         }
       };
     });
@@ -267,14 +282,18 @@ class DataManager {
     const apiConfig = await this.getApiConfig();
     const personalSettings = await this.getPersonalSettings();
     const themeSettings = await this.getThemeSettings();
+    const balance = await this.getBalance();
+    const transactions = await this.getTransactionHistory();
     
     const exportData = {
       chats,
       apiConfig,
       personalSettings,
       themeSettings,
+      balance,
+      transactions,
       exportTime: new Date().toISOString(),
-      version: '1.1'
+      version: '1.2'
     };
 
     return JSON.stringify(exportData, null, 2);
@@ -302,6 +321,16 @@ class DataManager {
       if (data.themeSettings) {
         await this.saveThemeSettings(data.themeSettings);
       }
+
+      if (typeof data.balance === 'number') {
+        await this.saveBalance(data.balance);
+      }
+
+      if (data.transactions && Array.isArray(data.transactions)) {
+        for (const transaction of data.transactions) {
+          await this.addTransaction(transaction);
+        }
+      }
     } catch {
       throw new Error('Invalid import data format');
     }
@@ -312,22 +341,26 @@ class DataManager {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE], 'readwrite');
+      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, BALANCE_STORE, TRANSACTION_STORE], 'readwrite');
       
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
       const personalStore = transaction.objectStore(PERSONAL_SETTINGS_STORE);
       const themeStore = transaction.objectStore(THEME_SETTINGS_STORE);
+      const balanceStore = transaction.objectStore(BALANCE_STORE);
+      const transactionStore = transaction.objectStore(TRANSACTION_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
       const clearPersonal = personalStore.clear();
       const clearTheme = themeStore.clear();
+      const clearBalance = balanceStore.clear();
+      const clearTransactions = transactionStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 4) resolve();
+        if (completed === 6) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -341,6 +374,12 @@ class DataManager {
 
       clearTheme.onerror = () => reject(new Error('Failed to clear theme settings'));
       clearTheme.onsuccess = checkComplete;
+
+      clearBalance.onerror = () => reject(new Error('Failed to clear balance data'));
+      clearBalance.onsuccess = checkComplete;
+
+      clearTransactions.onerror = () => reject(new Error('Failed to clear transaction data'));
+      clearTransactions.onsuccess = checkComplete;
     });
   }
 
@@ -405,6 +444,132 @@ class DataManager {
           resolve(null);
         }
       };
+    });
+  }
+
+  // 保存用户余额
+  async saveBalance(balance: number): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([BALANCE_STORE], 'readwrite');
+      const store = transaction.objectStore(BALANCE_STORE);
+      const request = store.put({ 
+        id: 'default', 
+        balance: balance, 
+        lastUpdated: Date.now() 
+      });
+
+      request.onerror = () => reject(new Error('Failed to save balance'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取用户余额
+  async getBalance(): Promise<number> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([BALANCE_STORE], 'readonly');
+      const store = transaction.objectStore(BALANCE_STORE);
+      const request = store.get('default');
+
+      request.onerror = () => reject(new Error('Failed to get balance'));
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          resolve(result.balance || 0);
+        } else {
+          // 如果没有余额记录，初始化为0并保存
+          this.saveBalance(0).then(() => resolve(0)).catch(() => resolve(0));
+        }
+      };
+    });
+  }
+
+  // 添加交易记录
+  async addTransaction(transaction: {
+    id: string;
+    type: 'send' | 'receive';
+    amount: number;
+    chatId: string;
+    fromUser: string;
+    toUser: string;
+    message?: string;
+    timestamp: number;
+    status: 'pending' | 'completed' | 'failed';
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const dbTransaction = this.db!.transaction([TRANSACTION_STORE], 'readwrite');
+      const store = dbTransaction.objectStore(TRANSACTION_STORE);
+      const request = store.put(transaction);
+
+      request.onerror = () => reject(new Error('Failed to add transaction'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取交易历史记录
+  async getTransactionHistory(limit?: number): Promise<{
+    id: string;
+    type: 'send' | 'receive';
+    amount: number;
+    chatId: string;
+    fromUser: string;
+    toUser: string;
+    message?: string;
+    timestamp: number;
+    status: 'pending' | 'completed' | 'failed';
+  }[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([TRANSACTION_STORE], 'readonly');
+      const store = transaction.objectStore(TRANSACTION_STORE);
+      const index = store.index('timestamp');
+      const request = index.openCursor(null, 'prev'); // 按时间倒序
+
+      const results: any[] = [];
+      let count = 0;
+
+      request.onerror = () => reject(new Error('Failed to get transaction history'));
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor && (!limit || count < limit)) {
+          results.push(cursor.value);
+          count++;
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+    });
+  }
+
+  // 根据聊天ID获取交易记录
+  async getTransactionsByChatId(chatId: string): Promise<{
+    id: string;
+    type: 'send' | 'receive';
+    amount: number;
+    chatId: string;
+    fromUser: string;
+    toUser: string;
+    message?: string;
+    timestamp: number;
+    status: 'pending' | 'completed' | 'failed';
+  }[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([TRANSACTION_STORE], 'readonly');
+      const store = transaction.objectStore(TRANSACTION_STORE);
+      const index = store.index('chatId');
+      const request = index.getAll(IDBKeyRange.only(chatId));
+
+      request.onerror = () => reject(new Error('Failed to get transactions by chat ID'));
+      request.onsuccess = () => resolve(request.result || []);
     });
   }
 }

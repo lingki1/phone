@@ -629,6 +629,53 @@
   }
 }
 
+/* 红包按钮样式 */
+.red-packet-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.red-packet-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #ff7979);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.red-packet-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 移动端红包按钮调整 */
+@media (max-width: 767px) {
+  .red-packet-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .red-packet-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+}
+
 .send-btn {
   background-color: var(--theme-accent-color, #007bff);
   color: white;

@@ -1,0 +1,388 @@
+/* 接收红包组件样式 */
+.receive-red-packet {
+  position: relative;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* 红包封面 */
+.red-packet-cover {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(214, 48, 49, 0.3);
+  transition: all 0.3s ease;
+}
+
+.red-packet-cover.opened {
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+}
+
+.red-packet-background {
+  background: linear-gradient(135deg, #d63031, #e17055);
+  padding: 24px;
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.red-packet-cover.opened .red-packet-background {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+/* 背景装饰图案 */
+.red-packet-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px, 60px 60px, 30px 30px;
+  opacity: 0.6;
+}
+
+/* 发送者信息 */
+.sender-info {
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+.sender-avatar {
+  margin-bottom: 8px;
+}
+
+.avatar-image {
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.sender-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.red-packet-message {
+  font-size: 14px;
+  opacity: 0.9;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* 红包图标 */
+.red-packet-icon-container {
+  z-index: 2;
+  margin: 20px 0;
+}
+
+.red-packet-icon {
+  font-size: 80px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.red-packet-icon.shaking {
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-5deg); }
+  75% { transform: translateX(5px) rotate(5deg); }
+}
+
+/* 金额显示 */
+.amount-display {
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+.amount-display.opened {
+  color: white;
+}
+
+.amount-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #ffd700;
+}
+
+.claim-status {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.claim-time {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* 领取提示 */
+.claim-hint {
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+.hint-text {
+  font-size: 14px;
+  opacity: 0.8;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* 点击区域 */
+.click-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 20px;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.claim-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  padding: 12px 24px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.claim-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.claim-button.loading {
+  pointer-events: none;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 成功动画 */
+.success-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.success-content {
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+.success-icon {
+  font-size: 80px;
+  margin-bottom: 16px;
+  animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-text {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.success-amount {
+  font-size: 36px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* 彩纸动画 */
+.confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+.confetti-0 {
+  background: #ff6b6b;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.confetti-1 {
+  background: #4ecdc4;
+  left: 30%;
+  animation-delay: 0.2s;
+}
+
+.confetti-2 {
+  background: #45b7d1;
+  left: 50%;
+  animation-delay: 0.4s;
+}
+
+.confetti-3 {
+  background: #f9ca24;
+  left: 70%;
+  animation-delay: 0.6s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    top: -10px;
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    top: 100vh;
+    transform: rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* 红包详情 */
+.red-packet-details {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.detail-value.claimed {
+  color: #28a745;
+}
+
+.detail-value.unclaimed {
+  color: #dc3545;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .receive-red-packet {
+    max-width: 280px;
+  }
+  
+  .red-packet-background {
+    padding: 20px;
+    min-height: 240px;
+  }
+  
+  .red-packet-icon {
+    font-size: 60px;
+  }
+  
+  .amount-value {
+    font-size: 28px;
+  }
+  
+  .success-icon {
+    font-size: 60px;
+  }
+  
+  .success-amount {
+    font-size: 28px;
+  }
+}

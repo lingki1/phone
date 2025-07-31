@@ -24,31 +24,61 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     userNickname: '用户',
     userBio: ''
   });
-  const [balance] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showBalanceInfo, setShowBalanceInfo] = useState(false);
   const [currentPage, setCurrentPage] = useState<'main' | 'color-settings'>('main');
 
-  // 加载个人信息
+  // 加载个人信息和余额
   useEffect(() => {
-    const loadPersonalSettings = async () => {
+    const loadData = async () => {
       try {
         await dataManager.initDB();
+        
+        // 加载个人信息
         const settings = await dataManager.getPersonalSettings();
         setPersonalSettings(settings);
+        
+        // 加载余额
+        const userBalance = await dataManager.getBalance();
+        setBalance(userBalance);
       } catch (error) {
-        console.error('Failed to load personal settings from database:', error);
+        console.error('Failed to load data from database:', error);
         // 回退到localStorage
         const savedPersonalSettings = localStorage.getItem('personalSettings');
         if (savedPersonalSettings) {
           setPersonalSettings(JSON.parse(savedPersonalSettings));
         }
+        setBalance(0);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadPersonalSettings();
+    loadData();
+  }, []);
+
+  // 添加余额刷新功能
+  const refreshBalance = async () => {
+    try {
+      await dataManager.initDB();
+      const userBalance = await dataManager.getBalance();
+      setBalance(userBalance);
+    } catch (error) {
+      console.error('Failed to refresh balance:', error);
+    }
+  };
+
+  // 页面获得焦点时刷新余额
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshBalance();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // 处理选项点击
