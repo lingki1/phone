@@ -41,6 +41,8 @@ export interface GroupMember {
   avatar: string;
   persona: string; // 角色人设
   avatarFrame?: string; // 头像框
+  singleChatId?: string; // 对应的单聊ID，用于获取单聊记忆
+  singleChatMemory?: Message[]; // 单聊记忆缓存
 }
 
 // 聊天项目类型
@@ -96,6 +98,10 @@ export interface ChatSettings {
   aiAvatarFrame: string;
   myAvatarFrame: string;
   groupRules?: string; // 群规内容
+  // API配置（可选，用于单聊）
+  proxyUrl?: string;
+  apiKey?: string;
+  model?: string;
 }
 
 // 头像库项目类型

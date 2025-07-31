@@ -1,43 +1,28 @@
-/* 红包消息组件样式 - 简化版 */
+/* 红包消息组件样式 - 直接使用内层容器，参考AiRedPacketResponse */
 .red-packet-message {
-  position: relative;
-  max-width: 280px;
-  margin: 8px 0;
-  cursor: pointer;
-  background: none; /* 移除背景 */
-  border: none; /* 移除边框 */
-  box-shadow: none; /* 移除阴影 */
-  padding: 0; /* 移除内边距 */
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  position: relative !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  max-width: 280px !important;
+  margin: 8px 0 !important;
+  cursor: pointer !important;
+  color: white !important;
+  text-align: center !important;
 }
 
-.red-packet-message.user {
-  margin-left: auto;
+/* 不同类型的红包样式 */
+.red-packet-message.red_packet_send {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d) !important;
 }
 
-.red-packet-message.ai {
-  margin-right: auto;
+.red-packet-message.red_packet_receive.claimed {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
 }
 
-/* 红包容器 - 简化版 */
-.red-packet-container {
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-  border-radius: 8px; /* 减小圆角 */
-  padding: 12px; /* 减少内边距 */
-  position: relative;
-  /* 移除阴影和其他装饰性样式 */
-}
-
-/* 不同类型的红包样式 - 简化版 */
-.red-packet-message.red_packet_send .red-packet-container {
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
-}
-
-.red-packet-message.red_packet_receive.claimed .red-packet-container {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-}
-
-.red-packet-message.red_packet_request .red-packet-container {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
+.red-packet-message.red_packet_request {
+  background: linear-gradient(135deg, #f39c12, #e67e22) !important;
 }
 
 /* 红包图标 */
@@ -248,23 +233,20 @@
   background: rgba(0, 0, 0, 0.8);
 }
 
-/* 用户消息样式调整 - 简化版 */
-.red-packet-message.user .red-packet-container {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+/* 用户消息样式调整 */
+.red-packet-message.user {
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
 }
 
-.red-packet-message.user.red_packet_send .red-packet-container {
-  background: linear-gradient(135deg, #28a745, #20c997);
+.red-packet-message.user.red_packet_send {
+  background: linear-gradient(135deg, #28a745, #20c997) !important;
 }
 
 /* 响应式设计 */
 @media (max-width: 480px) {
   .red-packet-message {
     max-width: 240px;
-  }
-  
-  .red-packet-container {
-    padding: 14px;
+    padding: 14px !important;
   }
   
   .red-packet-amount {

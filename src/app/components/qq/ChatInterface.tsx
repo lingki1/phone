@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import GroupMemberManager from './GroupMemberManager';
+import MemoryManager from './memory/MemoryManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
@@ -43,6 +44,7 @@ export default function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [currentAiUser, setCurrentAiUser] = useState<{name: string, avatar: string} | null>(null);
   const [showMemberManager, setShowMemberManager] = useState(false);
+  const [showMemoryManager, setShowMemoryManager] = useState(false);
   const [showMentionList, setShowMentionList] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
@@ -479,6 +481,21 @@ export default function ChatInterface({
       // 群聊系统提示词
       const membersList = chat.members.map(m => `- **${m.originalName}**: ${m.persona}`).join('\n');
       
+      // 构建单聊记忆信息
+      const memoryInfo = chat.members
+        .filter(m => m.id !== 'me' && m.singleChatMemory && m.singleChatMemory.length > 0)
+        .map(m => {
+          const memoryCount = m.singleChatMemory?.length || 0;
+          const recentMessages = m.singleChatMemory?.slice(-5).map(msg => 
+            `${msg.role === 'user' ? myNickname : m.originalName}: ${msg.content}`
+          ).join('\n') || '';
+          
+          return `## ${m.originalName} 与 ${myNickname} 的单聊记忆 (${memoryCount} 条记录)
+最近5条对话：
+${recentMessages}`;
+        })
+        .join('\n\n');
+      
       return `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
 
 # 核心规则
@@ -487,6 +504,7 @@ export default function ChatInterface({
 3. **角色扮演**: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 5. **情景感知**: 注意当前时间是 ${currentTime}。
+6. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
 
 ## 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "name": "角色名", "message": "文本内容"}
@@ -514,7 +532,10 @@ ${membersList}
 # 用户的角色
 - **${myNickname}**: ${myPersona}
 
-现在，请根据以上规则和对话历史，继续这场群聊。`;
+${memoryInfo ? `# 单聊记忆信息
+${memoryInfo}` : ''}
+
+现在，请根据以上规则、对话历史和单聊记忆，继续这场群聊。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
     } else {
       // 单聊系统提示词
       return `你现在扮演一个名为"${chat.name}"的角色。
@@ -754,7 +775,6 @@ ${myPersona}
         };
       case 'accept_red_packet':
         // AI接收红包命令
-        const redPacketId = String(msgData.red_packet_id || '');
         const acceptMessage = String(msgData.message || '谢谢红包！');
         
         // 创建AI红包响应消息
@@ -1030,13 +1050,22 @@ ${myPersona}
         </div>
         <div className="chat-actions">
           {chat.isGroup && (
-            <button 
-              className="action-btn"
-              onClick={() => setShowMemberManager(true)}
-              title="群成员管理"
-            >
-              👥
-            </button>
+            <>
+              <button 
+                className="action-btn"
+                onClick={() => setShowMemoryManager(true)}
+                title="记忆管理"
+              >
+                🧠
+              </button>
+              <button 
+                className="action-btn"
+                onClick={() => setShowMemberManager(true)}
+                title="群成员管理"
+              >
+                👥
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -1300,6 +1329,17 @@ ${myPersona}
               localStorage.setItem('personalSettings', JSON.stringify(settings));
             }
           }}
+        />
+      )}
+
+      {/* 记忆管理模态框 */}
+      {showMemoryManager && chat.isGroup && (
+        <MemoryManager
+          isOpen={showMemoryManager}
+          onClose={() => setShowMemoryManager(false)}
+          chat={chat}
+          onUpdateChat={onUpdateChat}
+          availableContacts={availableContacts}
         />
       )}
 

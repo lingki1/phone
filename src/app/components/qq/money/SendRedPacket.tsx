@@ -16,9 +16,6 @@ export default function SendRedPacket({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // 预设金额选项
-  const presetAmounts = [1, 5, 10, 20, 50, 100];
-
   const handleAmountChange = (value: string) => {
     // 只允许数字和小数点
     const regex = /^\d*\.?\d{0,2}$/;
@@ -28,10 +25,7 @@ export default function SendRedPacket({
     }
   };
 
-  const handlePresetAmount = (presetAmount: number) => {
-    setAmount(presetAmount.toString());
-    setError('');
-  };
+
 
   const validateAmount = (): boolean => {
     const numAmount = parseFloat(amount);
@@ -143,20 +137,6 @@ export default function SendRedPacket({
           </div>
           
           {error && <div className="error-message">{error}</div>}
-          
-          {/* 预设金额按钮 */}
-          <div className="preset-amounts">
-            {presetAmounts.map((presetAmount) => (
-              <button
-                key={presetAmount}
-                className={`preset-btn ${parseFloat(amount) === presetAmount ? 'active' : ''}`}
-                onClick={() => handlePresetAmount(presetAmount)}
-                disabled={isLoading}
-              >
-                {presetAmount}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* 祝福语输入 */}

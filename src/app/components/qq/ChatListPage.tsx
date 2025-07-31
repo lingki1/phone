@@ -125,6 +125,10 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
   // 添加好友
   const handleAddFriend = async (name: string, persona: string, avatar?: string) => {
+    // 获取全局设置中的maxMemory
+    const globalSettings = localStorage.getItem('globalSettings');
+    const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
+    
     const newChat: ChatItem = {
       id: Date.now().toString(),
       name,
@@ -138,7 +142,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         aiPersona: persona,
         myPersona: personalSettings.userBio || '用户',
         myNickname: personalSettings.userNickname,
-        maxMemory: 20,
+        maxMemory: maxMemory,
         aiAvatar: avatar || '/avatars/default-avatar.svg',
         myAvatar: personalSettings.userAvatar,
         background: 'default',
@@ -148,7 +152,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         linkedWorldBookIds: [],
         aiAvatarLibrary: [],
         aiAvatarFrame: '',
-        myAvatarFrame: ''
+        myAvatarFrame: '',
+        // 使用当前API配置
+        proxyUrl: apiConfig.proxyUrl,
+        apiKey: apiConfig.apiKey,
+        model: apiConfig.model
       }
     };
     
@@ -258,44 +266,63 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setEditingChat(null);
   };
 
-  // 根据当前选中的标签和搜索查询过滤聊天列表
-  const filteredChats = chats.filter(chat => {
-    // 首先根据标签过滤
-    let matchesTab = false;
-    if (activeTab === 'all') matchesTab = true;
-    else if (activeTab === 'single') matchesTab = !chat.isGroup;
-    else if (activeTab === 'group') matchesTab = chat.isGroup;
-    
-    if (!matchesTab) return false;
-    
-    // 如果没有搜索查询，直接返回
-    if (!searchQuery.trim()) return true;
-    
-    // 搜索逻辑：角色名字、人设、聊天记录内容
-    const query = searchQuery.toLowerCase();
-    
-    // 搜索角色名字
-    if (chat.name.toLowerCase().includes(query)) return true;
-    
-    // 搜索人设
-    if (chat.persona && chat.persona.toLowerCase().includes(query)) return true;
-    
-    // 搜索聊天记录内容
-    if (chat.messages && chat.messages.some(msg => 
-      msg.content && msg.content.toLowerCase().includes(query)
-    )) return true;
-    
-    // 搜索群成员名字（如果是群聊）
-    if (chat.isGroup && chat.members) {
-      if (chat.members.some(member => 
-        member.originalName.toLowerCase().includes(query) ||
-        member.groupNickname.toLowerCase().includes(query) ||
-        (member.persona && member.persona.toLowerCase().includes(query))
+  // 根据当前选中的标签和搜索查询过滤聊天列表，并按最近聊天时间排序
+  const filteredChats = chats
+    .filter(chat => {
+      // 首先根据标签过滤
+      let matchesTab = false;
+      if (activeTab === 'all') matchesTab = true;
+      else if (activeTab === 'single') matchesTab = !chat.isGroup;
+      else if (activeTab === 'group') matchesTab = chat.isGroup;
+      
+      if (!matchesTab) return false;
+      
+      // 如果没有搜索查询，直接返回
+      if (!searchQuery.trim()) return true;
+      
+      // 搜索逻辑：角色名字、人设、聊天记录内容
+      const query = searchQuery.toLowerCase();
+      
+      // 搜索角色名字
+      if (chat.name.toLowerCase().includes(query)) return true;
+      
+      // 搜索人设
+      if (chat.persona && chat.persona.toLowerCase().includes(query)) return true;
+      
+      // 搜索聊天记录内容
+      if (chat.messages && chat.messages.some(msg => 
+        msg.content && msg.content.toLowerCase().includes(query)
       )) return true;
-    }
-    
-    return false;
-  });
+      
+      // 搜索群成员名字（如果是群聊）
+      if (chat.isGroup && chat.members) {
+        if (chat.members.some(member => 
+          member.originalName.toLowerCase().includes(query) ||
+          member.groupNickname.toLowerCase().includes(query) ||
+          (member.persona && member.persona.toLowerCase().includes(query))
+        )) return true;
+      }
+      
+      return false;
+    })
+    .sort((a, b) => {
+      // 按最近聊天时间排序
+      // 获取最后一条消息的时间戳
+      const getLastMessageTime = (chat: ChatItem) => {
+        if (chat.messages && chat.messages.length > 0) {
+          const lastMessage = chat.messages[chat.messages.length - 1];
+          return lastMessage.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
+        }
+        // 如果没有消息，使用创建时间（从ID推断）
+        return parseInt(chat.id) || 0;
+      };
+      
+      const timeA = getLastMessageTime(a);
+      const timeB = getLastMessageTime(b);
+      
+      // 降序排列（最新的在前面）
+      return timeB - timeA;
+    });
 
   // 获取当前选中的聊天
   const selectedChat = selectedChatId ? chats.find(chat => chat.id === selectedChatId) : null;
@@ -428,6 +455,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onUpdateGroup={handleUpdateChat}
         availableContacts={availableContacts}
         editingGroup={editingChat}
+        apiConfig={apiConfig}
       />
     </div>
   );

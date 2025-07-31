@@ -95,72 +95,70 @@ export default function RedPacketMessage({
         className={`red-packet-message ${message.type} ${getRedPacketStatus()} ${isUserMessage ? 'user' : 'ai'}`}
         onClick={handleRedPacketClick}
       >
-        <div className="red-packet-container">
-          {/* 红包图标 */}
-          <div className="red-packet-icon">
-            {getRedPacketIcon()}
-          </div>
+        {/* 红包图标 */}
+        <div className="red-packet-icon">
+          {getRedPacketIcon()}
+        </div>
 
-          {/* 红包内容 */}
-          <div className="red-packet-content">
-            <div className="red-packet-header">
-              <span className="red-packet-title">{getRedPacketTitle()}</span>
-              {message.type === 'red_packet_receive' && !redPacketData.isClaimed && (
-                <span className="red-packet-badge">待领取</span>
-              )}
-              {message.type === 'red_packet_receive' && redPacketData.isClaimed && (
-                <span className="red-packet-badge claimed">已领取</span>
-              )}
-              {getStatusDisplay()}
-            </div>
-
-            {/* 金额显示 */}
-            {(message.type === 'red_packet_send' || message.type === 'red_packet_receive') && (
-              <div className="red-packet-amount">
-                ¥{redPacketData.amount.toFixed(2)}
-              </div>
-            )}
-
-            {/* 祝福语或请求消息 */}
-            {redPacketData.message && (
-              <div className="red-packet-message-text">
-                {redPacketData.message}
-              </div>
-            )}
-
-            {/* 发送者/接收者信息 */}
-            <div className="red-packet-info">
-              {message.type === 'red_packet_send' && (
-                <span className="info-text">发给 {redPacketData.recipientName}</span>
-              )}
-              {message.type === 'red_packet_receive' && (
-                <span className="info-text">来自 {redPacketData.senderName}</span>
-              )}
-              {message.type === 'red_packet_request' && (
-                <span className="info-text">向你请求红包</span>
-              )}
-            </div>
-
-            {/* 时间信息 */}
-            <div className="red-packet-time">
-              {formatTime(message.timestamp)}
-              {redPacketData.isClaimed && redPacketData.claimedAt && (
-                <span className="claim-time">
-                  · 领取于 {formatTime(redPacketData.claimedAt)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* 操作提示 */}
-          <div className="red-packet-action">
+        {/* 红包内容 */}
+        <div className="red-packet-content">
+          <div className="red-packet-header">
+            <span className="red-packet-title">{getRedPacketTitle()}</span>
             {message.type === 'red_packet_receive' && !redPacketData.isClaimed && (
-              <div className="action-hint">点击领取</div>
+              <span className="red-packet-badge">待领取</span>
+            )}
+            {message.type === 'red_packet_receive' && redPacketData.isClaimed && (
+              <span className="red-packet-badge claimed">已领取</span>
+            )}
+            {getStatusDisplay()}
+          </div>
+
+          {/* 金额显示 */}
+          {(message.type === 'red_packet_send' || message.type === 'red_packet_receive') && (
+            <div className="red-packet-amount">
+              ¥{redPacketData.amount.toFixed(2)}
+            </div>
+          )}
+
+          {/* 祝福语或请求消息 */}
+          {redPacketData.message && (
+            <div className="red-packet-message-text">
+              {redPacketData.message}
+            </div>
+          )}
+
+          {/* 发送者/接收者信息 */}
+          <div className="red-packet-info">
+            {message.type === 'red_packet_send' && (
+              <span className="info-text">发给 {redPacketData.recipientName}</span>
+            )}
+            {message.type === 'red_packet_receive' && (
+              <span className="info-text">来自 {redPacketData.senderName}</span>
             )}
             {message.type === 'red_packet_request' && (
-              <div className="action-hint">点击发送</div>
+              <span className="info-text">向你请求红包</span>
             )}
           </div>
+
+          {/* 时间信息 */}
+          <div className="red-packet-time">
+            {formatTime(message.timestamp)}
+            {redPacketData.isClaimed && redPacketData.claimedAt && (
+              <span className="claim-time">
+                · 领取于 {formatTime(redPacketData.claimedAt)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 操作提示 */}
+        <div className="red-packet-action">
+          {message.type === 'red_packet_receive' && !redPacketData.isClaimed && (
+            <div className="action-hint">点击领取</div>
+          )}
+          {message.type === 'red_packet_request' && (
+            <div className="action-hint">点击发送</div>
+          )}
         </div>
 
         {/* 红包装饰效果 */}

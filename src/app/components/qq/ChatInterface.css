@@ -393,7 +393,7 @@
 /* 兼容性备选方案 - 如果浏览器不支持:has选择器 */
 .user-message .message-bubble .red-packet-message,
 .ai-message .message-bubble .red-packet-message {
-  margin: -12px -16px; /* 抵消父容器的padding */
+  margin: 0 !important; /* 重置margin，让红包消息正常显示 */
 }
 
 .user-message:has(.red-packet-message) .message-bubble,

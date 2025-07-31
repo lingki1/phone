@@ -12,6 +12,11 @@ interface CreateGroupModalProps {
   onUpdateGroup?: (group: ChatItem) => void;
   availableContacts: ChatItem[];
   editingGroup?: ChatItem | null;
+  apiConfig?: {
+    proxyUrl: string;
+    apiKey: string;
+    model: string;
+  };
 }
 
 export default function CreateGroupModal({
@@ -20,7 +25,8 @@ export default function CreateGroupModal({
   onCreateGroup,
   onUpdateGroup,
   availableContacts,
-  editingGroup
+  editingGroup,
+  apiConfig
 }: CreateGroupModalProps) {
   const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState('');
@@ -115,6 +121,10 @@ export default function CreateGroupModal({
       onUpdateGroup(updatedGroup);
     } else {
       // 创建模式：创建新群聊
+      // 获取全局设置中的maxMemory
+      const globalSettings = localStorage.getItem('globalSettings');
+      const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
+      
       const newGroup: ChatItem = {
         id: Date.now().toString(),
         name: groupName,
@@ -127,7 +137,7 @@ export default function CreateGroupModal({
         settings: {
           aiPersona: '',
           myPersona: myNickname || '用户',
-          maxMemory: 20,
+          maxMemory: maxMemory,
           aiAvatar: '/avatars/default-avatar.svg',
           myAvatar: '/avatars/user-avatar.svg',
           background: 'default',
@@ -138,7 +148,11 @@ export default function CreateGroupModal({
           aiAvatarLibrary: [],
           aiAvatarFrame: '',
           myAvatarFrame: '',
-          groupRules: groupRules
+          groupRules: groupRules,
+          // 使用传入的API配置
+          proxyUrl: apiConfig?.proxyUrl || '',
+          apiKey: apiConfig?.apiKey || '',
+          model: apiConfig?.model || ''
         },
         members: [
           {
