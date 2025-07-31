@@ -1,5 +1,6 @@
 // 数据管理器 - 用于持久化存储聊天数据
 import { ChatItem, GroupMember, ApiConfig } from '../types/chat';
+import { TransactionRecord } from '../types/money';
 
 const DB_NAME = 'ChatAppDB';
 const DB_VERSION = 4; // 升级数据库版本以支持货币系统
@@ -531,7 +532,7 @@ class DataManager {
       const index = store.index('timestamp');
       const request = index.openCursor(null, 'prev'); // 按时间倒序
 
-      const results: any[] = [];
+      const results: TransactionRecord[] = [];
       let count = 0;
 
       request.onerror = () => reject(new Error('Failed to get transaction history'));

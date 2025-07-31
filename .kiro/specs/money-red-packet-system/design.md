@@ -252,6 +252,129 @@ interface TransactionRecord {
 - 提供操作确认机制
 - 记录所有货币操作日志
 
+## 优化设计
+
+### 1. 发送红包即时关闭优化
+
+#### 问题分析
+当前SendRedPacket组件在发送红包后会等待AI回复才关闭，导致用户体验不佳。
+
+#### 解决方案
+```typescript
+// 修改handleSend方法，发送后立即关闭
+const handleSend = async () => {
+  if (!validateAmount()) return;
+  
+  setIsLoading(true);
+  setError('');
+  
+  try {
+    // 异步发送，不等待结果
+    onSend(parseFloat(amount), message);
+    
+    // 立即重置表单并关闭
+    setAmount('');
+    setMessage('恭喜发财，大吉大利！');
+    onClose();
+  } catch (error) {
+    setError('发送失败，请重试');
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
+### 2. 红包状态显示优化
+
+#### 问题分析
+用户发送的红包消息无法显示AI的接收/拒绝状态。
+
+#### 解决方案
+```typescript
+// 扩展RedPacketData接口
+interface RedPacketData {
+  // ... 现有字段
+  status: 'pending' | 'accepted' | 'rejected';
+  statusUpdatedAt?: number;
+}
+
+// 在RedPacketMessage组件中添加状态显示
+const getStatusDisplay = () => {
+  if (message.type === 'red_packet_send') {
+    switch (redPacketData.status) {
+      case 'accepted':
+        return <span className="status-badge accepted">已接收</span>;
+      case 'rejected':
+        return <span className="status-badge rejected">已拒绝</span>;
+      default:
+        return <span className="status-badge pending">待处理</span>;
+    }
+  }
+  return null;
+};
+```
+
+### 3. 移动端界面优化
+
+#### 问题分析
+SendRedPacket组件在小屏幕设备上显示不完整。
+
+#### 解决方案
+```css
+/* 优化移动端样式 */
+@media (max-width: 480px) {
+  .send-red-packet-modal {
+    max-height: 85vh; /* 减少高度 */
+    margin: 10px; /* 增加边距 */
+  }
+  
+  .red-packet-preview {
+    padding: 20px 15px; /* 减少内边距 */
+  }
+  
+  .amount-input-section,
+  .message-input-section,
+  .send-button-section {
+    padding: 16px; /* 统一减少内边距 */
+  }
+}
+
+@media (max-height: 600px) {
+  .send-red-packet-modal {
+    max-height: 90vh;
+    overflow-y: auto; /* 确保可滚动 */
+  }
+  
+  .red-packet-preview {
+    padding: 15px; /* 进一步减少 */
+  }
+}
+```
+
+### 4. 红包消息样式简化
+
+#### 问题分析
+红包消息在聊天中有多余的背景装饰。
+
+#### 解决方案
+```css
+/* 简化红包消息样式 */
+.red-packet-message {
+  background: none; /* 移除背景 */
+  border: none; /* 移除边框 */
+  box-shadow: none; /* 移除阴影 */
+  padding: 0; /* 移除内边距 */
+}
+
+.red-packet-container {
+  /* 只保留红包本身的样式 */
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  border-radius: 8px;
+  padding: 12px;
+  /* 移除其他装饰性样式 */
+}
+```
+
 ## 扩展性设计
 
 ### 1. 多货币支持

@@ -1,4 +1,4 @@
-import { RedPacketData } from './money';
+
 
 // 基础消息类型
 export interface Message {
@@ -8,7 +8,7 @@ export interface Message {
   timestamp: number;
   senderName?: string; // 群聊中发送者的名称
   senderAvatar?: string; // 群聊中发送者的头像
-  type?: 'text' | 'image' | 'voice' | 'sticker' | 'poll' | 'red_packet' | 'transfer' | 'waimai_request' | 'ai_image' | 'voice_message' | 'red_packet_send' | 'red_packet_receive' | 'red_packet_request';
+  type?: 'text' | 'image' | 'voice' | 'sticker' | 'poll' | 'red_packet' | 'transfer' | 'waimai_request' | 'ai_image' | 'voice_message' | 'red_packet_send' | 'red_packet_receive' | 'red_packet_request' | 'ai_red_packet_response';
   quote?: QuoteMessage; // 引用回复
   isHidden?: boolean; // 是否对用户隐藏（系统消息）
   meaning?: string; // 表情含义
@@ -21,6 +21,8 @@ export interface Message {
     recipientName: string;
     isClaimed: boolean;
     claimedAt?: number;
+    status?: 'pending' | 'accepted' | 'rejected';
+    statusUpdatedAt?: number;
   }; // 红包数据
 }
 

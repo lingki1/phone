@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Message } from '../../../types/chat';
 import ReceiveRedPacket from './ReceiveRedPacket';
-import { RedPacketData } from '../../../types/money';
 import './RedPacketMessage.css';
 
 interface RedPacketMessageProps {
@@ -86,9 +84,14 @@ export default function RedPacketMessage({
     return 'normal';
   };
 
+  const getStatusDisplay = () => {
+    // 删除待处理状态，不再显示状态标签
+    return null;
+  };
+
   return (
     <>
-      <div 
+      <div
         className={`red-packet-message ${message.type} ${getRedPacketStatus()} ${isUserMessage ? 'user' : 'ai'}`}
         onClick={handleRedPacketClick}
       >
@@ -108,6 +111,7 @@ export default function RedPacketMessage({
               {message.type === 'red_packet_receive' && redPacketData.isClaimed && (
                 <span className="red-packet-badge claimed">已领取</span>
               )}
+              {getStatusDisplay()}
             </div>
 
             {/* 金额显示 */}
@@ -169,7 +173,7 @@ export default function RedPacketMessage({
       {showReceiveModal && message.redPacketData && (
         <div className="red-packet-modal-overlay" onClick={() => setShowReceiveModal(false)}>
           <div className="red-packet-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
               className="modal-close-btn"
               onClick={() => setShowReceiveModal(false)}
             >

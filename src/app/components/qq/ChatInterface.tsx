@@ -7,6 +7,7 @@ import { dataManager } from '../../utils/dataManager';
 import GroupMemberManager from './GroupMemberManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
+import AiRedPacketResponse from './money/AiRedPacketResponse';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -196,7 +197,9 @@ export default function ChatInterface({
           message: message,
           senderName: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
           recipientName: chat.name,
-          isClaimed: false
+          isClaimed: false,
+          status: 'pending' as const,
+          statusUpdatedAt: Date.now()
         }
       };
 
@@ -222,8 +225,8 @@ export default function ChatInterface({
       };
       onUpdateChat(updatedChat);
 
-      // 触发AI回复
-      await triggerAiResponse(updatedChat);
+      // 异步触发AI回复，不等待结果
+      triggerAiResponse(updatedChat);
     } catch (error) {
       console.error('Send red packet error:', error);
       throw error;
@@ -293,53 +296,9 @@ export default function ChatInterface({
     }
   };
 
-  // AI接收红包处理函数
-  const handleAiAcceptRedPacket = async (redPacketId: string, thankMessage: string, aiName: string) => {
-    try {
-      // 找到对应的红包消息
-      const redPacketMessage = chat.messages.find(msg => 
-        msg.redPacketData?.id === redPacketId
-      );
 
-      if (!redPacketMessage || !redPacketMessage.redPacketData) {
-        console.warn('Red packet not found:', redPacketId);
-        return;
-      }
 
-      if (redPacketMessage.redPacketData.isClaimed) {
-        console.warn('Red packet already claimed:', redPacketId);
-        return;
-      }
 
-      // 更新红包状态为已领取
-      const updatedMessages = chat.messages.map(msg => {
-        if (msg.redPacketData?.id === redPacketId) {
-          return {
-            ...msg,
-            redPacketData: {
-              ...msg.redPacketData,
-              isClaimed: true,
-              claimedAt: Date.now()
-            }
-          };
-        }
-        return msg;
-      });
-
-      // 更新聊天记录
-      const updatedChat = {
-        ...chat,
-        messages: updatedMessages,
-        lastMessage: thankMessage,
-        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      };
-      onUpdateChat(updatedChat);
-
-      console.log(`AI ${aiName} accepted red packet ${redPacketId} with message: ${thankMessage}`);
-    } catch (error) {
-      console.error('AI accept red packet error:', error);
-    }
-  };
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading) return;
@@ -463,7 +422,7 @@ export default function ChatInterface({
         }
 
         // 创建AI消息对象
-        const aiMessage = await createAiMessage(msgData, chat, messageTimestamp++);
+        const aiMessage = await createAiMessage(msgData, currentChat, messageTimestamp++);
         if (aiMessage) {
           // 更新聊天记录
           currentChat = {
@@ -544,8 +503,10 @@ export default function ChatInterface({
 - 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
 - 如果接收红包，使用accept_red_packet命令，并表达感谢
 - 如果拒绝红包，使用decline_red_packet命令，并说明理由
-- 红包ID会在对话历史中提供，格式为"redpacket_时间戳"
+- **重要**：红包ID在对话历史中以"红包ID: redpacket_时间戳"的格式提供，你必须准确复制这个ID
 - 你可以根据红包金额、祝福语、当前关系等因素做出判断
+- 示例：如果看到"红包ID: redpacket_1703123456789"，则使用"redpacket_1703123456789"作为red_packet_id
+- **禁止调试信息**：不要在消息中包含"测试"、"调试"、"功能"等调试相关词汇，保持自然的对话风格
 
 # 群成员列表及人设
 ${membersList}
@@ -582,8 +543,10 @@ ${chat.settings.aiPersona}
 - 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
 - 如果接收红包，使用accept_red_packet命令，并表达感谢
 - 如果拒绝红包，使用decline_red_packet命令，并说明理由
-- 红包ID会在对话历史中提供，格式为"redpacket_时间戳"
+- **重要**：红包ID在对话历史中以"红包ID: redpacket_时间戳"的格式提供，你必须准确复制这个ID
 - 你可以根据红包金额、祝福语、当前关系等因素做出判断
+- 示例：如果看到"红包ID: redpacket_1703123456789"，则使用"redpacket_1703123456789"作为red_packet_id
+- **禁止调试信息**：不要在消息中包含"测试"、"调试"、"功能"等调试相关词汇，保持自然的对话风格
 
 # 对话者的角色设定：
 ${myPersona}
@@ -615,7 +578,14 @@ ${myPersona}
       } else if (msg.type === 'red_packet_send' && msg.redPacketData) {
         // 红包发送消息，包含红包ID和详细信息
         const redPacket = msg.redPacketData;
-        const status = redPacket.isClaimed ? '已被领取' : '待领取';
+        let status = '待处理';
+        if (redPacket.status === 'accepted') {
+          status = '已接收';
+        } else if (redPacket.status === 'rejected') {
+          status = '已拒绝';
+        } else if (redPacket.isClaimed) {
+          status = '已被领取';
+        }
         content = `${prefix}发送了一个红包 [红包ID: ${redPacket.id}, 金额: ¥${redPacket.amount}, 祝福语: "${redPacket.message}", 状态: ${status}]`;
       } else if (msg.type === 'red_packet_receive' && msg.redPacketData) {
         // AI发送给用户的红包
@@ -734,23 +704,8 @@ ${myPersona}
         const redPacketMessage = String(msgData.message || '恭喜发财！');
         
         if (amount > 0) {
-          // 增加用户余额
-          const newBalance = currentBalance + amount;
-          await dataManager.saveBalance(newBalance);
-          setCurrentBalance(newBalance);
-          
-          // 添加交易记录
-          await dataManager.addTransaction({
-            id: `transaction_${timestamp}`,
-            type: 'receive',
-            amount: amount,
-            chatId: chat.id,
-            fromUser: String(msgData.name || chat.name),
-            toUser: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
-            message: redPacketMessage,
-            timestamp: timestamp,
-            status: 'completed'
-          });
+          // 注意：不在这里增加用户余额，等用户点击领取时再增加
+          // 这样避免重复增加余额的问题
           
           content = `发送了一个红包`;
           type = 'red_packet_receive';
@@ -802,21 +757,68 @@ ${myPersona}
         const redPacketId = String(msgData.red_packet_id || '');
         const acceptMessage = String(msgData.message || '谢谢红包！');
         
-        if (redPacketId) {
-          // 找到对应的红包消息并处理接收逻辑
-          await handleAiAcceptRedPacket(redPacketId, acceptMessage, String(msgData.name || chat.name));
-        }
-        
-        content = acceptMessage;
-        type = 'text';
+        // 创建AI红包响应消息
+        type = 'ai_red_packet_response';
+        content = JSON.stringify({
+          action: 'accepted',
+          amount: 0, // 将在后续处理中获取实际金额
+          message: acceptMessage,
+          timestamp: timestamp
+        });
         break;
       case 'decline_red_packet':
         // AI拒绝红包命令
         const declineRedPacketId = String(msgData.red_packet_id || '');
         const declineMessage = String(msgData.message || '不好意思，我不能收这个红包');
         
-        content = declineMessage;
-        type = 'text';
+        // 查找对应的红包并返还余额
+        let refundAmount = 0;
+        const targetRedPacket = chat.messages.find(msg => 
+          msg.type === 'red_packet_send' && 
+          msg.redPacketData && 
+          (msg.redPacketData.id === declineRedPacketId || 
+           msg.redPacketData.id.includes(declineRedPacketId.replace(/[^0-9]/g, '')))
+        );
+        
+        if (targetRedPacket && targetRedPacket.redPacketData) {
+          refundAmount = targetRedPacket.redPacketData.amount;
+          
+          // 返还余额到数据库
+          try {
+            await dataManager.initDB();
+            const currentBalance = await dataManager.getBalance();
+            await dataManager.saveBalance(currentBalance + refundAmount);
+            
+            // 更新本地余额状态
+            setCurrentBalance(currentBalance + refundAmount);
+            
+            // 记录交易
+            await dataManager.addTransaction({
+              id: `refund_${Date.now()}`,
+              type: 'receive',
+              amount: refundAmount,
+              chatId: chat.id,
+              fromUser: String(msgData.name || chat.name),
+              toUser: dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我',
+              message: '红包被拒绝，金额已返还',
+              timestamp: Date.now(),
+              status: 'completed'
+            });
+            
+            console.log(`AI拒绝红包，返还金额: ¥${refundAmount.toFixed(2)}`);
+          } catch (error) {
+            console.error('返还余额失败:', error);
+          }
+        }
+        
+        // 创建AI红包响应消息
+        type = 'ai_red_packet_response';
+        content = JSON.stringify({
+          action: 'rejected',
+          amount: refundAmount,
+          message: declineMessage,
+          timestamp: timestamp
+        });
         break;
       default:
         // 默认情况下也处理可能的JSON内容
@@ -961,6 +963,21 @@ ${myPersona}
             isUserMessage={msg.role === 'user'}
           />
         );
+      case 'ai_red_packet_response':
+        try {
+          const responseData = JSON.parse(msg.content);
+          return (
+            <AiRedPacketResponse
+              action={responseData.action}
+              amount={responseData.amount}
+              message={responseData.message}
+              timestamp={responseData.timestamp}
+            />
+          );
+        } catch (error) {
+          console.error('Failed to parse AI red packet response:', error);
+          return <span>AI红包响应解析失败</span>;
+        }
       case 'image':
           return (
             <div className="image-message">

@@ -1,0 +1,168 @@
+/* AI红包响应组件样式 */
+.ai-red-packet-response {
+  position: relative;
+  max-width: 280px;
+  margin: 8px 0;
+  cursor: default;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.ai-red-packet-response.ai {
+  margin-right: auto;
+}
+
+/* 响应容器 */
+.response-container {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+  border: 1px solid #dee2e6;
+}
+
+/* 接受状态样式 */
+.ai-red-packet-response.accepted .response-container {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border-color: #28a745;
+}
+
+/* 拒绝状态样式 */
+.ai-red-packet-response.rejected .response-container {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  border-color: #dc3545;
+}
+
+/* 响应图标 */
+.response-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* 响应内容 */
+.response-content {
+  color: #333;
+  text-align: center;
+}
+
+/* 响应头部 */
+.response-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.response-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.response-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.response-badge.accepted {
+  background: rgba(40, 167, 69, 0.2);
+  border-color: #28a745;
+  color: #155724;
+}
+
+.response-badge.rejected {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+/* 金额显示 */
+.response-amount {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* 接受状态的金额颜色 */
+.ai-red-packet-response.accepted .response-amount {
+  color: #28a745;
+}
+
+/* 拒绝状态的金额颜色 */
+.ai-red-packet-response.rejected .response-amount {
+  color: #dc3545;
+}
+
+/* 响应消息 */
+.response-message {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 时间信息 */
+.response-time {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .ai-red-packet-response {
+    max-width: 240px;
+  }
+  
+  .response-container {
+    padding: 14px;
+  }
+  
+  .response-amount {
+    font-size: 20px;
+  }
+  
+  .response-title {
+    font-size: 14px;
+  }
+  
+  .response-message {
+    font-size: 13px;
+    max-width: 180px;
+  }
+}
+
+/* 动画效果 */
+.ai-red-packet-response {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 接受状态的额外效果 */
+.ai-red-packet-response.accepted .response-container {
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+/* 拒绝状态的额外效果 */
+.ai-red-packet-response.rejected .response-container {
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+} 

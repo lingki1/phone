@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { SendRedPacketProps } from '../../../types/money';
 import './SendRedPacket.css';
 
@@ -67,14 +66,19 @@ export default function SendRedPacket({
     setError('');
     
     try {
-      await onSend(parseFloat(amount), message);
-      // 发送成功后重置表单
+      // 异步发送，不等待结果
+      onSend(parseFloat(amount), message);
+      
+      // 立即重置表单并关闭
       setAmount('');
       setMessage('恭喜发财，大吉大利！');
       onClose();
     } catch (error) {
+      // 即使发生错误，也允许用户关闭界面
       setError('发送失败，请重试');
       console.error('Send red packet error:', error);
+      // 发送失败时仍然关闭界面（根据需求8.4）
+      onClose();
     } finally {
       setIsLoading(false);
     }

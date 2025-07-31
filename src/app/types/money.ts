@@ -19,6 +19,8 @@ export interface RedPacketData {
   timestamp: number;
   isClaimed: boolean;
   claimedAt?: number;
+  status?: 'pending' | 'accepted' | 'rejected';
+  statusUpdatedAt?: number;
 }
 
 // 交易记录类型
