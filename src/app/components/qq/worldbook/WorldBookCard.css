@@ -6,13 +6,19 @@
   padding: 16px;
   margin-bottom: 12px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .world-book-card:hover {
   background: var(--theme-bg-tertiary);
   border-color: var(--theme-accent-color);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.world-book-card:active {
+  transform: translateY(0);
+  box-shadow: var(--theme-shadow-light, 0 2px 6px rgba(0, 0, 0, 0.1));
 }
 
 .world-book-header {
@@ -48,10 +54,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
 }
 
 .action-btn:hover {
   background: var(--theme-bg-tertiary);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
 }
 
 .edit-btn {
@@ -112,11 +124,89 @@
   font-weight: 500;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
+/* 移动端卡片调整 */
+@media (max-width: 767px) {
   .world-book-card {
     padding: 12px;
     margin-bottom: 8px;
+    border-radius: 10px;
+  }
+  
+  .world-book-title {
+    font-size: 15px;
+  }
+  
+  .world-book-preview {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+  
+  .action-btn {
+    padding: 4px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+  
+  .world-book-meta {
+    font-size: 11px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .world-book-actions {
+    gap: 6px;
+  }
+}
+
+/* 超小屏幕卡片调整 */
+@media (max-width: 480px) {
+  .world-book-card {
+    padding: 10px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+  }
+  
+  .world-book-title {
+    font-size: 14px;
+  }
+  
+  .world-book-preview {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+    margin-bottom: 8px;
+  }
+  
+  .action-btn {
+    padding: 3px;
+    min-width: 24px;
+    min-height: 24px;
+  }
+  
+  .world-book-meta {
+    font-size: 10px;
+    gap: 2px;
+  }
+  
+  .world-book-actions {
+    gap: 4px;
+  }
+  
+  .world-book-header {
+    margin-bottom: 6px;
+  }
+  
+  .world-book-description {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+}
+
+/* 平板端卡片调整 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .world-book-card {
+    padding: 14px;
+    margin-bottom: 10px;
   }
   
   .world-book-title {
@@ -126,15 +216,101 @@
   .world-book-preview {
     font-size: 13px;
   }
+}
+
+/* 桌面端卡片调整 */
+@media (min-width: 1024px) {
+  .world-book-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
   
-  .action-btn {
-    padding: 4px;
+  .world-book-title {
+    font-size: 16px;
+  }
+  
+  .world-book-preview {
+    font-size: 14px;
+  }
+  
+  .world-book-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--theme-shadow-large, 0 8px 24px rgba(0, 0, 0, 0.15));
+  }
+}
+
+/* 横屏模式适配 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .world-book-card {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+  }
+  
+  .world-book-title {
+    font-size: 14px;
+  }
+  
+  .world-book-preview {
+    font-size: 12px;
+    -webkit-line-clamp: 1;
+    margin-bottom: 6px;
   }
   
   .world-book-meta {
-    font-size: 11px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    font-size: 10px;
+    padding-top: 6px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .world-book-card {
+    background: var(--theme-bg-secondary, #2a2a2a);
+    border-color: var(--theme-border-color, #404040);
+  }
+  
+  .world-book-card:hover {
+    background: var(--theme-bg-tertiary, #3a3a3a);
+    border-color: var(--theme-accent-color);
+  }
+  
+  .action-btn {
+    border-color: var(--theme-border-color, #404040);
+  }
+  
+  .action-btn:hover {
+    background: var(--theme-bg-tertiary, #3a3a3a);
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .world-book-card,
+  .action-btn {
+    transition: none;
+  }
+  
+  .world-book-card:hover {
+    transform: none;
+  }
+  
+  .action-btn:active {
+    transform: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .world-book-card {
+    border-color: var(--theme-text-primary);
+  }
+  
+  .world-book-card:hover {
+    border-color: var(--theme-text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .action-btn {
+    border-color: var(--theme-text-primary);
   }
 }

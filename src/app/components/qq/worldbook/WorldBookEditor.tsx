@@ -163,13 +163,6 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
         <button className="cancel-btn" onClick={handleCancel}>
           取消
         </button>
-        <button 
-          className={`save-btn-footer ${isSaving ? 'saving' : ''}`}
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? '保存中...' : '保存'}
-        </button>
       </div>
     </div>
   );
