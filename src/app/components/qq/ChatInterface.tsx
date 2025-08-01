@@ -7,6 +7,7 @@ import { dataManager } from '../../utils/dataManager';
 import { WorldBookInjector } from '../../utils/WorldBookInjector';
 import GroupMemberManager from './GroupMemberManager';
 import MemoryManager from './memory/MemoryManager';
+import SingleChatMemoryManager from './memory/SingleChatMemoryManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
@@ -30,6 +31,7 @@ interface ChatInterfaceProps {
   onBack: () => void;
   onUpdateChat: (chat: ChatItem) => void;
   availableContacts: ChatItem[];
+  allChats?: ChatItem[];
   personalSettings?: PersonalSettings;
 }
 
@@ -39,6 +41,7 @@ export default function ChatInterface({
   onBack, 
   onUpdateChat,
   availableContacts,
+  allChats,
   personalSettings
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
@@ -46,6 +49,7 @@ export default function ChatInterface({
   const [currentAiUser, setCurrentAiUser] = useState<{name: string, avatar: string} | null>(null);
   const [showMemberManager, setShowMemberManager] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
+  const [showSingleChatMemoryManager, setShowSingleChatMemoryManager] = useState(false);
   const [showMentionList, setShowMentionList] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
@@ -575,6 +579,33 @@ ${memoryInfo}` : ''}
 现在，请根据以上规则、对话历史和单聊记忆，继续这场群聊。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
     } else {
       // 单聊系统提示词
+      
+      // 构建群聊记忆信息
+      let groupMemoryInfo = '';
+      if (chat.settings.linkedGroupChatIds && chat.settings.linkedGroupChatIds.length > 0) {
+        const groupMemoryPromises = chat.settings.linkedGroupChatIds.map(async (groupChatId) => {
+          const groupChat = availableContacts.find(contact => contact.id === groupChatId);
+          if (!groupChat || !groupChat.messages) return null;
+          
+          // 获取群聊中所有人的消息
+          const recentMessages = groupChat.messages.slice(-5).map(msg => 
+            `${msg.role === 'user' ? myNickname : msg.senderName || chat.name}: ${msg.content}`
+          ).join('\n');
+          
+          return `## ${groupChat.name} 中的群聊记忆 (${groupChat.messages.length} 条记录)
+最近5条对话：
+${recentMessages}`;
+        });
+        
+        const groupMemories = await Promise.all(groupMemoryPromises);
+        const validMemories = groupMemories.filter(memory => memory !== null);
+        
+        if (validMemories.length > 0) {
+          groupMemoryInfo = `\n\n# 群聊记忆信息
+${validMemories.join('\n\n')}`;
+        }
+      }
+      
       basePrompt = `你现在扮演一个名为"${chat.name}"的角色。
 
 # 你的角色设定：
@@ -585,6 +616,7 @@ ${chat.settings.aiPersona}
 2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少3-8条消息！！！
 3. **情景感知**: 你需要感知当前的时间(${currentTime})。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
+5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。
 
 # 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "content": "文本内容"}
@@ -607,9 +639,9 @@ ${chat.settings.aiPersona}
 - **禁止调试信息**：不要在消息中包含"测试"、"调试"、"功能"等调试相关词汇，保持自然的对话风格
 
 # 对话者的角色设定：
-${myPersona}
+${myPersona}${groupMemoryInfo}
 
-现在，请根据以上规则和对话历史，继续进行对话。`;
+现在，请根据以上规则、对话历史和群聊记忆，继续进行对话。`;
     }
 
     // 注入世界书内容
@@ -1095,15 +1127,15 @@ ${myPersona}
           </div>
         </div>
         <div className="chat-actions">
-          {chat.isGroup && (
+          {chat.isGroup ? (
             <>
-              <button 
-                className="action-btn"
-                onClick={() => setShowMemoryManager(true)}
-                title="记忆管理"
-              >
-                🧠
-              </button>
+                                      <button 
+                          className="action-btn"
+                          onClick={() => setShowMemoryManager(true)}
+                          title="记忆管理"
+                        >
+                          📋
+                        </button>
               <button 
                 className="action-btn"
                 onClick={() => setShowMemberManager(true)}
@@ -1112,6 +1144,14 @@ ${myPersona}
                 👥
               </button>
             </>
+          ) : (
+                                  <button 
+                        className="action-btn"
+                        onClick={() => setShowSingleChatMemoryManager(true)}
+                        title="群聊记忆管理"
+                      >
+                        📋
+                      </button>
           )}
         </div>
       </div>
@@ -1392,6 +1432,17 @@ ${myPersona}
           chat={chat}
           onUpdateChat={onUpdateChat}
           availableContacts={availableContacts}
+        />
+      )}
+
+      {/* 单聊记忆管理模态框 */}
+      {showSingleChatMemoryManager && !chat.isGroup && (
+        <SingleChatMemoryManager
+          isOpen={showSingleChatMemoryManager}
+          onClose={() => setShowSingleChatMemoryManager(false)}
+          chat={chat}
+          onUpdateChat={onUpdateChat}
+          availableContacts={allChats || availableContacts}
         />
       )}
 

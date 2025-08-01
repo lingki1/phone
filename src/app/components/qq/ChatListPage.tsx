@@ -371,6 +371,9 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
   // 获取可用的联系人列表（用于创建群聊）
   const availableContacts = chats.filter(chat => !chat.isGroup);
+  
+  // 获取所有聊天列表（用于记忆管理）
+  const allChats = chats;
 
   if (isLoading) {
     return (
@@ -389,6 +392,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onBack={() => setCurrentScreen('list')}
           onUpdateChat={handleUpdateChat}
           availableContacts={availableContacts}
+          allChats={allChats}
           personalSettings={personalSettings}
         />
       </>

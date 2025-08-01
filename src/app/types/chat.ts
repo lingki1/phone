@@ -94,6 +94,7 @@ export interface ChatSettings {
   fontSize: number;
   customCss: string;
   linkedWorldBookIds: string[];
+  linkedGroupChatIds?: string[]; // 单聊关联的群聊ID列表
   aiAvatarLibrary: AvatarLibraryItem[];
   aiAvatarFrame: string;
   myAvatarFrame: string;

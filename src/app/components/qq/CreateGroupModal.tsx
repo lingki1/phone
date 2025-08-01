@@ -113,7 +113,9 @@ export default function CreateGroupModal({
             originalName: contact.name,
             groupNickname: contact.name,
             avatar: contact.avatar,
-            persona: contact.persona
+            persona: contact.persona,
+            singleChatId: contact.id, // 关联对应的单聊ID
+            singleChatMemory: contact.messages || [] // 关联单聊记忆
           }))
         ]
       };
@@ -167,7 +169,9 @@ export default function CreateGroupModal({
             originalName: contact.name,
             groupNickname: contact.name,
             avatar: contact.avatar,
-            persona: contact.persona
+            persona: contact.persona,
+            singleChatId: contact.id, // 关联对应的单聊ID
+            singleChatMemory: contact.messages || [] // 关联单聊记忆
           }))
         ]
       };
