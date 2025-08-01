@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
+import { WorldBookInjector } from '../../utils/WorldBookInjector';
 import GroupMemberManager from './GroupMemberManager';
 import MemoryManager from './memory/MemoryManager';
 import SendRedPacket from './money/SendRedPacket';
@@ -374,7 +375,7 @@ export default function ChatInterface({
     }
 
     try {
-      const systemPrompt = buildSystemPrompt(updatedChat);
+      const systemPrompt = await buildSystemPrompt(updatedChat);
       const messagesPayload = buildMessagesPayload(updatedChat);
 
       const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
@@ -470,12 +471,14 @@ export default function ChatInterface({
   };
 
   // 构建系统提示词
-  const buildSystemPrompt = (chat: ChatItem): string => {
+  const buildSystemPrompt = async (chat: ChatItem): Promise<string> => {
     const now = new Date();
     const currentTime = now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' });
     // 优先使用数据库中的个人信息，后备使用传入的personalSettings
     const myNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
     const myPersona = dbPersonalSettings?.userBio || personalSettings?.userBio || chat.settings.myPersona || '用户';
+
+    let basePrompt: string;
 
     if (chat.isGroup && chat.members) {
       // 群聊系统提示词
@@ -496,7 +499,7 @@ ${recentMessages}`;
         })
         .join('\n\n');
       
-      return `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
+      basePrompt = `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
 
 # 核心规则
 1. **【身份铁律】**: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。
@@ -538,7 +541,7 @@ ${memoryInfo}` : ''}
 现在，请根据以上规则、对话历史和单聊记忆，继续这场群聊。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
     } else {
       // 单聊系统提示词
-      return `你现在扮演一个名为"${chat.name}"的角色。
+      basePrompt = `你现在扮演一个名为"${chat.name}"的角色。
 
 # 你的角色设定：
 ${chat.settings.aiPersona}
@@ -574,6 +577,15 @@ ${myPersona}
 
 现在，请根据以上规则和对话历史，继续进行对话。`;
     }
+
+    // 注入世界书内容
+    const finalPrompt = await WorldBookInjector.injectWorldBooks(
+      chat.id,
+      basePrompt,
+      chat.settings.linkedWorldBookIds || []
+    );
+
+    return finalPrompt;
   };
 
   // 构建消息载荷

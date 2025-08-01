@@ -183,6 +183,9 @@ export interface WorldBook {
   id: string;
   name: string;
   content: string;
+  createdAt: number;
+  updatedAt: number;
+  description?: string; // 世界书描述
 }
 
 // 人设预设类型

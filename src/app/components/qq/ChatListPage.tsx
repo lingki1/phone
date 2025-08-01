@@ -10,6 +10,7 @@ import CreateGroupModal from './CreateGroupModal';
 import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import MePage from './me/MePage';
+import { WorldBookListPage, WorldBookAssociationModal } from './worldbook';
 import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import './ChatListPage.css';
@@ -27,7 +28,7 @@ interface ChatListPageProps {
 export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
   const [activeView, setActiveView] = useState<string>('messages');
-  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'me'>('list');
+  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'me' | 'worldbook'>('list');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
   // 模态框状态
@@ -37,6 +38,10 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatItem | null>(null);
+  
+  // 世界书相关状态
+  const [showWorldBookAssociation, setShowWorldBookAssociation] = useState(false);
+  const [associatingChatId, setAssociatingChatId] = useState<string | null>(null);
   
   // API配置状态
   const [apiConfig, setApiConfig] = useState<ApiConfig>({
@@ -266,6 +271,43 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setEditingChat(null);
   };
 
+  // 打开世界书管理页面
+  const handleOpenWorldBook = () => {
+    setCurrentScreen('worldbook');
+  };
+
+  // 打开世界书关联弹窗
+  const handleAssociateWorldBook = (chatId: string) => {
+    setAssociatingChatId(chatId);
+    setShowWorldBookAssociation(true);
+  };
+
+  // 保存世界书关联
+  const handleSaveWorldBookAssociation = async (linkedIds: string[]) => {
+    if (!associatingChatId) return;
+
+    const chat = chats.find(c => c.id === associatingChatId);
+    if (!chat) return;
+
+    const updatedChat = {
+      ...chat,
+      settings: {
+        ...chat.settings,
+        linkedWorldBookIds: linkedIds
+      }
+    };
+
+    await handleUpdateChat(updatedChat);
+    setShowWorldBookAssociation(false);
+    setAssociatingChatId(null);
+  };
+
+  // 关闭世界书关联弹窗
+  const handleCloseWorldBookAssociation = () => {
+    setShowWorldBookAssociation(false);
+    setAssociatingChatId(null);
+  };
+
   // 根据当前选中的标签和搜索查询过滤聊天列表，并按最近聊天时间排序
   const filteredChats = chats
     .filter(chat => {
@@ -365,6 +407,12 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     );
   }
 
+  if (currentScreen === 'worldbook') {
+    return (
+      <WorldBookListPage onBack={() => setCurrentScreen('list')} />
+    );
+  }
+
   return (
     <div className="chat-list-page">
       {/* 顶部导航栏 */}
@@ -375,6 +423,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onOpenPersonalSettings={() => setShowPersonalSettings(true)}
         onOpenAddFriend={handleOpenAddFriend}
         onOpenCreateGroup={() => setShowCreateGroup(true)}
+        onOpenWorldBook={handleOpenWorldBook}
         onBackToDesktop={onBackToDesktop}
         personalSettings={personalSettings}
       />
@@ -410,6 +459,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onChatClick={handleOpenChat}
         onDeleteChat={handleDeleteChat}
         onEditChat={handleEditChat}
+        onAssociateWorldBook={handleAssociateWorldBook}
       />
       
       {/* 底部导航栏 */}
@@ -457,6 +507,17 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         editingGroup={editingChat}
         apiConfig={apiConfig}
       />
+
+      {/* 世界书关联弹窗 */}
+      {associatingChatId && (
+        <WorldBookAssociationModal
+          isVisible={showWorldBookAssociation}
+          chatName={chats.find(c => c.id === associatingChatId)?.name || ''}
+          currentLinkedIds={chats.find(c => c.id === associatingChatId)?.settings.linkedWorldBookIds || []}
+          onClose={handleCloseWorldBookAssociation}
+          onSave={handleSaveWorldBookAssociation}
+        />
+      )}
     </div>
   );
 }

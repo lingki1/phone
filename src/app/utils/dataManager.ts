@@ -1,15 +1,16 @@
 // 数据管理器 - 用于持久化存储聊天数据
-import { ChatItem, GroupMember, ApiConfig } from '../types/chat';
+import { ChatItem, GroupMember, ApiConfig, WorldBook } from '../types/chat';
 import { TransactionRecord } from '../types/money';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 4; // 升级数据库版本以支持货币系统
+const DB_VERSION = 5; // 升级数据库版本以支持世界书系统
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
 const THEME_SETTINGS_STORE = 'themeSettings';
 const BALANCE_STORE = 'balance';
 const TRANSACTION_STORE = 'transactions';
+const WORLD_BOOK_STORE = 'worldBooks';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -64,6 +65,13 @@ class DataManager {
           transactionStore.createIndex('chatId', 'chatId', { unique: false });
           transactionStore.createIndex('timestamp', 'timestamp', { unique: false });
           transactionStore.createIndex('type', 'type', { unique: false });
+        }
+
+        // 创建世界书存储
+        if (!db.objectStoreNames.contains(WORLD_BOOK_STORE)) {
+          const worldBookStore = db.createObjectStore(WORLD_BOOK_STORE, { keyPath: 'id' });
+          worldBookStore.createIndex('name', 'name', { unique: false });
+          worldBookStore.createIndex('createdAt', 'createdAt', { unique: false });
         }
       };
     });
@@ -285,6 +293,7 @@ class DataManager {
     const themeSettings = await this.getThemeSettings();
     const balance = await this.getBalance();
     const transactions = await this.getTransactionHistory();
+    const worldBooks = await this.getAllWorldBooks();
     
     const exportData = {
       chats,
@@ -293,8 +302,9 @@ class DataManager {
       themeSettings,
       balance,
       transactions,
+      worldBooks,
       exportTime: new Date().toISOString(),
-      version: '1.2'
+      version: '1.3'
     };
 
     return JSON.stringify(exportData, null, 2);
@@ -332,6 +342,12 @@ class DataManager {
           await this.addTransaction(transaction);
         }
       }
+
+      if (data.worldBooks && Array.isArray(data.worldBooks)) {
+        for (const worldBook of data.worldBooks) {
+          await this.saveWorldBook(worldBook);
+        }
+      }
     } catch {
       throw new Error('Invalid import data format');
     }
@@ -342,7 +358,7 @@ class DataManager {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, BALANCE_STORE, TRANSACTION_STORE], 'readwrite');
+      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE], 'readwrite');
       
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
@@ -350,6 +366,7 @@ class DataManager {
       const themeStore = transaction.objectStore(THEME_SETTINGS_STORE);
       const balanceStore = transaction.objectStore(BALANCE_STORE);
       const transactionStore = transaction.objectStore(TRANSACTION_STORE);
+      const worldBookStore = transaction.objectStore(WORLD_BOOK_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
@@ -357,11 +374,12 @@ class DataManager {
       const clearTheme = themeStore.clear();
       const clearBalance = balanceStore.clear();
       const clearTransactions = transactionStore.clear();
+      const clearWorldBooks = worldBookStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 6) resolve();
+        if (completed === 7) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -381,6 +399,9 @@ class DataManager {
 
       clearTransactions.onerror = () => reject(new Error('Failed to clear transaction data'));
       clearTransactions.onsuccess = checkComplete;
+
+      clearWorldBooks.onerror = () => reject(new Error('Failed to clear world book data'));
+      clearWorldBooks.onsuccess = checkComplete;
     });
   }
 
@@ -571,6 +592,78 @@ class DataManager {
 
       request.onerror = () => reject(new Error('Failed to get transactions by chat ID'));
       request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  // ==================== 世界书相关方法 ====================
+
+  // 保存世界书
+  async saveWorldBook(worldBook: WorldBook): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([WORLD_BOOK_STORE], 'readwrite');
+      const store = transaction.objectStore(WORLD_BOOK_STORE);
+      const request = store.put(worldBook);
+
+      request.onerror = () => reject(new Error('Failed to save world book'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取所有世界书
+  async getAllWorldBooks(): Promise<WorldBook[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([WORLD_BOOK_STORE], 'readonly');
+      const store = transaction.objectStore(WORLD_BOOK_STORE);
+      const request = store.getAll();
+
+      request.onerror = () => reject(new Error('Failed to get world books'));
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  // 获取单个世界书
+  async getWorldBook(id: string): Promise<WorldBook | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([WORLD_BOOK_STORE], 'readonly');
+      const store = transaction.objectStore(WORLD_BOOK_STORE);
+      const request = store.get(id);
+
+      request.onerror = () => reject(new Error('Failed to get world book'));
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  // 删除世界书
+  async deleteWorldBook(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([WORLD_BOOK_STORE], 'readwrite');
+      const store = transaction.objectStore(WORLD_BOOK_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete world book'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 更新世界书
+  async updateWorldBook(worldBook: WorldBook): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([WORLD_BOOK_STORE], 'readwrite');
+      const store = transaction.objectStore(WORLD_BOOK_STORE);
+      const request = store.put(worldBook);
+
+      request.onerror = () => reject(new Error('Failed to update world book'));
+      request.onsuccess = () => resolve();
     });
   }
 }

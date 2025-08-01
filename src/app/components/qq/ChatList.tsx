@@ -18,9 +18,10 @@ interface ChatListProps {
   onChatClick: (chatId: string) => void;
   onDeleteChat?: (chatId: string) => void;
   onEditChat?: (chatId: string) => void;
+  onAssociateWorldBook?: (chatId: string) => void;
 }
 
-export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat }: ChatListProps) {
+export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook }: ChatListProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -65,6 +66,13 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat 
   const handleEditClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     onEditChat?.(chatId);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const handleAssociateWorldBookClick = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    onAssociateWorldBook?.(chatId);
     setActiveMenuId(null);
     setMenuPosition(null);
   };
@@ -160,6 +168,12 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat 
               onClick={(e) => handleEditClick(e, activeMenuId)}
             >
               编辑
+            </button>
+            <button 
+              className="menu-item"
+              onClick={(e) => handleAssociateWorldBookClick(e, activeMenuId)}
+            >
+              关联世界书
             </button>
             <button 
               className="menu-item delete"

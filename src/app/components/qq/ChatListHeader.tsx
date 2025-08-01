@@ -16,11 +16,12 @@ interface ChatListHeaderProps {
   onOpenPersonalSettings: () => void;
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
+  onOpenWorldBook: () => void;
   onBackToDesktop?: () => void;
   personalSettings?: PersonalSettings;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onBackToDesktop, personalSettings }: ChatListHeaderProps) {
+export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onBackToDesktop, personalSettings }: ChatListHeaderProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
@@ -86,6 +87,13 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
               </svg>
               <span>个人设置</span>
+            </div>
+            <div className="dropdown-item" onClick={() => { setShowUserDropdown(false); onOpenWorldBook(); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              <span>世界书</span>
             </div>
           </div>
         )}
