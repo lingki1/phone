@@ -57,6 +57,22 @@ export default function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 自动调整输入框高度
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // 重置高度以获取正确的 scrollHeight
+    textarea.style.height = 'auto';
+    
+    // 计算新高度，最小高度为一行，最大高度为5行
+    const minHeight = 40; // 一行的高度
+    const maxHeight = 120; // 5行的高度
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+    
+    textarea.style.height = `${newHeight}px`;
+  };
+
 
 
   const scrollToBottom = () => {
@@ -104,12 +120,20 @@ export default function ChatInterface({
     loadBalance();
   }, []);
 
+  // 初始化输入框高度
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, []);
+
   // 处理@提及功能
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
     
     setMessage(value);
+    
+    // 自动调整输入框高度
+    adjustTextareaHeight();
     
     if (chat.isGroup && chat.members) {
       // 检查是否在输入@符号
@@ -139,7 +163,12 @@ export default function ChatInterface({
     
     setMessage(newMessage);
     setShowMentionList(false);
-    textareaRef.current?.focus();
+    
+    // 延迟调整高度，确保状态更新完成
+    setTimeout(() => {
+      adjustTextareaHeight();
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   // 过滤可@的成员
@@ -326,6 +355,11 @@ export default function ChatInterface({
     onUpdateChat(updatedChat);
     setMessage('');
     setQuotedMessage(undefined);
+
+    // 重置输入框高度
+    setTimeout(() => {
+      adjustTextareaHeight();
+    }, 0);
 
     // 触发AI回复
     await triggerAiResponse(updatedChat);
@@ -1300,6 +1334,12 @@ ${myPersona}
             placeholder={chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息..."}
             rows={1}
             disabled={isLoading}
+            style={{
+              resize: 'none',
+              overflow: 'hidden',
+              minHeight: '40px',
+              maxHeight: '120px'
+            }}
           />
           <button 
             className="red-packet-btn"

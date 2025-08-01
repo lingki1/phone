@@ -11,6 +11,13 @@ interface BatteryManager extends EventTarget {
   level: number;
 }
 
+interface NetworkInformation extends EventTarget {
+  effectiveType: string;
+  downlink: number;
+  rtt: number;
+  saveData: boolean;
+}
+
 interface DesktopPageProps {
   onOpenApp: (appName: string) => void;
 }
@@ -90,16 +97,27 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
   const longPressRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
   const isLongPressRef = useRef<{ [key: string]: boolean }>({});
 
+  // 检测是否为移动设备
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   // 获取电池信息
   useEffect(() => {
     const getBatteryInfo = async () => {
       try {
+        // 检查是否支持电池 API
         if ('getBattery' in navigator) {
           const battery = await (navigator as Navigator & { getBattery(): Promise<BatteryManager> }).getBattery();
           
           const updateBatteryInfo = () => {
-            setBatteryLevel(Math.round(battery.level * 100));
-            setIsCharging(battery.charging);
+            const newLevel = Math.round(battery.level * 100);
+            const newCharging = battery.charging;
+            
+            setBatteryLevel(newLevel);
+            setIsCharging(newCharging);
+            
+            console.log(`电池状态更新: ${newLevel}%, 充电中: ${newCharging}, 设备类型: ${isMobileDevice() ? '移动设备' : '桌面设备'}`);
           };
 
           // 初始更新
@@ -109,13 +127,45 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
           battery.addEventListener('levelchange', updateBatteryInfo);
           battery.addEventListener('chargingchange', updateBatteryInfo);
 
+          // 对于移动设备，更频繁地检查电池状态
+          const checkInterval = isMobileDevice() ? 15000 : 30000; // 移动设备15秒，桌面设备30秒
+          const batteryCheckInterval = setInterval(() => {
+            if (battery && typeof battery.level === 'number') {
+              updateBatteryInfo();
+            }
+          }, checkInterval);
+
           return () => {
             battery.removeEventListener('levelchange', updateBatteryInfo);
             battery.removeEventListener('chargingchange', updateBatteryInfo);
+            clearInterval(batteryCheckInterval);
           };
+        } else {
+          console.log('设备不支持电池API，使用默认值');
+          
+          // 对于不支持电池API的设备，尝试使用其他方法
+          if ('connection' in navigator) {
+            // 监听网络状态变化，间接检测设备状态
+            const connection = (navigator as Navigator & { connection: NetworkInformation }).connection;
+            if (connection) {
+              connection.addEventListener('change', () => {
+                console.log('网络状态变化，可能影响电池状态');
+              });
+            }
+          }
+          
+          // 对于移动设备，尝试使用页面可见性API来检测设备状态
+          if (isMobileDevice() && 'hidden' in document) {
+            document.addEventListener('visibilitychange', () => {
+              if (!document.hidden) {
+                console.log('页面重新可见，可能需要更新电池状态');
+              }
+            });
+          }
         }
-      } catch {
-        console.log('电池API不可用，使用默认值');
+      } catch (error) {
+        console.error('获取电池信息失败:', error);
+        console.log('使用默认电池值');
       }
     };
 
@@ -131,6 +181,35 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // 监听页面可见性变化，重新获取电池状态
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isMobileDevice()) {
+        console.log('页面重新可见，尝试更新电池状态');
+        // 延迟一下再检查电池状态，确保设备完全唤醒
+        setTimeout(() => {
+          if ('getBattery' in navigator) {
+            (navigator as Navigator & { getBattery(): Promise<BatteryManager> }).getBattery()
+              .then(battery => {
+                setBatteryLevel(Math.round(battery.level * 100));
+                setIsCharging(battery.charging);
+                console.log('页面可见性变化后电池状态更新完成');
+              })
+              .catch(error => {
+                console.error('页面可见性变化后获取电池状态失败:', error);
+              });
+          }
+        }, 1000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // 格式化时间
@@ -154,14 +233,25 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
   // 获取电池图标
   const getBatteryIcon = () => {
     if (isCharging) {
-      return '🔌';
+      if (batteryLevel <= 20) {
+        return '🔌🔴'; // 充电中但电量低
+      } else if (batteryLevel <= 50) {
+        return '🔌🟡'; // 充电中电量中等
+      } else {
+        return '🔌🔋'; // 充电中电量充足
+      }
     }
-    if (batteryLevel <= 20) {
-      return '🔴';
+    
+    if (batteryLevel <= 10) {
+      return '🔴'; // 电量极低
+    } else if (batteryLevel <= 20) {
+      return '🟠'; // 电量很低
     } else if (batteryLevel <= 50) {
-      return '🟡';
+      return '🟡'; // 电量中等
+    } else if (batteryLevel <= 80) {
+      return '🟢'; // 电量良好
     } else {
-      return '🔋';
+      return '🔋'; // 电量充足
     }
   };
 
@@ -338,7 +428,9 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
           <span className="signal-icon">📶</span>
         </div>
         <div className="status-right">
-          <span className="battery-icon">{getBatteryIcon()}</span>
+          <span className="battery-icon" title={`电池状态: ${batteryLevel}% ${isCharging ? '充电中' : '未充电'}`}>
+            {getBatteryIcon()}
+          </span>
           <span className="battery-percentage">{batteryLevel}%</span>
         </div>
       </div>
