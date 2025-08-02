@@ -13,6 +13,7 @@ import MePage from './me/MePage';
 import { WorldBookListPage, WorldBookAssociationModal } from './worldbook';
 import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
+import PageTransitionManager from '../utils/PageTransitionManager';
 import './ChatListPage.css';
 
 interface PersonalSettings {
@@ -383,9 +384,71 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     );
   }
 
-  if (currentScreen === 'chat' && selectedChat) {
-    return (
-      <>
+  // 定义页面配置
+  const pages = [
+    {
+      id: 'list',
+      component: (
+        <div className="chat-list-page">
+          {/* 顶部导航栏 */}
+          <ChatListHeader 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onOpenAddFriend={handleOpenAddFriend}
+            onOpenCreateGroup={() => setShowCreateGroup(true)}
+            onOpenWorldBook={handleOpenWorldBook}
+            onBackToDesktop={onBackToDesktop}
+            onOpenMePage={() => handleViewChange('me')}
+            personalSettings={personalSettings}
+          />
+          
+          {/* 搜索框 */}
+          <div className="search-container">
+            <div className="search-box">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="搜索角色、人设、聊天内容..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button 
+                  className="clear-search-btn"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m15 9-6 6"/>
+                    <path d="m9 9 6 6"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* 聊天列表 */}
+          <ChatList 
+            chats={filteredChats} 
+            onChatClick={handleOpenChat}
+            onDeleteChat={handleDeleteChat}
+            onEditChat={handleEditChat}
+            onAssociateWorldBook={handleAssociateWorldBook}
+          />
+          
+          {/* 底部导航栏 */}
+          <BottomNavigation 
+            activeView={activeView}
+            onViewChange={handleViewChange}
+          />
+        </div>
+      ),
+      direction: 'right' as const,
+      duration: 300
+    },
+    {
+      id: 'chat',
+      component: selectedChat ? (
         <ChatInterface
           chat={selectedChat}
           apiConfig={apiConfig}
@@ -395,81 +458,41 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           allChats={allChats}
           personalSettings={personalSettings}
         />
-      </>
-    );
-  }
-
-  if (currentScreen === 'me') {
-    return (
-      <div className="chat-list-page">
-        <MePage onBackToDesktop={onBackToDesktop} />
-        <BottomNavigation 
-          activeView={activeView}
-          onViewChange={handleViewChange}
-        />
-      </div>
-    );
-  }
-
-  if (currentScreen === 'worldbook') {
-    return (
-      <WorldBookListPage onBack={() => setCurrentScreen('list')} />
-    );
-  }
+      ) : <div>聊天加载中...</div>,
+      direction: 'left' as const,
+      duration: 300
+    },
+    {
+      id: 'me',
+      component: (
+        <div className="chat-list-page">
+          <MePage onBackToDesktop={onBackToDesktop} />
+          <BottomNavigation 
+            activeView={activeView}
+            onViewChange={handleViewChange}
+          />
+        </div>
+      ),
+      direction: 'up' as const,
+      duration: 300
+    },
+    {
+      id: 'worldbook',
+      component: (
+        <WorldBookListPage onBack={() => setCurrentScreen('list')} />
+      ),
+      direction: 'left' as const,
+      duration: 300
+    }
+  ];
 
   return (
-    <div className="chat-list-page">
-      {/* 顶部导航栏 */}
-      <ChatListHeader 
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onOpenApiSettings={() => setShowApiSettings(true)}
-        onOpenPersonalSettings={() => setShowPersonalSettings(true)}
-        onOpenAddFriend={handleOpenAddFriend}
-        onOpenCreateGroup={() => setShowCreateGroup(true)}
-        onOpenWorldBook={handleOpenWorldBook}
-        onBackToDesktop={onBackToDesktop}
-        personalSettings={personalSettings}
-      />
-      
-      {/* 搜索框 */}
-      <div className="search-container">
-        <div className="search-box">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="搜索角色、人设、聊天内容..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button 
-              className="clear-search-btn"
-              onClick={() => setSearchQuery('')}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="m15 9-6 6"/>
-                <path d="m9 9 6 6"/>
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-      
-      {/* 聊天列表 */}
-      <ChatList 
-        chats={filteredChats} 
-        onChatClick={handleOpenChat}
-        onDeleteChat={handleDeleteChat}
-        onEditChat={handleEditChat}
-        onAssociateWorldBook={handleAssociateWorldBook}
-      />
-      
-      {/* 底部导航栏 */}
-      <BottomNavigation 
-        activeView={activeView}
-        onViewChange={handleViewChange}
+    <>
+      <PageTransitionManager
+        pages={pages}
+        currentPageId={currentScreen}
+        defaultDirection="left"
+        defaultDuration={300}
       />
       
       {/* API设置模态框 */}
@@ -522,6 +545,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onSave={handleSaveWorldBookAssociation}
         />
       )}
-    </div>
+    </>
   );
 }

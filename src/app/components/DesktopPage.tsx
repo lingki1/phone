@@ -80,7 +80,7 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
       color: '#EF4444',
       gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
       size: 'medium',
-      status: 'coming-soon'
+      status: 'available'
     },
     {
       id: 'weibo',
@@ -401,11 +401,7 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
 
     // 延迟执行应用打开，让动画有时间播放
     setTimeout(() => {
-    if (app.id === 'qq') {
-      onOpenApp('qq');
-    } else {
-      console.log(`打开应用: ${app.name}`);
-    }
+      onOpenApp(app.id);
       // 清除点击状态
       setClickedApp(null);
     }, 300); // 300ms动画时长

@@ -1246,9 +1246,25 @@
   background-color: var(--theme-bg-tertiary, #e3f2fd);
 }
 
+.message-action-btn.regenerate-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  min-width: auto !important;
+  height: auto !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--theme-text-primary, #333) !important;
+  opacity: 1 !important;
+}
+
 .message-action-btn.regenerate-btn:hover {
-  color: #28a745;
-  background-color: #e8f5e8;
+  background: transparent !important;
+  color: var(--theme-text-primary, #333) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
 }
 
 .message-action-btn.delete-btn:hover {

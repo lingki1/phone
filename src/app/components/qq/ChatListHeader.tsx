@@ -12,28 +12,21 @@ interface PersonalSettings {
 interface ChatListHeaderProps {
   activeTab: 'all' | 'single' | 'group';
   onTabChange: (tab: 'all' | 'single' | 'group') => void;
-  onOpenApiSettings: () => void;
-  onOpenPersonalSettings: () => void;
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
   onOpenWorldBook: () => void;
   onBackToDesktop?: () => void;
+  onOpenMePage?: () => void;
   personalSettings?: PersonalSettings;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettings, onOpenPersonalSettings, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onBackToDesktop, personalSettings }: ChatListHeaderProps) {
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onBackToDesktop, onOpenMePage, personalSettings }: ChatListHeaderProps) {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
   // 添加点击空白区域关闭菜单的功能
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      
-      // 关闭用户下拉菜单
-      if (showUserDropdown && !target.closest('.user-avatar-container')) {
-        setShowUserDropdown(false);
-      }
       
       // 关闭添加下拉菜单
       if (showAddDropdown && !target.closest('.add-menu-container')) {
@@ -48,7 +41,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showUserDropdown, showAddDropdown]);
+  }, [showAddDropdown]);
 
   return (
     <div className="chat-list-header">
@@ -69,34 +62,9 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
           width={48}
           height={48}
           className="user-avatar"
-          onClick={() => setShowUserDropdown(!showUserDropdown)}
+          onClick={onOpenMePage}
           unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
         />
-        
-        {/* 用户下拉菜单 */}
-        {showUserDropdown && (
-          <div className="user-dropdown-menu visible">
-            <div className="dropdown-item" onClick={() => { setShowUserDropdown(false); onOpenApiSettings(); }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
-              </svg>
-              <span>API设置</span>
-            </div>
-            <div className="dropdown-item" onClick={() => { setShowUserDropdown(false); onOpenPersonalSettings(); }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
-              </svg>
-              <span>个人设置</span>
-            </div>
-            <div className="dropdown-item" onClick={() => { setShowUserDropdown(false); onOpenWorldBook(); }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              <span>世界书</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 群聊/单聊切换开关 */}
@@ -136,20 +104,27 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenApiSettin
             <div className="add-dropdown-menu visible">
               <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenAddFriend(); }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="8.5" cy="7" r="4"></circle>
-                  <line x1="20" y1="8" x2="20" y2="14"></line>
-                  <line x1="17" y1="11" x2="23" y2="11"></line>
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="20" y1="8" x2="20" y2="14" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="17" y1="11" x2="23" y2="11" stroke="currentColor" strokeWidth="2"/>
                 </svg>
                 <span>添加好友</span>
               </div>
               <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenCreateGroup(); }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="8.5" cy="7" r="4"></circle>
-                  <path d="M23 11l-2-2v4l2-2z"></path>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M23 11l-2-2v4l2-2z" stroke="currentColor" strokeWidth="2"/>
                 </svg>
                 <span>创建群聊</span>
+              </div>
+              <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenWorldBook(); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                <span>世界书</span>
               </div>
             </div>
           )}

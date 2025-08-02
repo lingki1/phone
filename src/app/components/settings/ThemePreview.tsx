@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Theme } from '../../types/theme';
 import { generateThemePreviewStyle } from '../../utils/themeUtils';
 import './ThemePreview.css';
@@ -17,27 +17,8 @@ interface ThemePreviewProps {
 export default function ThemePreview({
   theme,
   isSelected,
-  isPreview,
-  onSelect,
-  onPreview,
-  onPreviewEnd
+  onSelect
 }: ThemePreviewProps) {
-  const [isHovering, setIsHovering] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-    if (!isSelected && !isPreview) {
-      onPreview(theme.id);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    if (!isSelected && isPreview && onPreviewEnd) {
-      onPreviewEnd();
-    }
-  };
-
   const handleClick = () => {
     if (!isSelected) {
       onSelect(theme.id);
@@ -48,9 +29,7 @@ export default function ThemePreview({
 
   return (
     <div
-      className={`theme-preview ${isSelected ? 'selected' : ''} ${isPreview ? 'previewing' : ''} ${isHovering ? 'hovering' : ''}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className={`theme-preview ${isSelected ? 'selected' : ''}`}
       onClick={handleClick}
     >
       {/* 主题预览卡片 */}
@@ -113,12 +92,7 @@ export default function ThemePreview({
           </div>
         )}
 
-        {/* 预览指示器 */}
-        {isPreview && !isSelected && (
-          <div className="preview-indicator">
-            <span>预览中</span>
-          </div>
-        )}
+
       </div>
 
       {/* 主题信息 */}
@@ -165,7 +139,7 @@ export default function ThemePreview({
               onSelect(theme.id);
             }}
           >
-            应用主题
+            应用
           </button>
         )}
       </div>

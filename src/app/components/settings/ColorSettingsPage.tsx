@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { Theme } from '../../types/theme';
 import ThemePreview from './ThemePreview';
@@ -15,15 +15,11 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
     currentTheme, 
     availableThemes, 
     isLoading, 
-    setTheme, 
-    previewTheme, 
-    cancelPreview,
+    setTheme,
     categories 
   } = useTheme();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('basic');
-  const [previewThemeId, setPreviewThemeId] = useState<string | null>(null);
-  const [isApplying, setIsApplying] = useState<boolean>(false);
 
   // 根据分类过滤主题
   const getThemesByCategory = (categoryId: string): Theme[] => {
@@ -32,41 +28,12 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
 
   // 处理主题选择
   const handleThemeSelect = async (themeId: string) => {
-    if (isApplying) return;
-    
     try {
-      setIsApplying(true);
       await setTheme(themeId);
-      setPreviewThemeId(null);
     } catch (error) {
       console.error('Failed to apply theme:', error);
-    } finally {
-      setIsApplying(false);
     }
   };
-
-  // 处理主题预览
-  const handleThemePreview = (themeId: string) => {
-    if (themeId === currentTheme) return;
-    
-    setPreviewThemeId(themeId);
-    previewTheme(themeId);
-  };
-
-  // 处理预览结束
-  const handlePreviewEnd = () => {
-    setPreviewThemeId(null);
-    cancelPreview();
-  };
-
-  // 组件卸载时取消预览
-  useEffect(() => {
-    return () => {
-      if (previewThemeId) {
-        cancelPreview();
-      }
-    };
-  }, [previewThemeId, cancelPreview]);
 
   if (isLoading) {
     return (
@@ -99,23 +66,7 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
         <h1 className="page-title">配色设置</h1>
       </div>
 
-      {/* 预览提示 */}
-      {previewThemeId && (
-        <div className="preview-banner">
-          <div className="preview-info">
-            <span className="preview-icon">👀</span>
-            <span className="preview-text">
-              正在预览主题，点击&quot;应用&quot;确认更改或点击其他主题取消
-            </span>
-          </div>
-          <button 
-            className="preview-cancel-btn"
-            onClick={handlePreviewEnd}
-          >
-            取消预览
-          </button>
-        </div>
-      )}
+
 
       {/* 分类选择器 */}
       <div className="category-selector">
@@ -138,42 +89,16 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
               key={theme.id}
               theme={theme}
               isSelected={currentTheme === theme.id}
-              isPreview={previewThemeId === theme.id}
+              isPreview={false}
               onSelect={handleThemeSelect}
-              onPreview={handleThemePreview}
-              onPreviewEnd={handlePreviewEnd}
+              onPreview={() => {}}
+              onPreviewEnd={() => {}}
             />
           ))}
         </div>
       </div>
 
-      {/* 当前主题信息 */}
-      <div className="current-theme-info">
-        <div className="current-theme-label">当前主题</div>
-        <div className="current-theme-details">
-          {(() => {
-            const current = availableThemes.find(t => t.id === currentTheme);
-            return current ? (
-              <>
-                <div className="current-theme-name">{current.name}</div>
-                <div className="current-theme-description">{current.description}</div>
-              </>
-            ) : (
-              <div className="current-theme-name">未知主题</div>
-            );
-          })()}
-        </div>
-      </div>
 
-      {/* 应用中遮罩 */}
-      {isApplying && (
-        <div className="applying-overlay">
-          <div className="applying-content">
-            <div className="applying-spinner"></div>
-            <p>正在应用主题...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -584,7 +584,9 @@ ${memoryInfo}` : ''}
       let groupMemoryInfo = '';
       if (chat.settings.linkedGroupChatIds && chat.settings.linkedGroupChatIds.length > 0) {
         const groupMemoryPromises = chat.settings.linkedGroupChatIds.map(async (groupChatId) => {
-          const groupChat = availableContacts.find(contact => contact.id === groupChatId);
+          // 优先使用 allChats，后备使用 availableContacts
+          const allChatsData = allChats || availableContacts;
+          const groupChat = allChatsData.find(contact => contact.id === groupChatId);
           if (!groupChat || !groupChat.messages) return null;
           
           // 获取群聊中所有人的消息
@@ -592,13 +594,24 @@ ${memoryInfo}` : ''}
             `${msg.role === 'user' ? myNickname : msg.senderName || chat.name}: ${msg.content}`
           ).join('\n');
           
-          return `## ${groupChat.name} 中的群聊记忆 (${groupChat.messages.length} 条记录)
-最近5条对话：
-${recentMessages}`;
+          return `## ${groupChat.name} 群聊记忆 (${groupChat.messages.length} 条记录)
+最近5条对话记录：
+${recentMessages}
+
+注意：这些是你在群聊中的表现，在单聊中请保持一致的个性和关系。`;
         });
         
         const groupMemories = await Promise.all(groupMemoryPromises);
         const validMemories = groupMemories.filter(memory => memory !== null);
+        
+        // 添加调试信息
+        console.log('单聊群聊记忆构建:', {
+          linkedGroupChatIds: chat.settings.linkedGroupChatIds,
+          allChatsCount: allChats?.length || 0,
+          availableContactsCount: availableContacts?.length || 0,
+          foundGroupChats: validMemories.length,
+          groupMemoryInfo: validMemories.length > 0 ? '已构建' : '无群聊记忆'
+        });
         
         if (validMemories.length > 0) {
           groupMemoryInfo = `\n\n# 群聊记忆信息
@@ -616,7 +629,7 @@ ${chat.settings.aiPersona}
 2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少3-8条消息！！！
 3. **情景感知**: 你需要感知当前的时间(${currentTime})。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
-5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。
+5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。
 
 # 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "content": "文本内容"}
@@ -1271,7 +1284,7 @@ ${myPersona}${groupMemoryInfo}
                         onClick={() => handleRegenerateAI(msg.id)}
                         title="重新生成"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
                           <path d="M21 3v5h-5"/>
                           <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
