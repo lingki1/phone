@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import './BottomNavigation.css';
 
 // 导航项类型定义
@@ -56,13 +57,38 @@ export default function BottomNavigation({
   navItems = defaultNavItems,
   className = ''
 }: BottomNavigationProps) {
+  const createRipple = (event: React.MouseEvent<HTMLDivElement>) => {
+    const button = event.currentTarget;
+    const ripple = document.createElement('span');
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.className = 'ripple';
+    
+    button.appendChild(ripple);
+    
+    setTimeout(() => {
+      ripple.remove();
+    }, 600);
+  };
+
+  const handleItemClick = (itemKey: string, event: React.MouseEvent<HTMLDivElement>) => {
+    createRipple(event);
+    onViewChange(itemKey);
+  };
+
   return (
     <div className={`bottom-navigation ${className}`}>
       {navItems.map((item) => (
         <div
           key={item.key}
           className={`nav-item ${activeView === item.key ? 'active' : ''}`}
-          onClick={() => onViewChange(item.key)}
+          onClick={(e) => handleItemClick(item.key, e)}
         >
           <div className="nav-icon">
             {item.icon}

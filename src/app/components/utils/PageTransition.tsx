@@ -24,7 +24,10 @@ export default function PageTransition({
   useEffect(() => {
     if (isVisible) {
       setShouldRender(true);
-      setIsAnimating(true);
+      // 使用 requestAnimationFrame 确保 DOM 更新后再开始动画
+      requestAnimationFrame(() => {
+        setIsAnimating(true);
+      });
     } else {
       setIsAnimating(false);
       const timer = setTimeout(() => {

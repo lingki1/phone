@@ -19,26 +19,128 @@
   font-size: 14px;
   color: var(--theme-text-secondary, #5f6368);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  margin: 0 4px;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    var(--theme-nav-active, #1a73e8) 0%, 
+    rgba(26, 115, 232, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: var(--theme-nav-active, #1a73e8);
+  border-radius: 2px 2px 0 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover {
+  color: var(--theme-nav-active, #1a73e8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+}
+
+.nav-item:hover::before {
+  opacity: 0.05;
 }
 
 .nav-item.active {
   color: var(--theme-nav-active, #1a73e8);
   font-weight: 600;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.2);
+}
+
+.nav-item.active::before {
+  opacity: 0.1;
+}
+
+.nav-item.active::after {
+  width: 60%;
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(26, 115, 232, 0.3));
 }
 
 .nav-item.active .nav-icon svg {
   stroke: var(--theme-nav-active, #1a73e8);
+  filter: drop-shadow(0 1px 2px rgba(26, 115, 232, 0.2));
 }
 
 .nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.nav-icon svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 图标脉冲动画 */
+@keyframes iconPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.nav-item.active .nav-icon {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+/* 图标旋转效果（仅在激活时） */
+@keyframes iconRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.nav-item.active .nav-icon svg {
+  animation: iconRotate 3s ease-in-out infinite;
 }
 
 .nav-label {
@@ -92,9 +194,56 @@
   /* 如果用户选择了深色主题，相应的CSS类会被应用 */
 }
 
+/* 涟漪效果 */
+.nav-item {
+  position: relative;
+}
+
+.nav-item .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(26, 115, 232, 0.3);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* 发光效果 */
+.nav-item.active::before {
+  box-shadow: 0 0 20px rgba(26, 115, 232, 0.3);
+}
+
+/* 文字发光效果 */
+.nav-item.active .nav-label {
+  text-shadow: 0 0 8px rgba(26, 115, 232, 0.5);
+  animation: textGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 8px rgba(26, 115, 232, 0.5);
+  }
+  to {
+    text-shadow: 0 0 12px rgba(26, 115, 232, 0.8);
+  }
+}
+
 /* 减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
   .nav-item {
     transition-duration: 0.01ms !important;
+  }
+  
+  .nav-item.active .nav-icon,
+  .nav-item.active .nav-icon svg,
+  .nav-item.active .nav-label {
+    animation: none !important;
   }
 } 

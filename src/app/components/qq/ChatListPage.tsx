@@ -64,6 +64,8 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('');
+  
+
 
   // 初始化数据库和加载数据
   useEffect(() => {
@@ -198,10 +200,13 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
   // 处理底部导航切换
   const handleViewChange = (view: string) => {
+    // 防止重复点击同一个视图
+    if (activeView === view) return;
+    
     setActiveView(view);
     if (view === 'me') {
       setCurrentScreen('me');
-    } else {
+    } else if (view === 'messages') {
       setCurrentScreen('list');
     }
   };
@@ -400,31 +405,17 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onBackToDesktop={onBackToDesktop}
             onOpenMePage={() => handleViewChange('me')}
             personalSettings={personalSettings}
-          />
+                    />
           
           {/* 搜索框 */}
-          <div className="search-container">
-            <div className="search-box">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="搜索角色、人设、聊天内容..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button 
-                  className="clear-search-btn"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="m15 9-6 6"/>
-                    <path d="m9 9 6 6"/>
-                  </svg>
-                </button>
-              )}
-            </div>
+          <div className="search-bar">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="搜索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           
           {/* 聊天列表 */}

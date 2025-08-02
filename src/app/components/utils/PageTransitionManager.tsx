@@ -27,17 +27,14 @@ export default function PageTransitionManager({
   defaultDuration = 300
 }: PageTransitionManagerProps) {
   const [currentPage, setCurrentPage] = useState(currentPageId);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    if (currentPageId !== currentPage && !isTransitioning) {
-      setIsTransitioning(true);
+    if (currentPageId !== currentPage) {
       setCurrentPage(currentPageId);
     }
-  }, [currentPageId, currentPage, isTransitioning]);
+  }, [currentPageId, currentPage]);
 
   const handleTransitionEnd = () => {
-    setIsTransitioning(false);
     onPageChange?.(currentPage);
   };
 

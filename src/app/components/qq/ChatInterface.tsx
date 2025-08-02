@@ -58,6 +58,7 @@ export default function ChatInterface({
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
