@@ -514,6 +514,14 @@ export default function ChatInterface({
 
   // 触发AI回复的核心函数
   const triggerAiResponse = async (updatedChat: ChatItem) => {
+    // 添加调试信息
+    console.log('ChatInterface - API配置检查:', {
+      proxyUrl: apiConfig.proxyUrl,
+      apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+      model: apiConfig.model,
+      hasAllConfig: !!(apiConfig.proxyUrl && apiConfig.apiKey && apiConfig.model)
+    });
+    
     if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
       // 如果没有API配置，显示提示消息
       const apiConfigMessage: Message = {

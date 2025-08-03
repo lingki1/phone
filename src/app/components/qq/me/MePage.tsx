@@ -62,9 +62,27 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         setBalance(userBalance);
         
         // 加载API配置
-        const savedApiConfig = localStorage.getItem('apiConfig');
-        if (savedApiConfig) {
-          setApiConfig(JSON.parse(savedApiConfig));
+        try {
+          const savedApiConfig = await dataManager.getApiConfig();
+          console.log('MePage - 从数据库加载API配置:', {
+            proxyUrl: savedApiConfig.proxyUrl,
+            apiKey: savedApiConfig.apiKey ? '已设置' : '未设置',
+            model: savedApiConfig.model
+          });
+          setApiConfig(savedApiConfig);
+        } catch (error) {
+          console.error('Failed to load API config from database:', error);
+          // 回退到localStorage
+          const savedApiConfig = localStorage.getItem('apiConfig');
+          if (savedApiConfig) {
+            const parsedConfig = JSON.parse(savedApiConfig);
+            console.log('MePage - 从localStorage加载API配置:', {
+              proxyUrl: parsedConfig.proxyUrl,
+              apiKey: parsedConfig.apiKey ? '已设置' : '未设置',
+              model: parsedConfig.model
+            });
+            setApiConfig(parsedConfig);
+          }
         }
       } catch (error) {
         console.error('Failed to load data from database:', error);
@@ -75,7 +93,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         }
         setBalance(0);
         
-        // 加载API配置
+        // 加载API配置（回退到localStorage）
         const savedApiConfig = localStorage.getItem('apiConfig');
         if (savedApiConfig) {
           setApiConfig(JSON.parse(savedApiConfig));
@@ -139,9 +157,31 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   };
 
   // 处理API设置保存
-  const handleApiSettingsSave = (config: { proxyUrl: string; apiKey: string; model: string }) => {
+  const handleApiSettingsSave = async (config: { proxyUrl: string; apiKey: string; model: string }) => {
+    console.log('MePage - 保存API配置:', {
+      proxyUrl: config.proxyUrl,
+      apiKey: config.apiKey ? '已设置' : '未设置',
+      model: config.model
+    });
+    
     setApiConfig(config);
-    localStorage.setItem('apiConfig', JSON.stringify(config));
+    
+    try {
+      // 保存到数据库
+      await dataManager.initDB();
+      await dataManager.saveApiConfig(config);
+      console.log('MePage - API配置已保存到数据库:', {
+        proxyUrl: config.proxyUrl,
+        apiKey: config.apiKey ? '已设置' : '未设置',
+        model: config.model
+      });
+    } catch (error) {
+      console.error('Failed to save API config to database:', error);
+      // 如果数据库保存失败，回退到localStorage
+      localStorage.setItem('apiConfig', JSON.stringify(config));
+      console.log('MePage - API配置已保存到localStorage');
+    }
+    
     setShowApiSettings(false);
   };
 

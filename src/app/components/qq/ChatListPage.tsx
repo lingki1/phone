@@ -116,8 +116,28 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         await dataManager.initDB();
         
         // 加载API配置
-        const savedApiConfig = await dataManager.getApiConfig();
-        setApiConfig(savedApiConfig);
+        try {
+          const savedApiConfig = await dataManager.getApiConfig();
+          console.log('ChatListPage - 从数据库加载API配置:', {
+            proxyUrl: savedApiConfig.proxyUrl,
+            apiKey: savedApiConfig.apiKey ? '已设置' : '未设置',
+            model: savedApiConfig.model
+          });
+          setApiConfig(savedApiConfig);
+        } catch (error) {
+          console.error('Failed to load API config from database:', error);
+          // 回退到localStorage
+          const savedApiConfig = localStorage.getItem('apiConfig');
+          if (savedApiConfig) {
+            const parsedConfig = JSON.parse(savedApiConfig);
+            console.log('ChatListPage - 从localStorage加载API配置:', {
+              proxyUrl: parsedConfig.proxyUrl,
+              apiKey: parsedConfig.apiKey ? '已设置' : '未设置',
+              model: parsedConfig.model
+            });
+            setApiConfig(parsedConfig);
+          }
+        }
         
         // 加载个人设置
         try {
@@ -160,12 +180,20 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
   // 保存API配置
   const handleSaveApiConfig = async (config: ApiConfig) => {
+    console.log('ChatListPage - 保存API配置:', {
+      proxyUrl: config.proxyUrl,
+      apiKey: config.apiKey ? '已设置' : '未设置',
+      model: config.model
+    });
+    
     setApiConfig(config);
     try {
       await dataManager.saveApiConfig(config);
+      console.log('ChatListPage - API配置已保存到数据库');
     } catch (error) {
       console.error('Failed to save API config:', error);
       localStorage.setItem('apiConfig', JSON.stringify(config));
+      console.log('ChatListPage - API配置已保存到localStorage');
     }
   };
 
