@@ -4,7 +4,7 @@ import { TransactionRecord } from '../types/money';
 import { PresetConfig } from '../types/preset';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 6; // 升级数据库版本以支持预设系统
+const DB_VERSION = 7; // 升级数据库版本以支持聊天状态系统
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -13,6 +13,7 @@ const BALANCE_STORE = 'balance';
 const TRANSACTION_STORE = 'transactions';
 const WORLD_BOOK_STORE = 'worldBooks';
 const PRESET_STORE = 'presets';
+const CHAT_STATUS_STORE = 'chatStatus';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -82,6 +83,12 @@ class DataManager {
           presetStore.createIndex('name', 'name', { unique: false });
           presetStore.createIndex('isDefault', 'isDefault', { unique: false });
           presetStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 创建聊天状态存储
+        if (!db.objectStoreNames.contains(CHAT_STATUS_STORE)) {
+          const statusStore = db.createObjectStore(CHAT_STATUS_STORE, { keyPath: 'chatId' });
+          statusStore.createIndex('lastUpdate', 'lastUpdate', { unique: false });
         }
       };
     });
@@ -741,6 +748,69 @@ class DataManager {
 
       request.onerror = () => reject(new Error('Failed to get default preset'));
       request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  // 聊天状态相关方法
+  async saveChatStatus(chatId: string, status: {
+    isOnline: boolean;
+    mood: string;
+    location: string;
+    outfit: string;
+    lastUpdate: number;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_STATUS_STORE], 'readwrite');
+      const store = transaction.objectStore(CHAT_STATUS_STORE);
+      const request = store.put({
+        chatId,
+        ...status
+      });
+
+      request.onerror = () => reject(new Error('Failed to save chat status'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getChatStatus(chatId: string): Promise<{
+    isOnline: boolean;
+    mood: string;
+    location: string;
+    outfit: string;
+    lastUpdate: number;
+  } | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_STATUS_STORE], 'readonly');
+      const store = transaction.objectStore(CHAT_STATUS_STORE);
+      const request = store.get(chatId);
+
+      request.onerror = () => reject(new Error('Failed to get chat status'));
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          const { chatId: _, ...status } = result;
+          resolve(status);
+        } else {
+          resolve(null);
+        }
+      };
+    });
+  }
+
+  async deleteChatStatus(chatId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_STATUS_STORE], 'readwrite');
+      const store = transaction.objectStore(CHAT_STATUS_STORE);
+      const request = store.delete(chatId);
+
+      request.onerror = () => reject(new Error('Failed to delete chat status'));
+      request.onsuccess = () => resolve();
     });
   }
 }

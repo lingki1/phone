@@ -11,6 +11,7 @@ import SingleChatMemoryManager from './memory/SingleChatMemoryManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
+import { ChatStatusManager, ChatStatusDisplay, ChatStatus, injectStatusPrompt } from './chatstatus';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -80,6 +81,15 @@ export default function ChatInterface({
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  
+  // 聊天状态相关状态
+  const [chatStatus, setChatStatus] = useState<ChatStatus>({
+    isOnline: true,
+    mood: '心情愉快',
+    location: '在家中',
+    outfit: '穿着休闲装',
+    lastUpdate: Date.now()
+  });
   
   // 分页加载相关状态
   const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息
@@ -521,6 +531,8 @@ export default function ChatInterface({
       model: apiConfig.model,
       hasAllConfig: !!(apiConfig.proxyUrl && apiConfig.apiKey && apiConfig.model)
     });
+
+
     
     if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
       // 如果没有API配置，显示提示消息
@@ -668,6 +680,16 @@ export default function ChatInterface({
     }
   };
 
+  // 检查是否需要触发状态更新
+  const shouldTriggerStatusUpdate = () => {
+    const now = Date.now();
+    const lastUpdate = chatStatus.lastUpdate;
+    const timeDiff = now - lastUpdate;
+    
+    // 如果距离上次状态更新超过30分钟，或者这是第一次对话，则触发状态更新
+    return timeDiff > 30 * 60 * 1000 || chat.messages.length <= 1;
+  };
+
   // 构建系统提示词
   const buildSystemPrompt = async (chat: ChatItem): Promise<string> => {
     const now = new Date();
@@ -791,6 +813,7 @@ ${chat.settings.aiPersona}
 3. **情景感知**: 你需要感知当前的时间(${currentTime})，但是不能重复提及时间概念。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。
+6. **状态实时性**: 每次对话都应该根据当前时间、对话内容和情境实时更新你的状态，让对话更有真实感。
 
 # 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "content": "文本内容"}
@@ -802,6 +825,7 @@ ${chat.settings.aiPersona}
 - **请求红包**: {"type": "request_red_packet", "message": "请求消息"}
 - **接收红包**: {"type": "accept_red_packet", "red_packet_id": "红包ID", "message": "感谢消息"}
 - **拒绝红包**: {"type": "decline_red_packet", "red_packet_id": "红包ID", "message": "拒绝理由"}
+- **更新状态**: {"type": "status_update", "mood": "新心情", "location": "新位置", "outfit": "新穿着"}
 
 # 红包处理规则：
 - 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
@@ -819,11 +843,31 @@ ${myPersona}${groupMemoryInfo}
     }
 
     // 注入世界书内容
-    const finalPrompt = await WorldBookInjector.injectWorldBooks(
+    let finalPrompt = await WorldBookInjector.injectWorldBooks(
       chat.id,
       basePrompt,
       chat.settings.linkedWorldBookIds || []
     );
+
+    // 注入状态提示词（仅在单聊中）
+    if (!chat.isGroup) {
+      finalPrompt = injectStatusPrompt(finalPrompt, chatStatus);
+      
+      // 如果需要触发状态更新，添加强制更新指令
+      if (shouldTriggerStatusUpdate()) {
+        finalPrompt += `
+
+## 重要：状态更新要求
+由于距离上次状态更新已经较长时间，或者这是我们的第一次对话，请务必在回复中包含状态更新指令。
+请根据当前时间和情境，更新你的状态信息，让对话更加真实自然。
+
+示例回复格式：
+[
+  {"type": "status_update", "mood": "当前心情", "location": "当前位置", "outfit": "当前穿着"},
+  {"type": "text", "content": "你的回复内容"}
+]`;
+      }
+    }
 
     return finalPrompt;
   };
@@ -1092,6 +1136,33 @@ ${myPersona}${groupMemoryInfo}
           timestamp: timestamp
         });
         break;
+      case 'status_update':
+        // AI状态更新命令
+        const newMood = String(msgData.mood || chatStatus.mood);
+        const newLocation = String(msgData.location || chatStatus.location);
+        const newOutfit = String(msgData.outfit || chatStatus.outfit);
+        
+        // 更新聊天状态
+        const updatedStatus: ChatStatus = {
+          isOnline: true,
+          mood: newMood,
+          location: newLocation,
+          outfit: newOutfit,
+          lastUpdate: Date.now()
+        };
+        
+        setChatStatus(updatedStatus);
+        
+        // 保存到数据库
+        try {
+          await dataManager.initDB();
+          await dataManager.saveChatStatus(chat.id, updatedStatus);
+        } catch (error) {
+          console.error('Failed to save chat status:', error);
+        }
+        
+        // 不创建消息，只更新状态
+        return null;
       default:
         // 默认情况下也处理可能的JSON内容
         const defaultContent = msgData.content || msgData.message || '';
@@ -1295,9 +1366,11 @@ ${myPersona}${groupMemoryInfo}
           />
           <div className="chat-details">
             <span className="chat-name">{chat.name}</span>
-            <span className="chat-status">
-              {chat.isGroup && chat.members ? `${chat.members.length}人` : '在线'}
-            </span>
+            {chat.isGroup && chat.members ? (
+              <span className="chat-status">{`${chat.members.length}人`}</span>
+            ) : (
+              <ChatStatusDisplay status={chatStatus} chatName={chat.name} />
+            )}
           </div>
         </div>
         <div className="chat-actions">
@@ -1641,6 +1714,14 @@ ${myPersona}${groupMemoryInfo}
           onSend={handleSendRedPacket}
           currentBalance={currentBalance}
           recipientName={chat.name}
+        />
+      )}
+
+      {/* 聊天状态管理器（仅在单聊中） */}
+      {!chat.isGroup && (
+        <ChatStatusManager
+          chatId={chat.id}
+          onStatusUpdate={setChatStatus}
         />
       )}
 
