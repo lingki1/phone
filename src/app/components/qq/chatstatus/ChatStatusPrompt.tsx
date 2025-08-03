@@ -8,9 +8,10 @@ export interface ChatStatusPromptProps {
   onStatusUpdate: (status: ChatStatus) => void;
 }
 
-export default function ChatStatusPrompt({ currentStatus, onStatusUpdate }: ChatStatusPromptProps) {
-  // 生成状态更新提示词
-  const generateStatusPrompt = (): string => {
+export default function ChatStatusPrompt({ }: ChatStatusPromptProps) {
+  // 生成状态更新提示词（暂时未使用）
+  /*
+  const _generateStatusPrompt = (): string => {
     return `# 状态更新指令
 
 你现在需要更新你的状态信息。请根据当前时间、对话内容和你的角色设定，生成一个JSON格式的状态更新。
@@ -36,9 +37,11 @@ export default function ChatStatusPrompt({ currentStatus, onStatusUpdate }: Chat
 
 请生成你的状态更新：`;
   };
+  */
 
-  // 解析AI返回的状态更新
-  const parseStatusUpdate = (aiResponse: string): Partial<ChatStatus> | null => {
+  // 解析AI返回的状态更新（暂时未使用）
+  /*
+  const _parseStatusUpdate = (aiResponse: string): Partial<ChatStatus> | null => {
     try {
       // 尝试解析JSON
       const parsed = JSON.parse(aiResponse);
@@ -58,6 +61,7 @@ export default function ChatStatusPrompt({ currentStatus, onStatusUpdate }: Chat
     
     return null;
   };
+  */
 
   // 触发状态更新（暂时未使用，保留以备将来扩展）
   // const triggerStatusUpdate = async (apiConfig: ApiConfig, chat: ChatItem) => {
@@ -104,11 +108,10 @@ export default function ChatStatusPrompt({ currentStatus, onStatusUpdate }: Chat
 export const injectStatusPrompt = (basePrompt: string, currentStatus: ChatStatus): string => {
   const now = new Date();
   const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
   const isMorning = currentHour >= 6 && currentHour < 12;
   const isAfternoon = currentHour >= 12 && currentHour < 18;
   const isEvening = currentHour >= 18 && currentHour < 22;
-  const isNight = currentHour >= 22 || currentHour < 6;
+  // const isNight = currentHour >= 22 || currentHour < 6;
 
   // 根据时间动态生成状态建议
   const getTimeBasedSuggestions = () => {

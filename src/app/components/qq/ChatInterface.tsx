@@ -12,6 +12,7 @@ import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
 import { ChatStatusManager, ChatStatusDisplay, ChatStatus, injectStatusPrompt } from './chatstatus';
+import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -81,6 +82,9 @@ export default function ChatInterface({
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  const [chatBackground, setChatBackground] = useState<string>('');
+  const [chatAnimation, setChatAnimation] = useState<string>('none');
+  const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   
   // 聊天状态相关状态
   const [chatStatus, setChatStatus] = useState<ChatStatus>({
@@ -276,6 +280,26 @@ export default function ChatInterface({
     
     loadBalance();
   }, []);
+
+  // 加载聊天背景
+  useEffect(() => {
+    const loadBackground = async () => {
+      try {
+        await dataManager.initDB();
+        const background = await dataManager.getChatBackground(chat.id);
+        setChatBackground(background || '');
+      } catch (error) {
+        console.error('Failed to load chat background:', error);
+        // 如果数据库加载失败，尝试从localStorage加载
+        const fallbackBackground = localStorage.getItem(`chatBackground_${chat.id}`);
+        if (fallbackBackground) {
+          setChatBackground(fallbackBackground);
+        }
+      }
+    };
+    
+    loadBackground();
+  }, [chat.id]);
 
   // 初始化输入框高度
   useEffect(() => {
@@ -1352,7 +1376,14 @@ ${myPersona}${groupMemoryInfo}
   };
 
   return (
-    <div className="chat-interface">
+    <ChatBackgroundManager
+      chatId={chat.id}
+      onBackgroundChange={(background, animation) => {
+        setChatBackground(background);
+        setChatAnimation(animation || 'none');
+      }}
+    >
+      <div className="chat-interface">
       {/* 顶部导航栏 */}
       <div className="chat-header">
         <button className="back-btn" onClick={onBack}>‹</button>
@@ -1374,15 +1405,22 @@ ${myPersona}${groupMemoryInfo}
           </div>
         </div>
         <div className="chat-actions">
+          <button 
+            className="action-btn"
+            onClick={() => setShowBackgroundModal(true)}
+            title="设置聊天背景"
+          >
+            🖼️
+          </button>
           {chat.isGroup ? (
             <>
-                                      <button 
-                          className="action-btn"
-                          onClick={() => setShowMemoryManager(true)}
-                          title="记忆管理"
-                        >
-                          📋
-                        </button>
+              <button 
+                className="action-btn"
+                onClick={() => setShowMemoryManager(true)}
+                title="记忆管理"
+              >
+                📋
+              </button>
               <button 
                 className="action-btn"
                 onClick={() => setShowMemberManager(true)}
@@ -1392,13 +1430,13 @@ ${myPersona}${groupMemoryInfo}
               </button>
             </>
           ) : (
-                                  <button 
-                        className="action-btn"
-                        onClick={() => setShowSingleChatMemoryManager(true)}
-                        title="群聊记忆管理"
-                      >
-                        📋
-                      </button>
+            <button 
+              className="action-btn"
+              onClick={() => setShowSingleChatMemoryManager(true)}
+              title="群聊记忆管理"
+            >
+              📋
+            </button>
           )}
         </div>
       </div>
@@ -1725,6 +1763,60 @@ ${myPersona}${groupMemoryInfo}
         />
       )}
 
+      {/* 聊天背景设置模态框 */}
+      {showBackgroundModal && (
+        <ChatBackgroundModal
+          isOpen={showBackgroundModal}
+          onClose={() => setShowBackgroundModal(false)}
+          currentBackground={chatBackground}
+          currentAnimation={chatAnimation}
+          onSave={async (background: string, animation: string) => {
+            try {
+              await dataManager.initDB();
+              await dataManager.saveChatBackground(chat.id, background);
+              
+              // 同时保存到localStorage作为备份
+              if (background) {
+                localStorage.setItem(`chatBackground_${chat.id}`, background);
+                localStorage.setItem(`chatAnimation_${chat.id}`, animation);
+              } else {
+                localStorage.removeItem(`chatBackground_${chat.id}`);
+                localStorage.removeItem(`chatAnimation_${chat.id}`);
+              }
+              
+              // 立即更新状态
+              setChatBackground(background);
+              setChatAnimation(animation);
+              
+              // 强制重新加载背景
+              setTimeout(() => {
+                const event = new CustomEvent('backgroundUpdated', { 
+                  detail: { chatId: chat.id, background, animation } 
+                });
+                window.dispatchEvent(event);
+              }, 100);
+              
+              setShowBackgroundModal(false);
+            } catch (error) {
+              console.error('Failed to save chat background:', error);
+              // 如果数据库保存失败，只保存到localStorage
+              if (background) {
+                localStorage.setItem(`chatBackground_${chat.id}`, background);
+                localStorage.setItem(`chatAnimation_${chat.id}`, animation);
+              } else {
+                localStorage.removeItem(`chatBackground_${chat.id}`);
+                localStorage.removeItem(`chatAnimation_${chat.id}`);
+              }
+              setChatBackground(background);
+              setChatAnimation(animation);
+              setShowBackgroundModal(false);
+            }
+          }}
+          chatName={chat.name}
+        />
+      )}
+
     </div>
+    </ChatBackgroundManager>
   );
 } 

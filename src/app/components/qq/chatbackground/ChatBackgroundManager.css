@@ -1,0 +1,20 @@
+/* 聊天背景图片容器 */
+.chat-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  opacity: 0.3;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform-origin: center center;
+}
+
+/* 确保动画效果在背景图片上正确显示 */
+.chat-background-image.background-animation-move {
+  transform-origin: center center;
+} 

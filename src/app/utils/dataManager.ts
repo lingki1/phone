@@ -4,7 +4,7 @@ import { TransactionRecord } from '../types/money';
 import { PresetConfig } from '../types/preset';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 7; // 升级数据库版本以支持聊天状态系统
+const DB_VERSION = 8; // 升级数据库版本以支持聊天背景功能
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -14,6 +14,7 @@ const TRANSACTION_STORE = 'transactions';
 const WORLD_BOOK_STORE = 'worldBooks';
 const PRESET_STORE = 'presets';
 const CHAT_STATUS_STORE = 'chatStatus';
+const CHAT_BACKGROUND_STORE = 'chatBackgrounds';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -89,6 +90,11 @@ class DataManager {
         if (!db.objectStoreNames.contains(CHAT_STATUS_STORE)) {
           const statusStore = db.createObjectStore(CHAT_STATUS_STORE, { keyPath: 'chatId' });
           statusStore.createIndex('lastUpdate', 'lastUpdate', { unique: false });
+        }
+
+        // 创建聊天背景存储
+        if (!db.objectStoreNames.contains(CHAT_BACKGROUND_STORE)) {
+          db.createObjectStore(CHAT_BACKGROUND_STORE, { keyPath: 'chatId' });
         }
       };
     });
@@ -792,6 +798,7 @@ class DataManager {
       request.onsuccess = () => {
         const result = request.result;
         if (result) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { chatId: _, ...status } = result;
           resolve(status);
         } else {
@@ -810,6 +817,53 @@ class DataManager {
       const request = store.delete(chatId);
 
       request.onerror = () => reject(new Error('Failed to delete chat status'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 聊天背景相关方法
+  async saveChatBackground(chatId: string, background: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_BACKGROUND_STORE], 'readwrite');
+      const store = transaction.objectStore(CHAT_BACKGROUND_STORE);
+      const request = store.put({
+        chatId,
+        background,
+        timestamp: Date.now()
+      });
+
+      request.onerror = () => reject(new Error('Failed to save chat background'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getChatBackground(chatId: string): Promise<string | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_BACKGROUND_STORE], 'readonly');
+      const store = transaction.objectStore(CHAT_BACKGROUND_STORE);
+      const request = store.get(chatId);
+
+      request.onerror = () => reject(new Error('Failed to get chat background'));
+      request.onsuccess = () => {
+        const result = request.result;
+        resolve(result ? result.background : null);
+      };
+    });
+  }
+
+  async deleteChatBackground(chatId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([CHAT_BACKGROUND_STORE], 'readwrite');
+      const store = transaction.objectStore(CHAT_BACKGROUND_STORE);
+      const request = store.delete(chatId);
+
+      request.onerror = () => reject(new Error('Failed to delete chat background'));
       request.onsuccess = () => resolve();
     });
   }

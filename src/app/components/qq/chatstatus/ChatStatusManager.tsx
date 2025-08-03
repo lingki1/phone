@@ -17,7 +17,7 @@ export interface ChatStatusManagerProps {
 }
 
 export default function ChatStatusManager({ chatId, onStatusUpdate }: ChatStatusManagerProps) {
-  const [status, setStatus] = useState<ChatStatus>({
+  const [, setStatus] = useState<ChatStatus>({
     isOnline: true,
     mood: '心情愉快',
     location: '在家中',
