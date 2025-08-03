@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
@@ -82,12 +82,14 @@ export default function ChatInterface({
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   
   // 分页加载相关状态
-  const MESSAGE_RENDER_WINDOW = 50; // 每次加载50条消息
-  const [currentRenderedCount, setCurrentRenderedCount] = useState(0);
+  const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息，适合手机端
   const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // 自动调整输入框高度
   const adjustTextareaHeight = () => {
@@ -112,63 +114,99 @@ export default function ChatInterface({
   };
 
   // 加载更多历史消息
-  const loadMoreMessages = () => {
-    const totalMessages = chat.messages.length;
-    const nextSliceStart = totalMessages - currentRenderedCount - MESSAGE_RENDER_WINDOW;
-    const nextSliceEnd = totalMessages - currentRenderedCount;
-    const messagesToPrepend = chat.messages.slice(Math.max(0, nextSliceStart), nextSliceEnd);
+  const loadMoreMessages = useCallback(() => {
+    if (isLoadingMore || !hasMoreMessages) return;
+    
+    setIsLoadingMore(true);
+    const currentFirstMessageIndex = chat.messages.findIndex(msg => msg.id === displayedMessages[0]?.id);
+    
+    if (currentFirstMessageIndex === -1) {
+      setIsLoadingMore(false);
+      return;
+    }
+    
+    const startIndex = Math.max(0, currentFirstMessageIndex - MESSAGE_RENDER_WINDOW);
+    const endIndex = currentFirstMessageIndex;
+    const messagesToPrepend = chat.messages.slice(startIndex, endIndex);
     
     if (messagesToPrepend.length > 0) {
-      const oldScrollHeight = messagesEndRef.current?.parentElement?.scrollHeight || 0;
+      const oldScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
       
-      // 将更早的消息添加到显示列表的开头，保持原有顺序
       setDisplayedMessages(prev => {
-        // 确保不重复添加消息
         const existingIds = new Set(prev.map(msg => msg.id));
         const newMessages = messagesToPrepend.filter(msg => !existingIds.has(msg.id));
         return [...newMessages, ...prev];
       });
-      setCurrentRenderedCount(prev => prev + messagesToPrepend.length);
+      
+      // 更新是否有更多消息
+      setHasMoreMessages(startIndex > 0);
       
       // 保持滚动位置
       setTimeout(() => {
-        const newScrollHeight = messagesEndRef.current?.parentElement?.scrollHeight || 0;
+        const newScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
         const scrollDiff = newScrollHeight - oldScrollHeight;
-        if (messagesEndRef.current?.parentElement) {
-          messagesEndRef.current.parentElement.scrollTop += scrollDiff;
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = scrollDiff;
         }
-      }, 0);
+        setIsLoadingMore(false);
+      }, 50);
+    } else {
+      setIsLoadingMore(false);
     }
-  };
+  }, [isLoadingMore, hasMoreMessages, chat.messages, displayedMessages]);
 
-  // 初始化显示的消息
+  // 初始化显示的消息 - 立即显示最新的30条
   useEffect(() => {
-    const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
-    // 确保消息ID唯一
-    const uniqueMessages = initialMessages.filter((msg, index, arr) => 
-      arr.findIndex(m => m.id === msg.id) === index
-    );
-    setDisplayedMessages(uniqueMessages);
-    setCurrentRenderedCount(uniqueMessages.length);
+    if (chat.messages.length > 0) {
+      const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
+      // 确保消息ID唯一
+      const uniqueMessages = initialMessages.filter((msg, index, arr) => 
+        arr.findIndex(m => m.id === msg.id) === index
+      );
+      setDisplayedMessages(uniqueMessages);
+      setHasMoreMessages(chat.messages.length > MESSAGE_RENDER_WINDOW);
+    } else {
+      setDisplayedMessages([]);
+      setHasMoreMessages(false);
+    }
   }, [chat.messages]);
 
   // 当有新消息时，自动添加到显示列表
   useEffect(() => {
-    if (chat.messages.length > currentRenderedCount) {
-      const newMessages = chat.messages.slice(currentRenderedCount);
-      setDisplayedMessages(prev => {
-        // 确保不重复添加消息
-        const existingIds = new Set(prev.map(msg => msg.id));
-        const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-        return [...prev, ...uniqueNewMessages];
-      });
-      setCurrentRenderedCount(chat.messages.length);
+    if (chat.messages.length > 0 && displayedMessages.length > 0) {
+      const lastDisplayedMessageId = displayedMessages[displayedMessages.length - 1]?.id;
+      const lastDisplayedIndex = chat.messages.findIndex(msg => msg.id === lastDisplayedMessageId);
+      
+      if (lastDisplayedIndex !== -1 && lastDisplayedIndex < chat.messages.length - 1) {
+        const newMessages = chat.messages.slice(lastDisplayedIndex + 1);
+        setDisplayedMessages(prev => {
+          const existingIds = new Set(prev.map(msg => msg.id));
+          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+          return [...prev, ...uniqueNewMessages];
+        });
+      }
     }
-  }, [chat.messages, currentRenderedCount]);
+  }, [chat.messages, displayedMessages]);
 
   useEffect(() => {
     scrollToBottom();
   }, [displayedMessages]);
+
+  // 监听滚动事件，自动加载更多消息
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      // 当滚动到顶部附近时（距离顶部100px内），自动加载更多消息
+      if (container.scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
+        loadMoreMessages();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
 
   // 加载数据库中的个人信息
   useEffect(() => {
@@ -1265,15 +1303,16 @@ ${myPersona}${groupMemoryInfo}
 
 
       {/* 消息列表 */}
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {/* 加载更多按钮 */}
-        {chat.messages.length > currentRenderedCount && (
+        {hasMoreMessages && (
           <div className="load-more-container">
             <button 
-              className="load-more-btn"
+              className={`load-more-btn ${isLoadingMore ? 'loading' : ''}`}
               onClick={loadMoreMessages}
+              disabled={isLoadingMore}
             >
-              加载更早的记录
+              {isLoadingMore ? '加载中...' : '加载更早的记录'}
             </button>
           </div>
         )}
