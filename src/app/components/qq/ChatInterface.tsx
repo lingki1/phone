@@ -176,10 +176,14 @@ export default function ChatInterface({
   // 初始化完成后滚动到最新消息处
   useEffect(() => {
     if (isInitialized && displayedMessages.length > 0) {
-      // 采用V0.03的设计方案：延迟滚动确保DOM渲染完成
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+      // 只在初始化时滚动，避免加载历史消息时滚动
+      const isInitialLoad = displayedMessages.length <= MESSAGE_RENDER_WINDOW;
+      if (isInitialLoad) {
+        // 采用V0.03的设计方案：延迟滚动确保DOM渲染完成
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
     }
   }, [isInitialized, displayedMessages]);
 
