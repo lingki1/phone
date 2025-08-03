@@ -13,6 +13,7 @@ import MePage from './me/MePage';
 import { WorldBookListPage, WorldBookAssociationModal } from './worldbook';
 import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
+import { presetManager } from '../../utils/presetManager';
 import PageTransitionManager from '../utils/PageTransitionManager';
 import './ChatListPage.css';
 
@@ -20,6 +21,26 @@ interface PersonalSettings {
   userAvatar: string;
   userNickname: string;
   userBio: string;
+}
+
+interface PresetConfig {
+  id: string;
+  name: string;
+  description: string;
+  isDefault?: boolean;
+  createdAt: number;
+  updatedAt: number;
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+  topK?: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  stopSequences?: string[];
+  logitBias?: Record<string, number>;
+  responseFormat?: 'text' | 'json_object';
+  seed?: number;
+  user?: string;
 }
 
 interface ChatListPageProps {
@@ -58,12 +79,33 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     userBio: ''
   });
   
+  // 预设状态
+  const [currentPreset, setCurrentPreset] = useState<PresetConfig | null>(null);
+  
   // 聊天数据状态
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 监听预设变更
+  useEffect(() => {
+    const handlePresetChange = async () => {
+      try {
+        const preset = await presetManager.getCurrentPreset();
+        setCurrentPreset(preset);
+      } catch (error) {
+        console.error('Failed to update preset:', error);
+      }
+    };
+
+    window.addEventListener('presetChanged', handlePresetChange);
+    
+    return () => {
+      window.removeEventListener('presetChanged', handlePresetChange);
+    };
+  }, []);
   
 
 
@@ -88,6 +130,14 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           if (savedPersonalSettings) {
             setPersonalSettings(JSON.parse(savedPersonalSettings));
           }
+        }
+        
+        // 加载预设
+        try {
+          const preset = await presetManager.getCurrentPreset();
+          setCurrentPreset(preset);
+        } catch (error) {
+          console.error('Failed to load preset:', error);
         }
         
         // 加载聊天数据
@@ -448,6 +498,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           availableContacts={availableContacts}
           allChats={allChats}
           personalSettings={personalSettings}
+          currentPreset={currentPreset || undefined}
         />
       ) : <div>聊天加载中...</div>,
       direction: 'left' as const,

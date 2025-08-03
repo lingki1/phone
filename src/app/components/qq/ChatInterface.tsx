@@ -19,6 +19,26 @@ interface ApiConfig {
   model: string;
 }
 
+interface PresetConfig {
+  id: string;
+  name: string;
+  description: string;
+  isDefault?: boolean;
+  createdAt: number;
+  updatedAt: number;
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+  topK?: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  stopSequences?: string[];
+  logitBias?: Record<string, number>;
+  responseFormat?: 'text' | 'json_object';
+  seed?: number;
+  user?: string;
+}
+
 interface PersonalSettings {
   userAvatar: string;
   userNickname: string;
@@ -33,6 +53,7 @@ interface ChatInterfaceProps {
   availableContacts: ChatItem[];
   allChats?: ChatItem[];
   personalSettings?: PersonalSettings;
+  currentPreset?: PresetConfig;
 }
 
 export default function ChatInterface({ 
@@ -42,7 +63,8 @@ export default function ChatInterface({
   onUpdateChat,
   availableContacts,
   allChats,
-  personalSettings
+  personalSettings,
+  currentPreset
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +80,11 @@ export default function ChatInterface({
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  
+  // 分页加载相关状态
+  const MESSAGE_RENDER_WINDOW = 50; // 每次加载50条消息
+  const [currentRenderedCount, setCurrentRenderedCount] = useState(0);
+  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,9 +111,64 @@ export default function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // 加载更多历史消息
+  const loadMoreMessages = () => {
+    const totalMessages = chat.messages.length;
+    const nextSliceStart = totalMessages - currentRenderedCount - MESSAGE_RENDER_WINDOW;
+    const nextSliceEnd = totalMessages - currentRenderedCount;
+    const messagesToPrepend = chat.messages.slice(Math.max(0, nextSliceStart), nextSliceEnd);
+    
+    if (messagesToPrepend.length > 0) {
+      const oldScrollHeight = messagesEndRef.current?.parentElement?.scrollHeight || 0;
+      
+      // 将更早的消息添加到显示列表的开头，保持原有顺序
+      setDisplayedMessages(prev => {
+        // 确保不重复添加消息
+        const existingIds = new Set(prev.map(msg => msg.id));
+        const newMessages = messagesToPrepend.filter(msg => !existingIds.has(msg.id));
+        return [...newMessages, ...prev];
+      });
+      setCurrentRenderedCount(prev => prev + messagesToPrepend.length);
+      
+      // 保持滚动位置
+      setTimeout(() => {
+        const newScrollHeight = messagesEndRef.current?.parentElement?.scrollHeight || 0;
+        const scrollDiff = newScrollHeight - oldScrollHeight;
+        if (messagesEndRef.current?.parentElement) {
+          messagesEndRef.current.parentElement.scrollTop += scrollDiff;
+        }
+      }, 0);
+    }
+  };
+
+  // 初始化显示的消息
+  useEffect(() => {
+    const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
+    // 确保消息ID唯一
+    const uniqueMessages = initialMessages.filter((msg, index, arr) => 
+      arr.findIndex(m => m.id === msg.id) === index
+    );
+    setDisplayedMessages(uniqueMessages);
+    setCurrentRenderedCount(uniqueMessages.length);
+  }, [chat.messages]);
+
+  // 当有新消息时，自动添加到显示列表
+  useEffect(() => {
+    if (chat.messages.length > currentRenderedCount) {
+      const newMessages = chat.messages.slice(currentRenderedCount);
+      setDisplayedMessages(prev => {
+        // 确保不重复添加消息
+        const existingIds = new Set(prev.map(msg => msg.id));
+        const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+        return [...prev, ...uniqueNewMessages];
+      });
+      setCurrentRenderedCount(chat.messages.length);
+    }
+  }, [chat.messages, currentRenderedCount]);
+
   useEffect(() => {
     scrollToBottom();
-  }, [chat.messages]);
+  }, [displayedMessages]);
 
   // 加载数据库中的个人信息
   useEffect(() => {
@@ -429,8 +511,17 @@ export default function ChatInterface({
             { role: 'system', content: systemPrompt },
             ...messagesPayload
           ],
-          temperature: 0.8,
-          max_tokens: 2000
+          temperature: currentPreset?.temperature || 0.8,
+          max_tokens: currentPreset?.maxTokens || 2000,
+          top_p: currentPreset?.topP || 0.8,
+          ...(currentPreset?.topK && { top_k: currentPreset.topK }),
+          frequency_penalty: currentPreset?.frequencyPenalty || 0.0,
+          presence_penalty: currentPreset?.presencePenalty || 0.0,
+          ...(currentPreset?.stopSequences && { stop: currentPreset.stopSequences }),
+          ...(currentPreset?.logitBias && { logit_bias: currentPreset.logitBias }),
+          ...(currentPreset?.responseFormat && { response_format: { type: currentPreset.responseFormat } }),
+          ...(currentPreset?.seed && { seed: currentPreset.seed }),
+          ...(currentPreset?.user && { user: currentPreset.user })
         })
       });
 
@@ -544,9 +635,10 @@ ${recentMessages}`;
 1. **【身份铁律】**: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。
 2. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有"type"和"name"字段的JSON对象】。
 3. **角色扮演**: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。
-4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
-5. **情景感知**: 注意当前时间是 ${currentTime}。
-6. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
+4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少2-3条消息！！！
+5. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
+6. **情景感知**: 注意当前时间是 ${currentTime},但是不能重复提及时间概念。
+7. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
 
 ## 你可以使用的操作指令:
 - **发送文本**: {"type": "text", "name": "角色名", "message": "文本内容"}
@@ -628,7 +720,7 @@ ${chat.settings.aiPersona}
 # 你的任务与规则：
 1. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有type字段的JSON对象】。
 2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少3-8条消息！！！
-3. **情景感知**: 你需要感知当前的时间(${currentTime})。
+3. **情景感知**: 你需要感知当前的时间(${currentTime})，但是不能重复提及时间概念。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。
 
@@ -1174,12 +1266,24 @@ ${myPersona}${groupMemoryInfo}
 
       {/* 消息列表 */}
       <div className="messages-container">
-        {chat.messages.length === 0 ? (
+        {/* 加载更多按钮 */}
+        {chat.messages.length > currentRenderedCount && (
+          <div className="load-more-container">
+            <button 
+              className="load-more-btn"
+              onClick={loadMoreMessages}
+            >
+              加载更早的记录
+            </button>
+          </div>
+        )}
+        
+        {displayedMessages.length === 0 ? (
           <div className="empty-chat">
             <p>开始和 {chat.name} 聊天吧！</p>
           </div>
         ) : (
-          chat.messages.map((msg, index) => {
+          displayedMessages.map((msg, index) => {
             // 获取发送者信息
             const getSenderInfo = () => {
               if (msg.role === 'user') {
@@ -1210,9 +1314,9 @@ ${myPersona}${groupMemoryInfo}
             // 检查是否是连续消息（同一发送者的连续消息）
             // 只有在时间间隔很短（30秒内）且内容类型相似时才认为是连续消息
             const isConsecutiveMessage = index > 0 && 
-              chat.messages[index - 1].senderName === msg.senderName &&
-              chat.messages[index - 1].role === msg.role &&
-              Math.abs(msg.timestamp - chat.messages[index - 1].timestamp) < 30000; // 30秒内
+              displayedMessages[index - 1].senderName === msg.senderName &&
+              displayedMessages[index - 1].role === msg.role &&
+              Math.abs(msg.timestamp - displayedMessages[index - 1].timestamp) < 30000; // 30秒内
 
             return (
               <div 

@@ -1,9 +1,10 @@
 // 数据管理器 - 用于持久化存储聊天数据
 import { ChatItem, GroupMember, ApiConfig, WorldBook } from '../types/chat';
 import { TransactionRecord } from '../types/money';
+import { PresetConfig } from '../types/preset';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 5; // 升级数据库版本以支持世界书系统
+const DB_VERSION = 6; // 升级数据库版本以支持预设系统
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -11,6 +12,7 @@ const THEME_SETTINGS_STORE = 'themeSettings';
 const BALANCE_STORE = 'balance';
 const TRANSACTION_STORE = 'transactions';
 const WORLD_BOOK_STORE = 'worldBooks';
+const PRESET_STORE = 'presets';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -72,6 +74,14 @@ class DataManager {
           const worldBookStore = db.createObjectStore(WORLD_BOOK_STORE, { keyPath: 'id' });
           worldBookStore.createIndex('name', 'name', { unique: false });
           worldBookStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 创建预设存储
+        if (!db.objectStoreNames.contains(PRESET_STORE)) {
+          const presetStore = db.createObjectStore(PRESET_STORE, { keyPath: 'id' });
+          presetStore.createIndex('name', 'name', { unique: false });
+          presetStore.createIndex('isDefault', 'isDefault', { unique: false });
+          presetStore.createIndex('createdAt', 'createdAt', { unique: false });
         }
       };
     });
@@ -664,6 +674,73 @@ class DataManager {
 
       request.onerror = () => reject(new Error('Failed to update world book'));
       request.onsuccess = () => resolve();
+    });
+  }
+
+  // 预设相关方法
+  async savePreset(preset: PresetConfig): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PRESET_STORE], 'readwrite');
+      const store = transaction.objectStore(PRESET_STORE);
+      const request = store.put(preset);
+
+      request.onerror = () => reject(new Error('Failed to save preset'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getAllPresets(): Promise<PresetConfig[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PRESET_STORE], 'readonly');
+      const store = transaction.objectStore(PRESET_STORE);
+      const request = store.getAll();
+
+      request.onerror = () => reject(new Error('Failed to get presets'));
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  async getPreset(id: string): Promise<PresetConfig | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PRESET_STORE], 'readonly');
+      const store = transaction.objectStore(PRESET_STORE);
+      const request = store.get(id);
+
+      request.onerror = () => reject(new Error('Failed to get preset'));
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  async deletePreset(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PRESET_STORE], 'readwrite');
+      const store = transaction.objectStore(PRESET_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete preset'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getDefaultPreset(): Promise<PresetConfig | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PRESET_STORE], 'readonly');
+      const store = transaction.objectStore(PRESET_STORE);
+      const index = store.index('isDefault');
+      const request = index.get(1);
+
+      request.onerror = () => reject(new Error('Failed to get default preset'));
+      request.onsuccess = () => resolve(request.result || null);
     });
   }
 }

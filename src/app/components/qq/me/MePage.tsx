@@ -6,6 +6,7 @@ import { dataManager } from '../../../utils/dataManager';
 import ColorSettingsPage from '../../settings/ColorSettingsPage';
 import ApiSettingsModal from '../ApiSettingsModal';
 import PageTransitionManager from '../../utils/PageTransitionManager';
+import PresetManagerPage from '../preset/PresetManagerPage';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -29,7 +30,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   const [balance, setBalance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showBalanceInfo, setShowBalanceInfo] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'main' | 'color-settings'>('main');
+  const [currentPage, setCurrentPage] = useState<'main' | 'color-settings' | 'preset-manager'>('main');
   const [showApiSettings, setShowApiSettings] = useState(false);
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
@@ -123,6 +124,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         break;
       case 'color-settings':
         setCurrentPage('color-settings');
+        break;
+      case 'preset-manager':
+        setCurrentPage('preset-manager');
         break;
       default:
         break;
@@ -336,6 +340,18 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 </div>
                 <div className="option-arrow">›</div>
               </div>
+
+              <div 
+                className="option-item"
+                onClick={() => handleOptionClick('preset-manager')}
+              >
+                <div className="option-icon">⚙️</div>
+                <div className="option-content">
+                  <div className="option-title">AI 预设管理</div>
+                  <div className="option-subtitle">管理 AI 模型的参数配置</div>
+                </div>
+                <div className="option-arrow">›</div>
+              </div>
             </div>
           </div>
         </div>
@@ -346,6 +362,12 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     {
       id: 'color-settings',
       component: <ColorSettingsPage onBack={handleBackToMain} />,
+      direction: 'left' as const,
+      duration: 300
+    },
+    {
+      id: 'preset-manager',
+      component: <PresetManagerPage onBack={handleBackToMain} />,
       direction: 'left' as const,
       duration: 300
     }
