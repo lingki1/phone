@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SillyTavern PNG 解析测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>SillyTavern PNG 解析测试</h1>
+    
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <p>点击选择 PNG 角色卡片文件</p>
+        <input type="file" id="fileInput" accept="image/png" style="display: none;" onchange="handleFileSelect(event)">
+    </div>
+    
+    <div id="result" class="result" style="display: none;">
+        <h3>解析结果</h3>
+        <div id="resultContent"></div>
+    </div>
+    
+    <script>
+        function checkForGarbledText(obj) {
+            const checkString = (str) => {
+                if (typeof str !== 'string') return false;
+                
+                // 检查常见的乱码模式
+                const garbledPatterns = [
+                    /ä¿\x9E/,
+                    /ä¹\x90/,
+                    /è§\x92/,
+                    /è\x89²/,
+                    /å\x90\x8D/,
+                    /\x9E/g,
+                    /\x90/g,
+                    /\x92/g,
+                    /\x89/g
+                ];
+                
+                return garbledPatterns.some(pattern => pattern.test(str));
+            };
+            
+            const checkObject = (obj) => {
+                if (typeof obj === 'string') {
+                    return checkString(obj);
+                }
+                
+                if (typeof obj === 'object' && obj !== null) {
+                    for (const key in obj) {
+                        if (checkObject(obj[key])) {
+                            return true;
+                        }
+                    }
+                }
+                
+                if (Array.isArray(obj)) {
+                    return obj.some(item => checkObject(item));
+                }
+                
+                return false;
+            };
+            
+            return checkObject(obj);
+        }
+        
+        function fixEncoding(decodedString) {
+            console.log('开始修复编码问题...');
+            console.log('原始字符串长度:', decodedString.length);
+            console.log('原始字符串预览:', decodedString.substring(0, 100));
+            
+            // 检查是否包含乱码字符
+            if (containsGarbledText(decodedString)) {
+                console.log('检测到乱码，尝试修复...');
+                return fixGarbledText(decodedString);
+            }
+            
+            return decodedString;
+        }
+        
+        function containsGarbledText(str) {
+            const garbledPatterns = [
+                /ä¿\x9E/,
+                /ä¹\x90/,
+                /è§\x92/,
+                /è\x89²/,
+                /å\x90\x8D/,
+                /\x9E/g,
+                /\x90/g,
+                /\x92/g,
+                /\x89/g
+            ];
+            
+            return garbledPatterns.some(pattern => pattern.test(str));
+        }
+        
+        function fixGarbledText(str) {
+            console.log('尝试修复乱码文本...');
+            
+            // 将字符串转换为字节数组
+            const bytes = new Uint8Array(str.length);
+            for (let i = 0; i < str.length; i++) {
+                bytes[i] = str.charCodeAt(i);
+            }
+            
+            console.log('字节数组长度:', bytes.length);
+            console.log('字节数组预览:', Array.from(bytes.slice(0, 20)));
+            
+            // 尝试不同的编码方式
+            const encodings = ['utf-8', 'utf8', 'latin1', 'iso-8859-1'];
+            
+            for (const encoding of encodings) {
+                try {
+                    const decoder = new TextDecoder(encoding);
+                    const fixedString = decoder.decode(bytes);
+                    
+                    // 检查修复后的字符串是否还包含乱码
+                    if (!containsGarbledText(fixedString)) {
+                        console.log(`使用 ${encoding} 编码修复成功`);
+                        return fixedString;
+                    }
+                } catch (error) {
+                    console.log(`${encoding} 编码修复失败:`, error);
+                }
+            }
+            
+            console.log('所有编码方式都失败，尝试手动修复...');
+            
+            // 手动修复常见的乱码模式
+            let fixedString = str;
+            
+            // 修复常见的乱码字符
+            const fixMap = {
+                'ä¿': '保',
+                'ä¹': '佑',
+                'è§': '角',
+                'è²': '色',
+                'å': '名',
+                'å¤': '外',
+                'å·': '号',
+                'å¸': '常',
+                'å¨': '挂',
+                'å´': '在',
+                'å°´': '嘴',
+                'è¾¹': '边',
+                'ç': '的',
+                'è¯': '话',
+                'â': '"',
+                '€': '"',
+                '¼': ',',
+                '½': '你',
+                '¾': '少',
+                '管': '管',
+                'æ': '我',
+                '¡': '！'
+            };
+            
+            for (const [garbled, fixed] of Object.entries(fixMap)) {
+                fixedString = fixedString.replace(new RegExp(garbled, 'g'), fixed);
+            }
+            
+            console.log('手动修复完成');
+            return fixedString;
+        }
+        
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.innerHTML = '<p>正在解析...</p>';
+            
+            try {
+                // 读取文件为 Base64
+                const base64Data = await readFileAsBase64(file);
+                console.log('文件读取完成，Base64 长度:', base64Data.length);
+                
+                // 分析 PNG 结构
+                analyzePNGStructure(base64Data);
+                
+                // 尝试提取角色数据
+                const metadata = await extractPNGMetadata(base64Data);
+                console.log('元数据提取完成，长度:', metadata.length);
+                console.log('元数据预览:', metadata.substring(0, 100));
+                
+                // 尝试解析角色数据
+                const character = parseSillyTavernData(metadata);
+                console.log('角色数据解析完成:', character.name);
+                
+                resultContent.innerHTML = `
+                    <div class="success">
+                        <h4>解析成功！</h4>
+                        <p><strong>角色名称:</strong> ${character.name}</p>
+                        <p><strong>角色描述:</strong> ${character.description || '无'}</p>
+                        <p><strong>角色人设:</strong> ${character.personality || '无'}</p>
+                        <p><strong>创建者:</strong> ${character.creator || '未知'}</p>
+                        <p><strong>版本:</strong> ${character.character_version || '未知'}</p>
+                    </div>
+                    <details>
+                        <summary>原始数据</summary>
+                        <pre>${JSON.stringify(character, null, 2)}</pre>
+                    </details>
+                `;
+                
+            } catch (error) {
+                console.error('解析失败:', error);
+                resultContent.innerHTML = `
+                    <div class="error">
+                        <h4>解析失败</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result;
+                    const base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(new Error('文件读取失败'));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function analyzePNGStructure(base64Data) {
+            try {
+                console.log('=== PNG 文件结构分析 ===');
+                
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                console.log('文件总大小:', bytes.length, '字节');
+                
+                // 检查 PNG 签名
+                const signature = bytes.slice(0, 8);
+                const signatureHex = Array.from(signature).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                console.log('PNG 签名:', signatureHex);
+                
+                if (signatureHex !== '89 50 4e 47 0d 0a 1a 0a') {
+                    throw new Error('无效的 PNG 签名');
+                }
+
+                // 分析所有块
+                let offset = 8;
+                let chunkCount = 0;
+                
+                while (offset < bytes.length - 12) {
+                    const length = (bytes[offset] << 24) | (bytes[offset + 1] << 16) | 
+                                   (bytes[offset + 2] << 8) | bytes[offset + 3];
+                    
+                    const type = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], 
+                                                    bytes[offset + 6], bytes[offset + 7]);
+                    
+                    console.log(`块 ${chunkCount + 1}: ${type}, 长度: ${length}, 偏移: ${offset}`);
+                    
+                    if (type === 'tEXt' || type === 'iTXt') {
+                        const dataStart = offset + 8;
+                        const data = bytes.slice(dataStart, dataStart + length);
+                        
+                        if (type === 'tEXt') {
+                            const nullIndex = data.indexOf(0);
+                            if (nullIndex !== -1) {
+                                const keyword = new TextDecoder().decode(data.slice(0, nullIndex));
+                                const text = new TextDecoder().decode(data.slice(nullIndex + 1));
+                                console.log(`  tEXt 块: ${keyword}`);
+                                console.log(`  内容长度: ${text.length}`);
+                                console.log(`  内容预览: ${text.substring(0, 100)}...`);
+                            }
+                        } else if (type === 'iTXt') {
+                            const nullIndex = data.indexOf(0);
+                            if (nullIndex !== -1) {
+                                const keyword = new TextDecoder().decode(data.slice(0, nullIndex));
+                                console.log(`  iTXt 块: ${keyword}`);
+                                
+                                let textStart = nullIndex + 1;
+                                while (textStart < data.length && data[textStart] !== 0) textStart++;
+                                textStart++;
+                                while (textStart < data.length && data[textStart] !== 0) textStart++;
+                                textStart++;
+                                
+                                const text = new TextDecoder().decode(data.slice(textStart));
+                                console.log(`  内容长度: ${text.length}`);
+                                console.log(`  内容预览: ${text.substring(0, 100)}...`);
+                            }
+                        }
+                    }
+                    
+                    offset += 12 + length;
+                    chunkCount++;
+                    
+                    if (length < 0 || length > bytes.length) {
+                        console.warn('无效的块长度，停止分析');
+                        break;
+                    }
+                }
+                
+                console.log(`总共分析 ${chunkCount} 个块`);
+                console.log('=== 分析完成 ===');
+                
+            } catch (error) {
+                console.error('PNG 分析失败:', error);
+                throw error;
+            }
+        }
+        
+        async function extractPNGMetadata(base64Data) {
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const textChunks = findTextChunks(bytes);
+            
+            const possibleKeys = ['chara', 'character', 'description', 'data'];
+            
+            for (const chunk of textChunks) {
+                if (possibleKeys.includes(chunk.keyword.toLowerCase())) {
+                    console.log(`找到角色数据块: ${chunk.keyword}`);
+                    return chunk.text;
+                }
+            }
+
+            for (const chunk of textChunks) {
+                if (chunk.text.trim().startsWith('{') || chunk.text.trim().startsWith('eyJ')) {
+                    console.log(`找到可能的角色数据块: ${chunk.keyword}`);
+                    return chunk.text;
+                }
+            }
+
+            console.log('找到的文本块:', textChunks.map(chunk => ({ keyword: chunk.keyword, preview: chunk.text.substring(0, 50) })));
+            
+            throw new Error('未找到角色数据');
+        }
+        
+        function findTextChunks(bytes) {
+            const chunks = [];
+            let offset = 8;
+
+            while (offset < bytes.length - 12) {
+                const length = (bytes[offset] << 24) | (bytes[offset + 1] << 16) | 
+                               (bytes[offset + 2] << 8) | bytes[offset + 3];
+                
+                const type = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], 
+                                                bytes[offset + 6], bytes[offset + 7]);
+                
+                if (type === 'tEXt' || type === 'iTXt') {
+                    const dataStart = offset + 8;
+                    const data = bytes.slice(dataStart, dataStart + length);
+                    
+                    if (type === 'tEXt') {
+                        const nullIndex = data.indexOf(0);
+                        if (nullIndex !== -1) {
+                            const keyword = new TextDecoder().decode(data.slice(0, nullIndex));
+                            const text = new TextDecoder().decode(data.slice(nullIndex + 1));
+                            chunks.push({ keyword, text });
+                        }
+                    } else if (type === 'iTXt') {
+                        const nullIndex = data.indexOf(0);
+                        if (nullIndex !== -1) {
+                            const keyword = new TextDecoder().decode(data.slice(0, nullIndex));
+                            let textStart = nullIndex + 1;
+                            while (textStart < data.length && data[textStart] !== 0) textStart++;
+                            textStart++;
+                            while (textStart < data.length && data[textStart] !== 0) textStart++;
+                            textStart++;
+                            
+                            const text = new TextDecoder().decode(data.slice(textStart));
+                            chunks.push({ keyword, text });
+                        }
+                    }
+                }
+                
+                offset += 12 + length;
+                
+                if (length < 0 || length > bytes.length) {
+                    break;
+                }
+            }
+
+            return chunks;
+        }
+        
+        function parseSillyTavernData(metadata) {
+            let character;
+            
+            try {
+                const decodedData = atob(metadata);
+                console.log('Base64 解码后数据长度:', decodedData.length);
+                console.log('Base64 解码后数据预览:', decodedData.substring(0, 200));
+                
+                // 尝试直接解析
+                try {
+                    character = JSON.parse(decodedData);
+                    
+                    // 检查解析后的数据是否包含乱码
+                    const hasGarbledText = checkForGarbledText(character);
+                    if (hasGarbledText) {
+                        console.log('检测到解析后的数据包含乱码，尝试修复编码...');
+                        
+                        // 尝试修复编码
+                        try {
+                            const fixedString = fixEncoding(decodedData);
+                            character = JSON.parse(fixedString);
+                            console.log('使用编码修复工具修复成功');
+                        } catch (fixError) {
+                            console.log('编码修复失败，保持原始解析结果');
+                        }
+                    }
+                } catch (parseError) {
+                    console.log('直接解析失败，尝试修复编码...');
+                    
+                    // 尝试修复编码
+                    try {
+                        const fixedString = fixEncoding(decodedData);
+                        character = JSON.parse(fixedString);
+                        console.log('使用编码修复工具修复成功');
+                    } catch (fixError) {
+                        console.log('编码修复失败，尝试原始数据解析');
+                        character = JSON.parse(decodedData);
+                    }
+                }
+            } catch (base64Error) {
+                try {
+                    character = JSON.parse(metadata);
+                } catch (jsonError) {
+                    throw new Error('无法解析角色数据：既不是有效的 Base64 编码，也不是有效的 JSON 格式');
+                }
+            }
+            
+            console.log('解析到的角色数据:', character);
+            
+            // 处理 SillyTavern v2 格式
+            let characterData = character;
+            if (character.data && character.spec === 'chara_card_v2') {
+                console.log('检测到 SillyTavern v2 格式，提取 data 字段');
+                characterData = character.data;
+            }
+            
+            console.log('实际角色数据:', characterData);
+            
+            // 检查可能的名称字段
+            const possibleNameFields = ['name', 'title', 'character_name', 'char_name'];
+            let characterName = '';
+            
+            for (const field of possibleNameFields) {
+                if (characterData[field] && typeof characterData[field] === 'string') {
+                    characterName = characterData[field];
+                    console.log(`找到角色名称字段: ${field} = ${characterName}`);
+                    break;
+                }
+            }
+            
+            if (!characterName) {
+                console.error('角色数据中未找到名称字段，可用字段:', Object.keys(characterData));
+                throw new Error('角色名称缺失');
+            }
+
+            return {
+                name: characterName,
+                description: characterData.description || characterData.desc || '',
+                personality: characterData.personality || characterData.char_persona || '',
+                scenario: characterData.scenario || characterData.context || '',
+                first_mes: characterData.first_mes || characterData.greeting || '',
+                mes_example: characterData.mes_example || characterData.example_dialogue || '',
+                creator_notes: characterData.creator_notes || characterData.notes || '',
+                tags: characterData.tags || [],
+                creator: characterData.creator || characterData.author || '',
+                character_version: characterData.character_version || characterData.version || '',
+                alternate_greetings: characterData.alternate_greetings || characterData.greetings || [],
+                post_history_instructions: characterData.post_history_instructions || characterData.post_history || '',
+                world_scenario: characterData.world_scenario || characterData.world || '',
+                character_book: characterData.character_book || characterData.book || '',
+                extensions: characterData.extensions || {}
+            };
+        }
+    </script>
+</body>
+</html> 

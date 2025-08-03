@@ -574,17 +574,34 @@ export default function ChatInterface({
 
   // 触发AI回复的核心函数
   const triggerAiResponse = async (updatedChat: ChatItem) => {
+    // 优先使用聊天设置中的API配置，如果没有则使用传入的apiConfig
+    const effectiveApiConfig = {
+      proxyUrl: updatedChat.settings.proxyUrl || apiConfig.proxyUrl,
+      apiKey: updatedChat.settings.apiKey || apiConfig.apiKey,
+      model: updatedChat.settings.model || apiConfig.model
+    };
+
     // 添加调试信息
     console.log('ChatInterface - API配置检查:', {
-      proxyUrl: apiConfig.proxyUrl,
-      apiKey: apiConfig.apiKey ? '已设置' : '未设置',
-      model: apiConfig.model,
-      hasAllConfig: !!(apiConfig.proxyUrl && apiConfig.apiKey && apiConfig.model)
+      chatSettings: {
+        proxyUrl: updatedChat.settings.proxyUrl,
+        apiKey: updatedChat.settings.apiKey ? '已设置' : '未设置',
+        model: updatedChat.settings.model
+      },
+      fallbackConfig: {
+        proxyUrl: apiConfig.proxyUrl,
+        apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+        model: apiConfig.model
+      },
+      effectiveConfig: {
+        proxyUrl: effectiveApiConfig.proxyUrl,
+        apiKey: effectiveApiConfig.apiKey ? '已设置' : '未设置',
+        model: effectiveApiConfig.model,
+        hasAllConfig: !!(effectiveApiConfig.proxyUrl && effectiveApiConfig.apiKey && effectiveApiConfig.model)
+      }
     });
 
-
-    
-    if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
+    if (!effectiveApiConfig.proxyUrl || !effectiveApiConfig.apiKey || !effectiveApiConfig.model) {
       // 如果没有API配置，显示提示消息
       const apiConfigMessage: Message = {
         id: Date.now().toString(),
@@ -629,14 +646,14 @@ export default function ChatInterface({
       const systemPrompt = await buildSystemPrompt(updatedChat);
       const messagesPayload = buildMessagesPayload(updatedChat);
 
-      const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
+      const response = await fetch(`${effectiveApiConfig.proxyUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiConfig.apiKey}`
+          'Authorization': `Bearer ${effectiveApiConfig.apiKey}`
         },
         body: JSON.stringify({
-          model: apiConfig.model,
+          model: effectiveApiConfig.model,
           messages: [
             { role: 'system', content: systemPrompt },
             ...messagesPayload
@@ -655,11 +672,40 @@ export default function ChatInterface({
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`API请求失败: ${response.status}`);
-      }
-
       const data = await response.json();
+      
+      // 添加详细的API响应调试信息
+      console.log('ChatInterface - API响应数据:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+        hasError: !!data.error,
+        errorMessage: data.error?.message,
+        hasChoices: !!data.choices,
+        choicesLength: data.choices?.length,
+        firstChoice: data.choices?.[0],
+        hasMessage: !!data.choices?.[0]?.message,
+        messageContent: data.choices?.[0]?.message?.content
+      });
+      
+      // 检查API是否返回了错误
+      if (data.error) {
+        let errorMessage = data.error.message || data.error.type || '未知错误';
+        const errorCode = data.error.code || '未知';
+        
+        // 特殊处理内容过滤错误
+        if (errorMessage.includes('No candidates returned') || errorCode === 500) {
+          errorMessage = '内容被安全策略过滤，请尝试调整角色设定或使用更温和的描述。';
+        }
+        
+        throw new Error(`API服务器错误: ${errorMessage} (代码: ${errorCode})`);
+      }
+      
+      // 检查响应格式
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error(`API响应格式错误: ${JSON.stringify(data)}`);
+      }
+      
       const aiResponseContent = data.choices[0].message.content;
       
       // 解析AI回复（支持多条消息）
@@ -707,11 +753,27 @@ export default function ChatInterface({
 
     } catch (error) {
       console.error('AI回复失败:', error);
+      
+      // 根据错误类型提供不同的错误信息
+      let errorContent = 'AI回复失败，请检查API配置是否正确。';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API服务器错误')) {
+          errorContent = `AI服务器错误: ${error.message.replace('API服务器错误: ', '')}`;
+        } else if (error.message.includes('API响应格式错误')) {
+          errorContent = 'AI响应格式错误，请检查模型配置。';
+        } else if (error.message.includes('API请求失败')) {
+          errorContent = 'API请求失败，请检查网络连接和代理设置。';
+        } else {
+          errorContent = `AI回复失败: ${error.message}`;
+        }
+      }
+      
       // API请求失败时显示错误提示
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'AI回复失败，请检查API配置是否正确，包括代理地址、API密钥和模型名称。',
+        content: errorContent,
         timestamp: Date.now(),
         senderName: '系统',
         senderAvatar: '/avatars/default-avatar.svg'

@@ -1,0 +1,282 @@
+.character-preview {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+}
+
+.preview-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.preview-header h3 {
+  margin: 0 0 4px 0;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.preview-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.preview-content {
+  margin-bottom: 24px;
+}
+
+/* 信息卡片 */
+.info-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-card:last-of-type {
+  margin-bottom: 0;
+}
+
+.info-card h5 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 头像和名称区域 */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.name-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.name-section h4 {
+  margin: 0 0 4px 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.creator {
+  color: #6b7280;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* 人设内容 */
+.persona-content {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.persona-content p {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.persona-content .empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* 信息网格 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item .label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item .value {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* 扩展信息 */
+.extended-info {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.extended-info summary {
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.extended-info summary:hover {
+  color: #2563eb;
+}
+
+.extended-info summary::-webkit-details-marker {
+  color: #3b82f6;
+}
+
+.extended-content {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.extended-item {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.extended-item h6 {
+  margin: 0 0 8px 0;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.extended-item p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* 操作按钮 */
+.preview-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.btn-import {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-import:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* 滚动条样式 */
+.persona-content::-webkit-scrollbar,
+.extended-item p::-webkit-scrollbar {
+  width: 4px;
+}
+
+.persona-content::-webkit-scrollbar-track,
+.extended-item p::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.persona-content::-webkit-scrollbar-thumb,
+.extended-item p::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.persona-content::-webkit-scrollbar-thumb:hover,
+.extended-item p::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .character-preview {
+    margin: 16px;
+    padding: 20px;
+    max-width: none;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .preview-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+} 

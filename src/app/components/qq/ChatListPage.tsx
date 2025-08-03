@@ -15,6 +15,7 @@ import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import { presetManager } from '../../utils/presetManager';
 import PageTransitionManager from '../utils/PageTransitionManager';
+import CharacterImportModal from './characterimport/CharacterImportModal';
 import './ChatListPage.css';
 
 interface PersonalSettings {
@@ -59,6 +60,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [showFriendModal, setShowFriendModal] = useState(false);
   const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showCharacterImport, setShowCharacterImport] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatItem | null>(null);
   
   // 世界书相关状态
@@ -106,6 +108,66 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       window.removeEventListener('presetChanged', handlePresetChange);
     };
   }, []);
+
+  // 监听API配置变更
+  useEffect(() => {
+    const handleApiConfigChange = async () => {
+      try {
+        console.log('ChatListPage - 收到API配置变更事件，重新加载配置');
+        // 重新加载API配置
+        const savedApiConfig = await dataManager.getApiConfig();
+        console.log('ChatListPage - 重新加载API配置:', {
+          proxyUrl: savedApiConfig.proxyUrl,
+          apiKey: savedApiConfig.apiKey ? '已设置' : '未设置',
+          model: savedApiConfig.model
+        });
+        setApiConfig(savedApiConfig);
+        
+        // 同时更新所有现有聊天的API配置
+        const updatedChats = chats.map(chat => ({
+          ...chat,
+          settings: {
+            ...chat.settings,
+            proxyUrl: savedApiConfig.proxyUrl,
+            apiKey: savedApiConfig.apiKey,
+            model: savedApiConfig.model
+          }
+        }));
+        
+        setChats(updatedChats);
+        
+        // 保存更新后的聊天到数据库
+        for (const chat of updatedChats) {
+          try {
+            await dataManager.saveChat(chat);
+          } catch (error) {
+            console.error(`Failed to update chat ${chat.id} API config:`, error);
+          }
+        }
+        
+        console.log('ChatListPage - 已更新所有聊天的API配置');
+      } catch (error) {
+        console.error('Failed to reload API config:', error);
+        // 回退到localStorage
+        const savedApiConfig = localStorage.getItem('apiConfig');
+        if (savedApiConfig) {
+          const parsedConfig = JSON.parse(savedApiConfig);
+          console.log('ChatListPage - 从localStorage重新加载API配置:', {
+            proxyUrl: parsedConfig.proxyUrl,
+            apiKey: parsedConfig.apiKey ? '已设置' : '未设置',
+            model: parsedConfig.model
+          });
+          setApiConfig(parsedConfig);
+        }
+      }
+    };
+
+    window.addEventListener('apiConfigChanged', handleApiConfigChange);
+    
+    return () => {
+      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
+    };
+  }, [chats]); // 添加chats依赖
   
 
 
@@ -349,6 +411,29 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setShowFriendModal(true);
   };
 
+  // 打开角色导入模态框
+  const handleOpenCharacterImport = () => {
+    console.log('ChatListPage - 打开角色导入模态框，当前API配置:', {
+      proxyUrl: apiConfig.proxyUrl,
+      apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+      model: apiConfig.model
+    });
+    setShowCharacterImport(true);
+  };
+
+  // 处理角色导入
+  const handleImportCharacter = async (character: ChatItem) => {
+    const updatedChats = [...chats, character];
+    setChats(updatedChats);
+    
+    try {
+      await dataManager.saveChat(character);
+    } catch (error) {
+      console.error('Failed to save imported character:', error);
+      localStorage.setItem('chats', JSON.stringify(updatedChats));
+    }
+  };
+
   // 关闭好友模态框
   const handleCloseFriendModal = () => {
     setShowFriendModal(false);
@@ -482,6 +567,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onOpenWorldBook={handleOpenWorldBook}
             onBackToDesktop={onBackToDesktop}
             onOpenMePage={() => handleViewChange('me')}
+            onOpenCharacterImport={handleOpenCharacterImport}
             personalSettings={personalSettings}
                     />
           
@@ -615,6 +701,15 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onSave={handleSaveWorldBookAssociation}
         />
       )}
+
+      {/* 角色导入模态框 */}
+      <CharacterImportModal
+        isVisible={showCharacterImport}
+        onClose={() => setShowCharacterImport(false)}
+        onImportCharacter={handleImportCharacter}
+        apiConfig={apiConfig}
+        personalSettings={personalSettings}
+      />
     </>
   );
 }
