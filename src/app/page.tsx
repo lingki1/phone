@@ -41,6 +41,36 @@ export default function Home() {
     loadData();
   }, []);
 
+  // 监听API配置变更
+  useEffect(() => {
+    const handleApiConfigChange = async () => {
+      try {
+        await dataManager.initDB();
+        const config = await dataManager.getApiConfig();
+        console.log('Home - 监听到API配置变更，重新加载:', {
+          proxyUrl: config.proxyUrl,
+          apiKey: config.apiKey ? '已设置' : '未设置',
+          model: config.model
+        });
+        setApiConfig(config);
+      } catch (error) {
+        console.error('Failed to reload API config in Home:', error);
+        // 回退到localStorage
+        const savedApiConfig = localStorage.getItem('apiConfig');
+        if (savedApiConfig) {
+          const parsedConfig = JSON.parse(savedApiConfig);
+          setApiConfig(parsedConfig);
+        }
+      }
+    };
+
+    window.addEventListener('apiConfigChanged', handleApiConfigChange);
+    
+    return () => {
+      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
+    };
+  }, []);
+
   // 刷新余额
   const refreshBalance = async () => {
     try {

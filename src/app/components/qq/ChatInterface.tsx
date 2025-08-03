@@ -301,6 +301,32 @@ export default function ChatInterface({
     loadBackground();
   }, [chat.id]);
 
+  // 监听API配置变更
+  useEffect(() => {
+    const handleApiConfigChange = async () => {
+      try {
+        await dataManager.initDB();
+        const newApiConfig = await dataManager.getApiConfig();
+        console.log('ChatInterface - 监听到API配置变更，重新加载:', {
+          proxyUrl: newApiConfig.proxyUrl,
+          apiKey: newApiConfig.apiKey ? '已设置' : '未设置',
+          model: newApiConfig.model
+        });
+        // 注意：这里我们不能直接更新apiConfig，因为它是从props传入的
+        // 但是我们可以通过触发父组件的更新来间接更新
+        // 这里主要是为了调试和日志记录
+      } catch (error) {
+        console.error('Failed to reload API config in ChatInterface:', error);
+      }
+    };
+
+    window.addEventListener('apiConfigChanged', handleApiConfigChange);
+    
+    return () => {
+      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
+    };
+  }, []);
+
   // 初始化输入框高度
   useEffect(() => {
     adjustTextareaHeight();

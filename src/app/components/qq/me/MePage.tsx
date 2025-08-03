@@ -175,11 +175,19 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         apiKey: config.apiKey ? '已设置' : '未设置',
         model: config.model
       });
+      
+      // 触发API配置变更事件，通知其他组件
+      window.dispatchEvent(new CustomEvent('apiConfigChanged'));
+      console.log('MePage - 已触发apiConfigChanged事件');
     } catch (error) {
       console.error('Failed to save API config to database:', error);
       // 如果数据库保存失败，回退到localStorage
       localStorage.setItem('apiConfig', JSON.stringify(config));
       console.log('MePage - API配置已保存到localStorage');
+      
+      // 即使保存到localStorage也要触发事件
+      window.dispatchEvent(new CustomEvent('apiConfigChanged'));
+      console.log('MePage - 已触发apiConfigChanged事件（localStorage）');
     }
     
     setShowApiSettings(false);
