@@ -19,7 +19,9 @@ interface NetworkInformation extends EventTarget {
 }
 
 interface DesktopPageProps {
-  onOpenApp: (appName: string) => void;
+  onOpenApp: (appName: string) => Promise<void>;
+  userBalance: number;
+  isLoadingBalance: boolean;
 }
 
 interface AppTile {
@@ -30,10 +32,10 @@ interface AppTile {
   gradient: string;
   size: 'small' | 'medium' | 'large';
   notifications?: number;
-  status?: 'coming-soon' | 'available';
+  status?: 'coming-soon' | 'available' | 'insufficient-balance';
 }
 
-export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
+export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }: DesktopPageProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentDate, setCurrentDate] = useState(new Date());
   const [batteryLevel, setBatteryLevel] = useState<number>(85);
@@ -80,7 +82,8 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
       color: '#EF4444',
       gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
       size: 'medium',
-      status: 'available'
+      status: userBalance >= 5 ? 'available' : 'insufficient-balance',
+      notifications: userBalance < 5 ? 1 : undefined
     },
     {
       id: 'weibo',
@@ -96,6 +99,20 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
   // 长按检测相关
   const longPressRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
   const isLongPressRef = useRef<{ [key: string]: boolean }>({});
+
+  // 更新购物应用状态当余额变化时
+  useEffect(() => {
+    setAppTiles(prev => prev.map(app => {
+      if (app.id === 'shopping') {
+        return {
+          ...app,
+          status: userBalance >= 5 ? 'available' : 'insufficient-balance',
+          notifications: userBalance < 5 ? 1 : undefined
+        };
+      }
+      return app;
+    }));
+  }, [userBalance]);
 
   // 检测是否为移动设备
   const isMobileDevice = () => {
@@ -383,7 +400,7 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
   };
 
   // 处理应用点击
-  const handleAppClick = (app: AppTile) => {
+  const handleAppClick = async (app: AppTile) => {
     if (isEditMode) {
       // 编辑模式下点击切换大小
       toggleAppSize(app.id);
@@ -396,12 +413,18 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
       return;
     }
 
+    if (app.status === 'insufficient-balance') {
+      // 显示余额不足提示
+      alert(`余额不足！当前余额：¥${userBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
+      return;
+    }
+
     // 设置点击的应用，触发转场动画
     setClickedApp(app.id);
 
     // 延迟执行应用打开，让动画有时间播放
-    setTimeout(() => {
-      onOpenApp(app.id);
+    setTimeout(async () => {
+      await onOpenApp(app.id);
       // 清除点击状态
       setClickedApp(null);
     }, 300); // 300ms动画时长
@@ -422,6 +445,11 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
       <div className="status-bar">
         <div className="status-left">
           <span className="signal-icon">📶</span>
+          {!isLoadingBalance && (
+            <span className="balance-display" title={`当前余额：¥${userBalance.toFixed(2)}`}>
+              💰 ¥{userBalance.toFixed(2)}
+            </span>
+          )}
         </div>
         <div className="status-right">
           <span className="battery-icon" title={`电池状态: ${batteryLevel}% ${isCharging ? '充电中' : '未充电'}`}>
@@ -483,6 +511,9 @@ export default function DesktopPage({ onOpenApp }: DesktopPageProps) {
             )}
             {app.status === 'coming-soon' && (
               <div className="coming-soon-badge">开发中</div>
+            )}
+            {app.status === 'insufficient-balance' && (
+              <div className="insufficient-balance-badge">余额不足</div>
             )}
             {isEditMode && (
               <div className="size-indicator">

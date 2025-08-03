@@ -14,26 +14,52 @@ export default function Home() {
     apiKey: '',
     model: ''
   });
+  const [userBalance, setUserBalance] = useState<number>(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
-  // 加载API配置
+  // 加载API配置和用户余额
   useEffect(() => {
-    const loadApiConfig = async () => {
+    const loadData = async () => {
       try {
         await dataManager.initDB();
-        const config = await dataManager.getApiConfig();
+        
+        // 并行加载API配置和用户余额
+        const [config, balance] = await Promise.all([
+          dataManager.getApiConfig(),
+          dataManager.getBalance()
+        ]);
+        
         setApiConfig(config);
+        setUserBalance(balance);
       } catch (error) {
-        console.error('Failed to load API config:', error);
+        console.error('Failed to load data:', error);
+      } finally {
+        setIsLoadingBalance(false);
       }
     };
     
-    loadApiConfig();
+    loadData();
   }, []);
 
-  const handleOpenApp = (appName: string) => {
+  // 刷新余额
+  const refreshBalance = async () => {
+    try {
+      const balance = await dataManager.getBalance();
+      setUserBalance(balance);
+    } catch (error) {
+      console.error('Failed to refresh balance:', error);
+    }
+  };
+
+  const handleOpenApp = async (appName: string) => {
     if (appName === 'qq') {
       setCurrentPage('chat');
     } else if (appName === 'shopping') {
+      // 检查余额是否足够
+      if (userBalance < 5) {
+        alert(`余额不足！当前余额：¥${userBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
+        return;
+      }
       setCurrentPage('shopping');
     }
     // 其他应用的处理逻辑可以在这里添加
@@ -41,12 +67,14 @@ export default function Home() {
 
   const handleBackToDesktop = () => {
     setCurrentPage('desktop');
+    // 返回桌面时刷新余额
+    refreshBalance();
   };
 
   const pages = [
     {
       id: 'desktop',
-      component: <DesktopPage onOpenApp={handleOpenApp} />,
+      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} />,
       direction: 'fade' as const,
       duration: 400
     },
