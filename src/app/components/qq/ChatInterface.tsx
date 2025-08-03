@@ -82,10 +82,11 @@ export default function ChatInterface({
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   
   // 分页加载相关状态
-  const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息，适合手机端
+  const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息
   const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -109,8 +110,11 @@ export default function ChatInterface({
 
 
 
+  // 滚动到底部 - 采用V0.03的设计方案
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   // 加载更多历史消息
@@ -155,44 +159,56 @@ export default function ChatInterface({
     }
   }, [isLoadingMore, hasMoreMessages, chat.messages, displayedMessages]);
 
-  // 初始化显示的消息 - 立即显示最新的30条
+  // 初始化显示的消息 - 打开聊天默认最新消息处
   useEffect(() => {
     if (chat.messages.length > 0) {
       const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
-      // 确保消息ID唯一
-      const uniqueMessages = initialMessages.filter((msg, index, arr) => 
-        arr.findIndex(m => m.id === msg.id) === index
-      );
-      setDisplayedMessages(uniqueMessages);
+      setDisplayedMessages(initialMessages);
       setHasMoreMessages(chat.messages.length > MESSAGE_RENDER_WINDOW);
+      setIsInitialized(true);
     } else {
       setDisplayedMessages([]);
       setHasMoreMessages(false);
+      setIsInitialized(true);
     }
   }, [chat.messages]);
 
-  // 当有新消息时，自动添加到显示列表
+  // 初始化完成后滚动到最新消息处
   useEffect(() => {
-    if (chat.messages.length > 0 && displayedMessages.length > 0) {
+    if (isInitialized && displayedMessages.length > 0) {
+      // 采用V0.03的设计方案：延迟滚动确保DOM渲染完成
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  }, [isInitialized, displayedMessages]);
+
+  // 新消息发送显示最新消息处
+  useEffect(() => {
+    if (isInitialized && chat.messages.length > 0 && displayedMessages.length > 0) {
       const lastDisplayedMessageId = displayedMessages[displayedMessages.length - 1]?.id;
       const lastDisplayedIndex = chat.messages.findIndex(msg => msg.id === lastDisplayedMessageId);
       
       if (lastDisplayedIndex !== -1 && lastDisplayedIndex < chat.messages.length - 1) {
         const newMessages = chat.messages.slice(lastDisplayedIndex + 1);
-        setDisplayedMessages(prev => {
-          const existingIds = new Set(prev.map(msg => msg.id));
-          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-          return [...prev, ...uniqueNewMessages];
-        });
+        
+        if (newMessages.length > 0) {
+          setDisplayedMessages(prev => {
+            const existingIds = new Set(prev.map(msg => msg.id));
+            const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+            return [...prev, ...uniqueNewMessages];
+          });
+          
+          // 新消息发送后立即滚动到最新消息处
+          setTimeout(() => {
+            scrollToBottom();
+          }, 0);
+        }
       }
     }
-  }, [chat.messages, displayedMessages]);
+  }, [chat.messages, displayedMessages, isInitialized]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [displayedMessages]);
-
-  // 监听滚动事件，自动加载更多消息
+  // 监听滚动事件，向上滑动自动加载更多的30条
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -207,6 +223,8 @@ export default function ChatInterface({
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
+
+
 
   // 加载数据库中的个人信息
   useEffect(() => {
@@ -673,7 +691,7 @@ ${recentMessages}`;
 1. **【身份铁律】**: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。
 2. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有"type"和"name"字段的JSON对象】。
 3. **角色扮演**: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。
-4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少2-3条消息！！！
+4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少2-3条消息，不能超过4条消息，指令消息不算！！！
 5. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 6. **情景感知**: 注意当前时间是 ${currentTime},但是不能重复提及时间概念。
 7. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
