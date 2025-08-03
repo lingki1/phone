@@ -15,7 +15,6 @@ import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import { presetManager } from '../../utils/presetManager';
 import PageTransitionManager from '../utils/PageTransitionManager';
-import CharacterImportModal from './characterimport/CharacterImportModal';
 import './ChatListPage.css';
 
 interface PersonalSettings {
@@ -66,9 +65,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [showWorldBookAssociation, setShowWorldBookAssociation] = useState(false);
   const [associatingChatId, setAssociatingChatId] = useState<string | null>(null);
   
-  // 角色导入相关状态
-  const [showCharacterImport, setShowCharacterImport] = useState(false);
-  
   // API配置状态
   const [apiConfig, setApiConfig] = useState<ApiConfig>({
     proxyUrl: '',
@@ -108,36 +104,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     
     return () => {
       window.removeEventListener('presetChanged', handlePresetChange);
-    };
-  }, []);
-
-  // 监听API配置变更
-  useEffect(() => {
-    const handleApiConfigChange = async () => {
-      try {
-        await dataManager.initDB();
-        const savedApiConfig = await dataManager.getApiConfig();
-        console.log('ChatListPage - 监听到API配置变更，重新加载:', {
-          proxyUrl: savedApiConfig.proxyUrl,
-          apiKey: savedApiConfig.apiKey ? '已设置' : '未设置',
-          model: savedApiConfig.model
-        });
-        setApiConfig(savedApiConfig);
-      } catch (error) {
-        console.error('Failed to reload API config:', error);
-        // 回退到localStorage
-        const savedApiConfig = localStorage.getItem('apiConfig');
-        if (savedApiConfig) {
-          const parsedConfig = JSON.parse(savedApiConfig);
-          setApiConfig(parsedConfig);
-        }
-      }
-    };
-
-    window.addEventListener('apiConfigChanged', handleApiConfigChange);
-    
-    return () => {
-      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
     };
   }, []);
   
@@ -224,18 +190,10 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     try {
       await dataManager.saveApiConfig(config);
       console.log('ChatListPage - API配置已保存到数据库');
-      
-      // 触发API配置变更事件，通知其他组件
-      window.dispatchEvent(new CustomEvent('apiConfigChanged'));
-      console.log('ChatListPage - 已触发apiConfigChanged事件');
     } catch (error) {
       console.error('Failed to save API config:', error);
       localStorage.setItem('apiConfig', JSON.stringify(config));
       console.log('ChatListPage - API配置已保存到localStorage');
-      
-      // 即使保存到localStorage也要触发事件
-      window.dispatchEvent(new CustomEvent('apiConfigChanged'));
-      console.log('ChatListPage - 已触发apiConfigChanged事件（localStorage）');
     }
   };
 
@@ -402,18 +360,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setCurrentScreen('worldbook');
   };
 
-  // 打开角色导入模态框
-  const handleOpenCharacterImport = () => {
-    setShowCharacterImport(true);
-  };
-
-  // 处理角色导入成功
-  const handleCharacterImportSuccess = (newChat: ChatItem) => {
-    // 添加新聊天到列表
-    setChats(prevChats => [newChat, ...prevChats]);
-    setShowCharacterImport(false);
-  };
-
   // 打开世界书关联弹窗
   const handleAssociateWorldBook = (chatId: string) => {
     setAssociatingChatId(chatId);
@@ -534,7 +480,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onOpenAddFriend={handleOpenAddFriend}
             onOpenCreateGroup={() => setShowCreateGroup(true)}
             onOpenWorldBook={handleOpenWorldBook}
-            onOpenCharacterImport={handleOpenCharacterImport}
             onBackToDesktop={onBackToDesktop}
             onOpenMePage={() => handleViewChange('me')}
             personalSettings={personalSettings}
@@ -670,15 +615,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           onSave={handleSaveWorldBookAssociation}
         />
       )}
-
-      {/* 角色导入模态框 */}
-      <CharacterImportModal
-        isVisible={showCharacterImport}
-        onClose={() => setShowCharacterImport(false)}
-        onImportSuccess={handleCharacterImportSuccess}
-        apiConfig={apiConfig}
-        personalSettings={personalSettings}
-      />
     </>
   );
 }

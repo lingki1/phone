@@ -15,13 +15,12 @@ interface ChatListHeaderProps {
   onOpenAddFriend: () => void;
   onOpenCreateGroup: () => void;
   onOpenWorldBook: () => void;
-  onOpenCharacterImport: () => void;
   onBackToDesktop?: () => void;
   onOpenMePage?: () => void;
   personalSettings?: PersonalSettings;
 }
 
-export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onOpenCharacterImport, onBackToDesktop, onOpenMePage, personalSettings }: ChatListHeaderProps) {
+export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onBackToDesktop, onOpenMePage, personalSettings }: ChatListHeaderProps) {
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
   // 添加点击空白区域关闭菜单的功能
@@ -126,14 +125,6 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
                 </svg>
                 <span>世界书</span>
-              </div>
-              <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenCharacterImport(); }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                <span>导入角色卡片</span>
               </div>
             </div>
           )}
