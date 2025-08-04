@@ -308,72 +308,148 @@ class DataManager {
     };
   }
 
-  // 导出数据
-  async exportData(): Promise<string> {
-    const chats = await this.getAllChats();
-    const apiConfig = await this.getApiConfig();
-    const personalSettings = await this.getPersonalSettings();
-    const themeSettings = await this.getThemeSettings();
-    const balance = await this.getBalance();
-    const transactions = await this.getTransactionHistory();
-    const worldBooks = await this.getAllWorldBooks();
-    
-    const exportData = {
-      chats,
-      apiConfig,
-      personalSettings,
-      themeSettings,
-      balance,
-      transactions,
-      worldBooks,
-      exportTime: new Date().toISOString(),
-      version: '1.3'
-    };
+  // 导出所有数据
+  async exportAllData(): Promise<string> {
+    try {
+      // 收集所有数据
+      const chats = await this.getAllChats();
+      const apiConfig = await this.getApiConfig();
+      const personalSettings = await this.getPersonalSettings();
+      const themeSettings = await this.getThemeSettings();
+      const balance = await this.getBalance();
+      const transactions = await this.getTransactionHistory();
+      const worldBooks = await this.getAllWorldBooks();
+      const presets = await this.getAllPresets();
+      
+      // 收集聊天状态数据
+      const chatStatuses: unknown[] = [];
+      const chatBackgrounds: unknown[] = [];
+      
+      // 为每个聊天收集状态和背景数据
+      for (const chat of chats) {
+        try {
+          const status = await this.getChatStatus(chat.id);
+          if (status) {
+            chatStatuses.push({ chatId: chat.id, ...status });
+          }
+          
+          const background = await this.getChatBackground(chat.id);
+          if (background) {
+            chatBackgrounds.push({ chatId: chat.id, background });
+          }
+        } catch (error) {
+          console.warn(`Failed to get status/background for chat ${chat.id}:`, error);
+        }
+      }
+      
+      const exportData = {
+        chats,
+        apiConfig,
+        personalSettings,
+        themeSettings,
+        balance,
+        transactions,
+        worldBooks,
+        presets,
+        chatStatuses,
+        chatBackgrounds,
+        exportTime: new Date().toISOString(),
+        version: '1.4'
+      };
 
-    return JSON.stringify(exportData, null, 2);
+      return JSON.stringify(exportData, null, 2);
+    } catch (error) {
+      console.error('Export failed:', error);
+      throw new Error(`导出失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    }
   }
 
-  // 导入数据
-  async importData(jsonData: string): Promise<void> {
+  // 导入所有数据
+  async importAllData(jsonData: string): Promise<void> {
     try {
       const data = JSON.parse(jsonData);
       
+      // 验证数据格式
+      if (!data.version || !data.exportTime) {
+        throw new Error('无效的备份文件格式');
+      }
+      
+      // 导入聊天数据
       if (data.chats && Array.isArray(data.chats)) {
         for (const chat of data.chats) {
           await this.saveChat(chat);
         }
       }
 
+      // 导入API配置
       if (data.apiConfig) {
         await this.saveApiConfig(data.apiConfig);
       }
 
+      // 导入个人信息
       if (data.personalSettings) {
         await this.savePersonalSettings(data.personalSettings);
       }
 
+      // 导入主题设置
       if (data.themeSettings) {
         await this.saveThemeSettings(data.themeSettings);
       }
 
+      // 导入余额
       if (typeof data.balance === 'number') {
         await this.saveBalance(data.balance);
       }
 
+      // 导入交易记录
       if (data.transactions && Array.isArray(data.transactions)) {
         for (const transaction of data.transactions) {
           await this.addTransaction(transaction);
         }
       }
 
+      // 导入世界书
       if (data.worldBooks && Array.isArray(data.worldBooks)) {
         for (const worldBook of data.worldBooks) {
           await this.saveWorldBook(worldBook);
         }
       }
-    } catch {
-      throw new Error('Invalid import data format');
+
+      // 导入预设
+      if (data.presets && Array.isArray(data.presets)) {
+        for (const preset of data.presets) {
+          await this.savePreset(preset);
+        }
+      }
+
+      // 导入聊天状态
+      if (data.chatStatuses && Array.isArray(data.chatStatuses)) {
+        for (const status of data.chatStatuses) {
+          const { chatId, ...statusData } = status;
+          await this.saveChatStatus(chatId, statusData);
+        }
+      }
+
+      // 导入聊天背景
+      if (data.chatBackgrounds && Array.isArray(data.chatBackgrounds)) {
+        for (const bg of data.chatBackgrounds) {
+          await this.saveChatBackground(bg.chatId, bg.background);
+        }
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      throw new Error(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
     }
+  }
+
+  // 导出数据（保持向后兼容）
+  async exportData(): Promise<string> {
+    return this.exportAllData();
+  }
+
+  // 导入数据（保持向后兼容）
+  async importData(jsonData: string): Promise<void> {
+    return this.importAllData(jsonData);
   }
 
   // 清空所有数据

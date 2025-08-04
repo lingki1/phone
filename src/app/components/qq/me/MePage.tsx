@@ -7,6 +7,7 @@ import ColorSettingsPage from '../../settings/ColorSettingsPage';
 import ApiSettingsModal from '../ApiSettingsModal';
 import PageTransitionManager from '../../utils/PageTransitionManager';
 import PresetManagerPage from '../preset/PresetManagerPage';
+import DataBackupManager from '../backup/DataBackupManager';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -32,6 +33,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   const [showBalanceInfo, setShowBalanceInfo] = useState(false);
   const [currentPage, setCurrentPage] = useState<'main' | 'color-settings' | 'preset-manager'>('main');
   const [showApiSettings, setShowApiSettings] = useState(false);
+  const [showDataBackup, setShowDataBackup] = useState(false);
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
     apiKey: '',
@@ -145,6 +147,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         break;
       case 'preset-manager':
         setCurrentPage('preset-manager');
+        break;
+      case 'data-backup':
+        setShowDataBackup(true);
         break;
       default:
         break;
@@ -400,6 +405,18 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 </div>
                 <div className="option-arrow">›</div>
               </div>
+
+              <div 
+                className="option-item"
+                onClick={() => handleOptionClick('data-backup')}
+              >
+                <div className="option-icon">💾</div>
+                <div className="option-content">
+                  <div className="option-title">数据备份管理</div>
+                  <div className="option-subtitle">导入导出所有数据，包括聊天记录、设置等</div>
+                </div>
+                <div className="option-arrow">›</div>
+              </div>
             </div>
           </div>
         </div>
@@ -528,6 +545,11 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 数据备份管理模态框 */}
+      {showDataBackup && (
+        <DataBackupManager onClose={() => setShowDataBackup(false)} />
       )}
     </>
   );
