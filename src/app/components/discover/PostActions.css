@@ -1,0 +1,230 @@
+/* 动态操作按钮样式 */
+.post-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border-light, #e9ecef);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--theme-text-secondary, #6c757d);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: var(--theme-bg-secondary, #f8f9fa);
+  color: var(--theme-text-primary, #1f1f1f);
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.action-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* 点赞按钮特殊样式 */
+.like-btn.liked {
+  color: #e74c3c;
+}
+
+.like-btn.liked:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+}
+
+.like-btn.liked svg {
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 评论按钮特殊样式 */
+.comment-btn.active {
+  color: var(--theme-accent-color, #007bff);
+  background: var(--theme-accent-light, rgba(0, 123, 255, 0.1));
+}
+
+.comment-btn.active:hover {
+  background: var(--theme-accent-lighter, rgba(0, 123, 255, 0.2));
+}
+
+/* 分享按钮特殊样式 */
+.share-btn:hover {
+  color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .post-actions {
+    gap: 6px;
+    padding-top: 10px;
+  }
+  
+  .action-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    gap: 4px;
+  }
+  
+  .action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-actions {
+    gap: 4px;
+    padding-top: 8px;
+  }
+  
+  .action-btn {
+    padding: 5px 8px;
+    font-size: 12px;
+    gap: 3px;
+  }
+  
+  .action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .action-btn span {
+    display: none;
+  }
+  
+  .action-btn {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .post-actions {
+  border-top-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .action-btn:hover {
+  background: var(--theme-bg-secondary, #2a2a2a);
+  color: var(--theme-text-primary, #ffffff);
+}
+
+.theme-dark .comment-btn.active {
+  background: var(--theme-accent-light, rgba(0, 123, 255, 0.2));
+}
+
+.theme-dark .share-btn:hover {
+  background: rgba(39, 174, 96, 0.2);
+}
+
+/* 主题切换动画 */
+.action-btn {
+  transition: 
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out,
+    transform 0.2s ease-in-out;
+}
+
+.action-btn svg {
+  transition: 
+    transform 0.2s ease-in-out,
+    fill 0.3s ease-in-out;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .action-btn,
+  .action-btn svg {
+    transition: none !important;
+  }
+  
+  .action-btn:hover {
+    transform: none !important;
+  }
+  
+  .action-btn:hover svg {
+    transform: none !important;
+  }
+  
+  .like-btn.liked svg {
+    animation: none !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .post-actions {
+    border-top-width: 2px;
+  }
+  
+  .action-btn {
+    border: 1px solid var(--theme-border-color, #000000);
+  }
+  
+  .action-btn:hover {
+    border-color: var(--theme-accent-color, #0000ff);
+  }
+}
+
+/* 焦点样式 */
+.action-btn:focus {
+  outline: 2px solid var(--theme-accent-color, #007bff);
+  outline-offset: 2px;
+}
+
+.action-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .action-btn:hover {
+    transform: none;
+  }
+  
+  .action-btn:hover svg {
+    transform: none;
+  }
+  
+  .action-btn:active {
+    background: var(--theme-bg-tertiary, #e9ecef);
+    transform: scale(0.95);
+  }
+  
+  .theme-dark .action-btn:active {
+    background: var(--theme-bg-tertiary, #404040);
+  }
+} 

@@ -2,9 +2,10 @@
 import { ChatItem, GroupMember, ApiConfig, WorldBook } from '../types/chat';
 import { TransactionRecord } from '../types/money';
 import { PresetConfig } from '../types/preset';
+import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 8; // 升级数据库版本以支持聊天背景功能
+const DB_VERSION = 9; // 升级数据库版本以支持动态功能
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -15,6 +16,11 @@ const WORLD_BOOK_STORE = 'worldBooks';
 const PRESET_STORE = 'presets';
 const CHAT_STATUS_STORE = 'chatStatus';
 const CHAT_BACKGROUND_STORE = 'chatBackgrounds';
+const DISCOVER_POSTS_STORE = 'discoverPosts';
+const DISCOVER_COMMENTS_STORE = 'discoverComments';
+const DISCOVER_SETTINGS_STORE = 'discoverSettings';
+const DISCOVER_NOTIFICATIONS_STORE = 'discoverNotifications';
+const DISCOVER_DRAFTS_STORE = 'discoverDrafts';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -95,6 +101,43 @@ class DataManager {
         // 创建聊天背景存储
         if (!db.objectStoreNames.contains(CHAT_BACKGROUND_STORE)) {
           db.createObjectStore(CHAT_BACKGROUND_STORE, { keyPath: 'chatId' });
+        }
+
+        // 创建动态存储
+        if (!db.objectStoreNames.contains(DISCOVER_POSTS_STORE)) {
+          const postsStore = db.createObjectStore(DISCOVER_POSTS_STORE, { keyPath: 'id' });
+          postsStore.createIndex('authorId', 'authorId', { unique: false });
+          postsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          postsStore.createIndex('type', 'type', { unique: false });
+          postsStore.createIndex('aiGenerated', 'aiGenerated', { unique: false });
+        }
+
+        // 创建评论存储
+        if (!db.objectStoreNames.contains(DISCOVER_COMMENTS_STORE)) {
+          const commentsStore = db.createObjectStore(DISCOVER_COMMENTS_STORE, { keyPath: 'id' });
+          commentsStore.createIndex('postId', 'postId', { unique: false });
+          commentsStore.createIndex('authorId', 'authorId', { unique: false });
+          commentsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          commentsStore.createIndex('parentCommentId', 'parentCommentId', { unique: false });
+        }
+
+        // 创建动态设置存储
+        if (!db.objectStoreNames.contains(DISCOVER_SETTINGS_STORE)) {
+          db.createObjectStore(DISCOVER_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建动态通知存储
+        if (!db.objectStoreNames.contains(DISCOVER_NOTIFICATIONS_STORE)) {
+          const notificationsStore = db.createObjectStore(DISCOVER_NOTIFICATIONS_STORE, { keyPath: 'id' });
+          notificationsStore.createIndex('authorId', 'authorId', { unique: false });
+          notificationsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          notificationsStore.createIndex('isRead', 'isRead', { unique: false });
+        }
+
+        // 创建动态草稿存储
+        if (!db.objectStoreNames.contains(DISCOVER_DRAFTS_STORE)) {
+          const draftsStore = db.createObjectStore(DISCOVER_DRAFTS_STORE, { keyPath: 'id' });
+          draftsStore.createIndex('lastSaved', 'lastSaved', { unique: false });
         }
       };
     });
@@ -942,6 +985,306 @@ class DataManager {
       request.onerror = () => reject(new Error('Failed to delete chat background'));
       request.onsuccess = () => resolve();
     });
+  }
+
+  // ==================== 动态功能相关方法 ====================
+
+  // 保存动态
+  async saveDiscoverPost(post: DiscoverPost): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_POSTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const request = store.put(post);
+
+      request.onerror = () => reject(new Error('Failed to save discover post'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取所有动态
+  async getAllDiscoverPosts(): Promise<DiscoverPost[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_POSTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const index = store.index('timestamp');
+      const request = index.openCursor(null, 'prev'); // 按时间倒序
+
+      const results: DiscoverPost[] = [];
+      request.onerror = () => reject(new Error('Failed to get discover posts'));
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          results.push(cursor.value);
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+    });
+  }
+
+  // 获取单个动态
+  async getDiscoverPost(id: string): Promise<DiscoverPost | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_POSTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const request = store.get(id);
+
+      request.onerror = () => reject(new Error('Failed to get discover post'));
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  // 删除动态
+  async deleteDiscoverPost(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_POSTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete discover post'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取用户的动态
+  async getDiscoverPostsByAuthor(authorId: string): Promise<DiscoverPost[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_POSTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const index = store.index('authorId');
+      const request = index.getAll(IDBKeyRange.only(authorId));
+
+      request.onerror = () => reject(new Error('Failed to get discover posts by author'));
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  // 保存评论
+  async saveDiscoverComment(comment: DiscoverComment): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_COMMENTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_COMMENTS_STORE);
+      const request = store.put(comment);
+
+      request.onerror = () => reject(new Error('Failed to save discover comment'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取动态的评论
+  async getDiscoverCommentsByPost(postId: string): Promise<DiscoverComment[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_COMMENTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_COMMENTS_STORE);
+      const index = store.index('postId');
+      const request = index.getAll(IDBKeyRange.only(postId));
+
+      request.onerror = () => reject(new Error('Failed to get discover comments by post'));
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  // 删除评论
+  async deleteDiscoverComment(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_COMMENTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_COMMENTS_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete discover comment'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 保存动态设置
+  async saveDiscoverSettings(settings: DiscoverSettings): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_SETTINGS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_SETTINGS_STORE);
+      const request = store.put({ ...settings, id: 'default' });
+
+      request.onerror = () => reject(new Error('Failed to save discover settings'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取动态设置
+  async getDiscoverSettings(): Promise<DiscoverSettings> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_SETTINGS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_SETTINGS_STORE);
+      const request = store.get('default');
+
+      request.onerror = () => reject(new Error('Failed to get discover settings'));
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          resolve(result);
+        } else {
+          // 返回默认设置
+          resolve({
+            autoGeneratePosts: true,
+            autoGenerateInterval: 60,
+            maxPostsPerDay: 10,
+            allowAiComments: true,
+            allowAiLikes: true,
+            privacyLevel: 'public',
+            notifyOnNewPosts: true,
+            theme: 'default'
+          });
+        }
+      };
+    });
+  }
+
+  // 保存通知
+  async saveDiscoverNotification(notification: DiscoverNotification): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_NOTIFICATIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
+      const request = store.put(notification);
+
+      request.onerror = () => reject(new Error('Failed to save discover notification'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取用户的通知
+  async getDiscoverNotifications(authorId: string): Promise<DiscoverNotification[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_NOTIFICATIONS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
+      const index = store.index('authorId');
+      const request = index.getAll(IDBKeyRange.only(authorId));
+
+      request.onerror = () => reject(new Error('Failed to get discover notifications'));
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  }
+
+  // 标记通知为已读
+  async markDiscoverNotificationAsRead(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_NOTIFICATIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
+      const getRequest = store.get(id);
+
+      getRequest.onerror = () => reject(new Error('Failed to get discover notification'));
+      getRequest.onsuccess = () => {
+        const notification = getRequest.result;
+        if (notification) {
+          notification.isRead = true;
+          const putRequest = store.put(notification);
+          putRequest.onerror = () => reject(new Error('Failed to update discover notification'));
+          putRequest.onsuccess = () => resolve();
+        } else {
+          resolve();
+        }
+      };
+    });
+  }
+
+  // 保存草稿
+  async saveDiscoverDraft(draft: DiscoverDraft): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_DRAFTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const request = store.put(draft);
+
+      request.onerror = () => reject(new Error('Failed to save discover draft'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取草稿
+  async getDiscoverDraft(id: string): Promise<DiscoverDraft | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_DRAFTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const request = store.get(id);
+
+      request.onerror = () => reject(new Error('Failed to get discover draft'));
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  // 删除草稿
+  async deleteDiscoverDraft(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_DRAFTS_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete discover draft'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取动态统计信息
+  async getDiscoverStats(): Promise<DiscoverStats> {
+    const posts = await this.getAllDiscoverPosts();
+    const totalLikes = posts.reduce((sum, post) => sum + post.likes.length, 0);
+    const totalComments = posts.reduce((sum, post) => sum + post.comments.length, 0);
+    const activeUsers = new Set(posts.map(post => post.authorId)).size;
+
+    // 计算热门动态（按点赞数排序）
+    const popularPosts = posts
+      .sort((a, b) => b.likes.length - a.likes.length)
+      .slice(0, 5)
+      .map(post => post.id);
+
+    // 提取热门话题（从标签中）
+    const allTags = posts.flatMap(post => post.tags || []);
+    const tagCounts = allTags.reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const trendingTopics = Object.entries(tagCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([tag]) => tag);
+
+    return {
+      totalPosts: posts.length,
+      totalLikes,
+      totalComments,
+      activeUsers,
+      popularPosts,
+      trendingTopics
+    };
   }
 }
 

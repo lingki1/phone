@@ -1,0 +1,355 @@
+/* 动态评论样式 */
+.post-comments {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border-light, #e9ecef);
+}
+
+.comments-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--theme-text-tertiary, #adb5bd);
+  font-size: 14px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.comment-item.ai-generated {
+  background: var(--theme-accent-light, rgba(0, 123, 255, 0.05));
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 -8px;
+}
+
+.comment-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.comment-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--theme-border-light, #e9ecef);
+}
+
+
+
+.comment-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.comment-time {
+  font-size: 11px;
+  color: var(--theme-text-tertiary, #adb5bd);
+}
+
+.comment-text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--theme-text-primary, #1f1f1f);
+  word-wrap: break-word;
+  margin-bottom: 4px;
+}
+
+/* @提及样式 */
+.comment-text .mention {
+  color: var(--theme-accent-color, #007bff);
+  font-weight: 500;
+  background-color: rgba(0, 123, 255, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comment-text .mention:hover {
+  background-color: rgba(0, 123, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.comment-likes {
+  font-size: 11px;
+  color: var(--theme-text-tertiary, #adb5bd);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .post-comments {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  
+  .comments-list {
+    gap: 10px;
+  }
+  
+  .comment-item {
+    gap: 6px;
+    padding: 6px 0;
+  }
+  
+  .comment-item.ai-generated {
+    padding: 6px;
+    margin: 0 -6px;
+  }
+  
+  .comment-avatar-img {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .comment-author {
+    font-size: 12px;
+  }
+  
+  .comment-text {
+    font-size: 13px;
+  }
+  
+  .comment-time {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-comments {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  
+  .comments-list {
+    gap: 8px;
+  }
+  
+  .comment-item {
+    gap: 4px;
+    padding: 4px 0;
+  }
+  
+  .comment-item.ai-generated {
+    padding: 4px;
+    margin: 0 -4px;
+  }
+  
+  .comment-avatar-img {
+    width: 24px;
+    height: 24px;
+  }
+  
+
+  
+  .comment-author {
+    font-size: 11px;
+  }
+  
+  .comment-text {
+    font-size: 12px;
+  }
+  
+  .comment-time {
+    font-size: 9px;
+  }
+  
+  .comment-likes {
+    font-size: 10px;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .post-comments {
+  border-top-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .comment-avatar-img {
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .comment-item.ai-generated {
+  background: var(--theme-accent-light, rgba(0, 123, 255, 0.1));
+}
+
+
+
+/* 主题切换动画 */
+.post-comments,
+.comment-item,
+.comment-avatar-img {
+  transition: 
+    background-color 0.3s ease-in-out,
+    border-color 0.3s ease-in-out;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .post-comments,
+  .comment-item,
+  .comment-avatar-img {
+    transition: none !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .post-comments {
+    border-top-width: 2px;
+  }
+  
+  .comment-avatar-img {
+    border-width: 2px;
+  }
+  
+
+}
+
+/* 焦点样式 */
+.comment-item:focus-within {
+  outline: 2px solid var(--theme-accent-color, #007bff);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.comment-item:focus-within:not(:focus-visible) {
+  outline: none;
+}
+
+/* 查看更多评论按钮 */
+.comments-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px 0;
+  border-top: 1px solid var(--theme-border-light, #e9ecef);
+  margin-top: 8px;
+}
+
+.show-more-btn {
+  background: none;
+  border: none;
+  color: var(--theme-accent-color, #007bff);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.show-more-btn:hover {
+  background-color: var(--theme-accent-light, rgba(0, 123, 255, 0.1));
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+.show-more-btn:active {
+  transform: translateY(1px);
+}
+
+/* 评论统计 */
+.comments-summary {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px 0;
+  border-top: 1px solid var(--theme-border-light, #e9ecef);
+  margin-top: 4px;
+}
+
+.comments-count {
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #adb5bd);
+  font-weight: 500;
+}
+
+/* 响应式设计 - 查看更多按钮 */
+@media (max-width: 768px) {
+  .comments-more {
+    padding: 10px 0 6px 0;
+    margin-top: 6px;
+  }
+  
+  .show-more-btn {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  
+  .comments-summary {
+    padding: 6px 0 3px 0;
+    margin-top: 3px;
+  }
+  
+  .comments-count {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .comments-more {
+    padding: 8px 0 4px 0;
+    margin-top: 4px;
+  }
+  
+  .show-more-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  .comments-summary {
+    padding: 4px 0 2px 0;
+    margin-top: 2px;
+  }
+  
+  .comments-count {
+    font-size: 10px;
+  }
+}
+
+/* 深色主题适配 - 查看更多按钮 */
+.theme-dark .comments-more {
+  border-top-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .comments-summary {
+  border-top-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .show-more-btn:hover {
+  background-color: var(--theme-accent-light, rgba(0, 123, 255, 0.15));
+}
+
+/* 减少动画偏好 - 查看更多按钮 */
+@media (prefers-reduced-motion: reduce) {
+  .show-more-btn {
+    transition: none !important;
+  }
+  
+  .show-more-btn:active {
+    transform: none !important;
+  }
+} 

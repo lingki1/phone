@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import ChatListPage from './components/qq/ChatListPage';
 import DesktopPage from './components/DesktopPage';
 import ShoppingPage from './components/shopping/ShoppingPage';
+import DiscoverPage from './components/discover/DiscoverPage';
 import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping'>('desktop');
+  const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping' | 'discover'>('desktop');
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
     apiKey: '',
@@ -91,9 +92,37 @@ export default function Home() {
         return;
       }
       setCurrentPage('shopping');
+    } else if (appName === 'discover') {
+      setCurrentPage('discover');
     }
     // 其他应用的处理逻辑可以在这里添加
   };
+
+  // 监听动态页面的导航事件
+  useEffect(() => {
+    const handleNavigateToChat = () => {
+      console.log('Home - 收到跳转到聊天页面事件');
+      setCurrentPage('chat');
+    };
+
+    const handleNavigateToMe = () => {
+      console.log('Home - 收到跳转到个人页面事件');
+      // 暂时跳转到聊天页面，因为个人页面在聊天页面内部
+      setCurrentPage('chat');
+      // 延迟一下再触发个人页面的显示
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('showMePage'));
+      }, 100);
+    };
+
+    window.addEventListener('navigateToChat', handleNavigateToChat);
+    window.addEventListener('navigateToMe', handleNavigateToMe);
+    
+    return () => {
+      window.removeEventListener('navigateToChat', handleNavigateToChat);
+      window.removeEventListener('navigateToMe', handleNavigateToMe);
+    };
+  }, []);
 
   const handleBackToDesktop = () => {
     setCurrentPage('desktop');
@@ -117,6 +146,12 @@ export default function Home() {
     {
       id: 'shopping',
       component: <ShoppingPage apiConfig={apiConfig} onBack={handleBackToDesktop} />,
+      direction: 'left' as const,
+      duration: 350
+    },
+    {
+      id: 'discover',
+      component: <DiscoverPage />,
       direction: 'left' as const,
       duration: 350
     }

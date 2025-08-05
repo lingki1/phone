@@ -1,0 +1,355 @@
+/* 动态卡片样式 */
+.post-card {
+  background: var(--theme-bg-primary, #ffffff);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--theme-shadow-light, 0 1px 3px rgba(0, 0, 0, 0.1));
+  transition: all 0.2s ease;
+}
+
+.post-card:hover {
+  box-shadow: var(--theme-shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.15));
+  transform: translateY(-1px);
+}
+
+.post-card.ai-generated {
+  border-left: 4px solid var(--theme-accent-color, #007bff);
+}
+
+/* 头部区域 */
+.post-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.post-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--theme-border-light, #e9ecef);
+}
+
+.post-author-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-author-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+
+.post-meta {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6c757d);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.post-separator {
+  opacity: 0.5;
+}
+
+.post-location,
+.post-mood {
+  color: var(--theme-accent-color, #007bff);
+}
+
+.post-privacy {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* 内容区域 */
+.post-content {
+  margin-bottom: 12px;
+}
+
+.post-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--theme-text-primary, #1f1f1f);
+  margin-bottom: 12px;
+  word-wrap: break-word;
+}
+
+/* @提及样式 */
+.post-text .mention {
+  color: var(--theme-accent-color, #007bff);
+  font-weight: 500;
+  background-color: rgba(0, 123, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.post-text .mention:hover {
+  background-color: rgba(0, 123, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.post-tag {
+  font-size: 12px;
+  color: var(--theme-accent-color, #007bff);
+  background: var(--theme-accent-light, rgba(0, 123, 255, 0.1));
+  padding: 2px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.post-tag:hover {
+  background: var(--theme-accent-lighter, rgba(0, 123, 255, 0.2));
+}
+
+/* 统计信息 */
+.post-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6c757d);
+}
+
+.post-likes-count,
+.post-comments-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 评论输入区域 */
+.post-comment-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border-light, #e9ecef);
+}
+
+.comment-textarea {
+  flex: 1;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 14px;
+  resize: none;
+  background: var(--theme-bg-secondary, #f8f9fa);
+  color: var(--theme-text-primary, #1f1f1f);
+  transition: border-color 0.2s ease;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: var(--theme-accent-color, #007bff);
+  background: var(--theme-bg-primary, #ffffff);
+}
+
+.comment-textarea::placeholder {
+  color: var(--theme-text-tertiary, #adb5bd);
+}
+
+.comment-submit-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--theme-accent-color, #007bff);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  background: var(--theme-accent-hover, #0056b3);
+  transform: translateY(-1px);
+}
+
+.comment-submit-btn:disabled {
+  background: var(--theme-border-color, #e0e0e0);
+  color: var(--theme-text-tertiary, #adb5bd);
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .post-card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .post-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .post-author-name {
+    font-size: 15px;
+  }
+  
+  .post-text {
+    font-size: 14px;
+  }
+  
+  .post-stats {
+    font-size: 12px;
+  }
+  
+  .comment-textarea {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  .comment-submit-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-card {
+    padding: 10px;
+  }
+  
+  .post-author {
+    gap: 8px;
+  }
+  
+  .post-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .post-author-name {
+    font-size: 14px;
+  }
+  
+  .post-meta {
+    font-size: 11px;
+  }
+  
+  .post-text {
+    font-size: 13px;
+  }
+  
+  .post-tags {
+    gap: 4px;
+  }
+  
+  .post-tag {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .post-card {
+  background: var(--theme-bg-primary, #1a1a1a);
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .post-avatar {
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .comment-textarea {
+  background: var(--theme-bg-secondary, #2a2a2a);
+  border-color: var(--theme-border-color, #404040);
+  color: var(--theme-text-primary, #ffffff);
+}
+
+.theme-dark .comment-textarea:focus {
+  background: var(--theme-bg-primary, #1a1a1a);
+}
+
+/* 主题切换动画 */
+.post-card,
+.post-tag,
+.comment-textarea,
+.comment-submit-btn {
+  transition: 
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out,
+    border-color 0.3s ease-in-out,
+    box-shadow 0.3s ease-in-out,
+    transform 0.2s ease-in-out;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .post-card,
+  .post-tag,
+  .comment-textarea,
+  .comment-submit-btn {
+    transition: none !important;
+  }
+  
+  .post-card:hover {
+    transform: none !important;
+  }
+  
+  .comment-submit-btn:hover:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .post-card {
+    border-width: 2px;
+  }
+  
+  .post-card.ai-generated {
+    border-left-width: 6px;
+  }
+  
+  .post-avatar {
+    border-width: 3px;
+  }
+  
+  .comment-textarea {
+    border-width: 2px;
+  }
+}
+
+/* 焦点样式 */
+.comment-textarea:focus,
+.comment-submit-btn:focus {
+  outline: 2px solid var(--theme-accent-color, #007bff);
+  outline-offset: 2px;
+}
+
+.comment-textarea:focus:not(:focus-visible),
+.comment-submit-btn:focus:not(:focus-visible) {
+  outline: none;
+} 

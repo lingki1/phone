@@ -168,6 +168,21 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       window.removeEventListener('apiConfigChanged', handleApiConfigChange);
     };
   }, [chats]); // 添加chats依赖
+
+  // 监听显示个人页面事件
+  useEffect(() => {
+    const handleShowMePage = () => {
+      console.log('ChatListPage - 收到显示个人页面事件');
+      setActiveView('me');
+      setCurrentScreen('me');
+    };
+
+    window.addEventListener('showMePage', handleShowMePage);
+    
+    return () => {
+      window.removeEventListener('showMePage', handleShowMePage);
+    };
+  }, []);
   
 
 
@@ -348,6 +363,15 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       setCurrentScreen('me');
     } else if (view === 'messages') {
       setCurrentScreen('list');
+    } else if (view === 'moments') {
+      // 跳转到动态页面
+      if (onBackToDesktop) {
+        onBackToDesktop();
+        // 延迟一下再打开动态应用，确保回到桌面
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('openApp', { detail: 'discover' }));
+        }, 100);
+      }
     }
   };
 

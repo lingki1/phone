@@ -57,6 +57,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       notifications: 3,
       status: 'available'
     },
+
     {
       id: 'story',
       name: '故事模式',
@@ -228,6 +229,21 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // 监听openApp事件
+  useEffect(() => {
+    const handleOpenApp = (event: CustomEvent) => {
+      const appName = event.detail;
+      console.log('DesktopPage - 收到openApp事件:', appName);
+      onOpenApp(appName);
+    };
+
+    window.addEventListener('openApp', handleOpenApp as EventListener);
+    
+    return () => {
+      window.removeEventListener('openApp', handleOpenApp as EventListener);
+    };
+  }, [onOpenApp]);
 
   // 格式化时间
   const formatTime = (date: Date) => {

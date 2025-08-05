@@ -1,0 +1,47 @@
+/* 动态列表样式 */
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .post-list {
+    gap: 12px;
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-list {
+    gap: 10px;
+    padding: 0 8px;
+  }
+}
+
+/* 动画效果 */
+.post-list {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .post-list {
+    animation: none;
+  }
+} 
