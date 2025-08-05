@@ -5,6 +5,7 @@ import { dataManager } from '../../utils/dataManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
 import { aiCommentService } from './utils/aiCommentService';
+import BottomNavigation from '../qq/BottomNavigation';
 
 import PostComposer from './PostComposer';
 import PostList from './PostList';
@@ -22,6 +23,53 @@ export default function DiscoverPage() {
     nickname: string;
     avatar: string;
   } | null>(null);
+
+  // 新内容计数状态
+  const [newContentCount, setNewContentCount] = useState<{
+    moments?: number;
+    messages?: number;
+  }>({});
+
+  // 加载新内容计数
+  useEffect(() => {
+    const loadNewContentCount = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount({
+          moments: newPostsCount + newCommentsCount
+        });
+      } catch (error) {
+        console.warn('Failed to load new content count:', error);
+      }
+    };
+
+    loadNewContentCount();
+  }, []);
+
+  // 监听新内容更新事件
+  useEffect(() => {
+    const handleNewContentUpdate = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount(prev => ({
+          ...prev,
+          moments: newPostsCount + newCommentsCount
+        }));
+      } catch (error) {
+        console.warn('Failed to update new content count:', error);
+      }
+    };
+
+    window.addEventListener('aiPostGenerated', handleNewContentUpdate);
+    window.addEventListener('aiCommentsGenerated', handleNewContentUpdate);
+    window.addEventListener('viewStateUpdated', handleNewContentUpdate);
+    
+    return () => {
+      window.removeEventListener('aiPostGenerated', handleNewContentUpdate);
+      window.removeEventListener('aiCommentsGenerated', handleNewContentUpdate);
+      window.removeEventListener('viewStateUpdated', handleNewContentUpdate);
+    };
+  }, []);
 
   // 加载数据
   useEffect(() => {
@@ -352,7 +400,21 @@ export default function DiscoverPage() {
     }
   };
 
-
+  // 处理底部导航切换
+  const handleViewChange = (view: string) => {
+    console.log('DiscoverPage - 底部导航点击:', view);
+    
+    if (view === 'messages') {
+      // 跳转到消息页面
+      console.log('DiscoverPage - 触发navigateToChat事件');
+      window.dispatchEvent(new CustomEvent('navigateToChat'));
+    } else if (view === 'me') {
+      // 跳转到个人页面
+      console.log('DiscoverPage - 触发navigateToMe事件');
+      window.dispatchEvent(new CustomEvent('navigateToMe'));
+    }
+    // 'moments' 已经在当前页面，不需要处理
+  };
 
   if (isLoading) {
     return (
@@ -381,6 +443,14 @@ export default function DiscoverPage() {
           currentUserId="user"
         />
       </div>
+
+      {/* 底部导航 */}
+      <BottomNavigation
+        activeView="moments"
+        onViewChange={handleViewChange}
+        newContentCount={newContentCount}
+        forceShow={true}
+      />
 
       {showComposer && (
         <PostComposer

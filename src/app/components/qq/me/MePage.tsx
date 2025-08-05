@@ -8,6 +8,7 @@ import ApiSettingsModal from '../ApiSettingsModal';
 import PageTransitionManager from '../../utils/PageTransitionManager';
 import PresetManagerPage from '../preset/PresetManagerPage';
 import DataBackupManager from '../backup/DataBackupManager';
+import BottomNavigation from '../BottomNavigation';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -48,6 +49,53 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   const [avatarPreview, setAvatarPreview] = useState('/avatars/user-avatar.svg');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 新内容计数状态
+  const [newContentCount, setNewContentCount] = useState<{
+    moments?: number;
+    messages?: number;
+  }>({});
+
+  // 加载新内容计数
+  useEffect(() => {
+    const loadNewContentCount = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount({
+          moments: newPostsCount + newCommentsCount
+        });
+      } catch (error) {
+        console.warn('Failed to load new content count:', error);
+      }
+    };
+
+    loadNewContentCount();
+  }, []);
+
+  // 监听新内容更新事件
+  useEffect(() => {
+    const handleNewContentUpdate = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount(prev => ({
+          ...prev,
+          moments: newPostsCount + newCommentsCount
+        }));
+      } catch (error) {
+        console.warn('Failed to update new content count:', error);
+      }
+    };
+
+    window.addEventListener('aiPostGenerated', handleNewContentUpdate);
+    window.addEventListener('aiCommentsGenerated', handleNewContentUpdate);
+    window.addEventListener('viewStateUpdated', handleNewContentUpdate);
+    
+    return () => {
+      window.removeEventListener('aiPostGenerated', handleNewContentUpdate);
+      window.removeEventListener('aiCommentsGenerated', handleNewContentUpdate);
+      window.removeEventListener('viewStateUpdated', handleNewContentUpdate);
+    };
+  }, []);
 
   // 加载个人信息和余额
   useEffect(() => {
@@ -283,6 +331,18 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     setShowBalanceInfo(!showBalanceInfo);
   };
 
+  // 处理底部导航切换
+  const handleViewChange = (view: string) => {
+    if (view === 'messages') {
+      // 跳转到消息页面
+      window.dispatchEvent(new CustomEvent('navigateToChat'));
+    } else if (view === 'moments') {
+      // 跳转到动态页面
+      window.dispatchEvent(new CustomEvent('navigateToDiscover'));
+    }
+    // 'me' 已经在当前页面，不需要处理
+  };
+
   if (isLoading) {
     return (
       <div className="me-page loading">
@@ -446,6 +506,16 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         defaultDirection="left"
         defaultDuration={300}
       />
+
+      {/* 底部导航 - 只在主页面显示 */}
+      {currentPage === 'main' && (
+        <BottomNavigation
+          activeView="me"
+          onViewChange={handleViewChange}
+          newContentCount={newContentCount}
+          forceShow={true}
+        />
+      )}
 
       {/* API设置模态框 */}
       <ApiSettingsModal

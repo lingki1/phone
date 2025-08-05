@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './BottomNavigation.css';
 
 // 导航项类型定义
@@ -20,6 +20,8 @@ interface BottomNavigationProps {
     moments?: number;
     messages?: number;
   };
+  // 新增：强制显示选项
+  forceShow?: boolean;
 }
 
 // 默认导航项配置
@@ -60,8 +62,80 @@ export default function BottomNavigation({
   onViewChange, 
   navItems = defaultNavItems,
   className = '',
-  newContentCount = {}
+  newContentCount = {},
+  forceShow = false
 }: BottomNavigationProps) {
+  const [shouldShow, setShouldShow] = useState(false);
+
+  // 检测当前页面是否应该显示底部导航
+  useEffect(() => {
+    const checkCurrentPage = () => {
+      // 如果强制显示，直接返回true
+      if (forceShow) {
+        setShouldShow(true);
+        return;
+      }
+
+      // 获取当前页面的组件名称
+      const getCurrentPageName = (): string => {
+        // 检查是否存在特定的CSS类来判断当前页面
+        const chatListElement = document.querySelector('.chat-list-page');
+        const mePageElement = document.querySelector('.me-page');
+        const mePageContainerElement = document.querySelector('.me-page-container');
+        const discoverPageElement = document.querySelector('.discover-page');
+        
+        if (chatListElement) return 'ChatListPage';
+        if (mePageElement || mePageContainerElement) return 'MePage';
+        if (discoverPageElement) return 'DiscoverPage';
+        
+        // 通过页面内容特征判断
+        const hasChatList = document.querySelector('.chat-list');
+        const hasMeContent = document.querySelector('.me-profile-section');
+        const hasDiscoverContent = document.querySelector('.discover-content');
+        
+        if (hasChatList) return 'ChatListPage';
+        if (hasMeContent) return 'MePage';
+        if (hasDiscoverContent) return 'DiscoverPage';
+        
+        return '';
+      };
+
+      const currentPageName = getCurrentPageName();
+      const isAllowedPage = ['ChatListPage', 'MePage', 'DiscoverPage'].includes(currentPageName);
+      
+      setShouldShow(isAllowedPage);
+      
+      console.log('BottomNavigation - 页面检测:', {
+        currentPageName,
+        isAllowedPage,
+        shouldShow: isAllowedPage,
+        forceShow
+      });
+    };
+
+    // 初始检查
+    checkCurrentPage();
+
+    // 监听页面变化
+    const observer = new MutationObserver(checkCurrentPage);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // 监听自定义页面切换事件
+    const handlePageChange = () => {
+      setTimeout(checkCurrentPage, 100);
+    };
+    
+    window.addEventListener('pageChanged', handlePageChange);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('pageChanged', handlePageChange);
+    };
+  }, [forceShow]);
+
   const createRipple = (event: React.MouseEvent<HTMLDivElement>) => {
     const button = event.currentTarget;
     const ripple = document.createElement('span');
@@ -86,6 +160,11 @@ export default function BottomNavigation({
     createRipple(event);
     onViewChange(itemKey);
   };
+
+  // 如果不应该显示，返回null
+  if (!shouldShow) {
+    return null;
+  }
 
   return (
     <div className={`bottom-navigation ${className}`}>

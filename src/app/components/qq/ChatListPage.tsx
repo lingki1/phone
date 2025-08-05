@@ -8,8 +8,8 @@ import ChatInterface from './ChatInterface';
 import CreateGroupModal from './CreateGroupModal';
 import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
-import MePage from './me/MePage';
 import { WorldBookListPage, WorldBookAssociationModal } from './worldbook';
+import BottomNavigation from './BottomNavigation';
 import { ChatItem, ApiConfig } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import { presetManager } from '../../utils/presetManager';
@@ -50,7 +50,7 @@ interface ChatListPageProps {
 export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
   const [activeView, setActiveView] = useState<string>('messages');
-  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'me' | 'worldbook'>('list');
+  const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'worldbook'>('list');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
   // 模态框状态
@@ -89,6 +89,53 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 新内容计数状态
+  const [newContentCount, setNewContentCount] = useState<{
+    moments?: number;
+    messages?: number;
+  }>({});
+
+  // 加载新内容计数
+  useEffect(() => {
+    const loadNewContentCount = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount({
+          moments: newPostsCount + newCommentsCount
+        });
+      } catch (error) {
+        console.warn('Failed to load new content count:', error);
+      }
+    };
+
+    loadNewContentCount();
+  }, []);
+
+  // 监听新内容更新事件
+  useEffect(() => {
+    const handleNewContentUpdate = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount(prev => ({
+          ...prev,
+          moments: newPostsCount + newCommentsCount
+        }));
+      } catch (error) {
+        console.warn('Failed to update new content count:', error);
+      }
+    };
+
+    window.addEventListener('aiPostGenerated', handleNewContentUpdate);
+    window.addEventListener('aiCommentsGenerated', handleNewContentUpdate);
+    window.addEventListener('viewStateUpdated', handleNewContentUpdate);
+    
+    return () => {
+      window.removeEventListener('aiPostGenerated', handleNewContentUpdate);
+      window.removeEventListener('aiCommentsGenerated', handleNewContentUpdate);
+      window.removeEventListener('viewStateUpdated', handleNewContentUpdate);
+    };
+  }, []);
 
   // 监听预设变更
   useEffect(() => {
@@ -168,25 +215,20 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     };
   }, [chats]); // 添加chats依赖
 
-  // 监听显示个人页面事件
+  // 监听显示消息页面事件
   useEffect(() => {
-    const handleShowMePage = () => {
-      console.log('ChatListPage - 收到显示个人页面事件');
-      setActiveView('me');
-      setCurrentScreen('me');
-    };
-
     const handleShowMessages = () => {
       console.log('ChatListPage - 收到显示消息页面事件');
       setActiveView('messages');
       setCurrentScreen('list');
+      console.log('ChatListPage - 已设置activeView为messages，currentScreen为list');
     };
 
-    window.addEventListener('showMePage', handleShowMePage);
+    console.log('ChatListPage - 添加事件监听器');
     window.addEventListener('showMessages', handleShowMessages);
     
     return () => {
-      window.removeEventListener('showMePage', handleShowMePage);
+      console.log('ChatListPage - 移除事件监听器');
       window.removeEventListener('showMessages', handleShowMessages);
     };
   }, []);
@@ -366,10 +408,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     if (activeView === view) return;
     
     setActiveView(view);
-    if (view === 'me') {
-      setCurrentScreen('me');
-    } else if (view === 'messages') {
+    if (view === 'messages') {
       setCurrentScreen('list');
+    } else if (view === 'me') {
+      // 跳转到个人页面
+      window.dispatchEvent(new CustomEvent('navigateToMe'));
     } else if (view === 'moments') {
       // 跳转到动态页面
       if (onBackToDesktop) {
@@ -643,16 +686,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       direction: 'left' as const,
       duration: 300
     },
-    {
-      id: 'me',
-      component: (
-        <div className="chat-list-page">
-          <MePage onBackToDesktop={onBackToDesktop} />
-        </div>
-      ),
-      direction: 'up' as const,
-      duration: 300
-    },
+
     {
       id: 'worldbook',
       component: (
@@ -671,6 +705,16 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         defaultDirection="left"
         defaultDuration={300}
       />
+      
+      {/* 底部导航 - 只在消息列表显示 */}
+      {currentScreen === 'list' && (
+        <BottomNavigation
+          activeView={activeView}
+          onViewChange={handleViewChange}
+          newContentCount={newContentCount}
+          forceShow={true}
+        />
+      )}
       
       {/* API设置模态框 */}
       <ApiSettingsModal
