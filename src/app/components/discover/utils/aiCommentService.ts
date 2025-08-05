@@ -81,15 +81,9 @@ export class AiCommentService {
     this.isProcessing = true;
 
     try {
-      console.log('🚀 开始生成AI评论');
+      console.log('🚀 开始生成AI评论，跳过API配置验证');
       
-      // 1. 验证API配置
-      const configValidation = await this.validateApiConfig();
-      if (!configValidation.valid) {
-        throw new Error(configValidation.error);
-      }
-
-      // 2. 获取API配置
+      // 1. 获取API配置
       const apiConfig = await dataManager.getApiConfig();
 
       // 2. 获取用户信息
@@ -104,10 +98,12 @@ export class AiCommentService {
       }
 
       // 4. 智能选择AI角色（基于角色人设和动态内容的相关性）
-      const selectedCharacters = this.selectRelevantCharacters(aiCharacters, post, 3);
+      // 如果用户刚评论，生成较少的AI评论
+      const maxCharacters = post.comments.length > 0 ? 2 : 3;
+      const selectedCharacters = this.selectRelevantCharacters(aiCharacters, post, maxCharacters);
 
       // 5. 构建API请求
-      const requestData = this.buildApiRequest(post, userInfo, selectedCharacters);
+      const requestData = await this.buildApiRequest(post, userInfo, selectedCharacters);
 
       // 6. 调用API
       const response = await this.callApi(apiConfig, requestData);
@@ -146,6 +142,7 @@ export class AiCommentService {
   ): ChatItem[] {
     const postContent = post.content.toLowerCase();
     const postTags = post.tags || [];
+    const existingComments = post.comments || [];
 
     // 计算每个角色的相关性分数
     const scoredCharacters = characters.map(character => {
@@ -164,6 +161,20 @@ export class AiCommentService {
         if (persona.includes(tag.toLowerCase())) score += 2;
       });
 
+      // 如果用户刚评论，优先选择与用户有聊天历史的角色
+      if (existingComments.length > 0) {
+        const lastUserComment = existingComments.find(c => c.authorId === 'user');
+        if (lastUserComment && character.messages.length > 0) {
+          score += 5; // 有聊天历史的角色优先
+        }
+      }
+
+      // 避免选择已经评论过的角色
+      const hasCommented = existingComments.some(c => c.authorId === character.id);
+      if (hasCommented) {
+        score -= 10; // 已经评论过的角色降低优先级
+      }
+
       // 随机因素（确保多样性）
       score += Math.random() * 2;
 
@@ -178,25 +189,65 @@ export class AiCommentService {
   }
 
   // 构建API请求数据
-  private buildApiRequest(
+  private async buildApiRequest(
     post: DiscoverPost, 
     userInfo: { userNickname: string; userBio: string }, 
     characters: ChatItem[]
   ) {
+    // 获取最近的5条动态（不包括当前动态）
+    const allPosts = await dataManager.getAllDiscoverPosts();
+    const recentPosts = allPosts
+      .filter(p => p.id !== post.id) // 排除当前动态
+      .sort((a, b) => b.timestamp - a.timestamp) // 按时间倒序
+      .slice(0, 5); // 取最近5条
+
+    // 为每个动态加载评论
+    const recentPostsWithComments = await Promise.all(
+      recentPosts.map(async (p) => {
+        const comments = await dataManager.getDiscoverCommentsByPost(p.id);
+        return {
+          ...p,
+          comments: comments
+        };
+      })
+    );
+
     return {
-      post: {
+      // 当前动态信息
+      currentPost: {
+        id: post.id,
         content: post.content,
         images: post.images,
         tags: post.tags,
         mood: post.mood,
         location: post.location,
         timestamp: post.timestamp,
-        authorName: post.authorName
+        authorName: post.authorName,
+        type: post.type,
+        isPublic: post.isPublic,
+        likes: post.likes
       },
-      author: {
+      
+      // 当前动态的现有评论
+      existingComments: post.comments.map(comment => ({
+        id: comment.id,
+        authorId: comment.authorId,
+        authorName: comment.authorName,
+        content: comment.content,
+        timestamp: comment.timestamp,
+        aiGenerated: comment.aiGenerated,
+        likes: comment.likes
+      })),
+      
+      // 用户信息
+      user: {
+        id: 'user',
         name: userInfo.userNickname,
-        bio: userInfo.userBio
+        bio: userInfo.userBio,
+        avatar: '/avatars/user-avatar.png'
       },
+      
+      // 所有AI角色信息
       characters: characters.map(char => {
         // 获取最近的聊天记录（最多10条）
         const recentMessages = char.messages
@@ -215,13 +266,61 @@ export class AiCommentService {
           persona: char.persona,
           avatar: char.avatar,
           chatHistory: recentMessages,
-          totalMessages: char.messages.length
+          totalMessages: char.messages.length,
+          // 添加角色在动态中的活跃度
+          recentActivity: {
+            postsCommented: recentPostsWithComments.filter(p => 
+              p.comments.some(c => c.authorId === char.id)
+            ).length,
+            lastCommentTime: char.messages.length > 0 ? 
+              Math.max(...char.messages.map(m => m.timestamp)) : 0
+          }
         };
       }),
+      
+      // 最近的动态历史（提供上下文）
+      recentPosts: recentPostsWithComments.map(p => ({
+        id: p.id,
+        content: p.content,
+        authorName: p.authorName,
+        timestamp: p.timestamp,
+        type: p.type,
+        mood: p.mood,
+        location: p.location,
+        tags: p.tags,
+        likes: p.likes,
+        comments: p.comments.map(c => ({
+          authorId: c.authorId,
+          authorName: c.authorName,
+          content: c.content,
+          timestamp: c.timestamp,
+          aiGenerated: c.aiGenerated
+        }))
+      })),
+      
+      // 系统上下文
       context: {
         totalCharacters: characters.length,
-        postType: post.type,
-        isPublic: post.isPublic
+        currentPostType: post.type,
+        isPublic: post.isPublic,
+        hasExistingComments: post.comments.length > 0,
+        commentCount: post.comments.length,
+        recentPostsCount: recentPostsWithComments.length,
+        systemTime: Date.now(),
+        // 动态趋势分析
+        trends: {
+          popularTopics: this.extractPopularTopics(recentPostsWithComments),
+          activeCharacters: characters
+            .map(c => ({
+              id: c.id,
+              name: c.name,
+              activityLevel: recentPostsWithComments.filter(p => 
+                p.comments.some(comment => comment.authorId === c.id)
+              ).length
+            }))
+            .sort((a, b) => b.activityLevel - a.activityLevel)
+            .slice(0, 3)
+        }
       }
     };
   }
@@ -229,6 +328,16 @@ export class AiCommentService {
   // 调用API
   private async callApi(apiConfig: ApiConfig, requestData: unknown): Promise<string> {
     console.log('🔍 AI评论服务 - 开始API调用');
+    
+    // 检查API配置
+    if (!apiConfig.proxyUrl) {
+      throw new Error('缺少API代理地址，请在设置中配置');
+    }
+    
+    if (!apiConfig.apiKey) {
+      throw new Error('缺少API密钥，请在设置中配置');
+    }
+    
     console.log('📡 API配置:', {
       proxyUrl: apiConfig.proxyUrl,
       model: apiConfig.model || 'gpt-3.5-turbo',
@@ -319,25 +428,93 @@ export class AiCommentService {
 
   // 构建系统提示词
   private buildSystemPrompt(): string {
-    return `你是一个智能社交评论生成器。你的任务是根据用户发布的动态内容、AI角色的人设和聊天历史，生成自然、有趣的评论。
+    return `你是一个智能社交评论生成器。你的任务是根据用户发布的动态内容、现有评论、AI角色的人设和聊天历史，生成自然、有趣的评论。
 
 ⚠️ 重要：你必须且只能返回有效的JSON格式，不能包含任何其他文本。
 
-## 聊天历史分析：
-- 分析每个角色的chatHistory，了解角色与用户的关系和互动风格
-- 根据聊天内容调整角色的语气和表达方式
-- 可以引用聊天中的话题或情感状态
-- 保持角色在聊天中展现的个性特征
+## 🎯 核心任务说明：
+你的主要任务是针对 **当前动态 (currentPost)** 生成评论，其他所有信息都只是参考和上下文，不要被其他动态的内容误导。
+
+## 数据上下文分析：
+
+### 1. 🎯 当前动态信息 (currentPost) - 主要目标
+- **这是你要评论的主要对象**
+- 分析动态内容、心情、位置、标签等
+- 了解动态类型（文字、图片、混合）
+- 查看点赞情况
+- **所有评论都必须基于这个动态的内容**
+
+### 2. 👤 用户信息 (user) - 参考信息
+- 用户名和个人介绍
+- 了解用户的个性和兴趣
+- 用于生成更个性化的评论
+
+### 3. 🤖 AI角色信息 (characters) - 角色设定
+- 每个角色的人设、性格特征
+- 最近的聊天历史（10条）
+- 角色在动态中的活跃度
+- 角色与用户的关系
+- **用于确定评论的语气和风格**
+
+### 4. 📚 最近动态历史 (recentPosts) - 仅作参考
+- ⚠️ **重要提醒：这些只是参考信息，不要评论这些动态**
+- 用于了解话题趋势和角色活跃度
+- 观察角色在不同动态中的表现
+- 发现热门话题和讨论焦点
+- **不要引用或回应这些动态的具体内容**
+
+### 5. 💬 现有评论分析 (existingComments) - 当前动态的评论
+- 分析当前动态下用户和其他AI角色的评论
+- 了解评论的互动模式
+- 避免重复已有观点
+- **这些是当前动态的评论，可以回应**
+
+### 6. 📊 系统趋势 (trends) - 背景信息
+- 热门话题分析
+- 活跃角色排名
+- 动态互动模式
+- **用于增加评论的相关性，但不要直接引用**
+
+## 🎯 评论生成策略：
+
+### 场景1：新动态评论
+- **基于当前动态内容生成初始评论**
+- 参考角色人设和聊天历史
+- 体现角色个性特征
+
+### 场景2：用户评论后
+- **优先回应用户在当前动态下的评论内容**
+- 基于聊天历史建立联系
+- 体现角色与用户的关系
+
+### 场景3：评论互动
+- **参考当前动态下的现有评论生成回应**
+- 引用当前动态评论中的观点
+- 创造有意义的对话
+
+## 🚫 重要限制：
+- **绝对不要评论其他动态 (recentPosts) 的内容**
+- **不要引用其他动态中的具体信息**
+- **所有评论都必须针对当前动态 (currentPost)**
+- **其他动态信息只用于了解话题趋势和角色活跃度**
+
+## 角色行为模式：
+- 根据角色的recentActivity调整活跃度
+- 参考chatHistory中的互动风格
+- 保持角色在动态中的一致性
+- 利用热门话题增加相关性
 
 要求：
 1. 必须返回严格的JSON格式
 2. 评论要符合角色人设，体现角色个性
-3. 参考聊天历史中的互动方式和关系
+3. **所有评论都必须基于当前动态内容**
 4. 评论内容要自然，避免过于机械
 5. 可以包含@提及其他角色或用户
 6. 评论长度控制在20-50字之间
 7. 每个角色只能生成一条评论
 8. 可以体现聊天中建立的关系和话题
+9. 如果有现有评论，要基于当前动态的评论内容生成有意义的回应
+10. 利用热门话题和趋势增加评论的相关性，但不要直接引用其他动态
 
 返回格式（必须严格遵循）：
 {
@@ -355,12 +532,12 @@ export class AiCommentService {
   "comments": [
     {
       "characterId": "char_001",
-      "content": "哈哈，这个想法很有趣！@用户 就像我们刚才聊天时说的那样～",
+      "content": "哈哈，@用户 说得对！这个话题最近很热门呢，我也很感兴趣～",
       "tone": "友好"
     },
     {
       "characterId": "char_002", 
-      "content": "很有深度的思考，值得学习。@用户 我们之前也讨论过类似的话题呢",
+      "content": "确实，@用户 的评论很有见地。让我想起了我们之前聊天的内容",
       "tone": "思考"
     }
   ]
@@ -370,11 +547,14 @@ export class AiCommentService {
 - 必须返回有效的JSON，不能有任何其他文本
 - 确保JSON语法正确，所有字符串用双引号包围
 - 评论要真实自然，符合角色人设
-- 参考聊天历史，但不要直接复制聊天内容
+- **所有评论都必须针对当前动态，不要被其他动态误导**
+- 参考聊天历史和动态历史，但不要直接复制内容
 - 避免重复或过于相似的评论
-- 可以引用动态中的具体内容
+- 可以引用当前动态或当前动态评论中的具体内容
 - 支持@功能，格式为@用户名或@角色名
-- 如果无法生成评论，返回空的comments数组：{"comments": []}`;
+- 如果无法生成评论，返回空的comments数组：{"comments": []}
+- 利用热门话题和趋势增加评论的相关性，但不要直接引用其他动态
+- 保持角色在动态中的行为一致性`;
   }
 
   // 处理API响应
@@ -431,14 +611,42 @@ export class AiCommentService {
 
       console.log('✅ 解析后的响应:', parsedResponse);
       
-      if (!parsedResponse.comments || !Array.isArray(parsedResponse.comments)) {
-        console.error('❌ 响应格式错误，缺少comments数组:', parsedResponse);
-        throw new Error('API响应格式不正确: 缺少comments数组');
+      // 处理不同的响应格式
+      let commentsArray = null;
+      
+      // 格式1: {comments: [...]}
+      if (parsedResponse.comments && Array.isArray(parsedResponse.comments)) {
+        commentsArray = parsedResponse.comments;
+        console.log('✅ 使用标准comments格式');
+      }
+      // 格式2: {post: {...}, comments: [...]}
+      else if (parsedResponse.post && parsedResponse.comments && Array.isArray(parsedResponse.comments)) {
+        commentsArray = parsedResponse.comments;
+        console.log('✅ 使用post+comments格式');
+      }
+      // 格式3: 尝试查找任何包含comments的数组
+      else {
+        // 遍历所有属性，查找comments数组
+        for (const key in parsedResponse) {
+          if (Array.isArray(parsedResponse[key]) && key.toLowerCase().includes('comment')) {
+            commentsArray = parsedResponse[key];
+            console.log(`✅ 找到comments数组在属性: ${key}`);
+            break;
+          }
+        }
+      }
+      
+      if (!commentsArray) {
+        console.error('❌ 响应格式错误，未找到comments数组:', parsedResponse);
+        console.log('📄 可用的属性:', Object.keys(parsedResponse));
+        throw new Error('API响应格式不正确: 未找到comments数组');
       }
 
       const comments: DiscoverComment[] = [];
+      const baseTimestamp = Date.now();
 
-      for (const commentData of parsedResponse.comments) {
+      for (let i = 0; i < commentsArray.length; i++) {
+        const commentData = commentsArray[i];
         console.log('🔍 处理评论数据:', commentData);
         
         // 验证评论数据格式
@@ -454,15 +662,16 @@ export class AiCommentService {
           continue;
         }
 
-        // 创建评论对象
+        // 创建评论对象，使用递增的时间戳确保最新的评论显示在最下方
+        // 第一个评论时间戳最小，后续递增，这样最新的评论会排在后面（下方）
         const comment: DiscoverComment = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          id: (baseTimestamp + i).toString() + Math.random().toString(36).substr(2, 9),
           postId: post.id,
           authorId: character.id,
           authorName: character.name,
           authorAvatar: character.avatar,
           content: commentData.content,
-          timestamp: Date.now(),
+          timestamp: baseTimestamp + i, // 递增时间戳，确保最新的评论显示在最下方
           likes: [],
           aiGenerated: true
         };
@@ -498,6 +707,42 @@ export class AiCommentService {
     }
 
     return mentions;
+  }
+
+  // 提取热门话题
+  private extractPopularTopics(posts: DiscoverPost[]): string[] {
+    const topicCount: { [key: string]: number } = {};
+    
+    posts.forEach(post => {
+      // 从内容中提取关键词
+      const content = post.content.toLowerCase();
+      const tags = post.tags || [];
+      
+      // 常见话题关键词
+      const topics = [
+        '学习', '工作', '生活', '心情', '朋友', '家人', '旅行', '美食',
+        '运动', '音乐', '电影', '读书', '思考', '感悟', '分享', '快乐',
+        '烦恼', '成长', '梦想', '目标', '计划', '回忆', '期待', '感谢'
+      ];
+      
+      topics.forEach(topic => {
+        if (content.includes(topic)) {
+          topicCount[topic] = (topicCount[topic] || 0) + 1;
+        }
+      });
+      
+      // 从标签中提取话题
+      tags.forEach(tag => {
+        const tagLower = tag.toLowerCase();
+        topicCount[tagLower] = (topicCount[tagLower] || 0) + 1;
+      });
+    });
+    
+    // 返回出现次数最多的5个话题
+    return Object.entries(topicCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([topic]) => topic);
   }
 
   // 后台处理评论（异步）

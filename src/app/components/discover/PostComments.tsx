@@ -23,8 +23,8 @@ export default function PostComments({
 }: PostCommentsProps) {
   const [showAllComments, setShowAllComments] = useState(false);
   
-  // 按时间戳排序，最新的在前面
-  const sortedComments = [...comments].sort((a, b) => b.timestamp - a.timestamp);
+  // 按时间戳排序，最新的在后面
+  const sortedComments = [...comments].sort((a, b) => a.timestamp - b.timestamp);
   
   // 默认显示最新的8条评论
   const defaultDisplayCount = 8;

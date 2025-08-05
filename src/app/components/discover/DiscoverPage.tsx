@@ -5,6 +5,7 @@ import { dataManager } from '../../utils/dataManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
 import { aiPostGenerator } from './utils/aiPostGenerator';
+import { aiCommentService } from './utils/aiCommentService';
 
 import { ApiDebugger } from './utils/apiDebugger';
 import PostComposer from './PostComposer';
@@ -143,15 +144,7 @@ export default function DiscoverPage() {
     try {
       // 使用新的AI评论服务
       if (settings?.allowAiComments) {
-        // 先检查API配置
-        const configValidation = await aiPostGenerator.validateApiConfig();
-        if (!configValidation.valid) {
-          console.warn('⚠️ API配置问题:', configValidation.error);
-          // 可以在这里显示用户友好的错误提示
-          return;
-        }
-
-        console.log('✅ API配置验证通过，开始生成AI评论');
+        console.log('🚀 开始生成AI评论，跳过API配置验证');
         
         // 获取AI角色
         const chats = await dataManager.getAllChats();
@@ -161,9 +154,8 @@ export default function DiscoverPage() {
           // 后台异步处理AI评论生成
           setTimeout(async () => {
             try {
-              const commentCount = Math.floor(Math.random() * 2) + 1; // 1-2条评论
-              console.log(`💬 为用户动态生成 ${commentCount} 条AI评论`);
-              await aiPostGenerator.generateCommentsForPost(post, aiCharacters, commentCount);
+              console.log(`💬 为用户动态生成AI评论`);
+              await aiCommentService.generateCommentsForPost(post);
               
               // 触发评论更新事件
               window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
@@ -330,13 +322,53 @@ export default function DiscoverPage() {
 
       await dataManager.saveDiscoverComment(comment);
       
+      // 更新本地状态，立即显示用户评论
       setPosts(prev => prev.map(p => 
         p.id === postId 
           ? { ...p, comments: [...p.comments, comment] }
           : p
       ));
+
+      // 触发AI评论生成
+      await triggerAiCommentForPost(postId);
     } catch (error) {
       console.error('Failed to add comment:', error);
+    }
+  };
+
+  // 触发AI评论生成
+  const triggerAiCommentForPost = async (postId: string) => {
+    try {
+      // 检查设置是否允许AI评论
+      if (!settings?.allowAiComments) {
+        console.log('AI评论功能已禁用');
+        return;
+      }
+
+      // 获取当前动态
+      const currentPost = posts.find(p => p.id === postId);
+      if (!currentPost) {
+        console.error('未找到动态:', postId);
+        return;
+      }
+
+      console.log('💬 用户评论后触发AI评论生成，动态ID:', postId);
+
+      // 使用AI评论服务生成评论
+      const result = await aiCommentService.generateCommentsForPost(currentPost);
+      
+      if (result.success) {
+        console.log('✅ AI评论生成成功，共生成', result.comments.length, '条评论');
+        
+        // 触发评论更新事件，让UI自动刷新
+        window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
+          detail: { postId: postId }
+        }));
+      } else {
+        console.warn('⚠️ AI评论生成失败:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ 触发AI评论生成失败:', error);
     }
   };
 

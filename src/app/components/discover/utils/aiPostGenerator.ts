@@ -885,7 +885,7 @@ export class AiPostGenerator {
 
       return { post, comments };
 
-    } catch (error) {
+    } catch {
       return { post: null, comments: [] };
     }
   }
@@ -918,8 +918,8 @@ export class AiPostGenerator {
         content: commentData.content as string
       };
 
-    } catch (error) {
-      console.error('❌ 处理评论API响应失败:', error);
+    } catch {
+      console.error('❌ 处理评论API响应失败');
       console.log('📄 原始响应内容:', response);
       return null; // 返回null而不是抛出错误
     }
