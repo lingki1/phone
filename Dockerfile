@@ -10,7 +10,7 @@ WORKDIR /app
 # 复制package文件
 COPY package.json package-lock.json* ./
 # 安装所有依赖（包括开发依赖）
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # 构建阶段
 FROM base AS builder
