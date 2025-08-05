@@ -5,7 +5,7 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 9; // 升级数据库版本以支持动态功能
+const DB_VERSION = 10; // 升级数据库版本以支持完整的动态功能备份
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -385,6 +385,22 @@ class DataManager {
         }
       }
       
+      // 收集动态数据
+      const discoverPosts = await this.getAllDiscoverPosts();
+      const discoverSettings = await this.getDiscoverSettings();
+      const discoverDrafts = await this.getAllDiscoverDrafts();
+      
+      // 收集所有动态的通知
+      const discoverNotifications: DiscoverNotification[] = [];
+      for (const post of discoverPosts) {
+        try {
+          const notifications = await this.getDiscoverNotifications(post.authorId);
+          discoverNotifications.push(...notifications);
+        } catch (error) {
+          console.warn(`Failed to get notifications for post ${post.id}:`, error);
+        }
+      }
+      
       const exportData = {
         chats,
         apiConfig,
@@ -396,8 +412,13 @@ class DataManager {
         presets,
         chatStatuses,
         chatBackgrounds,
+        discoverPosts,
+        discoverComments: [], // 评论数据在posts中已包含
+        discoverSettings,
+        discoverNotifications,
+        discoverDrafts,
         exportTime: new Date().toISOString(),
-        version: '1.4'
+        version: '1.5'
       };
 
       return JSON.stringify(exportData, null, 2);
@@ -479,6 +500,32 @@ class DataManager {
           await this.saveChatBackground(bg.chatId, bg.background);
         }
       }
+
+      // 导入动态数据
+      if (data.discoverPosts && Array.isArray(data.discoverPosts)) {
+        for (const post of data.discoverPosts) {
+          await this.saveDiscoverPost(post);
+        }
+      }
+
+      // 导入动态设置
+      if (data.discoverSettings) {
+        await this.saveDiscoverSettings(data.discoverSettings);
+      }
+
+      // 导入动态通知
+      if (data.discoverNotifications && Array.isArray(data.discoverNotifications)) {
+        for (const notification of data.discoverNotifications) {
+          await this.saveDiscoverNotification(notification);
+        }
+      }
+
+      // 导入动态草稿
+      if (data.discoverDrafts && Array.isArray(data.discoverDrafts)) {
+        for (const draft of data.discoverDrafts) {
+          await this.saveDiscoverDraft(draft);
+        }
+      }
     } catch (error) {
       console.error('Import failed:', error);
       throw new Error(`导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
@@ -500,7 +547,13 @@ class DataManager {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE], 'readwrite');
+      const transaction = this.db!.transaction([
+        CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, 
+        BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE, PRESET_STORE, 
+        CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, DISCOVER_POSTS_STORE, 
+        DISCOVER_COMMENTS_STORE, DISCOVER_SETTINGS_STORE, DISCOVER_NOTIFICATIONS_STORE, 
+        DISCOVER_DRAFTS_STORE
+      ], 'readwrite');
       
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
@@ -509,6 +562,14 @@ class DataManager {
       const balanceStore = transaction.objectStore(BALANCE_STORE);
       const transactionStore = transaction.objectStore(TRANSACTION_STORE);
       const worldBookStore = transaction.objectStore(WORLD_BOOK_STORE);
+      const presetStore = transaction.objectStore(PRESET_STORE);
+      const chatStatusStore = transaction.objectStore(CHAT_STATUS_STORE);
+      const chatBackgroundStore = transaction.objectStore(CHAT_BACKGROUND_STORE);
+      const discoverPostsStore = transaction.objectStore(DISCOVER_POSTS_STORE);
+      const discoverCommentsStore = transaction.objectStore(DISCOVER_COMMENTS_STORE);
+      const discoverSettingsStore = transaction.objectStore(DISCOVER_SETTINGS_STORE);
+      const discoverNotificationsStore = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
+      const discoverDraftsStore = transaction.objectStore(DISCOVER_DRAFTS_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
@@ -517,11 +578,19 @@ class DataManager {
       const clearBalance = balanceStore.clear();
       const clearTransactions = transactionStore.clear();
       const clearWorldBooks = worldBookStore.clear();
+      const clearPresets = presetStore.clear();
+      const clearChatStatus = chatStatusStore.clear();
+      const clearChatBackground = chatBackgroundStore.clear();
+      const clearDiscoverPosts = discoverPostsStore.clear();
+      const clearDiscoverComments = discoverCommentsStore.clear();
+      const clearDiscoverSettings = discoverSettingsStore.clear();
+      const clearDiscoverNotifications = discoverNotificationsStore.clear();
+      const clearDiscoverDrafts = discoverDraftsStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 7) resolve();
+        if (completed === 15) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -544,6 +613,30 @@ class DataManager {
 
       clearWorldBooks.onerror = () => reject(new Error('Failed to clear world book data'));
       clearWorldBooks.onsuccess = checkComplete;
+
+      clearPresets.onerror = () => reject(new Error('Failed to clear preset data'));
+      clearPresets.onsuccess = checkComplete;
+
+      clearChatStatus.onerror = () => reject(new Error('Failed to clear chat status data'));
+      clearChatStatus.onsuccess = checkComplete;
+
+      clearChatBackground.onerror = () => reject(new Error('Failed to clear chat background data'));
+      clearChatBackground.onsuccess = checkComplete;
+
+      clearDiscoverPosts.onerror = () => reject(new Error('Failed to clear discover posts data'));
+      clearDiscoverPosts.onsuccess = checkComplete;
+
+      clearDiscoverComments.onerror = () => reject(new Error('Failed to clear discover comments data'));
+      clearDiscoverComments.onsuccess = checkComplete;
+
+      clearDiscoverSettings.onerror = () => reject(new Error('Failed to clear discover settings data'));
+      clearDiscoverSettings.onsuccess = checkComplete;
+
+      clearDiscoverNotifications.onerror = () => reject(new Error('Failed to clear discover notifications data'));
+      clearDiscoverNotifications.onsuccess = checkComplete;
+
+      clearDiscoverDrafts.onerror = () => reject(new Error('Failed to clear discover drafts data'));
+      clearDiscoverDrafts.onsuccess = checkComplete;
     });
   }
 
@@ -1250,6 +1343,30 @@ class DataManager {
 
       request.onerror = () => reject(new Error('Failed to delete discover draft'));
       request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取所有草稿
+  async getAllDiscoverDrafts(): Promise<DiscoverDraft[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_DRAFTS_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const index = store.index('lastSaved');
+      const request = index.openCursor(null, 'prev'); // 按时间倒序
+
+      const results: DiscoverDraft[] = [];
+      request.onerror = () => reject(new Error('Failed to get discover drafts'));
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          results.push(cursor.value);
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
     });
   }
 

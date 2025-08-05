@@ -304,7 +304,7 @@ export default function DiscoverPage() {
   };
 
   // 处理评论
-  const handleComment = async (postId: string, content: string) => {
+  const handleComment = async (postId: string, content: string, replyTo?: string) => {
     if (!userInfo) return;
 
     try {
@@ -317,7 +317,8 @@ export default function DiscoverPage() {
         content,
         timestamp: Date.now(),
         likes: [],
-        aiGenerated: false
+        aiGenerated: false,
+        replyTo: replyTo // 添加回复目标
       };
 
       await dataManager.saveDiscoverComment(comment);

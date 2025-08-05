@@ -7,21 +7,21 @@ import './PostComments.css';
 
 interface PostCommentsProps {
   comments: DiscoverComment[];
-  onComment?: (postId: string, content: string) => void;
+  onComment?: (postId: string, content: string, replyTo?: string) => void;
   postId?: string;
   currentUserId?: string;
 }
 
 export default function PostComments({ 
   comments, 
+  onComment, 
+  postId, 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onComment: _onComment, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  postId: _postId, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  currentUserId: _currentUserId 
+  currentUserId 
 }: PostCommentsProps) {
   const [showAllComments, setShowAllComments] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   
   // 按时间戳排序，最新的在后面
   const sortedComments = [...comments].sort((a, b) => a.timestamp - b.timestamp);
@@ -74,6 +74,27 @@ export default function PostComments({
     return result;
   };
 
+  // 处理回复
+  const handleReply = (commentId: string, authorName: string) => {
+    setReplyingTo(commentId);
+    setReplyContent(`@${authorName} `);
+  };
+
+  // 提交回复
+  const submitReply = () => {
+    if (replyContent.trim() && postId && onComment) {
+      onComment(postId, replyContent.trim(), replyingTo || undefined);
+      setReplyingTo(null);
+      setReplyContent('');
+    }
+  };
+
+  // 取消回复
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setReplyContent('');
+  };
+
   if (comments.length === 0) {
     return (
       <div className="post-comments">
@@ -107,15 +128,51 @@ export default function PostComments({
               
               <div className="comment-text">{renderContentWithMentions(comment.content)}</div>
               
-              {comment.likes.length > 0 && (
-                <div className="comment-likes">
-                  ❤️ {comment.likes.length} 人点赞
-                </div>
-              )}
+              <div className="comment-actions">
+                {comment.likes.length > 0 && (
+                  <span className="comment-likes">
+                    ❤️ {comment.likes.length}
+                  </span>
+                )}
+                <button 
+                  className="reply-btn"
+                  onClick={() => handleReply(comment.id, comment.authorName)}
+                >
+                  回复
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* 回复输入框 */}
+      {replyingTo && (
+        <div className="reply-input-container">
+          <div className="reply-input-wrapper">
+            <textarea
+              className="reply-input"
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="输入回复内容..."
+              rows={2}
+              autoFocus
+            />
+            <div className="reply-actions">
+              <button className="reply-cancel-btn" onClick={cancelReply}>
+                取消
+              </button>
+              <button 
+                className="reply-submit-btn"
+                onClick={submitReply}
+                disabled={!replyContent.trim()}
+              >
+                发送
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {hasMoreComments && (
         <div className="comments-more">

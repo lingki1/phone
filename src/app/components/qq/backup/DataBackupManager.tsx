@@ -5,6 +5,7 @@ import { dataManager } from '../../../utils/dataManager';
 import { ChatItem, ApiConfig, WorldBook } from '../../../types/chat';
 import { TransactionRecord } from '../../../types/money';
 import { PresetConfig } from '../../../types/preset';
+import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft } from '../../../types/discover';
 import './DataBackupManager.css';
 
 interface BackupData {
@@ -35,6 +36,11 @@ interface BackupData {
     chatId: string;
     background: string;
   }>;
+  discoverPosts: DiscoverPost[];
+  discoverComments: DiscoverComment[];
+  discoverSettings: DiscoverSettings;
+  discoverNotifications: DiscoverNotification[];
+  discoverDrafts: DiscoverDraft[];
   exportTime: string;
   version: string;
 }
@@ -100,7 +106,34 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
       setCurrentOperation('正在收集预设配置...');
 
       const presets = await dataManager.getAllPresets();
-      setExportProgress(90);
+      setExportProgress(85);
+      setCurrentOperation('正在收集动态数据...');
+
+      const discoverPosts = await dataManager.getAllDiscoverPosts();
+      setExportProgress(87);
+      setCurrentOperation('正在收集动态设置...');
+
+      const discoverSettings = await dataManager.getDiscoverSettings();
+      setExportProgress(89);
+      setCurrentOperation('正在收集动态通知...');
+
+      // 收集所有动态的通知
+      const discoverNotifications: DiscoverNotification[] = [];
+      for (const post of discoverPosts) {
+        try {
+          const notifications = await dataManager.getDiscoverNotifications(post.authorId);
+          discoverNotifications.push(...notifications);
+        } catch (error) {
+          console.warn(`Failed to get notifications for post ${post.id}:`, error);
+        }
+      }
+
+      setExportProgress(91);
+      setCurrentOperation('正在收集动态草稿...');
+
+      const discoverDrafts = await dataManager.getAllDiscoverDrafts();
+      
+      setExportProgress(93);
       setCurrentOperation('正在生成导出文件...');
 
       // 构建导出数据
@@ -115,8 +148,13 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         presets,
         chatStatuses: [], // 暂时为空，后续可以扩展
         chatBackgrounds: [], // 暂时为空，后续可以扩展
+        discoverPosts,
+        discoverComments: [], // 评论数据在posts中已包含
+        discoverSettings,
+        discoverNotifications,
+        discoverDrafts,
         exportTime: new Date().toISOString(),
-        version: '1.4'
+        version: '1.5'
       };
 
       // 创建并下载文件
@@ -234,7 +272,41 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入预设配置...');
         for (let i = 0; i < importData.presets.length; i++) {
           await dataManager.savePreset(importData.presets[i]);
-          setImportProgress(90 + (i / importData.presets.length) * 5);
+          setImportProgress(85 + (i / importData.presets.length) * 5);
+        }
+      }
+
+      // 导入动态数据
+      if (importData.discoverPosts && Array.isArray(importData.discoverPosts)) {
+        setCurrentOperation('正在导入动态数据...');
+        for (let i = 0; i < importData.discoverPosts.length; i++) {
+          await dataManager.saveDiscoverPost(importData.discoverPosts[i]);
+          setImportProgress(90 + (i / importData.discoverPosts.length) * 3);
+        }
+      }
+
+      // 导入动态设置
+      if (importData.discoverSettings) {
+        setCurrentOperation('正在导入动态设置...');
+        await dataManager.saveDiscoverSettings(importData.discoverSettings);
+      }
+      setImportProgress(93);
+
+      // 导入动态通知
+      if (importData.discoverNotifications && Array.isArray(importData.discoverNotifications)) {
+        setCurrentOperation('正在导入动态通知...');
+        for (let i = 0; i < importData.discoverNotifications.length; i++) {
+          await dataManager.saveDiscoverNotification(importData.discoverNotifications[i]);
+          setImportProgress(93 + (i / importData.discoverNotifications.length) * 3);
+        }
+      }
+
+      // 导入动态草稿
+      if (importData.discoverDrafts && Array.isArray(importData.discoverDrafts)) {
+        setCurrentOperation('正在导入动态草稿...');
+        for (let i = 0; i < importData.discoverDrafts.length; i++) {
+          await dataManager.saveDiscoverDraft(importData.discoverDrafts[i]);
+          setImportProgress(96 + (i / importData.discoverDrafts.length) * 2);
         }
       }
 
@@ -345,6 +417,9 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
               <li>世界书</li>
               <li>预设配置</li>
               <li>主题设置</li>
+              <li>动态内容和评论</li>
+              <li>动态设置和通知</li>
+              <li>动态草稿</li>
             </ul>
             <button 
               className="export-btn"

@@ -33,6 +33,7 @@ export interface DiscoverComment {
   likes: string[]; // 评论点赞
   replies?: DiscoverComment[]; // 回复评论
   parentCommentId?: string; // 父评论ID
+  replyTo?: string; // 回复目标评论ID
   aiGenerated?: boolean; // 是否为AI生成
 }
 

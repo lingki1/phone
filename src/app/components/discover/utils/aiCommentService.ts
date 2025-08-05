@@ -161,22 +161,45 @@ export class AiCommentService {
         if (persona.includes(tag.toLowerCase())) score += 2;
       });
 
-      // 如果用户刚评论，优先选择与用户有聊天历史的角色
+      // 优先选择与用户有聊天历史的角色（最高权重）
+      if (character.messages.length > 0) {
+        const recentMessages = character.messages.slice(-10);
+        const userMessages = recentMessages.filter(msg => msg.role === 'user');
+        if (userMessages.length > 0) {
+          score += 10; // 有聊天历史的角色最高优先级
+          
+          // 根据聊天频率增加分数
+          score += Math.min(userMessages.length * 2, 10);
+          
+          // 根据最近聊天时间增加分数
+          const lastMessageTime = Math.max(...userMessages.map(m => m.timestamp));
+          const timeDiff = Date.now() - lastMessageTime;
+          if (timeDiff < 24 * 60 * 60 * 1000) { // 24小时内
+            score += 5;
+          }
+        }
+      }
+
+      // 如果用户刚评论，进一步增加有互动历史的角色分数
       if (existingComments.length > 0) {
         const lastUserComment = existingComments.find(c => c.authorId === 'user');
         if (lastUserComment && character.messages.length > 0) {
-          score += 5; // 有聊天历史的角色优先
+          score += 8; // 用户刚评论时，有聊天历史的角色更优先
         }
       }
 
       // 避免选择已经评论过的角色
       const hasCommented = existingComments.some(c => c.authorId === character.id);
       if (hasCommented) {
-        score -= 10; // 已经评论过的角色降低优先级
+        score -= 15; // 已经评论过的角色大幅降低优先级
       }
 
+      // 根据角色在动态中的活跃度调整分数
+      const recentActivity = character.messages.length;
+      score += Math.min(recentActivity / 10, 3); // 活跃度加分，但不超过3分
+
       // 随机因素（确保多样性）
-      score += Math.random() * 2;
+      score += Math.random() * 1;
 
       return { character, score };
     });
@@ -228,16 +251,24 @@ export class AiCommentService {
         likes: post.likes
       },
       
-      // 当前动态的现有评论
-      existingComments: post.comments.map(comment => ({
-        id: comment.id,
-        authorId: comment.authorId,
-        authorName: comment.authorName,
-        content: comment.content,
-        timestamp: comment.timestamp,
-        aiGenerated: comment.aiGenerated,
-        likes: comment.likes
-      })),
+      // 当前动态的现有评论（按时间排序，最新的在前）
+      existingComments: post.comments
+        .sort((a, b) => b.timestamp - a.timestamp) // 按时间倒序，最新的在前
+        .map(comment => ({
+          id: comment.id,
+          authorId: comment.authorId,
+          authorName: comment.authorName,
+          content: comment.content,
+          timestamp: comment.timestamp,
+          aiGenerated: comment.aiGenerated,
+          likes: comment.likes,
+          replyTo: comment.replyTo
+        })),
+      
+      // 用户最新评论（最高优先级）
+      latestUserComment: post.comments
+        .filter(comment => comment.authorId === 'user' && !comment.aiGenerated)
+        .sort((a, b) => b.timestamp - a.timestamp)[0] || null,
       
       // 用户信息
       user: {
@@ -428,101 +459,123 @@ export class AiCommentService {
 
   // 构建系统提示词
   private buildSystemPrompt(): string {
-    return `你是一个智能社交评论生成器。你的任务是根据用户发布的动态内容、现有评论、AI角色的人设和聊天历史，生成自然、有趣的评论。
+    return `你是一个智能社交评论生成器。你的任务是根据用户最新评论、动态主题、AI角色人设和历史互动，生成自然、有趣的评论。
 
 ⚠️ 重要：你必须且只能返回有效的JSON格式，不能包含任何其他文本。
 
 ## 🎯 核心任务说明：
-你的主要任务是针对 **当前动态 (currentPost)** 生成评论，其他所有信息都只是参考和上下文，不要被其他动态的内容误导。
+你的主要任务是针对 **用户最新评论** 生成回应，同时围绕动态主题，并体现AI角色与用户的历史互动关系。
 
-## 数据上下文分析：
+## 📊 数据优先级分析（按重要性排序）：
 
-### 1. 🎯 当前动态信息 (currentPost) - 主要目标
-- **这是你要评论的主要对象**
+### 1. 🎯 用户最新评论 (latestUserComment) - 最高优先级
+- **这是你要回应的主要对象**
+- 分析用户评论的意图、情感和观点
+- 理解用户想要表达的内容
+- **AI评论必须直接回应用户的最新评论**
+
+### 2. 🎯 动态主题 (currentPost) - 核心背景
+- **这是评论的上下文基础**
 - 分析动态内容、心情、位置、标签等
 - 了解动态类型（文字、图片、混合）
-- 查看点赞情况
-- **所有评论都必须基于这个动态的内容**
+- **所有评论都要围绕动态主题展开**
 
-### 2. 👤 用户信息 (user) - 参考信息
-- 用户名和个人介绍
-- 了解用户的个性和兴趣
-- 用于生成更个性化的评论
-
-### 3. 🤖 AI角色信息 (characters) - 角色设定
+### 3. 🤖 AI角色人设与历史互动 (characters) - 个性化基础
 - 每个角色的人设、性格特征
-- 最近的聊天历史（10条）
-- 角色在动态中的活跃度
-- 角色与用户的关系
-- **用于确定评论的语气和风格**
+- 最近的聊天历史（10条）中的互动模式
+- 角色与用户的关系发展
+- 角色在动态中的活跃度和表现
+- **用于确定评论的语气、风格和个性化表达**
 
-### 4. 📚 最近动态历史 (recentPosts) - 仅作参考
-- ⚠️ **重要提醒：这些只是参考信息，不要评论这些动态**
-- 用于了解话题趋势和角色活跃度
-- 观察角色在不同动态中的表现
-- 发现热门话题和讨论焦点
-- **不要引用或回应这些动态的具体内容**
-
-### 5. 💬 现有评论分析 (existingComments) - 当前动态的评论
-- 分析当前动态下用户和其他AI角色的评论
-- 了解评论的互动模式
+### 4. 💬 评论历史 (existingComments) - 对话连续性
+- 当前动态下的所有评论历史
+- 了解评论的互动模式和话题发展
 - 避免重复已有观点
-- **这些是当前动态的评论，可以回应**
+- 保持对话的连贯性
+- **这些是当前动态的评论，可以引用和回应**
 
-### 6. 📊 系统趋势 (trends) - 背景信息
+### 5. 📚 动态历史 (recentPosts) - 背景参考
+- 最近5条动态的内容和评论
+- 了解话题趋势和角色活跃度
+- 观察角色在不同动态中的表现
+- **仅用于了解背景，不要直接引用**
+
+### 6. 📊 系统趋势 (trends) - 补充信息
 - 热门话题分析
 - 活跃角色排名
 - 动态互动模式
-- **用于增加评论的相关性，但不要直接引用**
+- **用于增加评论的相关性**
 
 ## 🎯 评论生成策略：
 
-### 场景1：新动态评论
-- **基于当前动态内容生成初始评论**
+### 场景1：用户刚发表评论
+- **优先回应用户的最新评论内容**
+- 理解用户评论的意图和情感
+- 基于角色人设给出个性化回应
+- 围绕动态主题展开讨论
+
+### 场景2：多轮评论互动
+- **基于评论历史保持对话连贯性**
+- 回应用户最新评论的同时引用历史互动
+- 体现角色与用户的关系发展
+- 避免重复已有观点
+
+### 场景3：新动态初始评论
+- **基于动态内容生成初始评论**
 - 参考角色人设和聊天历史
 - 体现角色个性特征
+- 为后续互动奠定基础
 
-### 场景2：用户评论后
-- **优先回应用户在当前动态下的评论内容**
-- 基于聊天历史建立联系
-- 体现角色与用户的关系
+## 🔄 历史互动整合策略：
 
-### 场景3：评论互动
-- **参考当前动态下的现有评论生成回应**
-- 引用当前动态评论中的观点
-- 创造有意义的对话
+### 1. 聊天历史分析
+- 分析角色与用户的聊天记录
+- 提取互动模式、共同话题、情感状态
+- 在评论中体现这些历史关系
+
+### 2. 动态互动分析
+- 观察角色在之前动态中的表现
+- 了解角色与用户的互动风格
+- 保持角色行为的一致性
+
+### 3. 关系发展追踪
+- 基于历史互动调整评论的亲密程度
+- 体现角色与用户关系的发展阶段
+- 在评论中体现这种关系变化
 
 ## 🚫 重要限制：
-- **绝对不要评论其他动态 (recentPosts) 的内容**
-- **不要引用其他动态中的具体信息**
-- **所有评论都必须针对当前动态 (currentPost)**
-- **其他动态信息只用于了解话题趋势和角色活跃度**
+- **必须优先回应用户的最新评论**
+- **所有评论都要围绕动态主题**
+- **体现角色与用户的历史互动关系**
+- **不要评论其他动态的具体内容**
+- **保持角色人设的一致性**
 
 ## 角色行为模式：
 - 根据角色的recentActivity调整活跃度
-- 参考chatHistory中的互动风格
+- 参考chatHistory中的互动风格和话题
 - 保持角色在动态中的一致性
-- 利用热门话题增加相关性
+- 基于历史互动调整评论的亲密程度
 
 要求：
 1. 必须返回严格的JSON格式
-2. 评论要符合角色人设，体现角色个性
-3. **所有评论都必须基于当前动态内容**
-4. 评论内容要自然，避免过于机械
-5. 可以包含@提及其他角色或用户
-6. 评论长度控制在20-50字之间
-7. 每个角色只能生成一条评论
-8. 可以体现聊天中建立的关系和话题
-9. 如果有现有评论，要基于当前动态的评论内容生成有意义的回应
-10. 利用热门话题和趋势增加评论的相关性，但不要直接引用其他动态
+2. **优先回应用户的最新评论**
+3. 评论要符合角色人设，体现角色个性
+4. **围绕动态主题展开讨论**
+5. **体现角色与用户的历史互动关系**
+6. 评论内容要自然，避免过于机械
+7. 可以包含@提及其他角色或用户
+8. 评论长度控制在20-50字之间
+9. 每个角色只能生成一条评论
+10. 保持对话的连贯性和历史连续性
 
 返回格式（必须严格遵循）：
 {
   "comments": [
     {
       "characterId": "角色ID",
-      "content": "评论内容，可以包含@用户名或@角色名",
-      "tone": "评论语调（如：友好、幽默、思考等）"
+      "content": "评论内容，优先回应用户最新评论，可以包含@用户名或@角色名",
+      "tone": "评论语调（如：友好、幽默、思考等）",
+      "intent": "评论意图（如：回应、赞同、讨论、安慰等）"
     }
   ]
 }
@@ -532,13 +585,15 @@ export class AiCommentService {
   "comments": [
     {
       "characterId": "char_001",
-      "content": "哈哈，@用户 说得对！这个话题最近很热门呢，我也很感兴趣～",
-      "tone": "友好"
+      "content": "哈哈，@用户 说得对！就像我们之前聊天时说的那样，这个话题确实很有意思～",
+      "tone": "友好",
+      "intent": "回应"
     },
     {
       "characterId": "char_002", 
-      "content": "确实，@用户 的评论很有见地。让我想起了我们之前聊天的内容",
-      "tone": "思考"
+      "content": "确实，@用户 的观点很有见地。让我想起了我们之前讨论的类似话题，很有共鸣！",
+      "tone": "思考",
+      "intent": "赞同"
     }
   ]
 }
@@ -546,14 +601,14 @@ export class AiCommentService {
 ⚠️ 注意事项：
 - 必须返回有效的JSON，不能有任何其他文本
 - 确保JSON语法正确，所有字符串用双引号包围
+- **优先回应用户的最新评论**
+- **围绕动态主题展开讨论**
+- **体现角色与用户的历史互动关系**
 - 评论要真实自然，符合角色人设
-- **所有评论都必须针对当前动态，不要被其他动态误导**
 - 参考聊天历史和动态历史，但不要直接复制内容
 - 避免重复或过于相似的评论
-- 可以引用当前动态或当前动态评论中的具体内容
 - 支持@功能，格式为@用户名或@角色名
 - 如果无法生成评论，返回空的comments数组：{"comments": []}
-- 利用热门话题和趋势增加评论的相关性，但不要直接引用其他动态
 - 保持角色在动态中的行为一致性`;
   }
 
