@@ -1,8 +1,8 @@
 // AI评论服务 - 基于API的智能评论生成
-import { dataManager } from './dataManager';
-import { DiscoverPost, DiscoverComment } from '../types/discover';
-import { ChatItem } from '../types/chat';
-import { ApiConfig } from '../types/chat';
+import { dataManager } from '../../../utils/dataManager';
+import { DiscoverPost, DiscoverComment } from '../../../types/discover';
+import { ChatItem } from '../../../types/chat';
+import { ApiConfig } from '../../../types/chat';
 
 export interface AiCommentResponse {
   success: boolean;
@@ -190,18 +190,34 @@ export class AiCommentService {
         tags: post.tags,
         mood: post.mood,
         location: post.location,
-        timestamp: post.timestamp
+        timestamp: post.timestamp,
+        authorName: post.authorName
       },
       author: {
         name: userInfo.userNickname,
         bio: userInfo.userBio
       },
-      characters: characters.map(char => ({
-        id: char.id,
-        name: char.name,
-        persona: char.persona,
-        avatar: char.avatar
-      })),
+      characters: characters.map(char => {
+        // 获取最近的聊天记录（最多10条）
+        const recentMessages = char.messages
+          .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+          .slice(-10)
+          .map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp,
+            senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
+          }));
+
+        return {
+          id: char.id,
+          name: char.name,
+          persona: char.persona,
+          avatar: char.avatar,
+          chatHistory: recentMessages,
+          totalMessages: char.messages.length
+        };
+      }),
       context: {
         totalCharacters: characters.length,
         postType: post.type,
@@ -303,17 +319,25 @@ export class AiCommentService {
 
   // 构建系统提示词
   private buildSystemPrompt(): string {
-    return `你是一个智能社交评论生成器。你的任务是根据用户发布的动态内容和AI角色的人设，生成自然、有趣的评论。
+    return `你是一个智能社交评论生成器。你的任务是根据用户发布的动态内容、AI角色的人设和聊天历史，生成自然、有趣的评论。
 
 ⚠️ 重要：你必须且只能返回有效的JSON格式，不能包含任何其他文本。
+
+## 聊天历史分析：
+- 分析每个角色的chatHistory，了解角色与用户的关系和互动风格
+- 根据聊天内容调整角色的语气和表达方式
+- 可以引用聊天中的话题或情感状态
+- 保持角色在聊天中展现的个性特征
 
 要求：
 1. 必须返回严格的JSON格式
 2. 评论要符合角色人设，体现角色个性
-3. 评论内容要自然，避免过于机械
-4. 可以包含@提及其他角色或用户
-5. 评论长度控制在20-50字之间
-6. 每个角色只能生成一条评论
+3. 参考聊天历史中的互动方式和关系
+4. 评论内容要自然，避免过于机械
+5. 可以包含@提及其他角色或用户
+6. 评论长度控制在20-50字之间
+7. 每个角色只能生成一条评论
+8. 可以体现聊天中建立的关系和话题
 
 返回格式（必须严格遵循）：
 {
@@ -331,12 +355,12 @@ export class AiCommentService {
   "comments": [
     {
       "characterId": "char_001",
-      "content": "哈哈，这个想法很有趣！@用户 我也这么觉得～",
+      "content": "哈哈，这个想法很有趣！@用户 就像我们刚才聊天时说的那样～",
       "tone": "友好"
     },
     {
       "characterId": "char_002", 
-      "content": "很有深度的思考，值得学习",
+      "content": "很有深度的思考，值得学习。@用户 我们之前也讨论过类似的话题呢",
       "tone": "思考"
     }
   ]
@@ -346,6 +370,7 @@ export class AiCommentService {
 - 必须返回有效的JSON，不能有任何其他文本
 - 确保JSON语法正确，所有字符串用双引号包围
 - 评论要真实自然，符合角色人设
+- 参考聊天历史，但不要直接复制聊天内容
 - 避免重复或过于相似的评论
 - 可以引用动态中的具体内容
 - 支持@功能，格式为@用户名或@角色名

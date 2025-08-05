@@ -1,6 +1,6 @@
 // API调试工具
-import { dataManager } from './dataManager';
-import { ApiConfig } from '../types/chat';
+import { dataManager } from '../../../utils/dataManager';
+import { ApiConfig } from '../../../types/chat';
 
 export interface ApiDebugResult {
   success: boolean;

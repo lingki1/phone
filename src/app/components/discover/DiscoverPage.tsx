@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { dataManager } from '../../utils/dataManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
-import { aiPostGenerator } from '../../utils/aiPostGenerator';
-import { aiCommentService } from '../../utils/aiCommentService';
-import { ApiDebugger } from '../../utils/apiDebugger';
+import { aiPostGenerator } from './utils/aiPostGenerator';
+
+import { ApiDebugger } from './utils/apiDebugger';
 import PostComposer from './PostComposer';
 import PostList from './PostList';
 import DiscoverHeader from './DiscoverHeader';
@@ -21,6 +21,7 @@ export default function DiscoverPage() {
   const [showComposer, setShowComposer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeView, setActiveView] = useState('moments');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     nickname: string;
     avatar: string;
@@ -143,7 +144,7 @@ export default function DiscoverPage() {
       // 使用新的AI评论服务
       if (settings?.allowAiComments) {
         // 先检查API配置
-        const configValidation = await aiCommentService.validateApiConfig();
+        const configValidation = await aiPostGenerator.validateApiConfig();
         if (!configValidation.valid) {
           console.warn('⚠️ API配置问题:', configValidation.error);
           // 可以在这里显示用户友好的错误提示
@@ -151,8 +152,28 @@ export default function DiscoverPage() {
         }
 
         console.log('✅ API配置验证通过，开始生成AI评论');
-        // 后台异步处理AI评论生成
-        aiCommentService.processCommentsInBackground(post);
+        
+        // 获取AI角色
+        const chats = await dataManager.getAllChats();
+        const aiCharacters = chats.filter(chat => !chat.isGroup);
+        
+        if (aiCharacters.length > 0) {
+          // 后台异步处理AI评论生成
+          setTimeout(async () => {
+            try {
+              const commentCount = Math.floor(Math.random() * 2) + 1; // 1-2条评论
+              console.log(`💬 为用户动态生成 ${commentCount} 条AI评论`);
+              await aiPostGenerator.generateCommentsForPost(post, aiCharacters, commentCount);
+              
+              // 触发评论更新事件
+              window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
+                detail: { postId: post.id }
+              }));
+            } catch (error) {
+              console.error('后台AI评论生成失败:', error);
+            }
+          }, 2000); // 延迟2秒开始生成
+        }
       }
 
       // 保留原有的点赞逻辑
@@ -196,32 +217,54 @@ export default function DiscoverPage() {
 
   // 刷新动态
   const handleRefresh = async () => {
+    if (isRefreshing) {
+      return;
+    }
+    
     try {
+      setIsRefreshing(true);
       setIsLoading(true);
       
       // 获取所有AI角色
       const chats = await dataManager.getAllChats();
       const aiCharacters = chats.filter(chat => !chat.isGroup);
       
-      // 随机生成1-2个AI动态
-      if (aiCharacters.length > 0 && settings?.autoGeneratePosts) {
-        const postCount = Math.floor(Math.random() * 2) + 1;
-        const newPosts = await aiPostGenerator.generateBatchPosts(aiCharacters, postCount);
-        
-        // 为新动态生成一些AI评论
-        for (const post of newPosts) {
-          const commentCount = Math.floor(Math.random() * 3) + 1;
-          await aiPostGenerator.generateCommentsForPost(post, aiCharacters, commentCount);
+      if (aiCharacters.length === 0) {
+        return;
+      }
+
+      // 生成单个最有争议的动态和评论
+      if (settings?.autoGeneratePosts) {
+        const result = await aiPostGenerator.generateSinglePostWithComments(aiCharacters);
+        if (result.post) {
+          // 更新本地状态，添加新生成的动态
+          const postWithComments = {
+            ...result.post,
+            comments: result.comments
+          };
+          setPosts(prev => [postWithComments, ...prev]);
         }
       }
       
       // 重新加载所有动态
       const postsData = await dataManager.getAllDiscoverPosts();
-      setPosts(postsData);
+      const postsWithComments = await Promise.all(
+        postsData.map(async (post) => {
+          const comments = await dataManager.getDiscoverCommentsByPost(post.id);
+          return {
+            ...post,
+            comments: comments
+          };
+        })
+      );
+      
+      setPosts(postsWithComments);
     } catch (error) {
       console.error('Failed to refresh posts:', error);
+      alert('❌ 刷新动态失败：' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
