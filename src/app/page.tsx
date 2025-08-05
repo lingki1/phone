@@ -198,6 +198,10 @@ export default function Home() {
     } else if (view === 'messages') {
       setCurrentPage('chat');
       setCurrentMePage('chat');
+      // 延迟一下再触发消息页面的显示
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('showMessages'));
+      }, 100);
     } else if (view === 'me') {
       setCurrentPage('chat');
       setCurrentMePage('me');

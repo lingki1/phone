@@ -176,10 +176,18 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       setCurrentScreen('me');
     };
 
+    const handleShowMessages = () => {
+      console.log('ChatListPage - 收到显示消息页面事件');
+      setActiveView('messages');
+      setCurrentScreen('list');
+    };
+
     window.addEventListener('showMePage', handleShowMePage);
+    window.addEventListener('showMessages', handleShowMessages);
     
     return () => {
       window.removeEventListener('showMePage', handleShowMePage);
+      window.removeEventListener('showMessages', handleShowMessages);
     };
   }, []);
   
