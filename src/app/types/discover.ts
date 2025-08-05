@@ -19,6 +19,7 @@ export interface DiscoverPost {
   aiGenerated?: boolean; // 是否为AI生成
   relatedChatId?: string; // 关联的聊天ID
   relatedWorldBookIds?: string[]; // 关联的世界书ID
+  isNew?: boolean; // 是否为新动态（用户未查看过）
 }
 
 // 评论类型
@@ -35,6 +36,7 @@ export interface DiscoverComment {
   parentCommentId?: string; // 父评论ID
   replyTo?: string; // 回复目标评论ID
   aiGenerated?: boolean; // 是否为AI生成
+  isNew?: boolean; // 是否为新评论（用户未查看过）
 }
 
 // 动态设置类型
@@ -131,4 +133,14 @@ export interface DiscoverDraft {
   mood?: string;
   tags: string[];
   lastSaved: number;
+}
+
+// 用户查看状态
+export interface DiscoverViewState {
+  userId: string;
+  lastViewedTimestamp: number; // 用户最后查看动态的时间戳
+  lastViewedPostId?: string; // 用户最后查看的动态ID
+  newPostsCount: number; // 新动态数量
+  newCommentsCount: number; // 新评论数量
+  lastUpdated: number; // 最后更新时间
 } 

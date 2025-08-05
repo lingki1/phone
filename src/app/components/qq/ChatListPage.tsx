@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import ChatListHeader from './ChatListHeader';
 import ChatList from './ChatList';
-import BottomNavigation from './BottomNavigation';
 import ApiSettingsModal from './ApiSettingsModal';
 import ChatInterface from './ChatInterface';
 import CreateGroupModal from './CreateGroupModal';
@@ -614,12 +613,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onEditChat={handleEditChat}
             onAssociateWorldBook={handleAssociateWorldBook}
           />
-          
-          {/* 底部导航栏 */}
-          <BottomNavigation 
-            activeView={activeView}
-            onViewChange={handleViewChange}
-          />
         </div>
       ),
       direction: 'right' as const,
@@ -647,10 +640,6 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       component: (
         <div className="chat-list-page">
           <MePage onBackToDesktop={onBackToDesktop} />
-          <BottomNavigation 
-            activeView={activeView}
-            onViewChange={handleViewChange}
-          />
         </div>
       ),
       direction: 'up' as const,

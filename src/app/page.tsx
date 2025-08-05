@@ -6,6 +6,7 @@ import DesktopPage from './components/DesktopPage';
 import ShoppingPage from './components/shopping/ShoppingPage';
 import DiscoverPage from './components/discover/DiscoverPage';
 import PageTransitionManager from './components/utils/PageTransitionManager';
+import BottomNavigation from './components/qq/BottomNavigation';
 import { dataManager } from './utils/dataManager';
 
 export default function Home() {
@@ -17,6 +18,10 @@ export default function Home() {
   });
   const [userBalance, setUserBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [newContentCount, setNewContentCount] = useState<{
+    moments?: number;
+    messages?: number;
+  }>({});
 
   // 加载API配置和用户余额
   useEffect(() => {
@@ -24,7 +29,7 @@ export default function Home() {
       try {
         await dataManager.initDB();
         
-        // 并行加载API配置和用户余额
+        // 并行加载API配置、用户余额和新内容计数
         const [config, balance] = await Promise.all([
           dataManager.getApiConfig(),
           dataManager.getBalance()
@@ -32,6 +37,16 @@ export default function Home() {
         
         setApiConfig(config);
         setUserBalance(balance);
+        
+        // 计算新内容计数
+        try {
+          const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+          setNewContentCount({
+            moments: newPostsCount + newCommentsCount
+          });
+        } catch (error) {
+          console.warn('Failed to calculate new content count:', error);
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
       } finally {
@@ -98,7 +113,7 @@ export default function Home() {
     // 其他应用的处理逻辑可以在这里添加
   };
 
-  // 监听动态页面的导航事件
+  // 监听动态页面的导航事件和新内容更新
   useEffect(() => {
     const handleNavigateToChat = () => {
       console.log('Home - 收到跳转到聊天页面事件');
@@ -115,12 +130,53 @@ export default function Home() {
       }, 100);
     };
 
+    // 监听新内容更新事件
+    const handleNewContentUpdate = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount(prev => ({
+          ...prev,
+          moments: newPostsCount + newCommentsCount
+        }));
+      } catch (error) {
+        console.warn('Failed to update new content count:', error);
+      }
+    };
+
+    // 监听查看状态更新事件
+    const handleViewStateUpdate = async () => {
+      try {
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount(prev => ({
+          ...prev,
+          moments: newPostsCount + newCommentsCount
+        }));
+      } catch (error) {
+        console.warn('Failed to update new content count after view state change:', error);
+      }
+    };
+
+    // 监听个人页面显示事件
+    const handleShowMePage = () => {
+      setCurrentMePage('me');
+    };
+
+
+
     window.addEventListener('navigateToChat', handleNavigateToChat);
     window.addEventListener('navigateToMe', handleNavigateToMe);
+    window.addEventListener('showMePage', handleShowMePage);
+    window.addEventListener('aiPostGenerated', handleNewContentUpdate);
+    window.addEventListener('aiCommentsGenerated', handleNewContentUpdate);
+    window.addEventListener('viewStateUpdated', handleViewStateUpdate);
     
     return () => {
       window.removeEventListener('navigateToChat', handleNavigateToChat);
       window.removeEventListener('navigateToMe', handleNavigateToMe);
+      window.removeEventListener('showMePage', handleShowMePage);
+      window.removeEventListener('aiPostGenerated', handleNewContentUpdate);
+      window.removeEventListener('aiCommentsGenerated', handleNewContentUpdate);
+      window.removeEventListener('viewStateUpdated', handleViewStateUpdate);
     };
   }, []);
 
@@ -128,6 +184,28 @@ export default function Home() {
     setCurrentPage('desktop');
     // 返回桌面时刷新余额
     refreshBalance();
+  };
+
+  // 处理底部导航点击
+  const handleBottomNavChange = async (view: string) => {
+    if (view === 'moments') {
+      setCurrentPage('discover');
+      // 用户进入动态页面，清除新内容计数
+      setNewContentCount(prev => ({
+        ...prev,
+        moments: 0
+      }));
+    } else if (view === 'messages') {
+      setCurrentPage('chat');
+      setCurrentMePage('chat');
+    } else if (view === 'me') {
+      setCurrentPage('chat');
+      setCurrentMePage('me');
+      // 延迟一下再触发个人页面的显示
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('showMePage'));
+      }, 100);
+    }
   };
 
   const pages = [
@@ -157,6 +235,17 @@ export default function Home() {
     }
   ];
 
+  const [currentMePage, setCurrentMePage] = useState<'chat' | 'me'>('chat');
+
+  // 确定当前活跃的底部导航项
+  const getActiveView = () => {
+    if (currentPage === 'discover') return 'moments';
+    if (currentPage === 'chat') {
+      return currentMePage === 'me' ? 'me' : 'messages';
+    }
+    return 'messages'; // 默认
+  };
+
   return (
     <div className="app-container">
       <PageTransitionManager
@@ -165,6 +254,15 @@ export default function Home() {
         defaultDirection="left"
         defaultDuration={350}
       />
+      
+      {/* 统一的底部导航 - 只在非桌面页面显示 */}
+      {currentPage !== 'desktop' && (
+        <BottomNavigation
+          activeView={getActiveView()}
+          onViewChange={handleBottomNavChange}
+          newContentCount={newContentCount}
+        />
+      )}
     </div>
   );
 }

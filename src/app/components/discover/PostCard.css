@@ -17,6 +17,45 @@
   border-left: 4px solid var(--theme-accent-color, #007bff);
 }
 
+/* 新动态标记 */
+.post-card.new-post {
+  position: relative;
+  border-left: 4px solid #28a745;
+}
+
+.new-post-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.new-badge {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* 头部区域 */
 .post-header {
   display: flex;

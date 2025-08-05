@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { DiscoverPost } from '../../types/discover';
 import PostImages from './PostImages';
@@ -13,16 +13,42 @@ interface PostCardProps {
   onLike: () => void;
   onComment: (postId: string, content: string) => void;
   currentUserId: string;
+  onVisibilityChange?: () => void;
 }
 
 export default function PostCard({ 
   post, 
   onLike, 
   onComment, 
-  currentUserId 
+  currentUserId,
+  onVisibilityChange
 }: PostCardProps) {
 
   const [commentInput, setCommentInput] = useState('');
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // 监听动态可见性
+  useEffect(() => {
+    if (!onVisibilityChange) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            onVisibilityChange();
+            observer.disconnect(); // 只触发一次
+          }
+        });
+      },
+      { threshold: 0.5 } // 当50%可见时触发
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [onVisibilityChange]);
 
   const isLiked = post.likes.includes(currentUserId);
   const isAiGenerated = post.aiGenerated;
@@ -83,7 +109,17 @@ export default function PostCard({
   };
 
   return (
-    <div className={`post-card ${isAiGenerated ? 'ai-generated' : ''}`}>
+    <div 
+      ref={cardRef}
+      className={`post-card ${isAiGenerated ? 'ai-generated' : ''} ${post.isNew ? 'new-post' : ''}`}
+    >
+      {/* 新动态标记 */}
+      {post.isNew && (
+        <div className="new-post-indicator">
+          <span className="new-badge">新</span>
+        </div>
+      )}
+      
       {/* 作者信息 */}
       <div className="post-header">
         <div className="post-author">

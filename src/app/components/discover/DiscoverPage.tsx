@@ -4,15 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { dataManager } from '../../utils/dataManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
-import { aiPostGenerator } from './utils/aiPostGenerator';
 import { aiCommentService } from './utils/aiCommentService';
 
-import { ApiDebugger } from './utils/apiDebugger';
 import PostComposer from './PostComposer';
 import PostList from './PostList';
 import DiscoverHeader from './DiscoverHeader';
 import DiscoverSettingsPanel from './DiscoverSettingsPanel';
-import BottomNavigation from '../qq/BottomNavigation';
 import './DiscoverPage.css';
 
 export default function DiscoverPage() {
@@ -21,8 +18,6 @@ export default function DiscoverPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showComposer, setShowComposer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeView, setActiveView] = useState('moments');
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     nickname: string;
     avatar: string;
@@ -58,6 +53,8 @@ export default function DiscoverPage() {
           nickname: personalSettings.userNickname,
           avatar: personalSettings.userAvatar
         });
+
+
       } catch (error) {
         console.error('Failed to load discover data:', error);
       } finally {
@@ -85,18 +82,70 @@ export default function DiscoverPage() {
             : post
         ));
         
+
+        
         console.log(`动态 ${postId} 的AI评论已更新，共 ${updatedComments.length} 条评论`);
       } catch (error) {
         console.error('Failed to update AI comments:', error);
       }
     };
 
+          // 监听AI动态生成完成事件
+      const handleAiPostGenerated = async () => {
+        try {
+          // 重新加载所有动态
+          const postsData = await dataManager.getAllDiscoverPosts();
+          const postsWithComments = await Promise.all(
+            postsData.map(async (p) => {
+              const postComments = await dataManager.getDiscoverCommentsByPost(p.id);
+              return {
+                ...p,
+                comments: postComments
+              };
+            })
+          );
+          
+          setPosts(postsWithComments);
+          
+
+          
+          console.log('✅ AI动态生成完成，已更新动态列表');
+        } catch (error) {
+          console.error('Failed to update AI posts:', error);
+        }
+      };
+
     window.addEventListener('aiCommentsGenerated', handleAiCommentsGenerated);
+    window.addEventListener('aiPostGenerated', handleAiPostGenerated);
     
     return () => {
       window.removeEventListener('aiCommentsGenerated', handleAiCommentsGenerated);
+      window.removeEventListener('aiPostGenerated', handleAiPostGenerated);
     };
   }, []);
+
+  // 用户进入动态页面时更新查看状态
+  useEffect(() => {
+    const updateViewState = async () => {
+      if (posts.length > 0) {
+        const latestPost = posts[0]; // 最新的动态
+        try {
+          await dataManager.updateDiscoverViewState('user', latestPost.timestamp, latestPost.id);
+          
+          // 触发查看状态更新事件
+          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+          
+          console.log('✅ 已更新用户查看状态，时间戳:', latestPost.timestamp);
+        } catch (error) {
+          console.warn('Failed to update view state:', error);
+        }
+      }
+    };
+
+    // 延迟执行，确保页面完全加载
+    const timer = setTimeout(updateViewState, 1000);
+    return () => clearTimeout(timer);
+  }, [posts]);
 
   // 发布新动态
   const handlePublishPost = async (postData: {
@@ -207,58 +256,7 @@ export default function DiscoverPage() {
 
 
 
-  // 刷新动态
-  const handleRefresh = async () => {
-    if (isRefreshing) {
-      return;
-    }
-    
-    try {
-      setIsRefreshing(true);
-      setIsLoading(true);
-      
-      // 获取所有AI角色
-      const chats = await dataManager.getAllChats();
-      const aiCharacters = chats.filter(chat => !chat.isGroup);
-      
-      if (aiCharacters.length === 0) {
-        return;
-      }
 
-      // 生成单个最有争议的动态和评论
-      if (settings?.autoGeneratePosts) {
-        const result = await aiPostGenerator.generateSinglePostWithComments(aiCharacters);
-        if (result.post) {
-          // 更新本地状态，添加新生成的动态
-          const postWithComments = {
-            ...result.post,
-            comments: result.comments
-          };
-          setPosts(prev => [postWithComments, ...prev]);
-        }
-      }
-      
-      // 重新加载所有动态
-      const postsData = await dataManager.getAllDiscoverPosts();
-      const postsWithComments = await Promise.all(
-        postsData.map(async (post) => {
-          const comments = await dataManager.getDiscoverCommentsByPost(post.id);
-          return {
-            ...post,
-            comments: comments
-          };
-        })
-      );
-      
-      setPosts(postsWithComments);
-    } catch (error) {
-      console.error('Failed to refresh posts:', error);
-      alert('❌ 刷新动态失败：' + (error instanceof Error ? error.message : '未知错误'));
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
 
   // 处理点赞
   const handleLike = async (postId: string) => {
@@ -282,26 +280,7 @@ export default function DiscoverPage() {
     }
   };
 
-  // 处理视图变化
-  const handleViewChange = (view: string) => {
-    console.log('DiscoverPage - handleViewChange 被调用:', view);
-    
-    if (view === 'messages') {
-      // 跳转到聊天页面
-      console.log('跳转到聊天页面');
-      // 通过自定义事件告诉主页面跳转到聊天列表页面
-      window.dispatchEvent(new CustomEvent('navigateToChat'));
-    } else if (view === 'moments') {
-      // 已经在动态页面，不需要操作
-      console.log('保持在动态页面');
-      setActiveView('moments');
-    } else if (view === 'me') {
-      // 跳转到个人页面
-      console.log('跳转到个人页面');
-      // 通过自定义事件告诉主页面跳转到个人页面
-      window.dispatchEvent(new CustomEvent('navigateToMe'));
-    }
-  };
+
 
   // 处理评论
   const handleComment = async (postId: string, content: string, replyTo?: string) => {
@@ -373,23 +352,7 @@ export default function DiscoverPage() {
     }
   };
 
-  // 测试API配置
-  const handleTestApi = async () => {
-    try {
-      console.log('🔧 开始API配置测试...');
-      const result = await ApiDebugger.testApiConfig();
-      
-      if (result.success) {
-        alert('✅ API配置测试成功！\n\n' + result.message);
-      } else {
-        const errorMessage = ApiDebugger.formatErrorMessage(result);
-        alert('❌ API配置测试失败！\n\n' + errorMessage);
-      }
-    } catch (error) {
-      console.error('API测试失败:', error);
-      alert('❌ API测试过程中发生错误: ' + (error instanceof Error ? error.message : '未知错误'));
-    }
-  };
+
 
   if (isLoading) {
     return (
@@ -408,8 +371,6 @@ export default function DiscoverPage() {
         <DiscoverHeader 
           onCompose={() => setShowComposer(true)}
           onSettings={() => setShowSettings(true)}
-          onRefresh={handleRefresh}
-          onTestApi={handleTestApi}
           postCount={posts.length}
         />
         
@@ -441,11 +402,7 @@ export default function DiscoverPage() {
         />
       )}
 
-      {/* 底部导航 */}
-      <BottomNavigation
-        activeView={activeView}
-        onViewChange={handleViewChange}
-      />
+
     </div>
   );
 } 

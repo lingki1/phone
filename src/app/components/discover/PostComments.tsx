@@ -109,7 +109,13 @@ export default function PostComments({
     <div className="post-comments">
       <div className="comments-list">
         {displayedComments.map((comment) => (
-          <div key={comment.id} className={`comment-item ${comment.aiGenerated ? 'ai-generated' : ''}`}>
+          <div key={comment.id} className={`comment-item ${comment.aiGenerated ? 'ai-generated' : ''} ${comment.isNew ? 'new-comment' : ''}`}>
+            {/* 新评论标记 */}
+            {comment.isNew && (
+              <div className="new-comment-indicator">
+                <span className="new-badge">新</span>
+              </div>
+            )}
             <div className="comment-avatar">
               <Image 
                 src={comment.authorAvatar} 

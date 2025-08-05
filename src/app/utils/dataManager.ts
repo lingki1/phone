@@ -5,7 +5,7 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 10; // 升级数据库版本以支持完整的动态功能备份
+const DB_VERSION = 11; // 升级数据库版本以支持新内容提示功能
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -21,6 +21,7 @@ const DISCOVER_COMMENTS_STORE = 'discoverComments';
 const DISCOVER_SETTINGS_STORE = 'discoverSettings';
 const DISCOVER_NOTIFICATIONS_STORE = 'discoverNotifications';
 const DISCOVER_DRAFTS_STORE = 'discoverDrafts';
+const DISCOVER_VIEW_STATE_STORE = 'discoverViewState';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -138,6 +139,12 @@ class DataManager {
         if (!db.objectStoreNames.contains(DISCOVER_DRAFTS_STORE)) {
           const draftsStore = db.createObjectStore(DISCOVER_DRAFTS_STORE, { keyPath: 'id' });
           draftsStore.createIndex('lastSaved', 'lastSaved', { unique: false });
+        }
+
+        // 创建动态查看状态存储
+        if (!db.objectStoreNames.contains(DISCOVER_VIEW_STATE_STORE)) {
+          const viewStateStore = db.createObjectStore(DISCOVER_VIEW_STATE_STORE, { keyPath: 'userId' });
+          viewStateStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
         }
       };
     });
@@ -1402,6 +1409,95 @@ class DataManager {
       popularPosts,
       trendingTopics
     };
+  }
+
+  // 保存用户查看状态
+  async saveDiscoverViewState(userId: string, viewState: {
+    lastViewedTimestamp: number;
+    lastViewedPostId?: string;
+    newPostsCount: number;
+    newCommentsCount: number;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_VIEW_STATE_STORE], 'readwrite');
+      const store = transaction.objectStore(DISCOVER_VIEW_STATE_STORE);
+      const request = store.put({
+        userId,
+        ...viewState,
+        lastUpdated: Date.now()
+      });
+
+      request.onerror = () => reject(new Error('Failed to save view state'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取用户查看状态
+  async getDiscoverViewState(userId: string): Promise<{
+    lastViewedTimestamp: number;
+    lastViewedPostId?: string;
+    newPostsCount: number;
+    newCommentsCount: number;
+    lastUpdated: number;
+  } | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([DISCOVER_VIEW_STATE_STORE], 'readonly');
+      const store = transaction.objectStore(DISCOVER_VIEW_STATE_STORE);
+      const request = store.get(userId);
+
+      request.onerror = () => reject(new Error('Failed to get view state'));
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  }
+
+  // 更新用户查看状态（标记为已查看）
+  async updateDiscoverViewState(userId: string, lastViewedTimestamp: number, lastViewedPostId?: string): Promise<void> {
+    try {
+      const newState = {
+        lastViewedTimestamp,
+        lastViewedPostId,
+        newPostsCount: 0, // 重置新动态计数
+        newCommentsCount: 0, // 重置新评论计数
+        lastUpdated: Date.now()
+      };
+
+      await this.saveDiscoverViewState(userId, newState);
+    } catch (error) {
+      console.warn('Failed to update discover view state:', error);
+      // 静默失败，不影响主要功能
+    }
+  }
+
+  // 计算新内容数量
+  async calculateNewContentCount(userId: string): Promise<{ newPostsCount: number; newCommentsCount: number }> {
+    try {
+      const viewState = await this.getDiscoverViewState(userId);
+      const lastViewedTimestamp = viewState?.lastViewedTimestamp || 0;
+
+      const allPosts = await this.getAllDiscoverPosts();
+      const allComments = await Promise.all(
+        allPosts.map(post => this.getDiscoverCommentsByPost(post.id))
+      );
+
+      // 计算新动态数量
+      const newPostsCount = allPosts.filter(post => 
+        post.timestamp > lastViewedTimestamp && post.authorId !== userId
+      ).length;
+
+      // 计算新评论数量
+      const newCommentsCount = allComments.flat().filter(comment => 
+        comment.timestamp > lastViewedTimestamp && comment.authorId !== userId
+      ).length;
+
+      return { newPostsCount, newCommentsCount };
+    } catch (error) {
+      console.warn('Failed to calculate new content count, returning 0:', error);
+      return { newPostsCount: 0, newCommentsCount: 0 };
+    }
   }
 }
 

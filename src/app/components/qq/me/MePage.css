@@ -55,6 +55,8 @@
   border-bottom: 1px solid var(--theme-border-color, #e8eaed);
 }
 
+
+
 .me-background::before {
   content: '';
   position: absolute;

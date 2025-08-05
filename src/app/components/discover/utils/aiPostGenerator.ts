@@ -146,50 +146,7 @@ export class AiPostGenerator {
     return { posts: [], comments: [] };
   }
 
-  // 验证API配置
-  async validateApiConfig(): Promise<{ valid: boolean; error?: string }> {
-    try {
-      const apiConfig = await dataManager.getApiConfig();
-      
-      if (!apiConfig.proxyUrl) {
-        return { valid: false, error: '缺少API代理地址，请在设置中配置' };
-      }
-      
-      if (!apiConfig.apiKey) {
-        return { valid: false, error: '缺少API密钥，请在设置中配置' };
-      }
 
-      // 测试API连接
-      const testResponse = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiConfig.apiKey}`
-        },
-        body: JSON.stringify({
-          model: apiConfig.model || 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: 'test' }],
-          max_tokens: 10,
-          temperature: 0.7,
-          top_p: 0.8
-        })
-      });
-
-      if (!testResponse.ok) {
-        return { 
-          valid: false, 
-          error: `API连接失败: ${testResponse.status} ${testResponse.statusText}` 
-        };
-      }
-
-      return { valid: true };
-    } catch (error) {
-      return { 
-        valid: false, 
-        error: `API配置验证失败: ${error instanceof Error ? error.message : '未知错误'}` 
-      };
-    }
-  }
 
   // 🚀 新增：批量生成所有内容（优化API使用）
   async generateBatchContent(
@@ -373,13 +330,7 @@ export class AiPostGenerator {
     try {
       console.log('🚀 开始生成AI动态');
       
-      // 1. 验证API配置
-      const configValidation = await this.validateApiConfig();
-      if (!configValidation.valid) {
-        throw new Error(configValidation.error);
-      }
-
-      // 2. 获取API配置
+      // 1. 获取API配置
       const apiConfig = await dataManager.getApiConfig();
 
       // 3. 构建API请求
@@ -432,13 +383,7 @@ export class AiPostGenerator {
     try {
       console.log('💬 开始生成AI评论');
       
-      // 1. 验证API配置
-      const configValidation = await this.validateApiConfig();
-      if (!configValidation.valid) {
-        throw new Error(configValidation.error);
-      }
-
-      // 2. 获取API配置
+      // 1. 获取API配置
       const apiConfig = await dataManager.getApiConfig();
 
       // 3. 构建API请求

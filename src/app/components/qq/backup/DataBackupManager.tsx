@@ -111,10 +111,24 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
 
       const discoverPosts = await dataManager.getAllDiscoverPosts();
       setExportProgress(87);
+      setCurrentOperation('正在收集动态评论...');
+
+      // 收集所有动态的评论
+      const discoverComments: DiscoverComment[] = [];
+      for (const post of discoverPosts) {
+        try {
+          const comments = await dataManager.getDiscoverCommentsByPost(post.id);
+          discoverComments.push(...comments);
+        } catch (error) {
+          console.warn(`Failed to get comments for post ${post.id}:`, error);
+        }
+      }
+
+      setExportProgress(89);
       setCurrentOperation('正在收集动态设置...');
 
       const discoverSettings = await dataManager.getDiscoverSettings();
-      setExportProgress(89);
+      setExportProgress(91);
       setCurrentOperation('正在收集动态通知...');
 
       // 收集所有动态的通知
@@ -128,7 +142,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         }
       }
 
-      setExportProgress(91);
+      setExportProgress(93);
       setCurrentOperation('正在收集动态草稿...');
 
       const discoverDrafts = await dataManager.getAllDiscoverDrafts();
@@ -149,7 +163,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         chatStatuses: [], // 暂时为空，后续可以扩展
         chatBackgrounds: [], // 暂时为空，后续可以扩展
         discoverPosts,
-        discoverComments: [], // 评论数据在posts中已包含
+        discoverComments, // 使用收集到的评论数据
         discoverSettings,
         discoverNotifications,
         discoverDrafts,
@@ -281,7 +295,16 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态数据...');
         for (let i = 0; i < importData.discoverPosts.length; i++) {
           await dataManager.saveDiscoverPost(importData.discoverPosts[i]);
-          setImportProgress(90 + (i / importData.discoverPosts.length) * 3);
+          setImportProgress(90 + (i / importData.discoverPosts.length) * 2);
+        }
+      }
+
+      // 导入动态评论
+      if (importData.discoverComments && Array.isArray(importData.discoverComments)) {
+        setCurrentOperation('正在导入动态评论...');
+        for (let i = 0; i < importData.discoverComments.length; i++) {
+          await dataManager.saveDiscoverComment(importData.discoverComments[i]);
+          setImportProgress(92 + (i / importData.discoverComments.length) * 2);
         }
       }
 
@@ -290,14 +313,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态设置...');
         await dataManager.saveDiscoverSettings(importData.discoverSettings);
       }
-      setImportProgress(93);
+      setImportProgress(94);
 
       // 导入动态通知
       if (importData.discoverNotifications && Array.isArray(importData.discoverNotifications)) {
         setCurrentOperation('正在导入动态通知...');
         for (let i = 0; i < importData.discoverNotifications.length; i++) {
           await dataManager.saveDiscoverNotification(importData.discoverNotifications[i]);
-          setImportProgress(93 + (i / importData.discoverNotifications.length) * 3);
+          setImportProgress(94 + (i / importData.discoverNotifications.length) * 2);
         }
       }
 

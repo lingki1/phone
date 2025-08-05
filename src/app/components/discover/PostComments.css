@@ -35,6 +35,34 @@
   margin: 0 -8px;
 }
 
+/* 新评论标记 */
+.comment-item.new-comment {
+  position: relative;
+  background: rgba(40, 167, 69, 0.05);
+  border-left: 3px solid #28a745;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 -8px;
+}
+
+.new-comment-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 10;
+}
+
+.new-comment-indicator .new-badge {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  font-size: 8px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
+  animation: pulse 2s infinite;
+}
+
 .comment-avatar {
   position: relative;
   flex-shrink: 0;

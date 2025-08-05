@@ -16,6 +16,10 @@ interface BottomNavigationProps {
   onViewChange: (view: string) => void;
   navItems?: NavItem[];
   className?: string;
+  newContentCount?: {
+    moments?: number;
+    messages?: number;
+  };
 }
 
 // 默认导航项配置
@@ -55,7 +59,8 @@ export default function BottomNavigation({
   activeView, 
   onViewChange, 
   navItems = defaultNavItems,
-  className = ''
+  className = '',
+  newContentCount = {}
 }: BottomNavigationProps) {
   const createRipple = (event: React.MouseEvent<HTMLDivElement>) => {
     const button = event.currentTarget;
@@ -84,18 +89,30 @@ export default function BottomNavigation({
 
   return (
     <div className={`bottom-navigation ${className}`}>
-      {navItems.map((item) => (
-        <div
-          key={item.key}
-          className={`nav-item ${activeView === item.key ? 'active' : ''}`}
-          onClick={(e) => handleItemClick(item.key, e)}
-        >
-          <div className="nav-icon">
-            {item.icon}
+      {navItems.map((item) => {
+        const count = newContentCount[item.key as keyof typeof newContentCount] || 0;
+        
+        return (
+          <div
+            key={item.key}
+            className={`nav-item ${activeView === item.key ? 'active' : ''}`}
+            onClick={(e) => handleItemClick(item.key, e)}
+          >
+            <div className="nav-icon">
+              {item.icon}
+              {/* 新内容提示 */}
+              {count > 0 && (
+                <div className="nav-badge">
+                  <span className="badge-count">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className="nav-label">{item.label}</span>
           </div>
-          <span className="nav-label">{item.label}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

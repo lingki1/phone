@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DiscoverSettings } from '../../types/discover';
+import { dataManager } from '../../utils/dataManager';
+import { aiPostGenerator } from './utils/aiPostGenerator';
+import { aiCommentService } from './utils/aiCommentService';
 import './DiscoverSettingsPanel.css';
 
 interface DiscoverSettingsPanelProps {
@@ -18,6 +21,87 @@ export default function DiscoverSettingsPanel({
   const [localSettings, setLocalSettings] = useState<DiscoverSettings>(settings);
   const [isSaving, setIsSaving] = useState(false);
 
+  // 后台自动生成功能 - 使用已保存的设置，而不是本地临时设置
+  useEffect(() => {
+    let postInterval: NodeJS.Timeout | null = null;
+    let commentInterval: NodeJS.Timeout | null = null;
+
+    // 启动自动生成动态
+    if (settings.autoGeneratePosts) {
+      console.log('🚀 启动自动生成动态，间隔:', settings.autoGenerateInterval, '分钟');
+      
+      const generatePost = async () => {
+        try {
+          const chats = await dataManager.getAllChats();
+          const aiCharacters = chats.filter(chat => !chat.isGroup);
+          
+          if (aiCharacters.length > 0) {
+            console.log('📝 自动生成AI动态');
+            const result = await aiPostGenerator.generateSinglePostWithComments(aiCharacters);
+            if (result.post) {
+              console.log('✅ 自动生成动态成功:', result.post.content.substring(0, 50) + '...');
+              
+              // 触发动态更新事件
+              window.dispatchEvent(new CustomEvent('aiPostGenerated', {
+                detail: { post: result.post, comments: result.comments }
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('❌ 自动生成动态失败:', error);
+        }
+      };
+
+      // 立即执行一次
+      generatePost();
+      
+      // 设置定时器
+      postInterval = setInterval(generatePost, settings.autoGenerateInterval * 60 * 1000);
+    }
+
+    // 启动自动生成评论（只对用户动态）
+    if (settings.allowAiComments) {
+      console.log('💬 启动自动生成评论');
+      
+      const generateComments = async () => {
+        try {
+          // 获取所有动态
+          const allPosts = await dataManager.getAllDiscoverPosts();
+          
+          // 只处理用户发布的动态（非AI生成）
+          const userPosts = allPosts.filter(post => 
+            post.authorId === 'user' && !post.aiGenerated
+          );
+          
+          if (userPosts.length > 0) {
+            // 随机选择一个用户动态进行评论
+            const randomPost = userPosts[Math.floor(Math.random() * userPosts.length)];
+            
+            console.log('💬 为用户动态生成AI评论:', randomPost.content.substring(0, 30) + '...');
+            await aiCommentService.generateCommentsForPost(randomPost);
+          }
+        } catch (error) {
+          console.error('❌ 自动生成评论失败:', error);
+        }
+      };
+
+      // 设置定时器，每5分钟检查一次
+      commentInterval = setInterval(generateComments, 5 * 60 * 1000);
+    }
+
+    // 清理函数
+    return () => {
+      if (postInterval) {
+        clearInterval(postInterval);
+        console.log('🛑 停止自动生成动态');
+      }
+      if (commentInterval) {
+        clearInterval(commentInterval);
+        console.log('🛑 停止自动生成评论');
+      }
+    };
+  }, [settings.autoGeneratePosts, settings.allowAiComments, settings.autoGenerateInterval]);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -33,6 +117,7 @@ export default function DiscoverSettingsPanel({
     key: K, 
     value: DiscoverSettings[K]
   ) => {
+    console.log(`🔧 设置更新: ${key} = ${value}`);
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -61,6 +146,22 @@ export default function DiscoverSettingsPanel({
           {/* AI自动生成设置 */}
           <div className="settings-section">
             <h3 className="settings-section-title">AI自动生成</h3>
+            
+            {/* 当前状态显示 */}
+            <div className="setting-status">
+              <div className="status-item">
+                <span>当前状态:</span>
+                <span className={`status-value ${settings.autoGeneratePosts ? 'active' : 'inactive'}`}>
+                  {settings.autoGeneratePosts ? '✅ 自动生成动态已开启' : '❌ 自动生成动态已关闭'}
+                </span>
+              </div>
+              <div className="status-item">
+                <span>评论状态:</span>
+                <span className={`status-value ${settings.allowAiComments ? 'active' : 'inactive'}`}>
+                  {settings.allowAiComments ? '✅ AI评论已开启' : '❌ AI评论已关闭'}
+                </span>
+              </div>
+            </div>
             
             <div className="setting-item">
               <div className="setting-label">
