@@ -491,34 +491,33 @@ export class AiPostGenerator {
 
   // 构建批量请求数据
   private async buildSinglePostRequest(characters: ChatItem[]) {
-    // 获取历史动态状态，避免重复内容
+    // 获取历史动态状态，避免重复内容 - 减少数据量
     const existingPosts = await dataManager.getAllDiscoverPosts();
     const recentPosts = existingPosts
-      .filter(post => post.timestamp > Date.now() - 24 * 60 * 60 * 1000) // 最近24小时
-      .slice(0, 10) // 最多10条
+      .filter(post => post.timestamp > Date.now() - 6 * 60 * 60 * 1000) // 最近6小时
+      .slice(0, 5) // 最多5条
       .map(post => ({
-        content: post.content,
-        tags: post.tags,
+        content: post.content.substring(0, 100), // 限制内容长度
+        tags: (post.tags || []).slice(0, 3), // 最多3个标签
         mood: post.mood,
-        authorName: post.authorName,
-        timestamp: post.timestamp
+        authorName: post.authorName
       }));
 
     const charactersWithHistory = characters.map(char => {
+      // 减少聊天历史数据量
       const recentMessages = char.messages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-        .slice(-10)
+        .slice(-5) // 只取最近5条
         .map(msg => ({
           role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp,
+          content: msg.content.substring(0, 50), // 限制消息长度
           senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
         }));
 
       return {
         id: char.id,
         name: char.name,
-        persona: char.persona,
+        persona: char.persona.substring(0, 200), // 限制人设长度
         avatar: char.avatar,
         chatHistory: recentMessages,
         totalMessages: char.messages.length
@@ -540,34 +539,33 @@ export class AiPostGenerator {
   }
 
   private async buildBatchRequest(characters: ChatItem[], postsCount: number, commentsPerPost: number) {
-    // 获取历史动态状态，避免重复内容
+    // 获取历史动态状态，避免重复内容 - 减少数据量
     const existingPosts = await dataManager.getAllDiscoverPosts();
     const recentPosts = existingPosts
-      .filter(post => post.timestamp > Date.now() - 24 * 60 * 60 * 1000) // 最近24小时
-      .slice(0, 20) // 最多20条
+      .filter(post => post.timestamp > Date.now() - 6 * 60 * 60 * 1000) // 最近6小时
+      .slice(0, 10) // 最多10条
       .map(post => ({
-        content: post.content,
-        tags: post.tags,
+        content: post.content.substring(0, 80), // 限制内容长度
+        tags: (post.tags || []).slice(0, 2), // 最多2个标签
         mood: post.mood,
-        authorName: post.authorName,
-        timestamp: post.timestamp
+        authorName: post.authorName
       }));
 
     const charactersWithHistory = characters.map(char => {
+      // 减少聊天历史数据量
       const recentMessages = char.messages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-        .slice(-10)
+        .slice(-3) // 只取最近3条
         .map(msg => ({
           role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp,
+          content: msg.content.substring(0, 40), // 限制消息长度
           senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
         }));
 
       return {
         id: char.id,
         name: char.name,
-        persona: char.persona,
+        persona: char.persona.substring(0, 150), // 限制人设长度
         avatar: char.avatar,
         chatHistory: recentMessages,
         totalMessages: char.messages.length
@@ -642,63 +640,129 @@ export class AiPostGenerator {
         },
         {
           role: 'user',
-          content: JSON.stringify(requestData, null, 2)
+          content: JSON.stringify(requestData)
         }
       ],
       temperature: 0.8,
-      max_tokens: 2500,
+      max_tokens: isBatch ? 2000 : 1500, // 减少token数量
       top_p: 0.9,
       frequency_penalty: 0.1,
       presence_penalty: 0.1
     };
 
-    try {
-      const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiConfig.apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        await response.text(); // 消费响应体
-        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        await response.text(); // 消费响应体
-        throw new Error(`API返回了非JSON格式: ${contentType}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        const errorMessage = data.error.message || data.error.type || '未知错误';
-        const errorCode = data.error.code || '未知';
-        throw new Error(`API服务器错误: ${errorMessage} (代码: ${errorCode})`);
-      }
-      
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('API响应格式错误: 缺少choices或message字段');
-      }
-
-      const content = data.choices[0].message.content;
-      
-      if (!content || content.trim().length === 0) {
-        throw new Error('API返回的内容为空，请检查API配置和模型设置');
-      }
-      
-      return content;
-
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`API调用失败: ${error.message}`);
-      }
-      throw new Error('API调用失败: 未知错误');
+    // 检查请求体大小
+    const requestBodySize = JSON.stringify(requestBody).length;
+    console.log(`📊 请求体大小: ${requestBodySize} 字符`);
+    
+    if (requestBodySize > 8000) { // 如果超过8KB，进一步压缩
+      console.warn('⚠️ 请求体过大，进行压缩处理');
+      // 简化请求数据
+      const simplifiedData = this.simplifyRequestData(requestData);
+      requestBody.messages[1].content = JSON.stringify(simplifiedData);
     }
+
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 API调用尝试 ${attempt}/${maxRetries}`);
+        
+        const response = await fetch(`${apiConfig.proxyUrl}/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiConfig.apiKey}`,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        console.log(`📥 响应状态: ${response.status} ${response.statusText}`);
+
+        if (response.status === 413) {
+          throw new Error('请求内容过大，请减少输入数据');
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ API请求失败: ${response.status} ${response.statusText}`, errorText.substring(0, 200));
+          throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const responseText = await response.text();
+          console.error('❌ 响应不是JSON格式:', contentType, responseText.substring(0, 200));
+          throw new Error(`API返回了非JSON格式: ${contentType}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+          const errorMessage = data.error.message || data.error.type || '未知错误';
+          const errorCode = data.error.code || '未知';
+          throw new Error(`API服务器错误: ${errorMessage} (代码: ${errorCode})`);
+        }
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+          console.error('❌ API响应格式错误:', data);
+          throw new Error('API响应格式错误: 缺少choices或message字段');
+        }
+
+        const content = data.choices[0].message.content;
+        
+        if (!content || content.trim().length === 0) {
+          throw new Error('API返回的内容为空，请检查API配置和模型设置');
+        }
+        
+        console.log('✅ API调用成功');
+        return content;
+
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('未知错误');
+        console.error(`❌ 尝试 ${attempt} 失败:`, lastError.message);
+        
+        if (attempt < maxRetries) {
+          // 等待一段时间后重试
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // 指数退避，最大5秒
+          console.log(`⏳ 等待 ${delay}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw new Error(`API调用失败 (${maxRetries} 次尝试): ${lastError?.message || '未知错误'}`);
+  }
+
+  // 简化请求数据以减少大小
+  private simplifyRequestData(data: unknown): unknown {
+    if (typeof data === 'object' && data !== null) {
+      const simplified = data as Record<string, unknown>;
+      
+      // 简化角色数据
+      if (simplified.characters && Array.isArray(simplified.characters)) {
+        simplified.characters = (simplified.characters as Record<string, unknown>[]).map(char => ({
+          id: char.id as string,
+          name: char.name as string,
+          persona: ((char.persona as string) || '').substring(0, 100),
+          chatHistory: Array.isArray(char.chatHistory) ? char.chatHistory.slice(-2) : []
+        }));
+      }
+      
+      // 简化历史动态
+      if (simplified.recentPosts && Array.isArray(simplified.recentPosts)) {
+        simplified.recentPosts = (simplified.recentPosts as Record<string, unknown>[]).slice(0, 3).map(post => ({
+          content: ((post.content as string) || '').substring(0, 50),
+          mood: post.mood as string,
+          authorName: post.authorName as string
+        }));
+      }
+      
+      return simplified;
+    }
+    
+    return data;
   }
 
   // 构建系统提示词
