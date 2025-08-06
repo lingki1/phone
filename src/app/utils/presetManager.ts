@@ -261,11 +261,17 @@ export class PresetManager {
     try {
       const existingPresets = await this.getAllPresets();
       
-      // 如果没有预设，创建默认预设
-      if (existingPresets.length === 0) {
-        console.log('Initializing default presets...');
+      // 检查是否已经存在默认预设（通过名称匹配）
+      const existingPresetNames = existingPresets.map(p => p.name);
+      const missingTemplates = DEFAULT_PRESET_TEMPLATES.filter(
+        template => !existingPresetNames.includes(template.name)
+      );
+      
+      // 只为缺失的模板创建预设
+      if (missingTemplates.length > 0) {
+        console.log(`Creating ${missingTemplates.length} missing default presets...`);
         
-        for (const template of DEFAULT_PRESET_TEMPLATES) {
+        for (const template of missingTemplates) {
           const preset: Omit<PresetConfig, 'id' | 'createdAt' | 'updatedAt'> = {
             name: template.name,
             description: template.description,
@@ -276,7 +282,9 @@ export class PresetManager {
           await this.createPreset(preset);
         }
         
-        console.log('Default presets initialized');
+        console.log('Missing default presets created');
+      } else {
+        console.log('All default presets already exist, skipping initialization');
       }
     } catch (error) {
       console.error('Failed to initialize default presets:', error);
