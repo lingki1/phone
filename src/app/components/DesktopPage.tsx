@@ -135,7 +135,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
             setBatteryLevel(newLevel);
             setIsCharging(newCharging);
             
-            console.log(`电池状态更新: ${newLevel}%, 充电中: ${newCharging}, 设备类型: ${isMobileDevice() ? '移动设备' : '桌面设备'}`);
+            // 电池状态更新日志已移除
           };
 
           // 初始更新
@@ -159,16 +159,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
             clearInterval(batteryCheckInterval);
           };
         } else {
-          console.log('设备不支持电池API，使用默认值');
+          // 设备不支持电池API，使用默认值
           
           // 对于不支持电池API的设备，尝试使用其他方法
           if ('connection' in navigator) {
             // 监听网络状态变化，间接检测设备状态
             const connection = (navigator as Navigator & { connection: NetworkInformation }).connection;
             if (connection) {
-              connection.addEventListener('change', () => {
-                console.log('网络状态变化，可能影响电池状态');
-              });
+                          connection.addEventListener('change', () => {
+              // 网络状态变化监听
+            });
             }
           }
           
@@ -176,7 +176,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
           if (isMobileDevice() && 'hidden' in document) {
             document.addEventListener('visibilitychange', () => {
               if (!document.hidden) {
-                console.log('页面重新可见，可能需要更新电池状态');
+                // 页面重新可见，可能需要更新电池状态
               }
             });
           }
@@ -205,7 +205,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && isMobileDevice()) {
-        console.log('页面重新可见，尝试更新电池状态');
+        // 页面重新可见，尝试更新电池状态
         // 延迟一下再检查电池状态，确保设备完全唤醒
         setTimeout(() => {
           if ('getBattery' in navigator) {
@@ -213,7 +213,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
               .then(battery => {
                 setBatteryLevel(Math.round(battery.level * 100));
                 setIsCharging(battery.charging);
-                console.log('页面可见性变化后电池状态更新完成');
+                // 页面可见性变化后电池状态更新完成
               })
               .catch(error => {
                 console.error('页面可见性变化后获取电池状态失败:', error);

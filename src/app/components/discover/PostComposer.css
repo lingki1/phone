@@ -371,6 +371,10 @@
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .modal-overlay {
+    /* 确保在移动端正确显示 */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
   .api-settings-modal {
     width: 95%;
     max-height: 95vh;
@@ -403,8 +407,16 @@
   }
   
   .action-buttons {
-    flex-direction: column;
+    flex-direction: row;
     gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .action-btn {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    padding: 10px 8px;
   }
 }
 
@@ -414,6 +426,9 @@
     height: 100vh;
     max-height: 100vh;
     border-radius: 0;
+    border: 1px solid #e0e0e0;
+    /* 考虑安全区域 */
+    margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   
   .modal-header {
@@ -422,10 +437,14 @@
   
   .modal-body {
     padding: 12px;
+    /* 确保内容不被遮挡 */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
   
   .modal-footer {
     padding: 12px;
+    /* 考虑底部安全区域 */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
   
   .user-avatar {
@@ -446,6 +465,7 @@
 /* 深色主题适配 */
 .theme-dark .api-settings-modal {
   background: #1a1a1a;
+  border-color: #404040;
 }
 
 .theme-dark .modal-header {

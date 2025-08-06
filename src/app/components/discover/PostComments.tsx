@@ -30,20 +30,12 @@ export default function PostComments({
   useEffect(() => {
     if (!onCommentsVisibilityChange || comments.length === 0) return;
 
-    console.log('👁️ 设置评论可见性监听:', {
-      postId,
-      commentsCount: comments.length,
-      hasNewComments: comments.some(c => c.isNew)
-    });
+    // 调试日志已移除
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            console.log('👁️ 评论区域可见，触发回调:', {
-              postId,
-              intersectionRatio: entry.intersectionRatio
-            });
             onCommentsVisibilityChange();
             observer.disconnect(); // 只触发一次
           }
