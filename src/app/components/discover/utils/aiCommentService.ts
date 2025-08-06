@@ -3,6 +3,7 @@ import { dataManager } from '../../../utils/dataManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
 import { ApiConfig } from '../../../types/chat';
+import { JsonParser } from './jsonParser';
 
 export interface AiCommentResponse {
   success: boolean;
@@ -624,93 +625,51 @@ export class AiCommentService {
     characters: ChatItem[]
   ): Promise<DiscoverComment[]> {
     try {
-      console.log('🔍 开始解析API响应');
-      console.log('📄 原始响应:', response);
+      console.log('🔍 开始解析评论API响应');
+      console.log('📄 原始响应长度:', response.length);
+      console.log('📄 原始响应预览:', response.substring(0, 300));
 
-      // 尝试清理响应文本，提取JSON部分
-      let cleanedResponse = response.trim();
+      // 🚀 使用统一的强力JSON解析函数
+      const parsedResponse = JsonParser.strongJsonExtract(response) as Record<string, unknown>;
       
-      // 如果响应包含代码块标记，提取其中的内容
-      if (cleanedResponse.includes('```json')) {
-        const jsonMatch = cleanedResponse.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          cleanedResponse = jsonMatch[1].trim();
-          console.log('🧹 提取的JSON内容:', cleanedResponse);
-        }
-      } else if (cleanedResponse.includes('```')) {
-        // 提取任何代码块内容
-        const codeMatch = cleanedResponse.match(/```\s*([\s\S]*?)\s*```/);
-        if (codeMatch) {
-          cleanedResponse = codeMatch[1].trim();
-          console.log('🧹 提取的代码块内容:', cleanedResponse);
-        }
-      }
-
-      // 尝试解析JSON
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error('❌ JSON解析失败:', parseError);
-        console.log('📄 尝试解析的内容:', cleanedResponse);
-        
-        // 尝试查找JSON对象
-        const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            parsedResponse = JSON.parse(jsonMatch[0]);
-            console.log('✅ 通过正则匹配成功解析JSON');
-          } catch (secondError) {
-            console.error('❌ 正则匹配解析也失败:', secondError);
-            throw new Error('无法解析JSON响应');
-          }
-        } else {
-          throw new Error('响应中未找到有效的JSON');
-        }
-      }
-
-      console.log('✅ 解析后的响应:', parsedResponse);
+      // 验证和清理解析结果
+      const cleanedResponse = JsonParser.validateAndClean(parsedResponse);
       
-      // 处理不同的响应格式
-      let commentsArray = null;
+      console.log('✅ 清理后的响应:', cleanedResponse);
       
-      // 格式1: {comments: [...]}
-      if (parsedResponse.comments && Array.isArray(parsedResponse.comments)) {
-        commentsArray = parsedResponse.comments;
+      // 获取评论数组
+      let commentsArray: unknown[] = [];
+      
+      if (Array.isArray(cleanedResponse.comments)) {
+        commentsArray = cleanedResponse.comments;
         console.log('✅ 使用标准comments格式');
-      }
-      // 格式2: {post: {...}, comments: [...]}
-      else if (parsedResponse.post && parsedResponse.comments && Array.isArray(parsedResponse.comments)) {
-        commentsArray = parsedResponse.comments;
-        console.log('✅ 使用post+comments格式');
-      }
-      // 格式3: 尝试查找任何包含comments的数组
-      else {
-        // 遍历所有属性，查找comments数组
-        for (const key in parsedResponse) {
-          if (Array.isArray(parsedResponse[key]) && key.toLowerCase().includes('comment')) {
-            commentsArray = parsedResponse[key];
+      } else {
+        // 尝试查找任何包含comments的数组
+        for (const key in cleanedResponse) {
+          if (Array.isArray(cleanedResponse[key]) && key.toLowerCase().includes('comment')) {
+            commentsArray = cleanedResponse[key] as unknown[];
             console.log(`✅ 找到comments数组在属性: ${key}`);
             break;
           }
         }
       }
       
-      if (!commentsArray) {
-        console.error('❌ 响应格式错误，未找到comments数组:', parsedResponse);
-        console.log('📄 可用的属性:', Object.keys(parsedResponse));
-        throw new Error('API响应格式不正确: 未找到comments数组');
+      if (commentsArray.length === 0) {
+        console.warn('⚠️ 响应中没有找到有效的评论数组');
+        return [];
       }
 
       const comments: DiscoverComment[] = [];
       const baseTimestamp = Date.now();
 
       for (let i = 0; i < commentsArray.length; i++) {
-        const commentData = commentsArray[i];
+        const commentData = commentsArray[i] as Record<string, unknown>;
         console.log('🔍 处理评论数据:', commentData);
         
         // 验证评论数据格式
-        if (!commentData.characterId || !commentData.content) {
+        if (!commentData.characterId || !commentData.content || 
+            typeof commentData.characterId !== 'string' || 
+            typeof commentData.content !== 'string') {
           console.warn('⚠️ 跳过格式不正确的评论:', commentData);
           continue;
         }
@@ -723,14 +682,13 @@ export class AiCommentService {
         }
 
         // 创建评论对象，使用递增的时间戳确保最新的评论显示在最下方
-        // 第一个评论时间戳最小，后续递增，这样最新的评论会排在后面（下方）
         const comment: DiscoverComment = {
           id: (baseTimestamp + i).toString() + Math.random().toString(36).substr(2, 9),
           postId: post.id,
           authorId: character.id,
           authorName: character.name,
           authorAvatar: character.avatar,
-          content: commentData.content,
+          content: String(commentData.content).trim(),
           timestamp: baseTimestamp + i, // 递增时间戳，确保最新的评论显示在最下方
           likes: [],
           aiGenerated: true
@@ -750,9 +708,10 @@ export class AiCommentService {
       return comments;
 
     } catch (error) {
-      console.error('❌ 处理API响应失败:', error);
-      console.log('📄 原始响应内容:', response);
-      throw new Error(`解析API响应失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      console.error('❌ 处理评论API响应失败:', error);
+      console.log('📄 失败的原始响应:', response);
+      // 不抛出错误，返回空数组
+      return [];
     }
   }
 

@@ -3,6 +3,7 @@ import { dataManager } from '../../../utils/dataManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
 import { ApiConfig } from '../../../types/chat';
+import { JsonParser } from './jsonParser';
 
 export interface AiPostResponse {
   success: boolean;
@@ -45,105 +46,9 @@ export class AiPostGenerator {
     return AiPostGenerator.instance;
   }
 
-  // 🚀 超强健壮 JSON 解析函数
+  // 使用统一的JSON解析器
   private strongJsonExtract(raw: string): Record<string, unknown> {
-    console.log('🔧 开始强力JSON解析，原始内容长度:', raw.length);
-    
-    // 1. 清理和标准化输入
-    let content = raw.trim();
-    
-    // 2. 尝试提取代码块内容
-    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      content = codeBlockMatch[1].trim();
-      console.log('📦 从代码块中提取内容');
-    }
-    
-    // 3. 尝试直接解析
-    try {
-      const result = JSON.parse(content);
-      console.log('✅ 直接解析成功');
-      return result;
-    } catch {
-      console.log('❌ 直接解析失败，开始修复...');
-    }
-    
-    // 4. 尝试提取最大JSON块
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      content = jsonMatch[0];
-      console.log('🔍 提取最大JSON块');
-    }
-    
-    // 5. 自动修复常见错误
-    let fixedContent = content;
-    
-    // 修复结尾缺失的括号
-    const openBraces = (content.match(/\{/g) || []).length;
-    const closeBraces = (content.match(/\}/g) || []).length;
-    const openBrackets = (content.match(/\[/g) || []).length;
-    const closeBrackets = (content.match(/\]/g) || []).length;
-    
-    // 补全缺失的闭合括号
-    while (closeBraces < openBraces) {
-      fixedContent += '}';
-    }
-    while (closeBrackets < openBrackets) {
-      fixedContent += ']';
-    }
-    
-    // 删除多余的结尾逗号
-    fixedContent = fixedContent.replace(/,(\s*[}\]])/g, '$1');
-    
-    // 删除非JSON内容
-    fixedContent = fixedContent.replace(/[^\x20-\x7E]/g, ''); // 只保留可打印ASCII字符
-    
-    console.log('🔧 修复后内容长度:', fixedContent.length);
-    
-    // 6. 尝试修复后的解析
-    try {
-      const result = JSON.parse(fixedContent);
-      console.log('✅ 修复后解析成功');
-      return result;
-    } catch {
-      console.log('❌ 修复后解析失败，尝试逐步截断...');
-    }
-    
-    // 7. 逐步截断到最后一个完整的JSON
-    for (let i = fixedContent.length - 1; i > 0; i--) {
-      try {
-        const truncated = fixedContent.substring(0, i);
-        const result = JSON.parse(truncated);
-        console.log(`✅ 截断到位置 ${i} 解析成功`);
-        return result;
-      } catch {
-        // 继续尝试
-      }
-    }
-    
-          // 8. 最后尝试：提取posts和comments部分
-      try {
-        const postsMatch = content.match(/"posts"\s*:\s*\[[\s\S]*?\]/);
-        const commentsMatch = content.match(/"comments"\s*:\s*\[[\s\S]*?\]/);
-        
-        if (postsMatch || commentsMatch) {
-          const result: Record<string, unknown> = {};
-          if (postsMatch) {
-            result.posts = JSON.parse(`[${postsMatch[0].split('[')[1].split(']')[0]}]`);
-          }
-          if (commentsMatch) {
-            result.comments = JSON.parse(`[${commentsMatch[0].split('[')[1].split(']')[0]}]`);
-          }
-          console.log('✅ 部分提取成功');
-          return result;
-        }
-      } catch {
-        console.log('❌ 部分提取失败');
-      }
-    
-    // 9. 返回默认空结构
-    console.log('⚠️ 所有解析方法失败，返回默认结构');
-    return { posts: [], comments: [] };
+    return JsonParser.strongJsonExtract(raw);
   }
 
 
@@ -867,36 +772,66 @@ export class AiPostGenerator {
   // 处理动态和评论API响应
   private async processPostResponse(response: string): Promise<{ post: { content: string; images: string[]; tags: string[]; mood: string; location: string; type: 'text' | 'image' | 'mixed'; } | null; comments: Array<{ characterId: string; content: string }> }> {
     try {
+      console.log('🔍 开始处理动态API响应');
+      console.log('📄 原始响应长度:', response.length);
+      console.log('📄 原始响应预览:', response.substring(0, 300));
+      
       // 🚀 使用强力JSON解析函数
       const parsedResponse = this.strongJsonExtract(response) as Record<string, unknown>;
       
-      if (!parsedResponse.post) {
+      // 验证和清理解析结果
+      const cleanedResponse = JsonParser.validateAndClean(parsedResponse);
+      
+      console.log('✅ 清理后的响应:', cleanedResponse);
+      
+      if (!cleanedResponse.post) {
+        console.warn('⚠️ 响应中没有post字段');
         return { post: null, comments: [] };
       }
 
-      const postData = parsedResponse.post as Record<string, unknown>;
+      const postData = cleanedResponse.post as Record<string, unknown>;
       
       // 验证必要字段
-      if (!postData.content) {
+      if (!postData.content || typeof postData.content !== 'string') {
+        console.warn('⚠️ post缺少有效的content字段');
         return { post: null, comments: [] };
       }
 
-      // 处理动态
+      // 处理动态，确保所有字段都有默认值
       const post = {
-        content: postData.content as string,
-        images: (postData.images as string[]) || [],
-        tags: (postData.tags as string[]) || [],
-        mood: (postData.mood as string) || '😊',
-        location: (postData.location as string) || '',
-        type: (postData.type as 'text' | 'image' | 'mixed') || 'text'
+        content: String(postData.content).trim(),
+        images: Array.isArray(postData.images) ? postData.images.filter(img => typeof img === 'string') : [],
+        tags: Array.isArray(postData.tags) ? postData.tags.filter(tag => typeof tag === 'string') : [],
+        mood: typeof postData.mood === 'string' ? postData.mood : '😊',
+        location: typeof postData.location === 'string' ? postData.location : '',
+        type: (postData.type === 'image' || postData.type === 'mixed') ? postData.type as 'image' | 'mixed' : 'text' as const
       };
 
-      // 处理评论
-      const comments = (parsedResponse.comments as Array<{ characterId: string; content: string }>) || [];
+      // 处理评论，确保数据格式正确
+      let comments: Array<{ characterId: string; content: string }> = [];
+      if (Array.isArray(cleanedResponse.comments)) {
+        comments = cleanedResponse.comments
+          .filter((comment: unknown) => {
+            const c = comment as Record<string, unknown>;
+            return c && typeof c.characterId === 'string' && typeof c.content === 'string';
+          })
+          .map((comment: unknown) => {
+            const c = comment as Record<string, unknown>;
+            return {
+              characterId: String(c.characterId),
+              content: String(c.content).trim()
+            };
+          });
+      }
+
+      console.log('✅ 处理完成，post内容:', post.content.substring(0, 50));
+      console.log('✅ 评论数量:', comments.length);
 
       return { post, comments };
 
-    } catch {
+    } catch (error) {
+      console.error('❌ 处理动态API响应失败:', error);
+      console.log('📄 失败的原始响应:', response);
       return { post: null, comments: [] };
     }
   }
