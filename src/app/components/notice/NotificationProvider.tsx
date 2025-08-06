@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import NotificationContainer from './NotificationContainer';
 import { NotificationItem } from './types';
 
@@ -19,8 +19,13 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
+  // 移除通知
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  }, []);
+
   // 添加通知
-  const addNotification = (notification: Omit<NotificationItem, 'id' | 'timestamp'>) => {
+  const addNotification = useCallback((notification: Omit<NotificationItem, 'id' | 'timestamp'>) => {
     const newNotification: NotificationItem = {
       ...notification,
       id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -35,19 +40,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         removeNotification(newNotification.id);
       }, notification.duration || 5000);
     }
-  };
-
-  // 移除通知
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
+  }, [removeNotification]);
 
   // 清空所有通知
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
-  // 监听全局事件
+      // 监听全局事件
   useEffect(() => {
     // 监听AI动态生成事件
     const handleAiPostGenerated = (event: Event) => {
@@ -70,10 +70,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     };
 
     // 监听AI评论生成事件
-    const handleAiCommentsGenerated = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      // const { postId } = customEvent.detail;
-      
+    const handleAiCommentsGenerated = () => {
       addNotification({
         type: 'info',
         title: '新评论生成',
@@ -143,7 +140,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       window.removeEventListener('chatMessageGenerated', handleChatMessageGenerated);
       window.removeEventListener('notificationError', handleError);
     };
-  }, []);
+  }, [addNotification]);
 
   const contextValue: NotificationContextType = {
     addNotification,
