@@ -473,6 +473,14 @@
     grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     gap: 4px;
   }
+  
+  /* 确保添加图片按钮在480px以下正常水平显示 */
+  .action-btn {
+    flex: none;
+    width: auto;
+    min-width: 120px;
+    text-align: center;
+  }
 }
 
 /* 针对iPhone等设备的特殊处理 */

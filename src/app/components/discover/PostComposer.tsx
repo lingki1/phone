@@ -169,6 +169,19 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
             </div>
           )}
 
+          {/* 添加图片按钮 */}
+          <div className="form-group">
+            <label>添加图片</label>
+            <button 
+              className="action-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={images.length >= 9}
+            >
+              添加图片
+            </button>
+            <small className="field-hint">最多上传9张图片</small>
+          </div>
+
           {/* 标签输入 */}
           <div className="form-group">
             <label htmlFor="tag-input">标签</label>
@@ -232,27 +245,6 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
               placeholder="😊 添加心情"
               maxLength={20}
             />
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="form-group">
-            <label>操作</label>
-            <div className="action-buttons">
-              <button 
-                className="action-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={images.length >= 9}
-              >
-                📷 添加图片
-              </button>
-              <button className="action-btn">
-                📍 选择位置
-              </button>
-              <button className="action-btn">
-                😊 选择心情
-              </button>
-            </div>
-            <small className="field-hint">最多上传9张图片</small>
           </div>
 
           {/* 隐藏的文件输入 */}
