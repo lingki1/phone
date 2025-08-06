@@ -17,11 +17,12 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  // 修改为单一通知状态，而不是数组
+  const [currentNotification, setCurrentNotification] = useState<NotificationItem | null>(null);
 
   // 移除通知
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setCurrentNotification(prev => prev?.id === id ? null : prev);
   }, []);
 
   // 添加通知
@@ -32,7 +33,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       timestamp: Date.now()
     };
 
-    setNotifications(prev => [newNotification, ...prev]);
+    // 新通知直接覆盖旧通知
+    setCurrentNotification(newNotification);
 
     // 自动移除通知（如果设置了自动移除）
     if (notification.autoRemove !== false) {
@@ -44,10 +46,19 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   // 清空所有通知
   const clearAllNotifications = useCallback(() => {
-    setNotifications([]);
+    setCurrentNotification(null);
   }, []);
 
-      // 监听全局事件
+  // 检查是否应该抑制通知
+  const shouldSuppressNotification = useCallback((chatId?: string) => {
+    // 如果当前在聊天页面，且通知来自同一个聊天，则抑制通知
+    if (typeof window !== 'undefined' && window.currentActiveChatId && chatId) {
+      return window.currentActiveChatId === chatId;
+    }
+    return false;
+  }, []);
+
+  // 监听全局事件
   useEffect(() => {
     // 监听AI动态生成事件
     const handleAiPostGenerated = (event: Event) => {
@@ -86,10 +97,15 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       });
     };
 
-    // 监听聊天消息生成事件
+    // 监听聊天消息生成事件 - 添加聊天页面检测
     const handleChatMessageGenerated = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { characterName, chatId, messageContent } = customEvent.detail;
+      
+      // 如果当前在对应的聊天页面，不显示通知
+      if (shouldSuppressNotification(chatId)) {
+        return;
+      }
       
       addNotification({
         type: 'info',
@@ -142,7 +158,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       window.removeEventListener('chatMessageGenerated', handleChatMessageGenerated);
       window.removeEventListener('notificationError', handleError);
     };
-  }, [addNotification]);
+  }, [addNotification, shouldSuppressNotification]);
 
   const contextValue: NotificationContextType = {
     addNotification,
@@ -154,9 +170,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     <NotificationContext.Provider value={contextValue}>
       {children}
       <NotificationContainer 
-        notifications={notifications}
+        notification={currentNotification}
         onRemove={removeNotification}
-        onClearAll={clearAllNotifications}
       />
     </NotificationContext.Provider>
   );

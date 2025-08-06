@@ -98,6 +98,17 @@ export default function ChatInterface({
     outfit: '穿着休闲装',
     lastUpdate: Date.now()
   });
+
+  // 设置当前活跃的聊天页面，用于通知抑制
+  useEffect(() => {
+    // 设置全局变量，告诉通知系统当前在哪个聊天页面
+    window.currentActiveChatId = chat.id;
+    
+    return () => {
+      // 清除当前活跃聊天ID
+      window.currentActiveChatId = null;
+    };
+  }, [chat.id]);
   
   // 分页加载相关状态
   const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息
