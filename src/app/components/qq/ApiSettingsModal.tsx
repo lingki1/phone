@@ -29,9 +29,39 @@ export default function ApiSettingsModal({
   const [backgroundInterval, setBackgroundInterval] = useState(60);
   const [maxMemory, setMaxMemory] = useState(20);
 
+  // 从localStorage加载已保存的模型列表
+  const loadSavedModels = () => {
+    try {
+      const savedModels = localStorage.getItem('savedModels');
+      if (savedModels) {
+        const parsedModels = JSON.parse(savedModels);
+        if (Array.isArray(parsedModels)) {
+          return parsedModels;
+        }
+      }
+    } catch (error) {
+      console.error('加载已保存的模型列表失败:', error);
+    }
+    return [];
+  };
+
+  // 保存模型列表到localStorage
+  const saveModelsToStorage = (modelList: string[]) => {
+    try {
+      localStorage.setItem('savedModels', JSON.stringify(modelList));
+    } catch (error) {
+      console.error('保存模型列表失败:', error);
+    }
+  };
+
   useEffect(() => {
     if (isVisible) {
       setConfig(currentConfig);
+      
+      // 加载已保存的模型列表
+      const savedModels = loadSavedModels();
+      setModels(savedModels);
+      
       // 从localStorage加载其他设置
       const savedSettings = localStorage.getItem('globalSettings');
       if (savedSettings) {
@@ -71,8 +101,15 @@ export default function ApiSettingsModal({
 
       const data = await response.json();
       const modelList = data.data?.map((model: { id: string }) => model.id) || [];
-      setModels(modelList);
       
+      // 合并新获取的模型和已保存的模型，去重
+      const existingModels = loadSavedModels();
+      const allModels = [...new Set([...existingModels, ...modelList])];
+      
+      setModels(allModels);
+      saveModelsToStorage(allModels);
+      
+      // 如果当前没有选择模型，选择第一个
       if (modelList.length > 0 && !config.model) {
         setConfig(prev => ({ ...prev, model: modelList[0] }));
       }
@@ -116,6 +153,9 @@ export default function ApiSettingsModal({
     }
     setBackgroundActivity(enabled);
   };
+
+  // 检查当前选择的模型是否在可用模型列表中
+  const isCurrentModelAvailable = config.model && models.includes(config.model);
 
   if (!isVisible) return null;
 
@@ -167,10 +207,18 @@ export default function ApiSettingsModal({
             >
               <option value="">点击选择你喜欢的AI模型</option>
               {models.map(model => (
-                <option key={model} value={model}>{model}</option>
+                <option key={model} value={model}>
+                  {model}
+                  {model === config.model && !isCurrentModelAvailable && ' (已保存)'}
+                </option>
               ))}
             </select>
-            <small className="field-hint">不同模型有不同的特点和能力</small>
+            <small className="field-hint">
+              {isCurrentModelAvailable 
+                ? '不同模型有不同的特点和能力' 
+                : '当前选择的模型可能不在可用列表中，建议重新获取模型列表'
+              }
+            </small>
           </div>
 
           <button 

@@ -14,6 +14,7 @@ interface PostCardProps {
   onComment: (postId: string, content: string) => void;
   currentUserId: string;
   onVisibilityChange?: () => void;
+  onCommentsVisibilityChange?: () => void;
 }
 
 export default function PostCard({ 
@@ -21,7 +22,8 @@ export default function PostCard({
   onLike, 
   onComment, 
   currentUserId,
-  onVisibilityChange
+  onVisibilityChange,
+  onCommentsVisibilityChange
 }: PostCardProps) {
 
   const [commentInput, setCommentInput] = useState('');
@@ -202,6 +204,7 @@ export default function PostCard({
         onComment={onComment}
         postId={post.id}
         currentUserId={currentUserId}
+        onCommentsVisibilityChange={onCommentsVisibilityChange}
       />
 
       {/* 评论输入框 */}

@@ -1,126 +1,147 @@
-/* 动态发布组件样式 */
-.post-composer-overlay {
+/* 动态发布组件样式 - 采用 ApiSettingsModal 样式 */
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.api-settings-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.modal-body {
   padding: 20px;
-  animation: fadeIn 0.2s ease-out;
-}
-
-.post-composer {
-  background: var(--theme-bg-primary, #ffffff);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--theme-shadow-heavy, 0 8px 32px rgba(0, 0, 0, 0.3));
-  animation: slideUp 0.3s ease-out;
-}
-
-/* 头部 */
-.composer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--theme-border-color, #e0e0e0);
-}
-
-.composer-cancel-btn {
-  background: none;
-  border: none;
-  color: var(--theme-text-secondary, #6c757d);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
-}
-
-.composer-cancel-btn:hover:not(:disabled) {
-  background: var(--theme-bg-secondary, #f8f9fa);
-}
-
-.composer-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--theme-text-primary, #1f1f1f);
-  margin: 0;
-}
-
-.composer-publish-btn {
-  background: var(--theme-border-color, #e0e0e0);
-  color: var(--theme-text-tertiary, #adb5bd);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.composer-publish-btn.active {
-  background: var(--theme-accent-color, #007bff);
-  color: white;
-}
-
-.composer-publish-btn.active:hover:not(:disabled) {
-  background: var(--theme-accent-hover, #0056b3);
-  transform: translateY(-1px);
-}
-
-.composer-publish-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* 内容区域 */
-.composer-content {
-  flex: 1;
+  max-height: calc(90vh - 140px);
   overflow-y: auto;
-  padding: 20px;
 }
 
-/* 用户信息 */
-.composer-user-info {
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* 用户信息显示 */
+.user-info-display {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
-.composer-avatar {
+.user-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--theme-border-light, #e9ecef);
+  border: 2px solid #e0e0e0;
 }
 
-.composer-user-details {
+.user-details {
   flex: 1;
 }
 
-.composer-username {
+.username {
   font-size: 16px;
   font-weight: 600;
-  color: var(--theme-text-primary, #1f1f1f);
+  color: #1f1f1f;
   margin-bottom: 4px;
 }
 
 .privacy-btn {
-  background: var(--theme-bg-secondary, #f8f9fa);
-  border: 1px solid var(--theme-border-color, #e0e0e0);
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
   border-radius: 16px;
   padding: 4px 12px;
   font-size: 12px;
@@ -129,48 +150,36 @@
 }
 
 .privacy-btn:hover {
-  background: var(--theme-bg-tertiary, #e9ecef);
+  background: #e9ecef;
 }
 
 .privacy-btn.public {
-  color: var(--theme-accent-color, #007bff);
-  border-color: var(--theme-accent-color, #007bff);
+  color: #007bff;
+  border-color: #007bff;
 }
 
-/* 文本输入 */
-.composer-textarea {
-  width: 100%;
-  border: none;
-  resize: none;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--theme-text-primary, #1f1f1f);
-  background: transparent;
-  margin-bottom: 16px;
-  outline: none;
-}
-
-.composer-textarea::placeholder {
-  color: var(--theme-text-tertiary, #adb5bd);
+.privacy-btn.private {
+  color: #6c757d;
+  border-color: #6c757d;
 }
 
 /* 图片预览 */
-.composer-images {
+.images-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 8px;
 }
 
-.composer-image-container {
+.image-container {
   position: relative;
   aspect-ratio: 1/1;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--theme-bg-secondary, #f8f9fa);
+  background: #f8f9fa;
 }
 
-.composer-image {
+.preview-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -193,51 +202,36 @@
   justify-content: center;
 }
 
-/* 标签 */
-.composer-tags {
-  margin-bottom: 16px;
-}
-
-.tags-input-container {
+/* 标签输入 */
+.tag-input-container {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.tag-input {
+.tag-input-container input {
   flex: 1;
-  border: 1px solid var(--theme-border-color, #e0e0e0);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 14px;
-  background: var(--theme-bg-secondary, #f8f9fa);
-  color: var(--theme-text-primary, #1f1f1f);
-}
-
-.tag-input:focus {
-  outline: none;
-  border-color: var(--theme-accent-color, #007bff);
-  background: var(--theme-bg-primary, #ffffff);
+  margin: 0;
 }
 
 .add-tag-btn {
-  background: var(--theme-accent-color, #007bff);
+  background: #007bff;
   color: white;
   border: none;
-  border-radius: 20px;
-  padding: 6px 12px;
+  border-radius: 8px;
+  padding: 12px 16px;
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  white-space: nowrap;
 }
 
 .add-tag-btn:hover:not(:disabled) {
-  background: var(--theme-accent-hover, #0056b3);
+  background: #0056b3;
 }
 
 .add-tag-btn:disabled {
-  background: var(--theme-border-color, #e0e0e0);
-  color: var(--theme-text-tertiary, #adb5bd);
+  background: #6c757d;
   cursor: not-allowed;
 }
 
@@ -245,14 +239,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 8px;
 }
 
 .tag-item {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--theme-accent-light, rgba(0, 123, 255, 0.1));
-  color: var(--theme-accent-color, #007bff);
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -277,54 +272,28 @@
   background: rgba(0, 123, 255, 0.2);
 }
 
-/* 选项输入 */
-.composer-options {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.composer-input {
-  flex: 1;
-  border: 1px solid var(--theme-border-color, #e0e0e0);
-  border-radius: 20px;
-  padding: 8px 12px;
-  font-size: 14px;
-  background: var(--theme-bg-secondary, #f8f9fa);
-  color: var(--theme-text-primary, #1f1f1f);
-}
-
-.composer-input:focus {
-  outline: none;
-  border-color: var(--theme-accent-color, #007bff);
-  background: var(--theme-bg-primary, #ffffff);
-}
-
-.composer-input::placeholder {
-  color: var(--theme-text-tertiary, #adb5bd);
-}
-
 /* 操作按钮 */
-.composer-actions {
+.action-buttons {
   display: flex;
   gap: 8px;
+  margin-top: 8px;
 }
 
 .action-btn {
   flex: 1;
-  background: var(--theme-bg-secondary, #f8f9fa);
-  border: 1px solid var(--theme-border-color, #e0e0e0);
-  border-radius: 20px;
-  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
   font-size: 14px;
-  color: var(--theme-text-secondary, #6c757d);
+  color: #6c757d;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .action-btn:hover:not(:disabled) {
-  background: var(--theme-bg-tertiary, #e9ecef);
-  color: var(--theme-text-primary, #1f1f1f);
+  background: #e9ecef;
+  color: #1f1f1f;
 }
 
 .action-btn:disabled {
@@ -332,208 +301,308 @@
   cursor: not-allowed;
 }
 
-/* 动画 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.cancel-btn,
+.save-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 滚动条样式 */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .post-composer-overlay {
-    padding: 10px;
-  }
-  
-  .post-composer {
+  .api-settings-modal {
+    width: 95%;
     max-height: 95vh;
-    border-radius: 12px;
   }
   
-  .composer-header {
-    padding: 12px 16px;
-  }
-  
-  .composer-content {
+  .modal-header {
     padding: 16px;
   }
   
-  .composer-avatar {
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 16px;
+  }
+  
+  .user-avatar {
     width: 36px;
     height: 36px;
   }
   
-  .composer-username {
+  .username {
     font-size: 15px;
   }
   
-  .composer-textarea {
-    font-size: 15px;
-  }
-  
-  .composer-images {
+  .images-grid {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 6px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
     gap: 6px;
   }
 }
 
 @media (max-width: 480px) {
-  .post-composer-overlay {
-    padding: 0;
-  }
-  
-  .post-composer {
+  .api-settings-modal {
+    width: 100%;
     height: 100vh;
     max-height: 100vh;
     border-radius: 0;
   }
   
-  .composer-header {
-    padding: 10px 12px;
-  }
-  
-  .composer-content {
+  .modal-header {
     padding: 12px;
   }
   
-  .composer-avatar {
+  .modal-body {
+    padding: 12px;
+  }
+  
+  .modal-footer {
+    padding: 12px;
+  }
+  
+  .user-avatar {
     width: 32px;
     height: 32px;
   }
   
-  .composer-username {
+  .username {
     font-size: 14px;
   }
   
-  .composer-textarea {
-    font-size: 14px;
-  }
-  
-  .composer-images {
+  .images-grid {
     grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     gap: 4px;
-  }
-  
-  .composer-options {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .composer-actions {
-    flex-direction: column;
-    gap: 6px;
   }
 }
 
 /* 深色主题适配 */
-.theme-dark .post-composer {
-  background: var(--theme-bg-primary, #1a1a1a);
+.theme-dark .api-settings-modal {
+  background: #1a1a1a;
 }
 
-.theme-dark .composer-header {
-  border-bottom-color: var(--theme-border-color, #404040);
+.theme-dark .modal-header {
+  background-color: #2a2a2a;
+  border-bottom-color: #404040;
 }
 
-.theme-dark .composer-avatar {
-  border-color: var(--theme-border-color, #404040);
+.theme-dark .modal-header h2 {
+  color: #ffffff;
+}
+
+.theme-dark .close-btn {
+  color: #cccccc;
+}
+
+.theme-dark .close-btn:hover {
+  background-color: #404040;
+}
+
+.theme-dark .modal-body {
+  background: #1a1a1a;
+}
+
+.theme-dark .form-group label {
+  color: #ffffff;
+}
+
+.theme-dark .form-group input,
+.theme-dark .form-group select,
+.theme-dark .form-group textarea {
+  background: #2a2a2a;
+  border-color: #404040;
+  color: #ffffff;
+}
+
+.theme-dark .form-group input:focus,
+.theme-dark .form-group select:focus,
+.theme-dark .form-group textarea:focus {
+  background: #1a1a1a;
+}
+
+.theme-dark .field-hint {
+  color: #999999;
+}
+
+.theme-dark .user-info-display {
+  background-color: #2a2a2a;
+  border-color: #404040;
+}
+
+.theme-dark .user-avatar {
+  border-color: #404040;
+}
+
+.theme-dark .username {
+  color: #ffffff;
 }
 
 .theme-dark .privacy-btn {
-  background: var(--theme-bg-secondary, #2a2a2a);
-  border-color: var(--theme-border-color, #404040);
+  background: #2a2a2a;
+  border-color: #404040;
 }
 
 .theme-dark .privacy-btn:hover {
-  background: var(--theme-bg-tertiary, #404040);
+  background: #404040;
 }
 
-.theme-dark .tag-input,
-.theme-dark .composer-input {
-  background: var(--theme-bg-secondary, #2a2a2a);
-  border-color: var(--theme-border-color, #404040);
-  color: var(--theme-text-primary, #ffffff);
-}
-
-.theme-dark .tag-input:focus,
-.theme-dark .composer-input:focus {
-  background: var(--theme-bg-primary, #1a1a1a);
+.theme-dark .image-container {
+  background: #2a2a2a;
 }
 
 .theme-dark .action-btn {
-  background: var(--theme-bg-secondary, #2a2a2a);
-  border-color: var(--theme-border-color, #404040);
+  background: #2a2a2a;
+  border-color: #404040;
 }
 
 .theme-dark .action-btn:hover:not(:disabled) {
-  background: var(--theme-bg-tertiary, #404040);
+  background: #404040;
+}
+
+.theme-dark .modal-footer {
+  background-color: #2a2a2a;
+  border-top-color: #404040;
+}
+
+.theme-dark .cancel-btn {
+  background-color: #2a2a2a;
+  color: #cccccc;
+  border-color: #404040;
+}
+
+.theme-dark .cancel-btn:hover:not(:disabled) {
+  background-color: #404040;
 }
 
 /* 减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
-  .post-composer-overlay,
-  .post-composer {
-    animation: none !important;
-  }
-  
-  .composer-publish-btn.active:hover:not(:disabled) {
-    transform: none !important;
+  .close-btn,
+  .cancel-btn,
+  .save-btn,
+  .privacy-btn,
+  .add-tag-btn,
+  .action-btn {
+    transition: none;
   }
 }
 
 /* 高对比度模式 */
 @media (prefers-contrast: high) {
-  .post-composer {
-    border: 2px solid var(--theme-border-color, #000000);
+  .api-settings-modal {
+    border: 2px solid #000000;
   }
   
-  .composer-header {
-    border-bottom-width: 2px;
-  }
-  
-  .composer-avatar {
-    border-width: 3px;
-  }
-  
-  .tag-input,
-  .composer-input {
+  .modal-header,
+  .modal-footer {
     border-width: 2px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    border-width: 2px;
+  }
+  
+  .user-info-display {
+    border-width: 2px;
+  }
+  
+  .user-avatar {
+    border-width: 3px;
   }
 }
 
 /* 焦点样式 */
-.composer-cancel-btn:focus,
-.composer-publish-btn:focus,
+.close-btn:focus,
+.cancel-btn:focus,
+.save-btn:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
 .privacy-btn:focus,
-.tag-input:focus,
 .add-tag-btn:focus,
-.composer-input:focus,
 .action-btn:focus,
 .remove-image-btn:focus,
 .remove-tag-btn:focus {
-  outline: 2px solid var(--theme-accent-color, #007bff);
+  outline: 2px solid #007bff;
   outline-offset: 2px;
 }
 
-.composer-cancel-btn:focus:not(:focus-visible),
-.composer-publish-btn:focus:not(:focus-visible),
+.close-btn:focus:not(:focus-visible),
+.cancel-btn:focus:not(:focus-visible),
+.save-btn:focus:not(:focus-visible),
+.form-group input:focus:not(:focus-visible),
+.form-group select:focus:not(:focus-visible),
+.form-group textarea:focus:not(:focus-visible),
 .privacy-btn:focus:not(:focus-visible),
-.tag-input:focus:not(:focus-visible),
 .add-tag-btn:focus:not(:focus-visible),
-.composer-input:focus:not(:focus-visible),
 .action-btn:focus:not(:focus-visible),
 .remove-image-btn:focus:not(:focus-visible),
 .remove-tag-btn:focus:not(:focus-visible) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { dataManager } from '../../../utils/dataManager';
 import ColorSettingsPage from '../../settings/ColorSettingsPage';
@@ -9,6 +9,7 @@ import PageTransitionManager from '../../utils/PageTransitionManager';
 import PresetManagerPage from '../preset/PresetManagerPage';
 import DataBackupManager from '../backup/DataBackupManager';
 import BottomNavigation from '../BottomNavigation';
+import PersonalSettingsModal from '../PersonalSettingsModal';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -41,14 +42,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     model: ''
   });
   const [showPersonalSettings, setShowPersonalSettings] = useState(false);
-  const [tempPersonalSettings, setTempPersonalSettings] = useState<PersonalSettings>({
-    userAvatar: '/avatars/user-avatar.svg',
-    userNickname: '用户',
-    userBio: ''
-  });
-  const [avatarPreview, setAvatarPreview] = useState('/avatars/user-avatar.svg');
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 新内容计数状态
   const [newContentCount, setNewContentCount] = useState<{
@@ -186,8 +179,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         setShowApiSettings(true);
         break;
       case 'personal-settings':
-        setTempPersonalSettings(personalSettings);
-        setAvatarPreview(personalSettings.userAvatar);
         setShowPersonalSettings(true);
         break;
       case 'color-settings':
@@ -251,78 +242,31 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     setShowApiSettings(false);
   };
 
-  // 处理个人设置输入变化
-  const handlePersonalSettingsChange = (field: keyof PersonalSettings, value: string) => {
-    setTempPersonalSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // 处理头像上传
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // 验证文件类型
-      if (!file.type.startsWith('image/')) {
-        alert('请选择图片文件');
-        return;
-      }
-      
-      // 验证文件大小 (限制为 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('图片大小不能超过 5MB');
-        return;
-      }
-
-      setIsUploading(true);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setAvatarPreview(result);
-        setTempPersonalSettings(prev => ({ ...prev, userAvatar: result }));
-        setIsUploading(false);
-      };
-      reader.onerror = () => {
-        alert('读取文件失败');
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // 处理头像点击
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
   // 处理个人设置保存
-  const handlePersonalSettingsSave = async () => {
-    if (!tempPersonalSettings.userNickname.trim()) {
-      alert('请输入用户昵称');
-      return;
-    }
-    
+  const handlePersonalSettingsSave = async (settings: PersonalSettings) => {
     try {
       // 保存到数据库
       await dataManager.initDB();
-      await dataManager.savePersonalSettings(tempPersonalSettings);
-      console.log('个人设置已保存到数据库:', tempPersonalSettings);
+      await dataManager.savePersonalSettings(settings);
+      console.log('个人设置已保存到数据库:', settings);
+      
+      // 更新本地状态
+      setPersonalSettings(settings);
+      
+      // 触发全局事件，通知其他组件更新
+      window.dispatchEvent(new CustomEvent('personalSettingsUpdated', { 
+        detail: { settings } 
+      }));
+      
     } catch (error) {
       console.error('Failed to save personal settings to database:', error);
       // 如果数据库保存失败，回退到localStorage
-      localStorage.setItem('personalSettings', JSON.stringify(tempPersonalSettings));
+      localStorage.setItem('personalSettings', JSON.stringify(settings));
+      
+      // 即使数据库保存失败，也更新本地状态
+      setPersonalSettings(settings);
     }
     
-    setPersonalSettings(tempPersonalSettings);
-    setShowPersonalSettings(false);
-  };
-
-  // 处理个人设置取消
-  const handlePersonalSettingsCancel = () => {
-    setTempPersonalSettings(personalSettings);
-    setAvatarPreview(personalSettings.userAvatar);
     setShowPersonalSettings(false);
   };
 
@@ -372,7 +316,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 </div>
                 <div className="me-info">
                   <h2 className="me-nickname">{personalSettings.userNickname}</h2>
-                  <p className="me-bio">{personalSettings.userBio || '这个人很懒，什么都没写~'}</p>
+                  <p className="me-bio">{personalSettings.userBio ? (personalSettings.userBio.length > 10 ? personalSettings.userBio.slice(0, 10) + '…' : personalSettings.userBio) : '这个人很懒，什么都没写~'}</p>
                 </div>
               </div>
             </div>
@@ -526,96 +470,12 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
       />
 
       {/* 个人设置模态框 */}
-      {showPersonalSettings && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handlePersonalSettingsCancel()}>
-          <div className="personal-settings-modal">
-            <div className="modal-header">
-              <h2>个人设置</h2>
-              <button className="close-btn" onClick={handlePersonalSettingsCancel}>×</button>
-            </div>
-            
-            <div className="modal-body">
-              {/* 头像上传区域 */}
-              <div className="form-group">
-                <label>用户头像</label>
-                <div className="avatar-upload-container">
-                  <div 
-                    className={`avatar-preview ${isUploading ? 'uploading' : ''}`}
-                    onClick={handleAvatarClick}
-                  >
-                    {avatarPreview ? (
-                      <Image 
-                        src={avatarPreview} 
-                        alt="用户头像" 
-                        width={100}
-                        height={100}
-                        className="avatar-image"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="avatar-placeholder">
-                        <span>👤</span>
-                        <span>点击上传头像</span>
-                      </div>
-                    )}
-                    {isUploading && (
-                      <div className="upload-overlay">
-                        <div className="upload-spinner"></div>
-                        <span>上传中...</span>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    style={{ display: 'none' }}
-                  />
-                  <div className="avatar-tips">
-                    <p>支持 JPG、PNG、GIF 格式，大小不超过 5MB</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="user-nickname">用户昵称</label>
-                <input
-                  type="text"
-                  id="user-nickname"
-                  value={tempPersonalSettings.userNickname}
-                  onChange={(e) => handlePersonalSettingsChange('userNickname', e.target.value)}
-                  placeholder="请输入你的昵称"
-                  maxLength={20}
-                />
-                <div className="char-count">{tempPersonalSettings.userNickname.length}/20</div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="user-bio">个人介绍</label>
-                <textarea
-                  id="user-bio"
-                  value={tempPersonalSettings.userBio}
-                  onChange={(e) => handlePersonalSettingsChange('userBio', e.target.value)}
-                  placeholder="介绍一下你自己吧..."
-                  rows={4}
-                  maxLength={200}
-                />
-                <div className="char-count">{tempPersonalSettings.userBio.length}/200</div>
-              </div>
-
-              <div className="tip-box">
-                <p>💡 提示：用户昵称和个人介绍会在聊天时注入到系统提示词中，帮助AI更好地了解你。</p>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={handlePersonalSettingsCancel}>取消</button>
-              <button className="save-btn" onClick={handlePersonalSettingsSave}>保存设置</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PersonalSettingsModal
+        isVisible={showPersonalSettings}
+        onClose={() => setShowPersonalSettings(false)}
+        onSave={handlePersonalSettingsSave}
+        currentSettings={personalSettings}
+      />
 
       {/* 数据备份管理模态框 */}
       {showDataBackup && (

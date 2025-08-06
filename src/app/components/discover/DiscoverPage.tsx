@@ -44,6 +44,11 @@ export default function DiscoverPage() {
     };
 
     loadNewContentCount();
+    
+    // 页面加载时立即触发一次计数更新，确保底部导航显示正确的状态
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+    }, 100);
   }, []);
 
   // 监听新内容更新事件
@@ -102,6 +107,10 @@ export default function DiscoverPage() {
           avatar: personalSettings.userAvatar
         });
 
+        // 数据加载完成后，检查是否需要更新新内容计数
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+        }, 200);
 
       } catch (error) {
         console.error('Failed to load discover data:', error);
@@ -130,7 +139,8 @@ export default function DiscoverPage() {
             : post
         ));
         
-
+        // 触发新内容计数更新
+        window.dispatchEvent(new CustomEvent('viewStateUpdated'));
         
         console.log(`动态 ${postId} 的AI评论已更新，共 ${updatedComments.length} 条评论`);
       } catch (error) {
@@ -155,7 +165,8 @@ export default function DiscoverPage() {
           
           setPosts(postsWithComments);
           
-
+          // 触发新内容计数更新
+          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
           
           console.log('✅ AI动态生成完成，已更新动态列表');
         } catch (error) {
@@ -228,6 +239,12 @@ export default function DiscoverPage() {
       await dataManager.saveDiscoverPost(newPost);
       setPosts(prev => [newPost, ...prev]);
       setShowComposer(false);
+
+      // 触发动态更新事件
+      window.dispatchEvent(new CustomEvent('aiPostGenerated'));
+      
+      // 触发新内容计数更新
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
 
       // 触发AI角色互动
       triggerAiInteraction(newPost);
@@ -323,6 +340,9 @@ export default function DiscoverPage() {
       setPosts(prev => prev.map(p => 
         p.id === postId ? updatedPost : p
       ));
+      
+      // 触发新内容计数更新
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
     } catch (error) {
       console.error('Failed to like post:', error);
     }
@@ -356,6 +376,9 @@ export default function DiscoverPage() {
           ? { ...p, comments: [...p.comments, comment] }
           : p
       ));
+
+      // 触发新内容计数更新
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
 
       // 触发AI评论生成
       await triggerAiCommentForPost(postId);
@@ -414,6 +437,11 @@ export default function DiscoverPage() {
       window.dispatchEvent(new CustomEvent('navigateToMe'));
     }
     // 'moments' 已经在当前页面，不需要处理
+    
+    // 切换页面时更新新内容计数
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+    }, 100);
   };
 
   if (isLoading) {

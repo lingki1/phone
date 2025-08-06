@@ -1457,9 +1457,10 @@ class DataManager {
   // 更新用户查看状态（标记为已查看）
   async updateDiscoverViewState(userId: string, lastViewedTimestamp: number, lastViewedPostId?: string): Promise<void> {
     try {
+      const currentState = await this.getDiscoverViewState(userId);
       const newState = {
-        lastViewedTimestamp,
-        lastViewedPostId,
+        lastViewedTimestamp: Math.max(currentState?.lastViewedTimestamp || 0, lastViewedTimestamp),
+        lastViewedPostId: lastViewedPostId || currentState?.lastViewedPostId,
         newPostsCount: 0, // 重置新动态计数
         newCommentsCount: 0, // 重置新评论计数
         lastUpdated: Date.now()
@@ -1468,6 +1469,25 @@ class DataManager {
       await this.saveDiscoverViewState(userId, newState);
     } catch (error) {
       console.warn('Failed to update discover view state:', error);
+      // 静默失败，不影响主要功能
+    }
+  }
+
+  // 更新评论查看状态（专门处理评论）
+  async updateCommentsViewState(userId: string, lastViewedCommentTimestamp: number): Promise<void> {
+    try {
+      const currentState = await this.getDiscoverViewState(userId);
+      const newState = {
+        lastViewedTimestamp: Math.max(currentState?.lastViewedTimestamp || 0, lastViewedCommentTimestamp),
+        lastViewedPostId: currentState?.lastViewedPostId,
+        newPostsCount: currentState?.newPostsCount || 0,
+        newCommentsCount: 0, // 重置新评论计数
+        lastUpdated: Date.now()
+      };
+
+      await this.saveDiscoverViewState(userId, newState);
+    } catch (error) {
+      console.warn('Failed to update comments view state:', error);
       // 静默失败，不影响主要功能
     }
   }

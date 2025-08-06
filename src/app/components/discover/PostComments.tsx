@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { DiscoverComment } from '../../types/discover';
 import './PostComments.css';
 
 interface PostCommentsProps {
   comments: DiscoverComment[];
-  onComment?: (postId: string, content: string, replyTo?: string) => void;
-  postId?: string;
-  currentUserId?: string;
+  onComment: (postId: string, content: string, replyTo?: string) => void;
+  postId: string;
+  currentUserId: string;
+  onCommentsVisibilityChange?: () => void; // 新增：评论可见性变化回调
 }
 
 export default function PostComments({ 
@@ -17,22 +18,47 @@ export default function PostComments({
   onComment, 
   postId, 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  currentUserId 
+  currentUserId,
+  onCommentsVisibilityChange
 }: PostCommentsProps) {
   const [showAllComments, setShowAllComments] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ commentId: string; authorName: string } | null>(null);
   const [replyContent, setReplyContent] = useState('');
-  
-  // 按时间戳排序，最新的在后面
-  const sortedComments = [...comments].sort((a, b) => a.timestamp - b.timestamp);
-  
-  // 默认显示最新的8条评论
-  const defaultDisplayCount = 8;
-  const displayedComments = showAllComments 
-    ? sortedComments 
-    : sortedComments.slice(0, defaultDisplayCount);
-  
-  const hasMoreComments = sortedComments.length > defaultDisplayCount;
+  const commentsRef = useRef<HTMLDivElement>(null);
+
+  // 监听评论区域可见性
+  useEffect(() => {
+    if (!onCommentsVisibilityChange || comments.length === 0) return;
+
+    console.log('👁️ 设置评论可见性监听:', {
+      postId,
+      commentsCount: comments.length,
+      hasNewComments: comments.some(c => c.isNew)
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            console.log('👁️ 评论区域可见，触发回调:', {
+              postId,
+              intersectionRatio: entry.intersectionRatio
+            });
+            onCommentsVisibilityChange();
+            observer.disconnect(); // 只触发一次
+          }
+        });
+      },
+      { threshold: 0.3 } // 当30%可见时触发
+    );
+
+    if (commentsRef.current) {
+      observer.observe(commentsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [onCommentsVisibilityChange, comments.length, postId, comments]);
+
   const formatTime = (timestamp: number) => {
     const now = Date.now();
     const diff = now - timestamp;
@@ -49,6 +75,31 @@ export default function PostComments({
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const handleReply = (commentId: string, authorName: string) => {
+    setReplyTo({ commentId, authorName });
+    setReplyContent(`@${authorName} `);
+  };
+
+  const handleSubmitReply = () => {
+    if (replyContent.trim() && replyTo) {
+      onComment(postId, replyContent.trim(), replyTo.commentId);
+      setReplyContent('');
+      setReplyTo(null);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmitReply();
+    }
+  };
+
+  const handleCancelReply = () => {
+    setReplyTo(null);
+    setReplyContent('');
   };
 
   // 处理@提及的显示
@@ -74,39 +125,22 @@ export default function PostComments({
     return result;
   };
 
-  // 处理回复
-  const handleReply = (commentId: string, authorName: string) => {
-    setReplyingTo(commentId);
-    setReplyContent(`@${authorName} `);
-  };
-
-  // 提交回复
-  const submitReply = () => {
-    if (replyContent.trim() && postId && onComment) {
-      onComment(postId, replyContent.trim(), replyingTo || undefined);
-      setReplyingTo(null);
-      setReplyContent('');
-    }
-  };
-
-  // 取消回复
-  const cancelReply = () => {
-    setReplyingTo(null);
-    setReplyContent('');
-  };
+  // 显示评论数量
+  const displayedComments = showAllComments ? comments : comments.slice(0, 3);
+  const hasMoreComments = comments.length > 3;
 
   if (comments.length === 0) {
     return (
       <div className="post-comments">
         <div className="comments-empty">
-          <span>还没有评论，快来抢沙发吧！</span>
+          还没有评论，快来抢沙发吧！
         </div>
       </div>
     );
   }
 
   return (
-    <div className="post-comments">
+    <div className="post-comments" ref={commentsRef}>
       <div className="comments-list">
         {displayedComments.map((comment) => (
           <div key={comment.id} className={`comment-item ${comment.aiGenerated ? 'ai-generated' : ''} ${comment.isNew ? 'new-comment' : ''}`}>
@@ -153,53 +187,42 @@ export default function PostComments({
       </div>
 
       {/* 回复输入框 */}
-      {replyingTo && (
+      {replyTo && (
         <div className="reply-input-container">
-          <div className="reply-input-wrapper">
+          <div className="reply-input-header">
+            <span className="reply-to-text">回复 @{replyTo.authorName}</span>
+            <button className="cancel-reply-btn" onClick={handleCancelReply}>
+              ×
+            </button>
+          </div>
+          <div className="reply-input-content">
             <textarea
-              className="reply-input"
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="输入回复内容..."
+              onKeyPress={handleKeyPress}
+              placeholder="写下你的回复..."
+              className="reply-textarea"
               rows={2}
-              autoFocus
             />
-            <div className="reply-actions">
-              <button className="reply-cancel-btn" onClick={cancelReply}>
-                取消
-              </button>
-              <button 
-                className="reply-submit-btn"
-                onClick={submitReply}
-                disabled={!replyContent.trim()}
-              >
-                发送
-              </button>
-            </div>
+            <button
+              onClick={handleSubmitReply}
+              disabled={!replyContent.trim()}
+              className="reply-submit-btn"
+            >
+              发送
+            </button>
           </div>
         </div>
       )}
-      
+
+      {/* 显示更多评论按钮 */}
       {hasMoreComments && (
-        <div className="comments-more">
-          <button 
-            className="show-more-btn"
-            onClick={() => setShowAllComments(!showAllComments)}
-          >
-            {showAllComments 
-              ? `收起评论 (${sortedComments.length}条)` 
-              : `查看更多评论 (${sortedComments.length - defaultDisplayCount}条)`
-            }
-          </button>
-        </div>
-      )}
-      
-      {comments.length > 0 && (
-        <div className="comments-summary">
-          <span className="comments-count">
-            共 {comments.length} 条评论
-          </span>
-        </div>
+        <button 
+          className="show-more-comments-btn"
+          onClick={() => setShowAllComments(true)}
+        >
+          查看全部 {comments.length} 条评论
+        </button>
       )}
     </div>
   );

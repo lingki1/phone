@@ -28,6 +28,9 @@ export default function PostList({
       await dataManager.updateDiscoverViewState(currentUserId, timestamp);
       setLastViewedTimestamp(timestamp);
       console.log('✅ 已更新查看状态，时间戳:', timestamp);
+      
+      // 触发事件通知其他组件更新新内容计数
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
     } catch (error) {
       console.warn('Failed to update view state:', error);
     }
@@ -52,6 +55,14 @@ export default function PostList({
         }));
         
         setPostsWithNewMarkers(markedPosts);
+        
+        console.log('📊 标记新内容完成:', {
+          lastViewedTimestamp: currentLastViewed,
+          totalPosts: posts.length,
+          newPosts: markedPosts.filter(p => p.isNew).length,
+          totalComments: posts.reduce((sum, p) => sum + p.comments.length, 0),
+          newComments: markedPosts.reduce((sum, p) => sum + p.comments.filter(c => c.isNew).length, 0)
+        });
       } catch (error) {
         console.warn('Failed to get view state, using fallback logic:', error);
         // 降级逻辑：使用1小时前作为默认值
@@ -108,6 +119,43 @@ export default function PostList({
     }
   };
 
+  // 处理评论可见性变化
+  const handleCommentsVisibility = async (post: DiscoverPost) => {
+    // 检查是否有新评论
+    const hasNewComments = post.comments.some(comment => 
+      comment.timestamp > lastViewedTimestamp && comment.authorId !== currentUserId
+    );
+    
+    if (hasNewComments) {
+      // 找到最新的评论时间戳
+      const latestCommentTimestamp = Math.max(
+        ...post.comments
+          .filter(comment => comment.authorId !== currentUserId)
+          .map(comment => comment.timestamp)
+      );
+      
+      console.log('👁️ 检测到评论可见性变化:', {
+        postId: post.id,
+        hasNewComments,
+        lastViewedTimestamp,
+        latestCommentTimestamp,
+        newCommentsCount: post.comments.filter(c => c.timestamp > lastViewedTimestamp && c.authorId !== currentUserId).length
+      });
+      
+      // 使用专门的评论查看状态更新方法
+      try {
+        await dataManager.updateCommentsViewState(currentUserId, latestCommentTimestamp);
+        setLastViewedTimestamp(latestCommentTimestamp);
+        console.log('✅ 已更新评论查看状态，时间戳:', latestCommentTimestamp);
+        
+        // 触发事件通知其他组件更新新内容计数
+        window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+      } catch (error) {
+        console.warn('Failed to update comments view state:', error);
+      }
+    }
+  };
+
   return (
     <div className="discover-content">
       <div className="post-list">
@@ -119,6 +167,7 @@ export default function PostList({
             onComment={onComment}
             currentUserId={currentUserId}
             onVisibilityChange={() => handlePostVisibility(post)}
+            onCommentsVisibilityChange={() => handleCommentsVisibility(post)}
           />
         ))}
       </div>

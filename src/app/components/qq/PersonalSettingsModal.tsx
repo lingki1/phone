@@ -182,9 +182,9 @@ export default function PersonalSettingsModal({
               onChange={(e) => handleInputChange('userBio', e.target.value)}
               placeholder="介绍一下你自己吧..."
               rows={4}
-              maxLength={200}
+              maxLength={10000}
             />
-            <div className="char-count">{settings.userBio.length}/200</div>
+            <div className="char-count">{settings.userBio.length}/10000</div>
           </div>
 
           <div className="tip-box">
