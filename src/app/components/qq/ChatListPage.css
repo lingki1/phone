@@ -516,6 +516,14 @@
   color: var(--theme-text-secondary, #5f6368);
 }
 
+.chat-list-item .unread-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
 .chat-list-item .unread-count {
   min-width: 18px;
   height: 18px;
@@ -528,6 +536,22 @@
   text-align: center;
   border-radius: 9px;
   box-shadow: var(--theme-shadow-light, 0 1px 3px rgba(0, 0, 0, 0.1));
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* 移动端聊天列表项调整 */

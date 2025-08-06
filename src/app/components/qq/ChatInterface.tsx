@@ -205,6 +205,49 @@ export default function ChatInterface({
     }
   }, [isInitialized, displayedMessages]);
 
+  // 标记消息为已读
+  useEffect(() => {
+    if (isInitialized && displayedMessages.length > 0) {
+      const markMessagesAsRead = async () => {
+        try {
+          // 获取当前显示的最新消息时间戳
+          const latestMessageTimestamp = Math.max(...displayedMessages.map(msg => msg.timestamp));
+          
+          // 更新聊天中的未读状态
+          const updatedMessages = chat.messages.map(msg => ({
+            ...msg,
+            isRead: msg.timestamp <= latestMessageTimestamp ? true : msg.isRead
+          }));
+          
+          // 计算未读消息数量
+          const unreadCount = updatedMessages.filter(msg => 
+            msg.role === 'assistant' && !msg.isRead
+          ).length;
+          
+          // 更新聊天记录
+          const updatedChat = {
+            ...chat,
+            messages: updatedMessages,
+            unreadCount,
+            lastReadTimestamp: latestMessageTimestamp
+          };
+          
+          onUpdateChat(updatedChat);
+          
+          // 触发通知系统更新
+          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+          
+        } catch (error) {
+          console.error('Failed to mark messages as read:', error);
+        }
+      };
+      
+      // 延迟标记已读，确保用户真正看到了消息
+      const timer = setTimeout(markMessagesAsRead, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized, displayedMessages, chat.messages, onUpdateChat, chat]);
+
   // 新消息发送显示最新消息处
   useEffect(() => {
     if (isInitialized && chat.messages.length > 0 && displayedMessages.length > 0) {
@@ -553,7 +596,8 @@ export default function ChatInterface({
       timestamp: Date.now(),
       senderName: chat.isGroup ? (chat.settings.myNickname || '我') : undefined,
       senderAvatar: chat.isGroup ? chat.settings.myAvatar : undefined,
-      quote: quotedMessage
+      quote: quotedMessage,
+      isRead: true // 用户发送的消息默认为已读
     };
 
     // 添加用户消息到聊天记录
@@ -746,13 +790,24 @@ export default function ChatInterface({
             timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
           };
           
-          // 立即更新UI，显示这条消息
-          onUpdateChat(currentChat);
-          
-          // 添加延迟，模拟人类打字效果（除了最后一条消息）
-          if (messagesArray.indexOf(msgData) < messagesArray.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 500));
-          }
+                  // 立即更新UI，显示这条消息
+        onUpdateChat(currentChat);
+        
+        // 触发聊天消息通知（仅对AI消息）
+        if (aiMessage.role === 'assistant') {
+          window.dispatchEvent(new CustomEvent('chatMessageGenerated', {
+            detail: {
+              characterName: aiMessage.senderName || chat.name,
+              chatId: chat.id,
+              messageContent: aiMessage.content
+            }
+          }));
+        }
+        
+        // 添加延迟，模拟人类打字效果（除了最后一条消息）
+        if (messagesArray.indexOf(msgData) < messagesArray.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 500));
+        }
         }
       }
 
@@ -1307,7 +1362,8 @@ ${myPersona}${groupMemoryInfo}
       senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
       type,
       meaning,
-      url
+      url,
+      isRead: false // AI消息默认为未读
     };
 
     return aiMessage;

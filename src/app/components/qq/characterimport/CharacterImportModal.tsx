@@ -146,6 +146,8 @@ export default function CharacterImportModal({
         lastMessage: '开始聊天吧！',
         timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
         isGroup: false,
+        unreadCount: 0,
+        lastReadTimestamp: Date.now(),
         messages: [],
         persona: combinedPersona,
         settings: {

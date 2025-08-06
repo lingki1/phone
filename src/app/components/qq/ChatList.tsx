@@ -10,7 +10,8 @@ interface ChatItem {
   lastMessage: string;
   timestamp: string;
   isGroup: boolean;
-  unreadCount?: number;
+  unreadCount: number;
+  lastReadTimestamp: number;
 }
 
 interface ChatListProps {
@@ -136,9 +137,11 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
             
             <div className="meta">
               <div className="timestamp">{chat.timestamp}</div>
-              {chat.unreadCount && chat.unreadCount > 0 && (
-                <div className="unread-count">
-                  {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+              {chat.unreadCount > 0 && (
+                <div className="unread-badge">
+                  <span className="unread-count">
+                    {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                  </span>
                 </div>
               )}
               <button 

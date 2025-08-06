@@ -86,21 +86,23 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       });
     };
 
-    // 监听聊天消息生成事件（预留）
+    // 监听聊天消息生成事件
     const handleChatMessageGenerated = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { characterName } = customEvent.detail;
+      const { characterName, chatId, messageContent } = customEvent.detail;
       
       addNotification({
         type: 'info',
         title: '新消息',
-        message: `${characterName} 发送了新消息`,
+        message: `${characterName}: ${messageContent?.substring(0, 30) || '发送了新消息'}${messageContent && messageContent.length > 30 ? '...' : ''}`,
         icon: '💌',
         action: {
           label: '查看',
           onClick: () => {
-            // 跳转到聊天页面
-            window.dispatchEvent(new CustomEvent('navigateToChat'));
+            // 跳转到特定聊天
+            window.dispatchEvent(new CustomEvent('openChat', { 
+              detail: { chatId } 
+            }));
           }
         }
       });

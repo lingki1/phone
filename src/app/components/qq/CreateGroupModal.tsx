@@ -134,6 +134,8 @@ export default function CreateGroupModal({
         lastMessage: '群聊已创建',
         timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
         isGroup: true,
+        unreadCount: 0,
+        lastReadTimestamp: Date.now(),
         messages: [],
         persona: '',
         settings: {

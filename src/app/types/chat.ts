@@ -13,6 +13,7 @@ export interface Message {
   isHidden?: boolean; // 是否对用户隐藏（系统消息）
   meaning?: string; // 表情含义
   url?: string; // 图片或表情URL
+  isRead?: boolean; // 消息是否已读
   redPacketData?: {
     id: string;
     amount: number;
@@ -53,7 +54,8 @@ export interface ChatItem {
   lastMessage: string;
   timestamp: string;
   isGroup: boolean;
-  unreadCount?: number;
+  unreadCount: number; // 未读消息数量
+  lastReadTimestamp: number; // 最后已读时间戳
   messages: Message[];
   persona: string;
   

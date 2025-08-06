@@ -224,12 +224,27 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       console.log('ChatListPage - 已设置activeView为messages，currentScreen为list');
     };
 
+    // 监听打开特定聊天事件
+    const handleOpenChat = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { chatId } = customEvent.detail;
+      
+      console.log('ChatListPage - 收到打开聊天事件:', chatId);
+      if (chatId) {
+        setSelectedChatId(chatId);
+        setCurrentScreen('chat');
+        setActiveView('messages');
+      }
+    };
+
     console.log('ChatListPage - 添加事件监听器');
     window.addEventListener('showMessages', handleShowMessages);
+    window.addEventListener('openChat', handleOpenChat);
     
     return () => {
       console.log('ChatListPage - 移除事件监听器');
       window.removeEventListener('showMessages', handleShowMessages);
+      window.removeEventListener('openChat', handleOpenChat);
     };
   }, []);
   
@@ -288,7 +303,15 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         
         // 加载聊天数据
         const savedChats = await dataManager.getAllChats();
-        setChats(savedChats);
+        
+        // 为现有聊天计算未读消息数量
+        const chatsWithUnreadCount = savedChats.map(chat => ({
+          ...chat,
+          unreadCount: chat.unreadCount ?? calculateUnreadCount(chat),
+          lastReadTimestamp: chat.lastReadTimestamp ?? Date.now()
+        }));
+        
+        setChats(chatsWithUnreadCount);
       } catch (error) {
         console.error('Failed to initialize data:', error);
         // 回退到localStorage
@@ -348,6 +371,8 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       lastMessage: '开始聊天吧！',
       timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
       isGroup: false,
+      unreadCount: 0,
+      lastReadTimestamp: Date.now(),
       messages: [],
       persona,
       settings: {
@@ -425,15 +450,29 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     }
   };
 
+  // 计算未读消息数量
+  const calculateUnreadCount = (chat: ChatItem): number => {
+    return chat.messages.filter(msg => 
+      msg.role === 'assistant' && !msg.isRead
+    ).length;
+  };
+
   // 更新聊天数据
   const handleUpdateChat = async (updatedChat: ChatItem) => {
+    // 计算未读消息数量
+    const unreadCount = calculateUnreadCount(updatedChat);
+    const finalUpdatedChat = {
+      ...updatedChat,
+      unreadCount
+    };
+    
     const updatedChats = chats.map(chat => 
-      chat.id === updatedChat.id ? updatedChat : chat
+      chat.id === finalUpdatedChat.id ? finalUpdatedChat : chat
     );
     setChats(updatedChats);
     
     try {
-      await dataManager.saveChat(updatedChat);
+      await dataManager.saveChat(finalUpdatedChat);
     } catch (error) {
       console.error('Failed to update chat:', error);
       localStorage.setItem('chats', JSON.stringify(updatedChats));
