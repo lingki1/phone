@@ -9,7 +9,8 @@ import './PostList.css';
 interface PostListProps {
   posts: DiscoverPost[];
   onLike: (postId: string) => void;
-  onComment: (postId: string, content: string) => void;
+  onComment: (postId: string, content: string, replyTo?: string) => void;
+  onDelete?: (postId: string) => void;
   currentUserId: string;
 }
 
@@ -17,6 +18,7 @@ export default function PostList({
   posts, 
   onLike, 
   onComment, 
+  onDelete,
   currentUserId 
 }: PostListProps) {
   const [postsWithNewMarkers, setPostsWithNewMarkers] = useState<DiscoverPost[]>([]);
@@ -165,6 +167,7 @@ export default function PostList({
             post={post}
             onLike={() => onLike(post.id)}
             onComment={onComment}
+            onDelete={onDelete ? () => onDelete(post.id) : undefined}
             currentUserId={currentUserId}
             onVisibilityChange={() => handlePostVisibility(post)}
             onCommentsVisibilityChange={() => handleCommentsVisibility(post)}

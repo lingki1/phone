@@ -357,6 +357,42 @@ export default function DiscoverPage() {
 
 
 
+  // 处理删除动态
+  const handleDeletePost = async (postId: string) => {
+    try {
+      // 确认删除
+      if (!confirm('确定要删除这条动态吗？删除后无法恢复。')) {
+        return;
+      }
+
+      // 删除动态
+      await dataManager.deleteDiscoverPost(postId);
+      
+      // 删除相关的评论
+      const post = posts.find(p => p.id === postId);
+      if (post && post.comments.length > 0) {
+        for (const comment of post.comments) {
+          try {
+            await dataManager.deleteDiscoverComment(comment.id);
+          } catch (error) {
+            console.warn('删除评论失败:', comment.id, error);
+          }
+        }
+      }
+      
+      // 更新本地状态
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      
+      // 触发新内容计数更新
+      window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+      
+      console.log('✅ 动态删除成功:', postId);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      alert('删除动态失败，请重试');
+    }
+  };
+
   // 处理评论
   const handleComment = async (postId: string, content: string, replyTo?: string) => {
     if (!userInfo) return;
@@ -475,6 +511,7 @@ export default function DiscoverPage() {
           posts={posts}
           onLike={handleLike}
           onComment={handleComment}
+          onDelete={handleDeletePost}
           currentUserId="user"
         />
       </div>

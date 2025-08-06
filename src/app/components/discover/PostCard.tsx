@@ -11,7 +11,8 @@ import './PostCard.css';
 interface PostCardProps {
   post: DiscoverPost;
   onLike: () => void;
-  onComment: (postId: string, content: string) => void;
+  onComment: (postId: string, content: string, replyTo?: string) => void;
+  onDelete?: () => void;
   currentUserId: string;
   onVisibilityChange?: () => void;
   onCommentsVisibilityChange?: () => void;
@@ -21,6 +22,7 @@ export default function PostCard({
   post, 
   onLike, 
   onComment, 
+  onDelete,
   currentUserId,
   onVisibilityChange,
   onCommentsVisibilityChange
@@ -154,8 +156,19 @@ export default function PostCard({
           </div>
         </div>
         
-        <div className="post-privacy">
-          {post.isPublic ? '🌍' : '👥'}
+        <div className="post-header-actions">
+          <div className="post-privacy">
+            {post.isPublic ? '🌍' : '👥'}
+          </div>
+          {onDelete && post.authorId === currentUserId && (
+            <button 
+              className="post-delete-btn"
+              onClick={onDelete}
+              title="删除动态"
+            >
+              🗑️
+            </button>
+          )}
         </div>
       </div>
 

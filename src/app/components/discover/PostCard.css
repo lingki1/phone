@@ -114,9 +114,33 @@
   color: var(--theme-accent-color, #007bff);
 }
 
+.post-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .post-privacy {
   font-size: 16px;
   opacity: 0.7;
+}
+
+.post-delete-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--theme-text-secondary, #666);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.post-delete-btn:hover {
+  opacity: 1;
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
 }
 
 /* 内容区域 */
