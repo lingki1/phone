@@ -5,6 +5,7 @@ import { dataManager } from '../../utils/dataManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
 import { aiCommentService } from './utils/aiCommentService';
+import { autoGenerationService } from './utils/autoGenerationService';
 import BottomNavigation from '../qq/BottomNavigation';
 
 import PostComposer from './PostComposer';
@@ -106,6 +107,12 @@ export default function DiscoverPage() {
           nickname: personalSettings.userNickname,
           avatar: personalSettings.userAvatar
         });
+
+        // 启动自动生成服务
+        if (settingsData) {
+          await autoGenerationService.start(settingsData);
+          console.log('🚀 自动生成服务已启动');
+        }
 
         // 数据加载完成后，检查是否需要更新新内容计数
         setTimeout(() => {
