@@ -4,6 +4,7 @@ import ThemeProvider, { ThemeErrorBoundary } from "./components/theme/ThemeProvi
 import ThemeInitScript from "./components/theme/ThemeInitScript";
 import ViewportHandler from "./components/utils/ViewportHandler";
 import { AiPendingProvider } from "./components/async";
+import { NotificationProvider } from "./components/notice";
 
 export const metadata: Metadata = {
   title: "Lingki-AI",
@@ -49,10 +50,12 @@ export default function RootLayout({
       <body>
         <ThemeErrorBoundary>
           <ThemeProvider>
-            <AiPendingProvider>
-              <ViewportHandler />
-              {children}
-            </AiPendingProvider>
+            <NotificationProvider>
+              <AiPendingProvider>
+                <ViewportHandler />
+                {children}
+              </AiPendingProvider>
+            </NotificationProvider>
           </ThemeProvider>
         </ThemeErrorBoundary>
       </body>

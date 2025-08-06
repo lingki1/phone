@@ -1,0 +1,238 @@
+/* 通知容器样式 */
+.notification-container {
+  position: fixed;
+  z-index: 9999;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  pointer-events: none; /* 允许点击穿透 */
+}
+
+/* 位置样式 */
+.notification-top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.notification-top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.notification-bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.notification-bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.notification-top-center {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.notification-bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 通知头部 */
+.notification-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+  pointer-events: auto;
+}
+
+.clear-all-btn {
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+/* 通知列表 */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+/* 更多通知提示 */
+.notification-more {
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  margin-top: 8px;
+  pointer-events: auto;
+}
+
+/* 滚动条样式 */
+.notification-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notification-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notification-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.notification-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .notification-container {
+    max-width: calc(100vw - 40px);
+    max-height: 60vh;
+  }
+  
+  .notification-top-right,
+  .notification-top-left {
+    top: 10px;
+  }
+  
+  .notification-bottom-right,
+  .notification-bottom-left {
+    bottom: 10px;
+  }
+  
+  .notification-top-center {
+    top: 10px;
+  }
+  
+  .notification-bottom-center {
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-container {
+    max-width: calc(100vw - 20px);
+    max-height: 50vh;
+  }
+  
+  .notification-top-right,
+  .notification-top-left {
+    top: 5px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .notification-bottom-right,
+  .notification-bottom-left {
+    bottom: 5px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .notification-top-center {
+    top: 5px;
+  }
+  
+  .notification-bottom-center {
+    bottom: 5px;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .clear-all-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.theme-dark .clear-all-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.theme-dark .notification-more {
+  background: rgba(0, 0, 0, 0.9);
+  color: #ccc;
+}
+
+/* 动画效果 */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notification-top-right .notification-item,
+.notification-bottom-right .notification-item {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-top-left .notification-item,
+.notification-bottom-left .notification-item {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.notification-top-center .notification-item {
+  animation: slideInTop 0.3s ease-out;
+}
+
+.notification-bottom-center .notification-item {
+  animation: slideInBottom 0.3s ease-out;
+} 
