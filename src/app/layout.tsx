@@ -3,6 +3,7 @@ import "./globals.css";
 import ThemeProvider, { ThemeErrorBoundary } from "./components/theme/ThemeProvider";
 import ThemeInitScript from "./components/theme/ThemeInitScript";
 import ViewportHandler from "./components/utils/ViewportHandler";
+import { AiPendingProvider } from "./components/async";
 
 export const metadata: Metadata = {
   title: "Lingki-AI",
@@ -48,8 +49,10 @@ export default function RootLayout({
       <body>
         <ThemeErrorBoundary>
           <ThemeProvider>
-            <ViewportHandler />
-            {children}
+            <AiPendingProvider>
+              <ViewportHandler />
+              {children}
+            </AiPendingProvider>
           </ThemeProvider>
         </ThemeErrorBoundary>
       </body>

@@ -194,6 +194,8 @@
   background-color: var(--theme-bg-tertiary, #f0f0f0);
 }
 
+
+
 /* 移动端操作按钮调整 */
 @media (max-width: 767px) {
   .chat-actions {

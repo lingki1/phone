@@ -13,6 +13,7 @@ import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
 import { ChatStatusManager, ChatStatusDisplay, ChatStatus, injectStatusPrompt } from './chatstatus';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
+import { useAiPendingState, AiPendingIndicator } from '../async';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -85,6 +86,9 @@ export default function ChatInterface({
   const [chatBackground, setChatBackground] = useState<string>('');
   const [chatAnimation, setChatAnimation] = useState<string>('none');
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
+  
+  // 使用异步AI状态管理
+  const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
   
   // 聊天状态相关状态
   const [chatStatus, setChatStatus] = useState<ChatStatus>({
@@ -568,8 +572,9 @@ export default function ChatInterface({
       adjustTextareaHeight();
     }, 0);
 
-    // 触发AI回复
-    await triggerAiResponse(updatedChat);
+    // 触发AI回复（异步执行，不等待完成）
+    startAiTask(); // 开始AI任务
+    triggerAiResponse(updatedChat);
   };
 
   // 触发AI回复的核心函数
@@ -789,6 +794,7 @@ export default function ChatInterface({
     } finally {
       setIsLoading(false);
       setCurrentAiUser(null); // 清除当前AI用户信息
+      endAiTask(); // 结束AI任务
     }
   };
 
@@ -1493,6 +1499,13 @@ ${myPersona}${groupMemoryInfo}
           </div>
         </div>
         <div className="chat-actions">
+          {/* 后台AI回复指示器 */}
+          <AiPendingIndicator 
+            isPending={isPending}
+            size="small"
+            variant="dots"
+            aiName={chat.name}
+          />
           <button 
             className="action-btn"
             onClick={() => setShowBackgroundModal(true)}
@@ -1687,7 +1700,7 @@ ${myPersona}${groupMemoryInfo}
         )}
         
         {/* AI正在输入指示器 */}
-        {isLoading && (
+        {(isLoading || isPending) && (
           <div className={`message ai-message ${chat.isGroup ? 'group-message' : ''}`}>
             <div className="message-avatar">
               <Image 
@@ -1757,9 +1770,9 @@ ${myPersona}${groupMemoryInfo}
             value={message}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder={chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息..."}
+            placeholder={isPending ? "AI正在回复中，请稍候..." : (chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息...")}
             rows={1}
-            disabled={isLoading}
+            disabled={isLoading || isPending}
             style={{
               resize: 'none',
               overflow: 'hidden',
@@ -1770,7 +1783,7 @@ ${myPersona}${groupMemoryInfo}
           <button 
             className="red-packet-btn"
             onClick={() => setShowSendRedPacket(true)}
-            disabled={isLoading}
+            disabled={isLoading || isPending}
             title="发送红包"
           >
             🧧
@@ -1778,7 +1791,7 @@ ${myPersona}${groupMemoryInfo}
           <button 
             className="send-btn"
             onClick={handleSendMessage}
-            disabled={!message.trim() || isLoading}
+            disabled={!message.trim() || isLoading || isPending}
           >
             发送
           </button>
