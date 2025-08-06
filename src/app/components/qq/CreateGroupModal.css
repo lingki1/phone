@@ -11,6 +11,8 @@
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  /* 确保在移动端正确处理安全区域 */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .modal-content {
@@ -492,6 +494,10 @@
 
 /* 响应式设计 */
 @media (max-width: 600px) {
+  .modal-overlay {
+    /* 确保在移动端正确显示 */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
   .modal-content {
     width: 95%;
     margin: 10px;
@@ -528,8 +534,28 @@
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    /* 在手机端使用全屏显示 */
+    padding: 0;
+    align-items: stretch;
+  }
+  
+  .modal-content {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    /* 使用dvh单位确保在手机浏览器中正确显示 */
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  
   .modal-header {
     padding: 16px 20px;
+    /* 确保头部不被状态栏遮挡 */
+    padding-top: max(16px, env(safe-area-inset-top));
   }
   
   .modal-header h3 {
@@ -538,6 +564,10 @@
   
   .modal-body {
     padding: 16px;
+    /* 确保内容不被遮挡 */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    /* 使用dvh确保正确的高度计算 */
+    max-height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
   
   .step-title h4 {
@@ -556,5 +586,19 @@
   .contact-avatar {
     width: 40px;
     height: 40px;
+  }
+}
+
+/* 针对iPhone等设备的特殊处理 */
+@supports (height: 100dvh) {
+  @media (max-width: 480px) {
+    .modal-content {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+    
+    .modal-body {
+      max-height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
   }
 }

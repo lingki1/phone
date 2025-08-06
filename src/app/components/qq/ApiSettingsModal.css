@@ -10,6 +10,8 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  /* 确保在移动端正确处理安全区域 */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .api-settings-modal {
@@ -250,4 +252,90 @@
 
 .modal-body::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .modal-overlay {
+    /* 确保在移动端正确显示 */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .api-settings-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-header {
+    padding: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    /* 在手机端使用全屏显示 */
+    padding: 0;
+    align-items: stretch;
+  }
+  
+  .api-settings-modal {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    /* 使用dvh单位确保在手机浏览器中正确显示 */
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  
+  .modal-header {
+    padding: 12px;
+    /* 确保头部不被状态栏遮挡 */
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  
+  .modal-body {
+    padding: 12px;
+    /* 确保内容不被遮挡 */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    /* 使用dvh确保正确的高度计算 */
+    max-height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  
+  .modal-footer {
+    padding: 12px;
+    /* 考虑底部安全区域 */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  
+  .toggle-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .toggle-group input[type="checkbox"] {
+    align-self: flex-end;
+  }
+}
+
+/* 针对iPhone等设备的特殊处理 */
+@supports (height: 100dvh) {
+  @media (max-width: 480px) {
+    .api-settings-modal {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+    
+    .modal-body {
+      max-height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+  }
 } 
