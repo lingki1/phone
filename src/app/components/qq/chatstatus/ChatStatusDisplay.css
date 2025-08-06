@@ -4,6 +4,7 @@
   gap: 2px;
   font-size: 12px;
   color: #666;
+  position: relative;
 }
 
 .status-main {
@@ -12,11 +13,81 @@
   gap: 4px;
 }
 
-.status-details {
+/* 桌面端显示在线状态 */
+.desktop-only {
+  display: flex;
+}
+
+/* 状态触发器 */
+.status-trigger {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.status-trigger:hover {
+  background-color: var(--theme-bg-tertiary, rgba(0, 0, 0, 0.05));
+}
+
+.status-arrow {
+  font-size: 8px;
+  color: var(--theme-text-tertiary, #999);
+  transition: transform 0.2s ease;
+}
+
+.status-trigger:hover .status-arrow {
+  transform: rotate(180deg);
+}
+
+/* 悬浮弹窗 */
+.status-tooltip {
+  background-color: var(--theme-bg-primary, #ffffff);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--theme-shadow-color, rgba(0, 0, 0, 0.15));
+  padding: 8px 12px;
+  min-width: 180px;
+  max-width: 250px;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* 位置由JavaScript动态设置 */
+}
+
+/* 主题适配 */
+.status-tooltip {
+  background-color: var(--theme-tooltip-bg, var(--theme-bg-primary, #ffffff));
+  color: var(--theme-tooltip-text, var(--theme-text-primary, #333333));
+  border-color: var(--theme-tooltip-border, var(--theme-border-color, #e0e0e0));
+}
+
+.status-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.status-detail-item:not(:last-child) {
+  border-bottom: 1px solid var(--theme-border-light, rgba(0, 0, 0, 0.05));
+}
+
+.status-label {
+  font-weight: 500;
+  color: var(--theme-text-secondary, #666666);
+  min-width: 36px;
+}
+
+.status-value {
+  color: var(--theme-text-primary, #333333);
+  flex: 1;
+  font-weight: 400;
 }
 
 .status-item {
@@ -27,6 +98,7 @@
 
 .status-icon {
   font-size: 10px;
+  flex-shrink: 0;
 }
 
 .online-icon {
@@ -34,8 +106,9 @@
 }
 
 .status-text {
-  font-size: 11px;
-  color: #666;
+  font-size: 13px; /* 原来11px，增加2号 */
+  color: var(--theme-text-secondary, #666);
+  font-weight: 500; /* 增加字重使其更突出 */
 }
 
 .status-separator {
@@ -44,21 +117,96 @@
   margin: 0 2px;
 }
 
-/* 响应式设计 */
-@media (max-width: 480px) {
+/* 移动端横向布局优化 */
+@media (max-width: 767px) {
   .chat-status-display {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
     font-size: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .status-main.desktop-only {
+    display: none; /* 隐藏在线状态 */
+  }
+  
+  .status-trigger {
+    gap: 3px;
+    padding: 2px 4px;
+    border-radius: 3px;
   }
   
   .status-text {
+    font-size: 11px; /* 原来9px，增加2号 */
+    font-weight: 500;
+  }
+  
+  .status-arrow {
+    font-size: 7px;
+  }
+  
+  /* 移动端弹窗调整 */
+  .status-tooltip {
+    min-width: 200px;
+    max-width: 280px;
+    box-shadow: 0 6px 20px var(--theme-shadow-color, rgba(0, 0, 0, 0.25));
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+  
+  .status-detail-item {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  
+  .status-label {
+    min-width: 40px;
+  }
+}
+
+/* 超小屏幕进一步优化 */
+@media (max-width: 480px) {
+  .chat-status-display {
     font-size: 9px;
+    gap: 4px;
   }
   
-  .status-details {
-    gap: 2px;
+  .status-text {
+    font-size: 10px; /* 原来8px，增加2号 */
+    font-weight: 500;
   }
   
-  .status-separator {
-    margin: 0 1px;
+  .status-arrow {
+    font-size: 6px;
+  }
+  
+  .status-icon {
+    font-size: 8px;
+  }
+  
+  .status-tooltip {
+    min-width: 180px;
+    max-width: 250px;
+    padding: 10px 14px;
+  }
+  
+  .status-detail-item {
+    font-size: 11px;
+    padding: 5px 0;
+  }
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .status-tooltip {
+    --theme-tooltip-bg: var(--theme-bg-primary, #2d2d2d);
+    --theme-tooltip-text: var(--theme-text-primary, #ffffff);
+    --theme-tooltip-border: var(--theme-border-color, #444444);
+    --theme-shadow-color: rgba(0, 0, 0, 0.4);
+  }
+  
+  .status-trigger:hover {
+    background-color: var(--theme-bg-tertiary, rgba(255, 255, 255, 0.1));
   }
 } 

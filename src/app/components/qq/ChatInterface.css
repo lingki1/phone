@@ -49,14 +49,16 @@
   top: 0;
   left: 0;
   right: 0;
+  min-height: 60px;
 }
 
 /* 移动端顶部导航栏调整 */
 @media (max-width: 767px) {
   .chat-header {
-    padding: 12px 15px;
+    padding: 10px 12px;
     position: sticky;
     top: 0;
+    min-height: 50px;
   }
   
   /* 移动端特殊适配 - 移除固定高度 */
@@ -68,9 +70,10 @@
 
 @media (max-width: 480px) {
   .chat-header {
-    padding: 10px 12px;
+    padding: 8px 10px;
     position: sticky;
     top: 0;
+    min-height: 45px;
   }
   
   /* 超小屏幕特殊适配 - 移除固定高度 */
@@ -99,15 +102,15 @@
 /* 移动端返回按钮调整 */
 @media (max-width: 767px) {
   .chat-header .back-btn {
-    font-size: 20px;
-    margin-right: 12px;
+    font-size: 18px;
+    margin-right: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .chat-header .back-btn {
-    font-size: 18px;
-    margin-right: 10px;
+    font-size: 16px;
+    margin-right: 8px;
   }
 }
 
@@ -116,6 +119,7 @@
   align-items: center;
   flex: 1;
   gap: 12px;
+  min-width: 0; /* 允许内容收缩 */
 }
 
 .chat-avatar {
@@ -126,39 +130,43 @@
 /* 移动端头像大小调整 */
 @media (max-width: 767px) {
   .chat-avatar {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 }
 
 @media (max-width: 480px) {
   .chat-avatar {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
 }
 
 .chat-details {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* 允许内容收缩 */
+  flex: 1;
 }
 
 .chat-name {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 17px; /* 原来16px，增加1号 */
   color: var(--theme-text-primary, #1f1f1f);
 }
 
 /* 移动端聊天名称调整 */
 @media (max-width: 767px) {
   .chat-name {
-    font-size: 15px;
+    font-size: 15px; /* 原来14px，增加1号 */
+    line-height: 1.2;
   }
 }
 
 @media (max-width: 480px) {
   .chat-name {
-    font-size: 14px;
+    font-size: 14px; /* 原来13px，增加1号 */
+    line-height: 1.1;
   }
 }
 
@@ -177,6 +185,7 @@
 .chat-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0; /* 防止按钮被压缩 */
 }
 
 .chat-actions .action-btn {
@@ -199,23 +208,30 @@
 /* 移动端操作按钮调整 */
 @media (max-width: 767px) {
   .chat-actions {
-    gap: 6px;
-  }
-  
-  .chat-actions .action-btn {
-    font-size: 18px;
-    padding: 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .chat-actions {
     gap: 4px;
   }
   
   .chat-actions .action-btn {
     font-size: 16px;
-    padding: 5px;
+    padding: 4px;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-actions {
+    gap: 2px;
+  }
+  
+  .chat-actions .action-btn {
+    font-size: 14px;
+    padding: 3px;
+    min-width: 24px;
+    min-height: 24px;
   }
 }
 
