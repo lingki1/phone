@@ -518,7 +518,8 @@ export class AiPostGenerator {
         id: char.id,
         name: char.name,
         persona: char.persona.substring(0, 200), // 限制人设长度
-        avatar: char.avatar,
+        // 不传输头像数据，避免请求体过大
+        // avatar: char.avatar,
         chatHistory: recentMessages,
         totalMessages: char.messages.length
       };
@@ -566,7 +567,8 @@ export class AiPostGenerator {
         id: char.id,
         name: char.name,
         persona: char.persona.substring(0, 150), // 限制人设长度
-        avatar: char.avatar,
+        // 不传输头像数据，避免请求体过大
+        // avatar: char.avatar,
         chatHistory: recentMessages,
         totalMessages: char.messages.length
       };

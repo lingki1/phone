@@ -251,7 +251,8 @@ export class AiCommentService {
           id: char.id,
           name: char.name,
           persona: char.persona.substring(0, 150), // 限制人设长度
-          avatar: char.avatar,
+          // 不传输头像数据，避免请求体过大
+          // avatar: char.avatar,
           chatHistory: recentMessages,
           totalMessages: char.messages.length,
           // 添加角色在动态中的活跃度
