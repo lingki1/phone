@@ -4,56 +4,63 @@ export class JsonParser {
   // 🚀 超强健壮 JSON 解析函数
   static strongJsonExtract(raw: string): Record<string, unknown> {
     console.log('🔧 开始强力JSON解析，原始内容长度:', raw.length);
-    console.log('📄 原始内容预览:', raw.substring(0, 200) + (raw.length > 200 ? '...' : ''));
+    console.log('📄 原始内容完整内容:', raw);
+    console.log('📄 原始内容预览:', raw.substring(0, 500) + (raw.length > 500 ? '...' : ''));
     
     // 1. 清理和标准化输入
     let content = raw.trim();
     
     // 2. 移除可能的前后缀文本
     content = this.removeExtraText(content);
+    console.log('🧹 移除前后缀后的内容:', content);
     
     // 3. 尝试提取代码块内容
     content = this.extractFromCodeBlock(content);
+    console.log('📦 提取代码块后的内容:', content);
     
     // 4. 尝试直接解析
     try {
       const result = JSON.parse(content);
-      console.log('✅ 直接解析成功');
+      console.log('✅ 直接解析成功，结果:', result);
       return result;
     } catch (error) {
-      console.log('❌ 直接解析失败，开始修复...', error);
+      console.log('❌ 直接解析失败，错误:', error);
     }
     
     // 5. 尝试提取JSON对象/数组
     content = this.extractJsonStructure(content);
+    console.log('🔍 提取JSON结构后的内容:', content);
     
     // 6. 自动修复常见错误
     content = this.fixCommonJsonErrors(content);
+    console.log('🔧 修复错误后的内容:', content);
     
     // 7. 尝试修复后的解析
     try {
       const result = JSON.parse(content);
-      console.log('✅ 修复后解析成功');
+      console.log('✅ 修复后解析成功，结果:', result);
       return result;
     } catch (error) {
-      console.log('❌ 修复后解析失败，尝试逐步截断...', error);
+      console.log('❌ 修复后解析失败，错误:', error);
     }
     
     // 8. 逐步截断到最后一个完整的JSON
     const truncatedResult = this.tryTruncatedParsing(content);
     if (truncatedResult) {
+      console.log('✅ 截断解析成功，结果:', truncatedResult);
       return truncatedResult;
     }
     
     // 9. 尝试部分提取
     const partialResult = this.tryPartialExtraction(content);
     if (partialResult) {
+      console.log('✅ 部分提取成功，结果:', partialResult);
       return partialResult;
     }
     
     // 10. 返回默认空结构
     console.log('⚠️ 所有解析方法失败，返回默认结构');
-    console.log('📄 无法解析的内容:', content);
+    console.log('📄 无法解析的最终内容:', content);
     return { posts: [], comments: [] };
   }
   

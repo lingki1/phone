@@ -356,11 +356,25 @@ export class AiCommentService {
     const requestBodySize = JSON.stringify(requestBody).length;
     console.log(`📊 请求体大小: ${requestBodySize} 字符`);
 
+    // 🔍 详细记录请求体内容
+    console.log('💬 完整请求体:', JSON.stringify(requestBody, null, 2));
+    console.log('💬 请求体keys:', Object.keys(requestBody));
+    console.log('💬 模型:', requestBody.model);
+    console.log('💬 消息数量:', requestBody.messages?.length);
+    if (requestBody.messages) {
+      requestBody.messages.forEach((msg, index) => {
+        console.log(`💬 消息${index + 1} (${msg.role}):`, msg.content?.substring(0, 200) + (msg.content?.length > 200 ? '...' : ''));
+      });
+    }
+
     if (requestBodySize > 8000) { // 如果超过8KB，进一步压缩
       console.warn('⚠️ 请求体过大，进行压缩处理');
       // 简化请求数据
       const simplifiedData = this.simplifyRequestData(requestData);
       requestBody.messages[1].content = JSON.stringify(simplifiedData);
+      
+      // 记录压缩后的请求体
+      console.log('💬 压缩后请求体:', JSON.stringify(requestBody, null, 2));
     }
 
     const maxRetries = 3;
@@ -377,7 +391,9 @@ export class AiCommentService {
             'Authorization': `Bearer ${apiConfig.apiKey}`,
             'Accept': 'application/json'
           },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify(requestBody),
+          // 添加超时设置，最多等待3分钟
+          signal: AbortSignal.timeout(180000)
         });
 
         console.log(`📥 响应状态: ${response.status} ${response.statusText}`);
@@ -400,7 +416,11 @@ export class AiCommentService {
         }
 
         const data = await response.json();
-        console.log('✅ API响应数据:', data);
+        
+        // 🔍 详细记录API响应数据
+        console.log('💬 AI评论API完整响应数据:', JSON.stringify(data, null, 2));
+        console.log('💬 响应数据类型:', typeof data);
+        console.log('💬 响应数据keys:', Object.keys(data || {}));
         
         // 检查API是否返回了错误
         if (data.error) {
@@ -415,12 +435,27 @@ export class AiCommentService {
         }
 
         const content = data.choices[0].message.content;
-        console.log('✅ 提取的AI回复:', content);
+        
+        // 🔍 详细记录消息内容
+        console.log('💬 原始消息内容:', content);
+        console.log('💬 消息内容类型:', typeof content);
+        console.log('💬 消息内容长度:', content ? content.length : 0);
+        
+        console.log('✅ API调用成功');
         return content;
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('未知错误');
-        console.error(`❌ 尝试 ${attempt} 失败:`, lastError.message);
+        
+        // 特殊处理超时错误
+        if (lastError.name === 'AbortError' || lastError.message.includes('timeout')) {
+          console.error(`❌ API调用超时 (尝试 ${attempt}):`, lastError.message);
+          if (attempt === maxRetries) {
+            throw new Error('API调用超时，请检查网络连接或尝试使用更快的模型');
+          }
+        } else {
+          console.error(`❌ 尝试 ${attempt} 失败:`, lastError.message);
+        }
         
         if (attempt < maxRetries) {
           // 等待一段时间后重试

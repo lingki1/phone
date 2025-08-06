@@ -1246,7 +1246,7 @@ class DataManager {
           // 返回默认设置
           resolve({
             autoGeneratePosts: true,
-            autoGenerateInterval: 60,
+            autoGenerateInterval: 5, // 改为5分钟，与UI最小值保持一致
             maxPostsPerDay: 10,
             allowAiComments: true,
             allowAiLikes: true,

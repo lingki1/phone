@@ -16,7 +16,14 @@ export default function DiscoverSettingsPanel({
   onSave, 
   onCancel 
 }: DiscoverSettingsPanelProps) {
-  const [localSettings, setLocalSettings] = useState<DiscoverSettings>(settings);
+  
+  // 确保间隔时间不小于5分钟
+  const normalizedSettings = {
+    ...settings,
+    autoGenerateInterval: Math.max(settings.autoGenerateInterval, 5)
+  };
+  
+  const [localSettings, setLocalSettings] = useState<DiscoverSettings>(normalizedSettings);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -87,16 +94,26 @@ export default function DiscoverSettingsPanel({
           {localSettings.autoGeneratePosts && (
             <div className="form-group">
               <label htmlFor="generate-interval">生成间隔（分钟）</label>
-              <input
-                type="number"
+              <select
                 id="generate-interval"
-                min="30"
-                max="1440"
                 value={localSettings.autoGenerateInterval}
-                onChange={(e) => updateSetting('autoGenerateInterval', parseInt(e.target.value) || 60)}
-                className="number-input"
-              />
-              <small className="field-hint">AI动态生成的时间间隔</small>
+                onChange={(e) => updateSetting('autoGenerateInterval', parseInt(e.target.value))}
+                className="select-input"
+              >
+                <option value={5}>5分钟</option>
+                <option value={10}>10分钟</option>
+                <option value={15}>15分钟</option>
+                <option value={30}>30分钟</option>
+                <option value={60}>1小时</option>
+                <option value={120}>2小时</option>
+                <option value={240}>4小时</option>
+                <option value={480}>8小时</option>
+                <option value={720}>12小时</option>
+                <option value={1440}>24小时</option>
+              </select>
+              <small className="field-hint">
+                AI动态生成的时间间隔，最少5分钟以避免与慢速模型冲突
+              </small>
             </div>
           )}
 
