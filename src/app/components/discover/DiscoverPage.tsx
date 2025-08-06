@@ -83,6 +83,12 @@ export default function DiscoverPage() {
       try {
         setIsLoading(true);
         
+        // 设置超时机制，确保不会永远卡在加载状态
+        const loadingTimeout = setTimeout(() => {
+          console.warn('⚠️ 数据加载超时，强制完成加载');
+          setIsLoading(false);
+        }, 10000); // 10秒超时
+        
         // 并行加载数据
         const [postsData, settingsData, personalSettings] = await Promise.all([
           dataManager.getAllDiscoverPosts(),
@@ -108,16 +114,23 @@ export default function DiscoverPage() {
           avatar: personalSettings.userAvatar
         });
 
-        // 启动自动生成服务
+        // 启动自动生成服务（异步执行，不阻塞页面加载）
         if (settingsData) {
-          await autoGenerationService.start(settingsData);
-          console.log('🚀 自动生成服务已启动');
+          // 异步启动，不等待完成
+          autoGenerationService.start(settingsData).then(() => {
+            console.log('🚀 自动生成服务已启动');
+          }).catch((error) => {
+            console.warn('⚠️ 自动生成服务启动失败:', error);
+          });
         }
 
         // 数据加载完成后，检查是否需要更新新内容计数
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('viewStateUpdated'));
         }, 200);
+
+        // 清除超时定时器
+        clearTimeout(loadingTimeout);
 
       } catch (error) {
         console.error('Failed to load discover data:', error);

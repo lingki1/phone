@@ -27,14 +27,14 @@ class AutoGenerationService {
     console.log('🚀 启动自动生成服务');
     this.isRunning = true;
 
-    // 启动自动生成动态
+    // 启动自动生成动态（异步执行，不阻塞页面加载）
     if (settings.autoGeneratePosts) {
-      await this.startPostGeneration(settings.autoGenerateInterval);
+      this.startPostGeneration(settings.autoGenerateInterval);
     }
 
-    // 启动自动生成评论
+    // 启动自动生成评论（异步执行，不阻塞页面加载）
     if (settings.allowAiComments) {
-      await this.startCommentGeneration();
+      this.startCommentGeneration();
     }
   }
 
@@ -91,8 +91,10 @@ class AutoGenerationService {
       }
     };
 
-    // 立即执行一次
-    await generatePost();
+    // 延迟10秒后执行第一次生成，避免阻塞页面加载
+    setTimeout(() => {
+      generatePost();
+    }, 10000);
     
     // 设置定时器
     this.postInterval = setInterval(generatePost, intervalMinutes * 60 * 1000);
