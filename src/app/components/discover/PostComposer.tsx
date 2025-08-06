@@ -22,7 +22,7 @@ interface PostComposerProps {
 
 export default function PostComposer({ onPublish, onCancel, userInfo }: PostComposerProps) {
   const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  // const [images, setImages] = useState<string[]>([]); // 暂时禁用图片功能
   const [isPublic, setIsPublic] = useState(true);
   const [location, setLocation] = useState('');
   const [mood, setMood] = useState('');
@@ -30,30 +30,31 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null); // 暂时禁用图片功能
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+  // 暂时禁用图片上传功能
+  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files;
+  //   if (!files) return;
 
-    const newImages: string[] = [];
-    Array.from(files).forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          newImages.push(result);
-          setImages(prev => [...prev, ...newImages]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  };
+  //   const newImages: string[] = [];
+  //   Array.from(files).forEach((file) => {
+  //     if (file.type.startsWith('image/')) {
+  //       const reader = new FileReader();
+  //       reader.onload = (e) => {
+  //         const result = e.target?.result as string;
+  //         newImages.push(result);
+  //         setImages(prev => [...prev, ...newImages]);
+  //       };
+  //       reader.readAsDataURL(file);
+  //     }
+  //   });
+  // };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
+  // const removeImage = (index: number) => {
+  //   setImages(prev => prev.filter((_, i) => i !== index));
+  // };
 
   const addTag = () => {
     const trimmedTag = tagInput.trim();
@@ -75,13 +76,13 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
   };
 
   const handleSubmit = async () => {
-    if (!content.trim() && images.length === 0) return;
+    if (!content.trim()) return; // 只需要文本内容即可发布
     
     setIsSubmitting(true);
     try {
       await onPublish({
         content: content.trim(),
-        images,
+        images: [], // 暂时不传输图片
         isPublic,
         location: location.trim() || undefined,
         mood: mood.trim() || undefined,
@@ -94,7 +95,7 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
     }
   };
 
-  const canSubmit = (content.trim() || images.length > 0) && !isSubmitting;
+  const canSubmit = content.trim() && !isSubmitting; // 只需要文本内容即可发布
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onCancel()}>
@@ -142,8 +143,8 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
             <small className="field-hint">最多500个字符</small>
           </div>
 
-          {/* 图片预览 */}
-          {images.length > 0 && (
+          {/* 图片预览 - 暂时禁用 */}
+          {/* {images.length > 0 && (
             <div className="form-group">
               <label>图片预览</label>
               <div className="images-grid">
@@ -167,19 +168,19 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
-          {/* 添加图片按钮 */}
+          {/* 添加图片按钮 - 暂时禁用 */}
           <div className="form-group">
             <label>添加图片</label>
             <button 
-              className="action-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={images.length >= 9}
+              className="action-btn disabled"
+              disabled={true}
+              title="图片上传功能暂时关闭，避免数据传输过大"
             >
-              添加图片
+              添加图片 (已禁用)
             </button>
-            <small className="field-hint">最多上传9张图片</small>
+            <small className="field-hint">图片上传功能暂时关闭，避免数据传输过大</small>
           </div>
 
           {/* 标签输入 */}
@@ -247,15 +248,15 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
             />
           </div>
 
-          {/* 隐藏的文件输入 */}
-          <input
+          {/* 隐藏的文件输入 - 暂时禁用 */}
+          {/* <input
             ref={fileInputRef}
             type="file"
             multiple
             accept="image/*"
             onChange={handleImageUpload}
             style={{ display: 'none' }}
-          />
+          /> */}
         </div>
 
         <div className="modal-footer">
