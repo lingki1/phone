@@ -4,16 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
-import { WorldBookInjector } from '../../utils/WorldBookInjector';
 import GroupMemberManager from './GroupMemberManager';
 import MemoryManager from './memory/MemoryManager';
 import SingleChatMemoryManager from './memory/SingleChatMemoryManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
-import { ChatStatusManager, ChatStatusDisplay, ChatStatus, injectStatusPrompt } from './chatstatus';
+import { ChatStatusManager, ChatStatusDisplay, ChatStatus } from './chatstatus';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
+import { getPromptManager, PromptContext } from '../systemprompt';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -574,8 +574,23 @@ export default function ChatInterface({
     }
 
     try {
-      const systemPrompt = await buildSystemPrompt(updatedChat);
-      const messagesPayload = buildMessagesPayload(updatedChat);
+      // 构建提示词上下文
+      const promptContext: PromptContext = {
+        chat: updatedChat,
+        currentTime: new Date().toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' }),
+        myNickname: dbPersonalSettings?.userNickname || personalSettings?.userNickname || updatedChat.settings.myNickname || '我',
+        myPersona: dbPersonalSettings?.userBio || personalSettings?.userBio || updatedChat.settings.myPersona || '用户',
+        allChats,
+        availableContacts,
+        chatStatus,
+        currentPreset,
+        dbPersonalSettings: dbPersonalSettings || undefined,
+        personalSettings
+      };
+
+      // 使用新的提示词注入系统
+      const promptManager = getPromptManager();
+      const result = await promptManager.buildPrompt(promptContext);
 
       const response = await fetch(`${effectiveApiConfig.proxyUrl}/v1/chat/completions`, {
         method: 'POST',
@@ -586,20 +601,10 @@ export default function ChatInterface({
         body: JSON.stringify({
           model: effectiveApiConfig.model,
           messages: [
-            { role: 'system', content: systemPrompt },
-            ...messagesPayload
+            { role: 'system', content: result.systemPrompt },
+            ...result.messagesPayload
           ],
-          temperature: currentPreset?.temperature || 0.8,
-          max_tokens: currentPreset?.maxTokens || 2000,
-          top_p: currentPreset?.topP || 0.8,
-          ...(currentPreset?.topK && { top_k: currentPreset.topK }),
-          frequency_penalty: currentPreset?.frequencyPenalty || 0.0,
-          presence_penalty: currentPreset?.presencePenalty || 0.0,
-          ...(currentPreset?.stopSequences && { stop: currentPreset.stopSequences }),
-          ...(currentPreset?.logitBias && { logit_bias: currentPreset.logitBias }),
-          ...(currentPreset?.responseFormat && { response_format: { type: currentPreset.responseFormat } }),
-          ...(currentPreset?.seed && { seed: currentPreset.seed }),
-          ...(currentPreset?.user && { user: currentPreset.user })
+          ...result.apiParams
         })
       });
 
@@ -735,243 +740,11 @@ export default function ChatInterface({
     }
   };
 
-  // 检查是否需要触发状态更新
-  const shouldTriggerStatusUpdate = () => {
-    const now = Date.now();
-    const lastUpdate = chatStatus.lastUpdate;
-    const timeDiff = now - lastUpdate;
-    
-    // 如果距离上次状态更新超过30分钟，或者这是第一次对话，则触发状态更新
-    return timeDiff > 30 * 60 * 1000 || chat.messages.length <= 1;
-  };
 
-  // 构建系统提示词
-  const buildSystemPrompt = async (chat: ChatItem): Promise<string> => {
-    const now = new Date();
-    const currentTime = now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' });
-    // 优先使用数据库中的个人信息，后备使用传入的personalSettings
-    const myNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
-    const myPersona = dbPersonalSettings?.userBio || personalSettings?.userBio || chat.settings.myPersona || '用户';
 
-    let basePrompt: string;
 
-    if (chat.isGroup && chat.members) {
-      // 群聊系统提示词
-      const membersList = chat.members.map(m => `- **${m.originalName}**: ${m.persona}`).join('\n');
-      
-      // 构建单聊记忆信息
-      const memoryInfo = chat.members
-        .filter(m => m.id !== 'me' && m.singleChatMemory && m.singleChatMemory.length > 0)
-        .map(m => {
-          const memoryCount = m.singleChatMemory?.length || 0;
-          const recentMessages = m.singleChatMemory?.slice(-5).map(msg => 
-            `${msg.role === 'user' ? myNickname : m.originalName}: ${msg.content}`
-          ).join('\n') || '';
-          
-          return `## ${m.originalName} 与 ${myNickname} 的单聊记忆 (${memoryCount} 条记录)
-最近5条对话：
-${recentMessages}`;
-        })
-        .join('\n\n');
-      
-      basePrompt = `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
 
-# 核心规则
-1. **【身份铁律】**: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。
-2. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有"type"和"name"字段的JSON对象】。
-3. **角色扮演**: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。
-4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条消息。每次要回复2-4条消息，每条消息内容要丰富，避免过于简短的回复（如2-5个字）。每条消息应该包含完整的想法或回应，内容长度适中。
-5. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
-6. **情景感知**: 注意当前时间是 ${currentTime},但是不能重复提及时间概念。
-7. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
 
-## 你可以使用的操作指令:
-- **发送文本**: {"type": "text", "name": "角色名", "message": "文本内容"}
-- **发送表情**: {"type": "sticker", "name": "角色名", "meaning": "表情含义"} (注意：不允许使用url字段，不能发送链接图片)
-- **发送图片**: {"type": "ai_image", "name": "角色名", "description": "图片描述"}
-- **发送语音**: {"type": "voice_message", "name": "角色名", "content": "语音内容"}
-- **拍一拍用户**: {"type": "pat_user", "name": "角色名", "suffix": "后缀"}
-- **发送红包**: {"type": "send_red_packet", "name": "角色名", "amount": 金额数字, "message": "祝福语"}
-- **请求红包**: {"type": "request_red_packet", "name": "角色名", "message": "请求消息"}
-- **接收红包**: {"type": "accept_red_packet", "name": "角色名", "red_packet_id": "红包ID", "message": "感谢消息"}
-- **拒绝红包**: {"type": "decline_red_packet", "name": "角色名", "red_packet_id": "红包ID", "message": "拒绝理由"}
-
-# 红包处理规则：
-- 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
-- 如果接收红包，使用accept_red_packet命令，并表达感谢
-- 如果拒绝红包，使用decline_red_packet命令，并说明理由
-- **重要**：红包ID在对话历史中以"红包ID: redpacket_时间戳"的格式提供，你必须准确复制这个ID
-- 你可以根据红包金额、祝福语、当前关系等因素做出判断
-- 示例：如果看到"红包ID: redpacket_1703123456789"，则使用"redpacket_1703123456789"作为red_packet_id
-- **禁止调试信息**：不要在消息中包含"测试"、"调试"、"功能"等调试相关词汇，保持自然的对话风格
-
-# 群成员列表及人设
-${membersList}
-
-# 用户的角色
-- **${myNickname}**: ${myPersona}
-
-${memoryInfo ? `# 单聊记忆信息
-${memoryInfo}` : ''}
-
-现在，请根据以上规则、对话历史和单聊记忆，继续这场群聊。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
-    } else {
-      // 单聊系统提示词
-      
-      // 构建群聊记忆信息
-      let groupMemoryInfo = '';
-      if (chat.settings.linkedGroupChatIds && chat.settings.linkedGroupChatIds.length > 0) {
-        const groupMemoryPromises = chat.settings.linkedGroupChatIds.map(async (groupChatId) => {
-          // 优先使用 allChats，后备使用 availableContacts
-          const allChatsData = allChats || availableContacts;
-          const groupChat = allChatsData.find(contact => contact.id === groupChatId);
-          if (!groupChat || !groupChat.messages) return null;
-          
-          // 获取群聊中所有人的消息
-          const recentMessages = groupChat.messages.slice(-5).map(msg => 
-            `${msg.role === 'user' ? myNickname : msg.senderName || chat.name}: ${msg.content}`
-          ).join('\n');
-          
-          return `## ${groupChat.name} 群聊记忆 (${groupChat.messages.length} 条记录)
-最近5条对话记录：
-${recentMessages}
-
-注意：这些是你在群聊中的表现，在单聊中请保持一致的个性和关系。`;
-        });
-        
-        const groupMemories = await Promise.all(groupMemoryPromises);
-        const validMemories = groupMemories.filter(memory => memory !== null);
-        
-        // 添加调试信息
-        console.log('单聊群聊记忆构建:', {
-          linkedGroupChatIds: chat.settings.linkedGroupChatIds,
-          allChatsCount: allChats?.length || 0,
-          availableContactsCount: availableContacts?.length || 0,
-          foundGroupChats: validMemories.length,
-          groupMemoryInfo: validMemories.length > 0 ? '已构建' : '无群聊记忆'
-        });
-        
-        if (validMemories.length > 0) {
-          groupMemoryInfo = `\n\n# 群聊记忆信息
-${validMemories.join('\n\n')}`;
-        }
-      }
-      
-      basePrompt = `你现在扮演一个名为"${chat.name}"的角色。
-
-# 你的角色设定：
-${chat.settings.aiPersona}
-
-# 你的任务与规则：
-1. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有type字段的JSON对象】。
-2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条消息。每次要回复2-4条消息，每条消息内容要丰富，避免过于简短的回复（如2-5个字）。每条消息应该包含完整的想法或回应，内容长度适中。
-3. **情景感知**: 你需要感知当前的时间(${currentTime})，但是不能重复提及时间概念。
-4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
-5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。
-6. **状态实时性**: 每次对话都应该根据当前时间、对话内容和情境实时更新你的状态，让对话更有真实感。
-
-# 你可以使用的操作指令:
-- **发送文本**: {"type": "text", "content": "文本内容"}
-- **发送表情**: {"type": "sticker", "meaning": "表情含义"} (注意：不允许使用url字段，不能发送链接图片)
-- **发送图片**: {"type": "ai_image", "description": "图片描述"}
-- **发送语音**: {"type": "voice_message", "content": "语音内容"}
-- **拍一拍用户**: {"type": "pat_user", "suffix": "后缀"}
-- **发送红包**: {"type": "send_red_packet", "amount": 金额数字, "message": "祝福语"}
-- **请求红包**: {"type": "request_red_packet", "message": "请求消息"}
-- **接收红包**: {"type": "accept_red_packet", "red_packet_id": "红包ID", "message": "感谢消息"}
-- **拒绝红包**: {"type": "decline_red_packet", "red_packet_id": "红包ID", "message": "拒绝理由"}
-- **更新状态**: {"type": "status_update", "mood": "新心情", "location": "新位置", "outfit": "新穿着"}
-
-# 红包处理规则：
-- 当用户发送红包时，你需要根据角色性格和当前情境判断是否接收
-- 如果接收红包，使用accept_red_packet命令，并表达感谢
-- 如果拒绝红包，使用decline_red_packet命令，并说明理由
-- **重要**：红包ID在对话历史中以"红包ID: redpacket_时间戳"的格式提供，你必须准确复制这个ID
-- 你可以根据红包金额、祝福语、当前关系等因素做出判断
-- 示例：如果看到"红包ID: redpacket_1703123456789"，则使用"redpacket_1703123456789"作为red_packet_id
-- **禁止调试信息**：不要在消息中包含"测试"、"调试"、"功能"等调试相关词汇，保持自然的对话风格
-
-# 对话者的角色设定：
-${myPersona}${groupMemoryInfo}
-
-现在，请根据以上规则、对话历史和群聊记忆，继续进行对话。`;
-    }
-
-    // 注入世界书内容
-    let finalPrompt = await WorldBookInjector.injectWorldBooks(
-      chat.id,
-      basePrompt,
-      chat.settings.linkedWorldBookIds || []
-    );
-
-    // 注入状态提示词（仅在单聊中）
-    if (!chat.isGroup) {
-      finalPrompt = injectStatusPrompt(finalPrompt, chatStatus);
-      
-      // 如果需要触发状态更新，添加强制更新指令
-      if (shouldTriggerStatusUpdate()) {
-        finalPrompt += `
-
-## 重要：状态更新要求
-由于距离上次状态更新已经较长时间，或者这是我们的第一次对话，请务必在回复中包含状态更新指令。
-请根据当前时间和情境，更新你的状态信息，让对话更加真实自然。
-
-示例回复格式：
-[
-  {"type": "status_update", "mood": "当前心情", "location": "当前位置", "outfit": "当前穿着"},
-  {"type": "text", "content": "你的回复内容"}
-]`;
-      }
-    }
-
-    return finalPrompt;
-  };
-
-  // 构建消息载荷
-  const buildMessagesPayload = (chat: ChatItem) => {
-    // 从全局设置获取最大记忆数量，如果没有设置则使用默认值
-    const globalSettings = localStorage.getItem('globalSettings');
-    const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
-    const historySlice = chat.messages.slice(-maxMemory);
-    // 优先使用数据库中的个人信息，后备使用传入的personalSettings
-    const myNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
-
-    return historySlice.map(msg => {
-      const sender = msg.role === 'user' ? myNickname : msg.senderName;
-      const prefix = `${sender} (Timestamp: ${msg.timestamp}): `;
-      
-      let content;
-      if (msg.type === 'ai_image') {
-        content = `[${sender} 发送了一张图片]`;
-      } else if (msg.type === 'voice_message') {
-        content = `[${sender} 发送了一条语音，内容是：'${msg.content}']`;
-      } else if (msg.meaning) {
-        content = `${sender}: [发送了一个表情，意思是: '${msg.meaning}']`;
-      } else if (msg.type === 'red_packet_send' && msg.redPacketData) {
-        // 红包发送消息，包含红包ID和详细信息
-        const redPacket = msg.redPacketData;
-        let status = '待处理';
-        if (redPacket.status === 'accepted') {
-          status = '已接收';
-        } else if (redPacket.status === 'rejected') {
-          status = '已拒绝';
-        } else if (redPacket.isClaimed) {
-          status = '已被领取';
-        }
-        content = `${prefix}发送了一个红包 [红包ID: ${redPacket.id}, 金额: ¥${redPacket.amount}, 祝福语: "${redPacket.message}", 状态: ${status}]`;
-      } else if (msg.type === 'red_packet_receive' && msg.redPacketData) {
-        // AI发送给用户的红包
-        content = `${prefix}${msg.content} [金额: ¥${msg.redPacketData.amount}]`;
-      } else if (msg.type === 'red_packet_request' && msg.redPacketData) {
-        // AI请求红包
-        content = `${prefix}${msg.content} [${msg.redPacketData.message}]`;
-      } else {
-        content = `${prefix}${msg.content}`;
-      }
-      
-      return { role: 'user', content };
-    }).filter(Boolean);
-  };
 
   // 解析AI回复（参考V0.03文件的强大解析逻辑）
   const parseAiResponse = (content: string) => {
