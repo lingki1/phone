@@ -46,26 +46,34 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
 
   return (
     <div className="chat-list-header">
-      {/* 返回按钮 */}
-      {onBackToDesktop && (
-        <div className="back-button" onClick={onBackToDesktop}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-      )}
+      {/* 左侧区域：返回按钮 + 用户头像 + 用户名 */}
+      <div className="header-left">
+        {/* 返回按钮 */}
+        {onBackToDesktop && (
+          <div className="back-button" onClick={onBackToDesktop}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        )}
 
-      {/* 用户头像 */}
-      <div className="user-avatar-container">
-        <Image 
-          src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
-          alt="用户头像" 
-          width={48}
-          height={48}
-          className="user-avatar"
-          onClick={onOpenMePage}
-          unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
-        />
+        {/* 用户头像 */}
+        <div className="user-avatar-container">
+          <Image 
+            src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
+            alt="用户头像" 
+            width={48}
+            height={48}
+            className="user-avatar"
+            onClick={onOpenMePage}
+            unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
+          />
+        </div>
+
+        {/* 用户名 */}
+        <div className="user-name" onClick={onOpenMePage}>
+          {personalSettings?.userNickname || '用户'}
+        </div>
       </div>
 
       {/* 群聊/单聊切换开关 */}

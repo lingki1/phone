@@ -60,6 +60,31 @@
   color: var(--theme-text-primary, #202124);
 }
 
+/* 左侧区域样式 */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 用户名样式 */
+.user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #202124);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.user-name:hover {
+  color: var(--theme-accent-color, #1a73e8);
+}
+
 /* 移动端顶部导航栏调整 */
 @media (max-width: 767px) {
   .chat-list-header {
@@ -67,13 +92,13 @@
     font-size: 16px;
   }
   
-  .back-button {
-    margin-left: -4px;
-    margin-right: 6px;
+  .header-left {
+    gap: 6px;
   }
   
-  .user-avatar-container {
-    margin-left: -2px;
+  .user-name {
+    font-size: 15px;
+    max-width: 100px;
   }
   
   /* 移动端特殊适配 - 移除固定高度，使用flex布局 */
@@ -90,13 +115,13 @@
     font-size: 15px;
   }
   
-  .back-button {
-    margin-left: -2px;
-    margin-right: 4px;
+  .header-left {
+    gap: 4px;
   }
   
-  .user-avatar-container {
-    margin-left: -1px;
+  .user-name {
+    font-size: 14px;
+    max-width: 80px;
   }
   
   /* 超小屏幕特殊适配 - 移除固定高度 */
@@ -117,8 +142,6 @@
   cursor: pointer;
   color: var(--theme-text-primary, #202124);
   transition: all 0.2s ease;
-  margin-right: 8px;
-  margin-left: -8px;
 }
 
 .back-button:hover {
@@ -134,7 +157,6 @@
 .user-avatar-container {
   position: relative;
   flex-shrink: 0;
-  margin-left: -4px;
 }
 
 .user-avatar {
@@ -184,7 +206,7 @@
   background: var(--theme-bg-tertiary, #f1f3f4);
   border-radius: 20px;
   padding: 4px;
-  width: 200px;
+  width: 160px;
   height: 36px;
   box-sizing: border-box;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -201,7 +223,7 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
-  width: 64px;
+  width: 52px;
   height: 28px;
   display: flex;
   align-items: center;
@@ -229,26 +251,26 @@
 /* 移动端切换按钮调整 */
 @media (max-width: 767px) {
   .chat-type-toggle {
-    width: 180px;
+    width: 140px;
     height: 32px;
   }
   
   .toggle-btn {
     font-size: 13px;
-    width: 60px;
+    width: 46px;
     height: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .chat-type-toggle {
-    width: 160px;
+    width: 120px;
     height: 30px;
   }
   
   .toggle-btn {
     font-size: 12px;
-    width: 53px;
+    width: 40px;
     height: 22px;
   }
 }
