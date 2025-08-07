@@ -7,7 +7,7 @@ import './ChatBackgroundAnimations.css';
 
 interface ChatBackgroundManagerProps {
   chatId: string;
-  onBackgroundChange: (background: string, animation?: string) => void;
+  onBackgroundChange: (background: string, animation?: string, opacity?: number) => void;
   children: React.ReactNode;
 }
 
@@ -18,6 +18,7 @@ export default function ChatBackgroundManager({
 }: ChatBackgroundManagerProps) {
   const [currentBackground, setCurrentBackground] = useState<string>('');
   const [currentAnimation, setCurrentAnimation] = useState<string>('none');
+  const [currentOpacity, setCurrentOpacity] = useState<number>(80);
 
   // 加载背景图片和动画
   useEffect(() => {
@@ -26,18 +27,22 @@ export default function ChatBackgroundManager({
         await dataManager.initDB();
         const background = await dataManager.getChatBackground(chatId);
         const animation = localStorage.getItem(`chatAnimation_${chatId}`) || 'none';
+        const opacity = Number(localStorage.getItem(`chatOpacity_${chatId}`)) || 80;
         setCurrentBackground(background || '');
         setCurrentAnimation(animation);
-        onBackgroundChange(background || '', animation);
+        setCurrentOpacity(opacity);
+        onBackgroundChange(background || '', animation, opacity);
       } catch (error) {
         console.error('Failed to load chat background:', error);
         // 如果数据库加载失败，尝试从localStorage加载
         const fallbackBackground = localStorage.getItem(`chatBackground_${chatId}`);
         const fallbackAnimation = localStorage.getItem(`chatAnimation_${chatId}`) || 'none';
+        const fallbackOpacity = Number(localStorage.getItem(`chatOpacity_${chatId}`)) || 80;
         if (fallbackBackground) {
           setCurrentBackground(fallbackBackground);
           setCurrentAnimation(fallbackAnimation);
-          onBackgroundChange(fallbackBackground, fallbackAnimation);
+          setCurrentOpacity(fallbackOpacity);
+          onBackgroundChange(fallbackBackground, fallbackAnimation, fallbackOpacity);
         }
       }
     };
@@ -52,7 +57,8 @@ export default function ChatBackgroundManager({
         console.log('背景更新事件:', event.detail);
         setCurrentBackground(event.detail.background || '');
         setCurrentAnimation(event.detail.animation || 'none');
-        onBackgroundChange(event.detail.background || '', event.detail.animation || 'none');
+        setCurrentOpacity(event.detail.opacity || 80);
+        onBackgroundChange(event.detail.background || '', event.detail.animation || 'none', event.detail.opacity || 80);
       }
     };
 
@@ -69,10 +75,11 @@ export default function ChatBackgroundManager({
       style={{
         // 使用系统主题配色作为默认背景
         backgroundColor: 'var(--theme-bg-primary, #ffffff)',
-        backgroundImage: currentBackground ? `url(${currentBackground})` : 'none',
-        backgroundSize: currentBackground ? 'cover' : 'auto',
-        backgroundPosition: currentBackground ? 'center' : 'initial',
-        backgroundRepeat: currentBackground ? 'no-repeat' : 'repeat',
+        // 移除容器层的自定义背景，以避免覆盖子层动画
+        backgroundImage: 'none',
+        backgroundSize: 'auto',
+        backgroundPosition: 'initial',
+        backgroundRepeat: 'repeat',
         position: 'relative',
         width: '100%',
         height: '100%',
@@ -103,10 +110,13 @@ export default function ChatBackgroundManager({
         <div 
           className={`chat-background-image ${currentAnimation !== 'none' ? `background-animation-${currentAnimation}` : ''}`}
           style={{
-            backgroundImage: `url(${currentBackground})`
+            // 用引号包裹以兼容 data: URL 在 CSS url() 中的解析
+            backgroundImage: `url("${currentBackground}")`,
+            opacity: currentOpacity / 100
           }}
           data-animation={currentAnimation}
-          data-debug={`background: ${!!currentBackground}, animation: ${currentAnimation}`}
+          data-opacity={currentOpacity}
+          data-debug={`background: ${!!currentBackground}, animation: ${currentAnimation}, opacity: ${currentOpacity}`}
         />
       )}
       

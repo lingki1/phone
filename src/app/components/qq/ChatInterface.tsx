@@ -87,6 +87,7 @@ export default function ChatInterface({
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [chatBackground, setChatBackground] = useState<string>('');
   const [chatAnimation, setChatAnimation] = useState<string>('none');
+  const [chatOpacity, setChatOpacity] = useState<number>(80);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   
@@ -319,7 +320,9 @@ export default function ChatInterface({
       
       // 加载动画设置
       const animation = localStorage.getItem(`chatAnimation_${chat.id}`) || 'none';
+      const opacity = Number(localStorage.getItem(`chatOpacity_${chat.id}`)) || 80;
       setChatAnimation(animation);
+      setChatOpacity(opacity);
     };
     
     loadBackground();
@@ -1565,9 +1568,10 @@ export default function ChatInterface({
   return (
     <ChatBackgroundManager
       chatId={chat.id}
-      onBackgroundChange={(background, animation) => {
+      onBackgroundChange={(background, animation, opacity) => {
         setChatBackground(background);
         setChatAnimation(animation || 'none');
+        setChatOpacity(opacity || 80);
       }}
     >
       <div className="chat-interface" style={{ backgroundColor: 'transparent' }}>
@@ -1877,9 +1881,10 @@ export default function ChatInterface({
           isOpen={showBackgroundModal}
           onClose={() => setShowBackgroundModal(false)}
           currentBackground={chatBackground}
-          currentAnimation={chatAnimation}
-          onSave={async (background: string, animation: string) => {
-            console.log('ChatInterface onSave被调用', { background, animation });
+            currentAnimation={chatAnimation}
+            currentOpacity={chatOpacity}
+          onSave={async (background: string, animation: string, opacity?: number) => {
+            console.log('ChatInterface onSave被调用', { background, animation, opacity });
             try {
               await dataManager.initDB();
               await dataManager.saveChatBackground(chat.id, background);
@@ -1888,19 +1893,22 @@ export default function ChatInterface({
               if (background) {
                 localStorage.setItem(`chatBackground_${chat.id}`, background);
                 localStorage.setItem(`chatAnimation_${chat.id}`, animation);
+                localStorage.setItem(`chatOpacity_${chat.id}`, (opacity || 80).toString());
               } else {
                 localStorage.removeItem(`chatBackground_${chat.id}`);
                 localStorage.removeItem(`chatAnimation_${chat.id}`);
+                localStorage.removeItem(`chatOpacity_${chat.id}`);
               }
               
               // 立即更新状态
               setChatBackground(background);
               setChatAnimation(animation);
+              setChatOpacity(opacity || 80);
               
               // 强制重新加载背景
               setTimeout(() => {
                 const event = new CustomEvent('backgroundUpdated', { 
-                  detail: { chatId: chat.id, background, animation } 
+                  detail: { chatId: chat.id, background, animation, opacity } 
                 });
                 window.dispatchEvent(event);
               }, 100);
@@ -1912,12 +1920,15 @@ export default function ChatInterface({
               if (background) {
                 localStorage.setItem(`chatBackground_${chat.id}`, background);
                 localStorage.setItem(`chatAnimation_${chat.id}`, animation);
+                localStorage.setItem(`chatOpacity_${chat.id}`, (opacity || 80).toString());
               } else {
                 localStorage.removeItem(`chatBackground_${chat.id}`);
                 localStorage.removeItem(`chatAnimation_${chat.id}`);
+                localStorage.removeItem(`chatOpacity_${chat.id}`);
               }
               setChatBackground(background);
               setChatAnimation(animation);
+              setChatOpacity(opacity || 80);
               setShowBackgroundModal(false);
             }
           }}

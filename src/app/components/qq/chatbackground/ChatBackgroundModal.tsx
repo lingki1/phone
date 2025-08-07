@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import './ChatBackgroundModal.css';
 import './ChatBackgroundAnimations.css';
@@ -11,7 +11,8 @@ interface ChatBackgroundModalProps {
   onClose: () => void;
   currentBackground?: string;
   currentAnimation?: string;
-  onSave: (background: string, animation: string) => void;
+  currentOpacity?: number;
+  onSave: (background: string, animation: string, opacity?: number) => void;
   chatName: string;
 }
 
@@ -20,14 +21,25 @@ export default function ChatBackgroundModal({
   onClose,
   currentBackground,
   currentAnimation = 'none',
+  currentOpacity = 80,
   onSave,
   chatName
 }: ChatBackgroundModalProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(currentBackground || null);
   const [selectedAnimation, setSelectedAnimation] = useState<string>(currentAnimation);
+  const [selectedOpacity, setSelectedOpacity] = useState<number>(80); // 默认80%透明度
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 打开弹窗或外部值变化时，同步内部预览与设置，避免保存为空导致清空背景
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedImage(currentBackground || null);
+      setSelectedAnimation(currentAnimation || 'none');
+      setSelectedOpacity(typeof currentOpacity === 'number' ? currentOpacity : 80);
+    }
+  }, [isOpen, currentBackground, currentAnimation, currentOpacity]);
 
   // 处理文件选择
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,17 +76,24 @@ export default function ChatBackgroundModal({
 
   // 处理保存
   const handleSave = async () => {
-    console.log('保存按钮被点击', { selectedImage, currentBackground, selectedAnimation });
-    // 如果有选中的图片，使用选中的图片；否则使用当前背景
-    const backgroundToSave = selectedImage || currentBackground || '';
-    await onSave(backgroundToSave, selectedAnimation);
+    console.log('保存按钮被点击', { selectedImage, currentBackground, selectedAnimation, selectedOpacity });
+    try {
+      // 如果有选中的图片，使用选中的图片；否则使用当前背景
+      const backgroundToSave = selectedImage || currentBackground || '';
+      await onSave(backgroundToSave, selectedAnimation, selectedOpacity);
+      console.log('背景保存成功');
+    } catch (error) {
+      console.error('保存背景失败:', error);
+      setError('保存失败，请重试');
+    }
   };
 
   // 处理清除背景
   const handleClear = async () => {
     setSelectedImage(null);
     setSelectedAnimation('none');
-    await onSave('', 'none');
+    setSelectedOpacity(80);
+    await onSave('', 'none', 80);
   };
 
   // 处理点击上传按钮
@@ -147,6 +166,22 @@ export default function ChatBackgroundModal({
             </div>
           )}
 
+          {/* 透明度控制 */}
+          {selectedImage && (
+            <div className="opacity-control">
+              <label htmlFor="opacity-slider">背景透明度: {selectedOpacity}%</label>
+              <input
+                id="opacity-slider"
+                type="range"
+                min="10"
+                max="100"
+                value={selectedOpacity}
+                onChange={(e) => setSelectedOpacity(Number(e.target.value))}
+                className="opacity-slider"
+              />
+            </div>
+          )}
+
           {/* 动画选择器 */}
           <AnimationSelector
             selectedAnimation={selectedAnimation}
@@ -170,12 +205,7 @@ export default function ChatBackgroundModal({
             </button>
             <button 
               className="save-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('保存按钮点击事件触发');
-                handleSave();
-              }}
+              onClick={handleSave}
               disabled={!selectedImage && !currentBackground}
             >
               保存
