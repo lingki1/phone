@@ -193,15 +193,13 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
             disabled={isCleaning}
             title="清理重复的默认预设"
           >
-            <span className="btn-icon">🧹</span>
-            <span className="btn-text">{isCleaning ? '清理中...' : '清理重复'}</span>
+            <span className="btn-text">{isCleaning ? '清理中...' : '清理'}</span>
           </button>
           <button 
             className="new-preset-btn"
             onClick={() => setShowCreateModal(true)}
           >
-            <span className="btn-icon">+</span>
-            <span className="btn-text">新建预设</span>
+            <span className="btn-text">新建</span>
           </button>
         </div>
       </div>
