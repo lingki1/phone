@@ -115,13 +115,45 @@
     font-size: 15px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
   }
   
   .back-btn {
     margin-left: -2px;
     margin-right: 4px;
     flex-shrink: 0;
+  }
+  
+  .page-title {
+    font-size: 15px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+  
+  .header-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  
+  .import-btn {
+    padding: 5px 6px !important;
+    font-size: 12px !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    min-width: unset !important;
+    max-width: none !important;
+  }
+  
+  .import-btn svg {
+    width: 12px !important;
+    height: 12px !important;
   }
   
   .create-btn {
@@ -139,54 +171,96 @@
     width: 12px !important;
     height: 12px !important;
   }
-  
-  .page-title {
-    font-size: 15px;
-    flex: 1 !important;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-right: 8px;
-  }
 }
 
 /* 超小屏幕顶部导航栏调整 */
 @media (max-width: 480px) {
   .world-book-header {
-    padding: 10px 12px;
-    font-size: 15px;
+    padding: 8px 10px;
+    font-size: 14px;
+    gap: 4px;
   }
   
   .back-btn {
     margin-left: -2px;
+    margin-right: 3px;
+  }
+  
+  .page-title {
+    font-size: 14px;
     margin-right: 4px;
   }
   
   .header-actions {
-    gap: 4px;
+    gap: 3px;
   }
   
   .import-btn {
-    padding: 5px 6px;
-    font-size: 12px;
-    gap: 3px;
+    padding: 4px 5px !important;
+    font-size: 11px !important;
+    gap: 2px !important;
   }
   
   .import-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 11px !important;
+    height: 11px !important;
   }
   
   .create-btn {
-    padding: 5px 6px;
-    font-size: 12px;
-    gap: 3px;
+    padding: 4px 5px !important;
+    font-size: 11px !important;
+    gap: 2px !important;
   }
   
   .create-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 11px !important;
+    height: 11px !important;
+  }
+}
+
+/* 极窄屏幕优化（如小屏手机） */
+@media (max-width: 360px) {
+  .world-book-header {
+    padding: 6px 8px;
+    font-size: 13px;
+    gap: 3px;
+  }
+  
+  .back-btn {
+    margin-left: -1px;
+    margin-right: 2px;
+    padding: 6px;
+  }
+  
+  .page-title {
+    font-size: 13px;
+    margin-right: 3px;
+  }
+  
+  .header-actions {
+    gap: 2px;
+  }
+  
+  .import-btn {
+    padding: 3px 4px !important;
+    font-size: 10px !important;
+    gap: 1px !important;
+  }
+  
+  .import-btn svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+  
+  .create-btn {
+    padding: 3px 4px !important;
+    font-size: 10px !important;
+    gap: 1px !important;
+  }
+  
+  .create-btn svg {
+    width: 10px !important;
+    height: 10px !important;
   }
 }
 
@@ -240,6 +314,7 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .import-btn:hover {
@@ -251,6 +326,19 @@
 .create-btn {
   background: var(--theme-accent-color);
   color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 0;
   border: none;
   border-radius: 6px;
   padding: 8px 12px;

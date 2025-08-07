@@ -5,6 +5,7 @@ import Image from 'next/image';
 import './ChatBackgroundModal.css';
 import './ChatBackgroundAnimations.css';
 import AnimationSelector from './AnimationSelector';
+import { compressImage } from '../../../utils/imageCompressor';
 
 interface ChatBackgroundModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export default function ChatBackgroundModal({
   }, [isOpen, currentBackground, currentAnimation, currentOpacity]);
 
   // 处理文件选择
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -52,26 +53,31 @@ export default function ChatBackgroundModal({
       return;
     }
 
-    // 验证文件大小（限制为5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      setError('图片大小不能超过5MB');
+    // 验证文件大小（限制为10MB，压缩后会变小）
+    if (file.size > 10 * 1024 * 1024) {
+      setError('图片大小不能超过10MB');
       return;
     }
 
     setError(null);
     setIsLoading(true);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setSelectedImage(result);
+    try {
+      // 压缩图片
+      const compressedImage = await compressImage(file, {
+        quality: 0.8,
+        maxWidth: 1920, // 背景图片可以更大一些
+        maxHeight: 1080,
+        maxSize: 2 * 1024 * 1024 // 2MB
+      });
+      
+      setSelectedImage(compressedImage);
+    } catch (error) {
+      console.error('图片压缩失败:', error);
+      setError('图片处理失败，请重试');
+    } finally {
       setIsLoading(false);
-    };
-    reader.onerror = () => {
-      setError('图片读取失败');
-      setIsLoading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   // 处理保存
@@ -120,7 +126,7 @@ export default function ChatBackgroundModal({
               {isLoading ? (
                 <div className="loading">
                   <div className="spinner"></div>
-                  <span>处理中...</span>
+                  <span>正在压缩图片...</span>
                 </div>
               ) : selectedImage ? (
                 <div className={`preview ${selectedAnimation !== 'none' ? `background-animation-${selectedAnimation === '3d' ? '3d' : selectedAnimation}` : ''}`}>
@@ -145,7 +151,7 @@ export default function ChatBackgroundModal({
                 <div className="upload-placeholder">
                   <div className="upload-icon">📷</div>
                   <span>点击上传背景图片</span>
-                  <small>支持 JPG、PNG、GIF 格式，最大 5MB</small>
+                  <small>支持 JPG、PNG、GIF 格式，最大 10MB，会自动压缩优化</small>
                 </div>
               )}
             </div>
