@@ -320,7 +320,6 @@ export class PresetManager {
           
           // 保留最新的一个，删除其他的
           const sortedPresets = presets.sort((a, b) => b.updatedAt - a.updatedAt);
-          const keepPreset = sortedPresets[0];
           const deletePresets = sortedPresets.slice(1);
           
           for (const deletePreset of deletePresets) {
@@ -420,7 +419,7 @@ export class PresetManager {
           
           // 保留最新的一个，删除其他的
           const sortedPresets = presets.sort((a, b) => b.updatedAt - a.updatedAt);
-          const keepPreset = sortedPresets[0];
+          // 保留最新的一个，删除其他的
           const deletePresets = sortedPresets.slice(1);
           
           for (const deletePreset of deletePresets) {

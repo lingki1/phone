@@ -1122,6 +1122,36 @@
   text-align: center;
   color: var(--theme-text-secondary, #666);
   font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 150px;
+}
+
+.image-placeholder:hover {
+  background-color: var(--theme-bg-secondary, rgba(255, 255, 255, 0.9));
+  border-color: var(--theme-accent-color, #007bff);
+  transform: scale(1.02);
+}
+
+.image-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.image-description {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.image-hint {
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #999);
 }
 
 .user-image {
@@ -1143,6 +1173,54 @@
   gap: 8px;
   color: var(--theme-accent-color, #007bff);
   font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 80px;
+  max-width: 200px;
+}
+
+.voice-message:hover {
+  background-color: var(--theme-bg-tertiary, rgba(0, 0, 0, 0.05));
+  border-radius: 8px;
+}
+
+.voice-message-body {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.voice-waveform {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  gap: 2px;
+  flex-grow: 1;
+}
+
+.voice-waveform div {
+  width: 3px;
+  background-color: currentColor;
+  border-radius: 2px;
+  animation: wave-quiet 1.5s ease-in-out infinite;
+}
+
+@keyframes wave-quiet {
+  0%, 100% { height: 2px; }
+  50% { height: 10px; }
+}
+
+.voice-waveform div:nth-child(2) { animation-delay: 0.2s; }
+.voice-waveform div:nth-child(3) { animation-delay: 0.4s; }
+.voice-waveform div:nth-child(4) { animation-delay: 0.6s; }
+.voice-waveform div:nth-child(5) { animation-delay: 0.8s; }
+
+.voice-duration {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  white-space: nowrap;
 }
 
 /* 深色模式下的特殊消息样式 */

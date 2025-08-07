@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
@@ -13,7 +13,7 @@ import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
 import { ChatStatusManager, ChatStatusDisplay, ChatStatus, injectStatusPrompt } from './chatstatus';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
-import { useAiPendingState, AiPendingIndicator } from '../async';
+import { useAiPendingState } from '../async';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -110,16 +110,7 @@ export default function ChatInterface({
     };
   }, [chat.id]);
   
-  // 分页加载相关状态
-  const MESSAGE_RENDER_WINDOW = 30; // 每次加载30条消息
-  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMoreMessages, setHasMoreMessages] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // 自动调整输入框高度
   const adjustTextareaHeight = () => {
@@ -136,169 +127,6 @@ export default function ChatInterface({
     
     textarea.style.height = `${newHeight}px`;
   };
-
-
-
-  // 滚动到底部 - 采用V0.03的设计方案
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  };
-
-  // 加载更多历史消息
-  const loadMoreMessages = useCallback(() => {
-    if (isLoadingMore || !hasMoreMessages) return;
-    
-    setIsLoadingMore(true);
-    const currentFirstMessageIndex = chat.messages.findIndex(msg => msg.id === displayedMessages[0]?.id);
-    
-    if (currentFirstMessageIndex === -1) {
-      setIsLoadingMore(false);
-      return;
-    }
-    
-    const startIndex = Math.max(0, currentFirstMessageIndex - MESSAGE_RENDER_WINDOW);
-    const endIndex = currentFirstMessageIndex;
-    const messagesToPrepend = chat.messages.slice(startIndex, endIndex);
-    
-    if (messagesToPrepend.length > 0) {
-      const oldScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
-      
-      setDisplayedMessages(prev => {
-        const existingIds = new Set(prev.map(msg => msg.id));
-        const newMessages = messagesToPrepend.filter(msg => !existingIds.has(msg.id));
-        return [...newMessages, ...prev];
-      });
-      
-      // 更新是否有更多消息
-      setHasMoreMessages(startIndex > 0);
-      
-      // 保持滚动位置
-      setTimeout(() => {
-        const newScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
-        const scrollDiff = newScrollHeight - oldScrollHeight;
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = scrollDiff;
-        }
-        setIsLoadingMore(false);
-      }, 50);
-    } else {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, hasMoreMessages, chat.messages, displayedMessages]);
-
-  // 初始化显示的消息 - 打开聊天默认最新消息处
-  useEffect(() => {
-    if (chat.messages.length > 0) {
-      const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
-      setDisplayedMessages(initialMessages);
-      setHasMoreMessages(chat.messages.length > MESSAGE_RENDER_WINDOW);
-      setIsInitialized(true);
-    } else {
-      setDisplayedMessages([]);
-      setHasMoreMessages(false);
-      setIsInitialized(true);
-    }
-  }, [chat.messages]);
-
-  // 初始化完成后滚动到最新消息处
-  useEffect(() => {
-    if (isInitialized && displayedMessages.length > 0) {
-      // 只在初始化时滚动，避免加载历史消息时滚动
-      const isInitialLoad = displayedMessages.length <= MESSAGE_RENDER_WINDOW;
-      if (isInitialLoad) {
-        // 采用V0.03的设计方案：延迟滚动确保DOM渲染完成
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-      }
-    }
-  }, [isInitialized, displayedMessages]);
-
-  // 标记消息为已读
-  useEffect(() => {
-    if (isInitialized && displayedMessages.length > 0) {
-      const markMessagesAsRead = async () => {
-        try {
-          // 获取当前显示的最新消息时间戳
-          const latestMessageTimestamp = Math.max(...displayedMessages.map(msg => msg.timestamp));
-          
-          // 更新聊天中的未读状态
-          const updatedMessages = chat.messages.map(msg => ({
-            ...msg,
-            isRead: msg.timestamp <= latestMessageTimestamp ? true : msg.isRead
-          }));
-          
-          // 计算未读消息数量
-          const unreadCount = updatedMessages.filter(msg => 
-            msg.role === 'assistant' && !msg.isRead
-          ).length;
-          
-          // 更新聊天记录
-          const updatedChat = {
-            ...chat,
-            messages: updatedMessages,
-            unreadCount,
-            lastReadTimestamp: latestMessageTimestamp
-          };
-          
-          onUpdateChat(updatedChat);
-          
-          // 触发通知系统更新
-          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
-          
-        } catch (error) {
-          console.error('Failed to mark messages as read:', error);
-        }
-      };
-      
-      // 延迟标记已读，确保用户真正看到了消息
-      const timer = setTimeout(markMessagesAsRead, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialized, displayedMessages, chat.messages, onUpdateChat, chat]);
-
-  // 新消息发送显示最新消息处
-  useEffect(() => {
-    if (isInitialized && chat.messages.length > 0 && displayedMessages.length > 0) {
-      const lastDisplayedMessageId = displayedMessages[displayedMessages.length - 1]?.id;
-      const lastDisplayedIndex = chat.messages.findIndex(msg => msg.id === lastDisplayedMessageId);
-      
-      if (lastDisplayedIndex !== -1 && lastDisplayedIndex < chat.messages.length - 1) {
-        const newMessages = chat.messages.slice(lastDisplayedIndex + 1);
-        
-        if (newMessages.length > 0) {
-          setDisplayedMessages(prev => {
-            const existingIds = new Set(prev.map(msg => msg.id));
-            const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-            return [...prev, ...uniqueNewMessages];
-          });
-          
-          // 新消息发送后立即滚动到最新消息处
-          setTimeout(() => {
-            scrollToBottom();
-          }, 0);
-        }
-      }
-    }
-  }, [chat.messages, displayedMessages, isInitialized]);
-
-  // 监听滚动事件，向上滑动自动加载更多的30条
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      // 当滚动到顶部附近时（距离顶部100px内），自动加载更多消息
-      if (container.scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
-        loadMoreMessages();
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
 
 
 
@@ -338,6 +166,49 @@ export default function ChatInterface({
     
     loadBalance();
   }, []);
+
+  // 标记消息为已读
+  useEffect(() => {
+    if (chat.messages.length > 0) {
+      const markMessagesAsRead = async () => {
+        try {
+          // 获取当前显示的最新消息时间戳
+          const latestMessageTimestamp = Math.max(...chat.messages.map(msg => msg.timestamp));
+          
+          // 更新聊天中的未读状态
+          const updatedMessages = chat.messages.map(msg => ({
+            ...msg,
+            isRead: msg.timestamp <= latestMessageTimestamp ? true : msg.isRead
+          }));
+          
+          // 计算未读消息数量
+          const unreadCount = updatedMessages.filter(msg => 
+            msg.role === 'assistant' && !msg.isRead
+          ).length;
+          
+          // 更新聊天记录
+          const updatedChat = {
+            ...chat,
+            messages: updatedMessages,
+            unreadCount,
+            lastReadTimestamp: latestMessageTimestamp
+          };
+          
+          onUpdateChat(updatedChat);
+          
+          // 触发通知系统更新
+          window.dispatchEvent(new CustomEvent('viewStateUpdated'));
+          
+        } catch (error) {
+          console.error('Failed to mark messages as read:', error);
+        }
+      };
+      
+      // 延迟标记已读，确保用户真正看到了消息
+      const timer = setTimeout(markMessagesAsRead, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [chat.messages, onUpdateChat, chat]);
 
   // 加载聊天背景
   useEffect(() => {
@@ -909,7 +780,7 @@ ${recentMessages}`;
 1. **【身份铁律】**: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。
 2. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有"type"和"name"字段的JSON对象】。
 3. **角色扮演**: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。
-4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少2-3条消息，不能超过4条消息，指令消息不算！！！
+4. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条消息。每次要回复2-4条消息，每条消息内容要丰富，避免过于简短的回复（如2-5个字）。每条消息应该包含完整的想法或回应，内容长度适中。
 5. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 6. **情景感知**: 注意当前时间是 ${currentTime},但是不能重复提及时间概念。
 7. **记忆继承**: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。
@@ -993,7 +864,7 @@ ${chat.settings.aiPersona}
 
 # 你的任务与规则：
 1. **【输出格式】**: 你的回复【必须】是一个JSON数组格式的字符串。数组中的【每一个元素都必须是一个带有type字段的JSON对象】。
-2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条短消息。每次要回复至少3-8条消息！！！
+2. **对话节奏**: 模拟真人的聊天习惯，你可以一次性生成多条消息。每次要回复2-4条消息，每条消息内容要丰富，避免过于简短的回复（如2-5个字）。每条消息应该包含完整的想法或回应，内容长度适中。
 3. **情景感知**: 你需要感知当前的时间(${currentTime})，但是不能重复提及时间概念。
 4. **禁止出戏**: 绝不能透露你是AI、模型，或提及"扮演"、"生成"等词语。
 5. **群聊记忆**: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。
@@ -1426,6 +1297,178 @@ ${myPersona}${groupMemoryInfo}
     }
   };
 
+  // 处理图片消息点击
+  const handleImageMessageClick = (content: string, senderName?: string) => {
+    // 创建一个更美观的弹窗来显示图片描述
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.2s ease;
+    `;
+    
+    modalContent.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-size: 24px;">📷</div>
+        <div>
+          <h3 style="margin: 0; color: #333; font-size: 18px;">${senderName || '对方'} 发送的图片</h3>
+          <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">图片内容描述</p>
+        </div>
+      </div>
+      <div style="
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        border-left: 4px solid #28a745;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+        white-space: pre-wrap;
+        word-break: break-word;
+      ">${content}</div>
+      <button onclick="this.closest('.image-modal').remove()" style="
+        margin-top: 16px;
+        padding: 8px 16px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#218838'" onmouseout="this.style.backgroundColor='#28a745'">
+        关闭
+      </button>
+    `;
+    
+    modal.className = 'image-modal';
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // 点击背景关闭弹窗
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+    
+    // ESC键关闭弹窗
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        modal.remove();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+  };
+
+  // 处理语音消息点击
+  const handleVoiceMessageClick = (content: string, senderName?: string) => {
+    // 创建一个更美观的弹窗来显示语音内容
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.2s ease;
+    `;
+    
+    modalContent.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-size: 24px;">🎤</div>
+        <div>
+          <h3 style="margin: 0; color: #333; font-size: 18px;">${senderName || '对方'} 的语音</h3>
+          <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">语音消息的文字内容</p>
+        </div>
+      </div>
+      <div style="
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        border-left: 4px solid #007bff;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+        white-space: pre-wrap;
+        word-break: break-word;
+      ">${content}</div>
+      <button onclick="this.closest('.voice-modal').remove()" style="
+        margin-top: 16px;
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007bff'">
+        关闭
+      </button>
+    `;
+    
+    modal.className = 'voice-modal';
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // 点击背景关闭弹窗
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+    
+    // ESC键关闭弹窗
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        modal.remove();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+  };
+
   // 重新生成AI回复
   const handleRegenerateAI = async (messageId: string) => {
     // 找到要重新生成的消息
@@ -1468,16 +1511,29 @@ ${myPersona}${groupMemoryInfo}
         );
       case 'ai_image':
         return (
-          <div className="image-message">
+          <div className="image-message" onClick={() => handleImageMessageClick(msg.content, msg.senderName)}>
             <div className="image-placeholder">
-              📷 {msg.content}
+              <div className="image-icon">📷</div>
+              <div className="image-description">图片</div>
+              <div className="image-hint">点击查看描述</div>
             </div>
           </div>
         );
       case 'voice_message':
         return (
-          <div className="voice-message">
-            🎤 {msg.content}
+          <div className="voice-message" onClick={() => handleVoiceMessageClick(msg.content, msg.senderName)}>
+            <div className="voice-message-body">
+              <div className="voice-waveform">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+              <span className="voice-duration">
+                {Math.max(1, Math.round((msg.content || '').length / 5))}&apos;&apos; 
+              </span>
+            </div>
           </div>
         );
       case 'red_packet_send':
@@ -1566,13 +1622,6 @@ ${myPersona}${groupMemoryInfo}
           </div>
         </div>
         <div className="chat-actions">
-          {/* 后台AI回复指示器 */}
-          <AiPendingIndicator 
-            isPending={isPending}
-            size="small"
-            variant="dots"
-            aiName={chat.name}
-          />
           <button 
             className="action-btn"
             onClick={() => setShowBackgroundModal(true)}
@@ -1612,26 +1661,13 @@ ${myPersona}${groupMemoryInfo}
 
 
       {/* 消息列表 */}
-      <div className="messages-container" ref={messagesContainerRef}>
-        {/* 加载更多按钮 */}
-        {hasMoreMessages && (
-          <div className="load-more-container">
-            <button 
-              className={`load-more-btn ${isLoadingMore ? 'loading' : ''}`}
-              onClick={loadMoreMessages}
-              disabled={isLoadingMore}
-            >
-              {isLoadingMore ? '加载中...' : '加载更早的记录'}
-            </button>
-          </div>
-        )}
-        
-        {displayedMessages.length === 0 ? (
+      <div className="messages-container">
+        {chat.messages.length === 0 ? (
           <div className="empty-chat">
             <p>开始和 {chat.name} 聊天吧！</p>
           </div>
         ) : (
-          displayedMessages.map((msg, index) => {
+          chat.messages.map((msg, index) => {
             // 获取发送者信息
             const getSenderInfo = () => {
               if (msg.role === 'user') {
@@ -1662,9 +1698,9 @@ ${myPersona}${groupMemoryInfo}
             // 检查是否是连续消息（同一发送者的连续消息）
             // 只有在时间间隔很短（30秒内）且内容类型相似时才认为是连续消息
             const isConsecutiveMessage = index > 0 && 
-              displayedMessages[index - 1].senderName === msg.senderName &&
-              displayedMessages[index - 1].role === msg.role &&
-              Math.abs(msg.timestamp - displayedMessages[index - 1].timestamp) < 30000; // 30秒内
+              chat.messages[index - 1].senderName === msg.senderName &&
+              chat.messages[index - 1].role === msg.role &&
+              Math.abs(msg.timestamp - chat.messages[index - 1].timestamp) < 30000; // 30秒内
 
             return (
               <div 
@@ -1792,8 +1828,6 @@ ${myPersona}${groupMemoryInfo}
             </div>
           </div>
         )}
-        
-        <div ref={messagesEndRef} />
       </div>
 
       {/* 输入区域 */}
