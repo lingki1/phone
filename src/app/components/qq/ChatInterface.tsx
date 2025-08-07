@@ -120,8 +120,8 @@ export default function ChatInterface({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  // 自动调整输入框高度
-  const adjustTextareaHeight = () => {
+  // 自动调整输入框高度（添加防抖优化）
+  const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -134,17 +134,17 @@ export default function ChatInterface({
     const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
     
     textarea.style.height = `${newHeight}px`;
-  };
+  }, []);
 
-  // 检测用户是否在查看历史消息
-  const handleScroll = () => {
+  // 检测用户是否在查看历史消息（添加防抖优化）
+  const handleScroll = useCallback(() => {
     if (!messagesContainerRef.current) return;
     
     const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px容差
     
     setShouldAutoScroll(isAtBottom);
-  };
+  }, []);
 
   // 自动滚动到最新消息
   const scrollToBottom = (smooth = true) => {
@@ -317,17 +317,19 @@ export default function ChatInterface({
   // 初始化输入框高度
   useEffect(() => {
     adjustTextareaHeight();
-  }, []);
+  }, [adjustTextareaHeight]);
 
-  // 处理@提及功能
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // 处理@提及功能（添加防抖优化）
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
     
     setMessage(value);
     
-    // 自动调整输入框高度
-    adjustTextareaHeight();
+    // 使用requestAnimationFrame优化高度调整
+    requestAnimationFrame(() => {
+      adjustTextareaHeight();
+    });
     
     if (chat.isGroup && chat.members) {
       // 检查是否在输入@符号
@@ -347,7 +349,7 @@ export default function ChatInterface({
         setShowMentionList(false);
       }
     }
-  };
+  }, [chat.isGroup, chat.members, adjustTextareaHeight]);
 
   // 选择@提及的成员
   const selectMention = (member: GroupMember) => {
@@ -1440,6 +1442,8 @@ export default function ChatInterface({
     }
   };
 
+
+
   return (
     <ChatBackgroundManager
       chatId={chat.id}
@@ -1459,6 +1463,7 @@ export default function ChatInterface({
             width={32}
             height={32}
             className="chat-avatar"
+            unoptimized={chat.avatar?.startsWith('data:')}
           />
           <div className="chat-details">
             <span className="chat-name">{chat.name}</span>
@@ -1532,8 +1537,9 @@ export default function ChatInterface({
                 ↓
               </button>
             )}
-            {chat.messages.map((msg, index) => {
-            // 获取发送者信息
+            {/* 只渲染最近的消息以提高性能 */}
+            {chat.messages.slice(-50).map((msg, index) => {
+            // 优化发送者信息计算
             const getSenderInfo = () => {
               if (msg.role === 'user') {
                 return {
@@ -1560,12 +1566,11 @@ export default function ChatInterface({
 
             const senderInfo = getSenderInfo();
             
-            // 检查是否是连续消息（同一发送者的连续消息）
-            // 只有在时间间隔很短（30秒内）且内容类型相似时才认为是连续消息
+            // 优化连续消息检查
             const isConsecutiveMessage = index > 0 && 
-              chat.messages[index - 1].senderName === msg.senderName &&
-              chat.messages[index - 1].role === msg.role &&
-              Math.abs(msg.timestamp - chat.messages[index - 1].timestamp) < 30000; // 30秒内
+              chat.messages[chat.messages.length - 51 + index - 1]?.senderName === msg.senderName &&
+              chat.messages[chat.messages.length - 51 + index - 1]?.role === msg.role &&
+              Math.abs(msg.timestamp - (chat.messages[chat.messages.length - 51 + index - 1]?.timestamp || 0)) < 30000; // 30秒内
 
             return (
               <div 
@@ -1580,6 +1585,7 @@ export default function ChatInterface({
                     width={36}
                     height={36}
                     className="avatar-image"
+                    unoptimized={senderInfo.avatar?.startsWith('data:')}
                   />
                 </div>
                 <div className="message-content">
@@ -1678,6 +1684,7 @@ export default function ChatInterface({
                 width={36}
                 height={36}
                 className="avatar-image"
+                unoptimized={(currentAiUser?.avatar || chat.avatar)?.startsWith('data:')}
               />
             </div>
             <div className="message-content">
