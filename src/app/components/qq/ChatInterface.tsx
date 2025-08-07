@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
@@ -15,6 +15,7 @@ import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
 import { WorldBookAssociationSwitchModal } from './worldbook';
+import { MessagePaginationManager, MessageItem } from './chat';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -89,8 +90,15 @@ export default function ChatInterface({
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   
+  // 分页相关状态
+  const [isPaginationEnabled] = useState(true);
+  
   // 使用异步AI状态管理
   const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
+  
+  // 使用useRef来避免循环依赖
+  const triggerAiResponseRef = useRef<((updatedChat: ChatItem) => Promise<void>) | null>(null);
+  const createAiMessageRef = useRef<((msgData: Record<string, unknown>, chat: ChatItem, timestamp: number) => Promise<Message | null>) | null>(null);
   
   // 聊天状态相关状态
   const [chatStatus, setChatStatus] = useState<ChatStatus>({
@@ -113,6 +121,14 @@ export default function ChatInterface({
       setIsLoading(false);
       setCurrentAiUser(null);
       endAiTask();
+      
+      // 清理防抖定时器
+      if (heightAdjustTimerRef.current) {
+        clearTimeout(heightAdjustTimerRef.current);
+      }
+      if (mentionCheckTimerRef.current) {
+        clearTimeout(mentionCheckTimerRef.current);
+      }
     };
   }, [chat.id, endAiTask]);
   
@@ -125,7 +141,8 @@ export default function ChatInterface({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // 重置高度以获取正确的 scrollHeight
+    // 使用transform来避免重排，提高性能
+    const currentHeight = textarea.style.height;
     textarea.style.height = 'auto';
     
     // 计算新高度，最小高度为一行，最大高度为5行
@@ -133,7 +150,10 @@ export default function ChatInterface({
     const maxHeight = 120; // 5行的高度
     const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
     
-    textarea.style.height = `${newHeight}px`;
+    // 只有当高度真正改变时才更新，避免不必要的DOM操作
+    if (currentHeight !== `${newHeight}px`) {
+      textarea.style.height = `${newHeight}px`;
+    }
   }, []);
 
   // 检测用户是否在查看历史消息（添加防抖优化）
@@ -143,7 +163,13 @@ export default function ChatInterface({
     const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px容差
     
-    setShouldAutoScroll(isAtBottom);
+    // 使用防抖避免频繁状态更新
+    setShouldAutoScroll(prev => {
+      if (prev !== isAtBottom) {
+        return isAtBottom;
+      }
+      return prev;
+    });
   }, []);
 
   // 自动滚动到最新消息
@@ -164,11 +190,11 @@ export default function ChatInterface({
 
   // 当消息列表更新时，根据用户行为决定是否自动滚动
   useEffect(() => {
-    if (shouldAutoScroll) {
+    if (shouldAutoScroll && chat.messages.length > 0) {
       // 新消息到达时使用平滑滚动
       scrollToBottom(true);
     }
-  }, [chat.messages, shouldAutoScroll]);
+  }, [chat.messages.length, shouldAutoScroll]);
 
   // 当用户发送消息时，强制滚动到底部
   useEffect(() => {
@@ -225,13 +251,20 @@ export default function ChatInterface({
     loadBalance();
   }, []);
 
-  // 标记消息为已读
+  // 标记消息为已读（优化：减少触发频率）
   useEffect(() => {
     if (chat.messages.length > 0) {
       const markMessagesAsRead = async () => {
         try {
           // 获取当前显示的最新消息时间戳
           const latestMessageTimestamp = Math.max(...chat.messages.map(msg => msg.timestamp));
+          
+          // 检查是否需要更新（避免不必要的更新）
+          const hasUnreadMessages = chat.messages.some(msg => 
+            msg.role === 'assistant' && !msg.isRead && msg.timestamp <= latestMessageTimestamp
+          );
+          
+          if (!hasUnreadMessages) return;
           
           // 更新聊天中的未读状态
           const updatedMessages = chat.messages.map(msg => ({
@@ -266,7 +299,7 @@ export default function ChatInterface({
       const timer = setTimeout(markMessagesAsRead, 1000);
       return () => clearTimeout(timer);
     }
-  }, [chat.messages, onUpdateChat, chat]);
+  }, [chat.messages.length, onUpdateChat, chat]);
 
   // 加载聊天背景
   useEffect(() => {
@@ -319,40 +352,55 @@ export default function ChatInterface({
     adjustTextareaHeight();
   }, [adjustTextareaHeight]);
 
+  // 防抖定时器引用
+  const heightAdjustTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const mentionCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 处理@提及功能（添加防抖优化）
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
     
+    // 立即更新消息内容，保证输入响应性
     setMessage(value);
     
-    // 使用requestAnimationFrame优化高度调整
-    requestAnimationFrame(() => {
+    // 防抖处理高度调整，避免频繁DOM操作
+    if (heightAdjustTimerRef.current) {
+      clearTimeout(heightAdjustTimerRef.current);
+    }
+    heightAdjustTimerRef.current = setTimeout(() => {
       adjustTextareaHeight();
-    });
+    }, 100); // 增加到100ms防抖
     
-    if (chat.isGroup && chat.members) {
-      // 检查是否在输入@符号
-      const beforeCursor = value.substring(0, cursorPos);
-      const lastAtIndex = beforeCursor.lastIndexOf('@');
-      
-      if (lastAtIndex !== -1) {
-        const afterAt = beforeCursor.substring(lastAtIndex + 1);
-        if (!afterAt.includes(' ') && !afterAt.includes('\n')) {
-          setMentionFilter(afterAt);
-          setMentionCursorPos(lastAtIndex);
-          setShowMentionList(true);
+    // 防抖处理@提及检查，避免频繁计算
+    if (mentionCheckTimerRef.current) {
+      clearTimeout(mentionCheckTimerRef.current);
+    }
+    
+    mentionCheckTimerRef.current = setTimeout(() => {
+      if (chat.isGroup && chat.members) {
+        // 检查是否在输入@符号
+        const beforeCursor = value.substring(0, cursorPos);
+        const lastAtIndex = beforeCursor.lastIndexOf('@');
+        
+        if (lastAtIndex !== -1) {
+          const afterAt = beforeCursor.substring(lastAtIndex + 1);
+          if (!afterAt.includes(' ') && !afterAt.includes('\n')) {
+            setMentionFilter(afterAt);
+            setMentionCursorPos(lastAtIndex);
+            setShowMentionList(true);
+          } else {
+            setShowMentionList(false);
+          }
         } else {
           setShowMentionList(false);
         }
-      } else {
-        setShowMentionList(false);
       }
-    }
+    }, 150); // 增加到150ms防抖，@提及检查可以稍微慢一点
   }, [chat.isGroup, chat.members, adjustTextareaHeight]);
 
-  // 选择@提及的成员
-  const selectMention = (member: GroupMember) => {
+  // 选择@提及的成员（优化：使用useCallback缓存）
+  const selectMention = useCallback((member: GroupMember) => {
     const beforeMention = message.substring(0, mentionCursorPos);
     const afterMention = message.substring(mentionCursorPos + mentionFilter.length + 1);
     const newMessage = beforeMention + `@${member.groupNickname} ` + afterMention;
@@ -365,18 +413,25 @@ export default function ChatInterface({
       adjustTextareaHeight();
       textareaRef.current?.focus();
     }, 0);
-  };
+  }, [message, mentionCursorPos, mentionFilter, adjustTextareaHeight]);
 
-  // 过滤可@的成员
-  const getFilteredMembers = () => {
-    if (!chat.members) return [];
-    return chat.members.filter(member => 
-      member.groupNickname.toLowerCase().includes(mentionFilter.toLowerCase())
-    );
-  };
+  // 过滤可@的成员（使用useMemo缓存结果，优化依赖项）
+  const filteredMembers = useMemo(() => {
+    if (!chat.members || !mentionFilter) return [];
+    
+    // 如果过滤条件为空，返回所有成员
+    if (mentionFilter.trim() === '') {
+      return chat.members.slice(0, 10); // 限制显示数量
+    }
+    
+    const filterLower = mentionFilter.toLowerCase();
+    return chat.members
+      .filter(member => member.groupNickname.toLowerCase().includes(filterLower))
+      .slice(0, 10); // 限制显示数量，提高性能
+  }, [chat.members, mentionFilter]); // 恢复完整依赖项以确保正确性
 
-  // 引用消息
-  const handleQuoteMessage = (msg: Message) => {
+  // 引用消息（优化：使用useCallback缓存）
+  const handleQuoteMessage = useCallback((msg: Message) => {
     if (msg.role === 'user') {
       setQuotedMessage({
         timestamp: msg.timestamp,
@@ -390,12 +445,12 @@ export default function ChatInterface({
         content: msg.content
       });
     }
-  };
+  }, []);
 
-  // 取消引用
-  const cancelQuote = () => {
+  // 取消引用（优化：使用useCallback缓存）
+  const cancelQuote = useCallback(() => {
     setQuotedMessage(undefined);
-  };
+  }, []);
 
   // 发送红包处理函数
   const handleSendRedPacket = async (amount: number, message: string) => {
@@ -462,7 +517,8 @@ export default function ChatInterface({
   };
 
   // 领取红包处理函数
-  const handleClaimRedPacket = async (redPacketId: string) => {
+  // 领取红包处理函数（优化：使用useCallback缓存）
+  const handleClaimRedPacket = useCallback(async (redPacketId: string) => {
     try {
       // 找到对应的红包消息
       const redPacketMessage = chat.messages.find(msg => 
@@ -522,13 +578,14 @@ export default function ChatInterface({
       console.error('Claim red packet error:', error);
       throw error;
     }
-  };
+  }, [chat, currentBalance, onUpdateChat, dbPersonalSettings, personalSettings]);
 
 
 
 
 
-  const handleSendMessage = async () => {
+  // 发送消息（优化：使用useCallback缓存）
+  const handleSendMessage = useCallback(async () => {
     if (!message.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -560,11 +617,13 @@ export default function ChatInterface({
 
     // 触发AI回复（异步执行，不等待完成）
     startAiTask(); // 开始AI任务
-    triggerAiResponse(updatedChat);
-  };
+    if (triggerAiResponseRef.current) {
+      triggerAiResponseRef.current(updatedChat);
+    }
+  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight, startAiTask]);
 
-    // 触发AI回复的核心函数
-  const triggerAiResponse = async (updatedChat: ChatItem) => {
+    // 触发AI回复的核心函数（优化：使用useCallback缓存）
+  const triggerAiResponse = useCallback(async (updatedChat: ChatItem) => {
     // 优先使用聊天设置中的API配置，如果没有则使用传入的apiConfig
     const effectiveApiConfig = {
       proxyUrl: updatedChat.settings.proxyUrl || apiConfig.proxyUrl,
@@ -732,7 +791,7 @@ export default function ChatInterface({
         }
 
         // 创建AI消息对象
-        const aiMessage = await createAiMessage(msgData, currentChat, messageTimestamp++);
+        const aiMessage = await createAiMessageRef.current!(msgData, currentChat, messageTimestamp++);
         if (aiMessage) {
           // 更新聊天记录
           currentChat = {
@@ -803,7 +862,12 @@ export default function ChatInterface({
       setCurrentAiUser(null); // 清除当前AI用户信息
       endAiTask(); // 结束AI任务
     }
-  };
+  }, [apiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask]);
+
+  // 将triggerAiResponse赋值给useRef，避免循环依赖
+  useEffect(() => {
+    triggerAiResponseRef.current = triggerAiResponse;
+  }, [triggerAiResponse]);
 
 
 
@@ -862,7 +926,8 @@ export default function ChatInterface({
   };
 
   // 创建AI消息对象
-  const createAiMessage = async (msgData: Record<string, unknown>, chat: ChatItem, timestamp: number): Promise<Message | null> => {
+  // 创建AI消息对象（优化：使用useCallback缓存）
+  const createAiMessage = useCallback(async (msgData: Record<string, unknown>, chat: ChatItem, timestamp: number): Promise<Message | null> => {
     // 根据消息类型处理内容
     let content = '';
     let type: Message['type'] = 'text';
@@ -1087,24 +1152,30 @@ export default function ChatInterface({
     };
 
     return aiMessage;
-  };
+  }, [dbPersonalSettings, personalSettings, chatStatus]);
+
+  // 将createAiMessage赋值给useRef，避免循环依赖
+  useEffect(() => {
+    createAiMessageRef.current = createAiMessage;
+  }, [createAiMessage]);
 
 
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // 处理键盘事件（优化：使用useCallback缓存）
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
 
-  // 编辑用户消息
-  const handleEditMessage = (messageId: string, currentContent: string) => {
+  // 编辑用户消息（优化：使用useCallback缓存）
+  const handleEditMessage = useCallback((messageId: string, currentContent: string) => {
     setEditingMessage({ id: messageId, content: currentContent });
-  };
+  }, []);
 
-  // 保存编辑的消息
-  const handleSaveEdit = () => {
+  // 保存编辑的消息（优化：使用useCallback缓存）
+  const handleSaveEdit = useCallback(() => {
     if (!editingMessage) return;
 
     const updatedChat = {
@@ -1117,15 +1188,15 @@ export default function ChatInterface({
     };
     onUpdateChat(updatedChat);
     setEditingMessage(null);
-  };
+  }, [editingMessage, chat, onUpdateChat]);
 
-  // 取消编辑
-  const handleCancelEdit = () => {
+  // 取消编辑（优化：使用useCallback缓存）
+  const handleCancelEdit = useCallback(() => {
     setEditingMessage(null);
-  };
+  }, []);
 
-  // 删除消息
-  const handleDeleteMessage = (messageId: string) => {
+  // 删除消息（优化：使用useCallback缓存）
+  const handleDeleteMessage = useCallback((messageId: string) => {
     if (confirm('确定要删除这条消息吗？')) {
       const updatedChat = {
         ...chat,
@@ -1133,10 +1204,11 @@ export default function ChatInterface({
       };
       onUpdateChat(updatedChat);
     }
-  };
+  }, [chat, onUpdateChat]);
 
   // 处理图片消息点击
-  const handleImageMessageClick = (content: string, senderName?: string) => {
+  // 处理图片消息点击（优化：使用useCallback缓存）
+  const handleImageMessageClick = useCallback((content: string, senderName?: string) => {
     // 创建一个更美观的弹窗来显示图片描述
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -1219,10 +1291,10 @@ export default function ChatInterface({
       }
     };
     document.addEventListener('keydown', handleEsc);
-  };
+  }, []);
 
-  // 处理世界书关联更新
-  const handleWorldBookAssociationUpdate = (worldBookIds: string[]) => {
+  // 处理世界书关联更新（优化：使用useCallback缓存）
+  const handleWorldBookAssociationUpdate = useCallback((worldBookIds: string[]) => {
     const updatedChat = {
       ...chat,
       settings: {
@@ -1231,10 +1303,50 @@ export default function ChatInterface({
       }
     };
     onUpdateChat(updatedChat);
-  };
+  }, [chat, onUpdateChat]);
 
-  // 处理语音消息点击
-  const handleVoiceMessageClick = (content: string, senderName?: string) => {
+  // 处理加载更多历史消息
+  const handleLoadMoreMessages = useCallback((olderMessages: Message[]) => {
+    if (olderMessages.length === 0) return;
+
+    console.log('Loading more messages:', olderMessages.length, 'messages');
+
+    // 将新消息插入到当前消息列表的开头
+    const updatedChat = {
+      ...chat,
+      messages: [...olderMessages, ...chat.messages]
+    };
+    
+    // 更新聊天记录
+    onUpdateChat(updatedChat);
+    
+    // 延迟确保新消息被正确渲染
+    setTimeout(() => {
+      console.log('Messages loaded, total messages:', updatedChat.messages.length);
+    }, 100);
+  }, [chat, onUpdateChat]);
+
+  // 处理滚动位置更新（保持用户当前查看的位置）
+  const handleUpdateScrollPosition = useCallback((oldHeight: number, newHeight: number) => {
+    if (!messagesContainerRef.current) return;
+
+    const heightDifference = newHeight - oldHeight;
+    const currentScrollTop = messagesContainerRef.current.scrollTop;
+    
+    console.log('Updating scroll position:', {
+      oldHeight,
+      newHeight,
+      heightDifference,
+      currentScrollTop,
+      newScrollTop: currentScrollTop + heightDifference
+    });
+    
+    // 调整滚动位置，保持用户当前查看的内容在相同位置
+    messagesContainerRef.current.scrollTop = currentScrollTop + heightDifference;
+  }, []);
+
+  // 处理语音消息点击（优化：使用useCallback缓存）
+  const handleVoiceMessageClick = useCallback((content: string, senderName?: string) => {
     // 创建一个更美观的弹窗来显示语音内容
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -1317,10 +1429,11 @@ export default function ChatInterface({
       }
     };
     document.addEventListener('keydown', handleEsc);
-  };
+  }, []);
 
   // 重新生成AI回复
-  const handleRegenerateAI = async (messageId: string) => {
+  // 重新生成AI回复（优化：使用useCallback缓存）
+  const handleRegenerateAI = useCallback(async (messageId: string) => {
     // 找到要重新生成的消息
     const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1) return;
@@ -1335,20 +1448,21 @@ export default function ChatInterface({
 
     // 重新触发AI回复
     await triggerAiResponse(updatedChat);
-  };
+  }, [chat, onUpdateChat, triggerAiResponse]);
 
 
 
-  const formatTime = (timestamp: number) => {
+  // 缓存formatTime函数，避免每次渲染都创建新函数
+  const formatTime = useCallback((timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('zh-CN', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
-  };
+  }, []);
 
-  // 渲染消息内容
-  const renderMessageContent = (msg: Message) => {
+  // 缓存renderMessageContent函数，避免每次渲染都创建新函数
+  const renderMessageContent = useCallback((msg: Message) => {
     switch (msg.type) {
       case 'sticker':
         return (
@@ -1440,7 +1554,7 @@ export default function ChatInterface({
         ));
         return <span>{contentWithBreaks}</span>;
     }
-  };
+  }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket]);
 
 
 
@@ -1528,6 +1642,14 @@ export default function ChatInterface({
           </div>
         ) : (
           <>
+            {/* 消息分页管理器 */}
+            <MessagePaginationManager
+              chat={chat}
+              onLoadMoreMessages={handleLoadMoreMessages}
+              onUpdateScrollPosition={handleUpdateScrollPosition}
+              isEnabled={isPaginationEnabled && chat.messages.length > 10}
+            />
+            
             {!shouldAutoScroll && (
               <button 
                 className="scroll-to-bottom-btn"
@@ -1537,140 +1659,28 @@ export default function ChatInterface({
                 ↓
               </button>
             )}
-            {/* 只渲染最近的消息以提高性能 */}
-            {chat.messages.slice(-50).map((msg, index) => {
-            // 优化发送者信息计算
-            const getSenderInfo = () => {
-              if (msg.role === 'user') {
-                return {
-                  name: dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我',
-                  avatar: dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || '/avatars/user-avatar.svg'
-                };
-              } else {
-                // AI消息，从群成员中查找对应的成员信息
-                if (chat.isGroup && chat.members && msg.senderName) {
-                  const member = chat.members.find(m => m.originalName === msg.senderName);
-                  if (member) {
-                    return {
-                      name: member.groupNickname,
-                      avatar: member.avatar
-                    };
-                  }
-                }
-                return {
-                  name: msg.senderName || chat.name,
-                  avatar: msg.senderAvatar || chat.avatar
-                };
-              }
-            };
-
-            const senderInfo = getSenderInfo();
-            
-            // 优化连续消息检查
-            const isConsecutiveMessage = index > 0 && 
-              chat.messages[chat.messages.length - 51 + index - 1]?.senderName === msg.senderName &&
-              chat.messages[chat.messages.length - 51 + index - 1]?.role === msg.role &&
-              Math.abs(msg.timestamp - (chat.messages[chat.messages.length - 51 + index - 1]?.timestamp || 0)) < 30000; // 30秒内
-
-            return (
-              <div 
-                key={msg.id} 
-                className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''} ${isConsecutiveMessage ? 'consecutive' : ''}`}
-                onDoubleClick={() => handleQuoteMessage(msg)}
-              >
-                <div className="message-avatar">
-                  <Image 
-                    src={senderInfo.avatar}
-                    alt={senderInfo.name}
-                    width={36}
-                    height={36}
-                    className="avatar-image"
-                    unoptimized={senderInfo.avatar?.startsWith('data:')}
-                  />
-                </div>
-                <div className="message-content">
-                  {chat.isGroup && (
-                    <div className="message-sender">{senderInfo.name}</div>
-                  )}
-                  {msg.quote && (
-                    <div className="quoted-message">
-                      <div className="quote-header">
-                        <span className="quote-sender">{msg.quote.senderName}</span>
-                        <span className="quote-time">{formatTime(msg.quote.timestamp)}</span>
-                      </div>
-                      <div className="quote-content">{msg.quote.content}</div>
-                    </div>
-                  )}
-                  
-                  {/* 编辑状态 */}
-                  {editingMessage?.id === msg.id ? (
-                    <div className="message-edit-container">
-                      <textarea
-                        value={editingMessage.content}
-                        onChange={(e) => setEditingMessage({...editingMessage, content: e.target.value})}
-                        className="message-edit-input"
-                        autoFocus
-                      />
-                      <div className="message-edit-actions">
-                        <button onClick={handleSaveEdit} className="edit-save-btn">✅ 保存</button>
-                        <button onClick={handleCancelEdit} className="edit-cancel-btn">❌ 取消</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="message-bubble">
-                      {renderMessageContent(msg)}
-                    </div>
-                  )}
-                  
-                  <div className="message-time">
-                    {formatTime(msg.timestamp)}
-                                      {/* 消息操作图标 */}
-                  <div className="message-actions">
-                    {msg.role === 'user' && (
-                      <button 
-                        className="message-action-btn edit-btn"
-                        onClick={() => handleEditMessage(msg.id, msg.content)}
-                        title="编辑消息"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                    )}
-                    {msg.role === 'assistant' && (
-                      <button 
-                        className="message-action-btn regenerate-btn"
-                        onClick={() => handleRegenerateAI(msg.id)}
-                        title="重新生成"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                          <path d="M21 3v5h-5"/>
-                          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                          <path d="M3 21v-5h5"/>
-                        </svg>
-                      </button>
-                    )}
-                    <button 
-                      className="message-action-btn delete-btn"
-                      onClick={() => handleDeleteMessage(msg.id)}
-                      title="删除消息"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                      </svg>
-                    </button>
-                  </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                        {/* 优化消息渲染，支持分页加载 */}
+            {chat.messages.map((msg, index) => (
+              <MessageItem
+                key={msg.id}
+                msg={msg}
+                chat={chat}
+                index={index}
+                totalMessages={chat.messages.length}
+                dbPersonalSettings={dbPersonalSettings}
+                personalSettings={personalSettings}
+                editingMessage={editingMessage}
+                onQuoteMessage={handleQuoteMessage}
+                onEditMessage={handleEditMessage}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                onDeleteMessage={handleDeleteMessage}
+                onRegenerateAI={handleRegenerateAI}
+                renderMessageContent={renderMessageContent}
+                formatTime={formatTime}
+                setEditingMessage={setEditingMessage}
+              />
+            ))}
         </>
         )}
         
@@ -1719,7 +1729,7 @@ export default function ChatInterface({
         {/* @提及列表 */}
         {showMentionList && chat.isGroup && (
           <div className="mention-list">
-            {getFilteredMembers().map(member => (
+            {filteredMembers.map(member => (
               <div 
                 key={member.id}
                 className="mention-item"

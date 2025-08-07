@@ -1,0 +1,124 @@
+.message-pagination-manager {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  background: transparent;
+}
+
+.load-more-trigger {
+  width: 100%;
+  height: 1px;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.load-more-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.load-more-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 20px;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.load-more-button:hover:not(:disabled) {
+  background: var(--bg-hover, #e8e8e8);
+  border-color: var(--border-hover, #d0d0d0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.load-more-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.load-more-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid var(--text-secondary, #666);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.message-count {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 深色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .load-more-button {
+    background: var(--bg-secondary-dark, #2a2a2a);
+    border-color: var(--border-color-dark, #404040);
+    color: var(--text-secondary-dark, #ccc);
+  }
+  
+  .load-more-button:hover:not(:disabled) {
+    background: var(--bg-hover-dark, #353535);
+    border-color: var(--border-hover-dark, #505050);
+  }
+  
+  .loading-spinner {
+    border-top-color: var(--text-secondary-dark, #ccc);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .load-more-button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .message-count {
+    font-size: 11px;
+  }
+  
+  .loading-spinner {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .load-more-button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .message-count {
+    font-size: 10px;
+  }
+} 

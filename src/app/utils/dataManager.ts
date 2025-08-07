@@ -1533,6 +1533,65 @@ class DataManager {
       return { newPostsCount: 0, newCommentsCount: 0 };
     }
   }
+
+  // 获取聊天消息总数
+  async getChatMessageCount(chatId: string): Promise<number> {
+    try {
+      await this.initDB();
+      const chat = await this.getChat(chatId);
+      return chat ? chat.messages.length : 0;
+    } catch (error) {
+      console.error('Failed to get chat message count:', error);
+      return 0;
+    }
+  }
+
+  // 获取指定时间戳之前的消息（用于分页加载）
+  async getChatMessagesBefore(chatId: string, timestamp: number, limit: number = 20): Promise<import('../types/chat').Message[]> {
+    try {
+      await this.initDB();
+      const chat = await this.getChat(chatId);
+      
+      if (!chat || !chat.messages || chat.messages.length === 0) {
+        return [];
+      }
+
+      // 过滤出时间戳小于指定时间的消息，按时间戳降序排列
+      const olderMessages = chat.messages
+        .filter(msg => msg.timestamp < timestamp)
+        .sort((a, b) => b.timestamp - a.timestamp) // 降序排列，最新的在前面
+        .slice(0, limit);
+
+      // 返回时按时间戳升序排列，保持正确的显示顺序
+      return olderMessages.reverse();
+    } catch (error) {
+      console.error('Failed to get chat messages before timestamp:', error);
+      return [];
+    }
+  }
+
+  // 获取指定时间戳之后的消息（用于加载新消息）
+  async getChatMessagesAfter(chatId: string, timestamp: number, limit: number = 20): Promise<import('../types/chat').Message[]> {
+    try {
+      await this.initDB();
+      const chat = await this.getChat(chatId);
+      
+      if (!chat || !chat.messages || chat.messages.length === 0) {
+        return [];
+      }
+
+      // 过滤出时间戳大于指定时间的消息，按时间戳升序排列
+      const newerMessages = chat.messages
+        .filter(msg => msg.timestamp > timestamp)
+        .sort((a, b) => a.timestamp - b.timestamp) // 升序排列
+        .slice(0, limit);
+
+      return newerMessages;
+    } catch (error) {
+      console.error('Failed to get chat messages after timestamp:', error);
+      return [];
+    }
+  }
 }
 
 // 创建单例实例
