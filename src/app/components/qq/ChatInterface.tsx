@@ -116,9 +116,6 @@ export default function ChatInterface({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [userScrolling, setUserScrolling] = useState(false); // 新增：检测用户是否正在手动滚动
-  const lastMessageCountRef = useRef(0); // 使用ref替代state，避免循环依赖
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -154,12 +151,10 @@ export default function ChatInterface({
     if (isLoadingMore || !hasMoreMessages) return;
     
     setIsLoadingMore(true);
-    setIsLoadingHistory(true); // 标记正在加载历史消息
     const currentFirstMessageIndex = chat.messages.findIndex(msg => msg.id === displayedMessages[0]?.id);
     
     if (currentFirstMessageIndex === -1) {
       setIsLoadingMore(false);
-      setIsLoadingHistory(false);
       return;
     }
     
@@ -187,11 +182,9 @@ export default function ChatInterface({
           messagesContainerRef.current.scrollTop = scrollDiff;
         }
         setIsLoadingMore(false);
-        setIsLoadingHistory(false); // 标记历史消息加载完成
       }, 50);
     } else {
       setIsLoadingMore(false);
-      setIsLoadingHistory(false);
     }
   }, [isLoadingMore, hasMoreMessages, chat.messages, displayedMessages]);
 
@@ -201,19 +194,17 @@ export default function ChatInterface({
       const initialMessages = chat.messages.slice(-MESSAGE_RENDER_WINDOW);
       setDisplayedMessages(initialMessages);
       setHasMoreMessages(chat.messages.length > MESSAGE_RENDER_WINDOW);
-      lastMessageCountRef.current = chat.messages.length; // 设置初始消息数量
       setIsInitialized(true);
     } else {
       setDisplayedMessages([]);
       setHasMoreMessages(false);
-              lastMessageCountRef.current = 0; // 设置初始消息数量
       setIsInitialized(true);
     }
   }, [chat.messages]);
 
   // 初始化完成后滚动到最新消息处
   useEffect(() => {
-    if (isInitialized && displayedMessages.length > 0 && !isLoadingHistory && !userScrolling) {
+    if (isInitialized && displayedMessages.length > 0) {
       // 只在初始化时滚动，避免加载历史消息时滚动
       const isInitialLoad = displayedMessages.length <= MESSAGE_RENDER_WINDOW;
       if (isInitialLoad) {
@@ -223,7 +214,7 @@ export default function ChatInterface({
         }, 100);
       }
     }
-  }, [isInitialized, displayedMessages, isLoadingHistory, userScrolling]);
+  }, [isInitialized, displayedMessages]);
 
   // 标记消息为已读
   useEffect(() => {
@@ -268,60 +259,45 @@ export default function ChatInterface({
     }
   }, [isInitialized, displayedMessages, chat.messages, onUpdateChat, chat]);
 
-    // 新消息发送显示最新消息处
+  // 新消息发送显示最新消息处
   useEffect(() => {
-    // 只有在不是加载历史消息且用户没有手动滚动时才处理新消息
-    if (isInitialized && chat.messages.length > 0 && !isLoadingHistory && !userScrolling) {
-      // 检查是否有真正的新消息（消息数量增加）
-      if (chat.messages.length > lastMessageCountRef.current) {
-        // 更新显示的消息，添加新消息
-        setDisplayedMessages(prev => {
-          const existingIds = new Set(prev.map(msg => msg.id));
-          const newMessages = chat.messages.filter(msg => !existingIds.has(msg.id));
-          return [...prev, ...newMessages];
-        });
+    if (isInitialized && chat.messages.length > 0 && displayedMessages.length > 0) {
+      const lastDisplayedMessageId = displayedMessages[displayedMessages.length - 1]?.id;
+      const lastDisplayedIndex = chat.messages.findIndex(msg => msg.id === lastDisplayedMessageId);
+      
+      if (lastDisplayedIndex !== -1 && lastDisplayedIndex < chat.messages.length - 1) {
+        const newMessages = chat.messages.slice(lastDisplayedIndex + 1);
         
-        // 新消息发送后立即滚动到最新消息处
-        setTimeout(() => {
-          scrollToBottom();
-        }, 0);
-        
-        // 更新消息数量记录
-        lastMessageCountRef.current = chat.messages.length;
+        if (newMessages.length > 0) {
+          setDisplayedMessages(prev => {
+            const existingIds = new Set(prev.map(msg => msg.id));
+            const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+            return [...prev, ...uniqueNewMessages];
+          });
+          
+          // 新消息发送后立即滚动到最新消息处
+          setTimeout(() => {
+            scrollToBottom();
+          }, 0);
+        }
       }
     }
-  }, [chat.messages, isInitialized, isLoadingHistory, userScrolling]);
+  }, [chat.messages, displayedMessages, isInitialized]);
 
   // 监听滚动事件，向上滑动自动加载更多的30条
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
-    let scrollTimeout: NodeJS.Timeout;
-
     const handleScroll = () => {
-      // 标记用户正在滚动
-      setUserScrolling(true);
-      
-      // 清除之前的定时器
-      clearTimeout(scrollTimeout);
-      
       // 当滚动到顶部附近时（距离顶部100px内），自动加载更多消息
       if (container.scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
         loadMoreMessages();
       }
-      
-      // 滚动停止后1秒，重置用户滚动状态
-      scrollTimeout = setTimeout(() => {
-        setUserScrolling(false);
-      }, 1000);
     };
 
     container.addEventListener('scroll', handleScroll);
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
 
 

@@ -683,6 +683,17 @@ export class AiPostGenerator {
             
             // 简化请求数据以减少token消耗
             const simplifiedData = this.simplifyRequestData(requestData);
+            const retryRequestBody = {
+              ...requestBody,
+              max_tokens: reducedTokens,
+              messages: [
+                requestBody.messages[0], // 保持system prompt
+                {
+                  role: 'user',
+                  content: JSON.stringify(simplifiedData)
+                }
+              ]
+            };
             
             // 继续下一次重试
             requestBody.max_tokens = reducedTokens;
