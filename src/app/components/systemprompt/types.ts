@@ -77,6 +77,7 @@ export interface WorldBookInfo {
   id: string;
   name: string;
   content: string;
+  category: string;
   description?: string;
 }
 

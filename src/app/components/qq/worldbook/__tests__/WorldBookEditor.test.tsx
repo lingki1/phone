@@ -31,6 +31,7 @@ describe('WorldBookEditor', () => {
       id: 'wb1',
       name: 'Test World Book',
       content: 'Test content',
+      category: '科幻',
       description: 'Test description',
       createdAt: Date.now(),
       updatedAt: Date.now()
@@ -47,6 +48,7 @@ describe('WorldBookEditor', () => {
     expect(screen.getByText('编辑世界书')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test World Book')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test content')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('科幻')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test description')).toBeInTheDocument();
   });
 
@@ -63,6 +65,7 @@ describe('WorldBookEditor', () => {
 
     await waitFor(() => {
       expect(screen.getByText('世界书名称不能为空')).toBeInTheDocument();
+      expect(screen.getByText('世界书分类不能为空')).toBeInTheDocument();
       expect(screen.getByText('世界书内容不能为空')).toBeInTheDocument();
     });
 

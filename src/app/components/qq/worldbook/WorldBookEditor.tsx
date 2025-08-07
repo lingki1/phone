@@ -14,8 +14,9 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
   const [name, setName] = useState('');
   const [content, setContent] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; content?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; content?: string; category?: string }>({});
 
   // 初始化表单数据
   useEffect(() => {
@@ -23,22 +24,30 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
       setName(worldBook.name);
       setContent(worldBook.content);
       setDescription(worldBook.description || '');
+      setCategory(worldBook.category || '');
     } else {
       setName('');
       setContent('');
       setDescription('');
+      setCategory('');
     }
     setErrors({});
   }, [worldBook]);
 
   // 表单验证
   const validateForm = () => {
-    const newErrors: { name?: string; content?: string } = {};
+    const newErrors: { name?: string; content?: string; category?: string } = {};
 
     if (!name.trim()) {
       newErrors.name = '世界书名称不能为空';
     } else if (name.trim().length > 50) {
       newErrors.name = '世界书名称不能超过50个字符';
+    }
+
+    if (!category.trim()) {
+      newErrors.category = '世界书分类不能为空';
+    } else if (category.trim().length > 20) {
+      newErrors.category = '世界书分类不能超过20个字符';
     }
 
     if (!content.trim()) {
@@ -62,6 +71,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
         id: worldBook?.id || `wb_${now}`,
         name: name.trim(),
         content: content.trim(),
+        category: category.trim(),
         description: description.trim() || undefined,
         createdAt: worldBook?.createdAt || now,
         updatedAt: now
@@ -78,7 +88,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
 
   // 取消编辑
   const handleCancel = () => {
-    if (name || content || description) {
+    if (name || content || description || category) {
       if (window.confirm('确定要取消编辑吗？未保存的内容将丢失。')) {
         onCancel();
       }
@@ -139,6 +149,23 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
             maxLength={100}
           />
           <div className="char-count">{description.length}/100</div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="worldbook-category" className="form-label">
+            分类 <span className="required">*</span>
+          </label>
+          <input
+            id="worldbook-category"
+            type="text"
+            className={`world-book-category-input ${errors.category ? 'error' : ''}`}
+            placeholder="请输入世界书分类，如：科幻、奇幻、现代等"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            maxLength={20}
+          />
+          {errors.category && <span className="error-message">{errors.category}</span>}
+          <div className="char-count">{category.length}/20</div>
         </div>
 
         <div className="form-group content-group">

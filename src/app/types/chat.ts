@@ -186,6 +186,7 @@ export interface WorldBook {
   id: string;
   name: string;
   content: string;
+  category: string; // 世界书分类
   createdAt: number;
   updatedAt: number;
   description?: string; // 世界书描述

@@ -12,7 +12,7 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'creative',
     config: {
       temperature: 0.9,
-      maxTokens: 2000,
+      maxTokens: 8000,
       topP: 0.9,
       frequencyPenalty: 0.1,
       presencePenalty: 0.1,
@@ -26,7 +26,7 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'balanced',
     config: {
       temperature: 0.7,
-      maxTokens: 1500,
+      maxTokens: 8000,
       topP: 0.8,
       frequencyPenalty: 0.0,
       presencePenalty: 0.0,
@@ -40,7 +40,7 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'precise',
     config: {
       temperature: 0.3,
-      maxTokens: 1000,
+      maxTokens: 8000,
       topP: 0.7,
       frequencyPenalty: -0.1,
       presencePenalty: 0.1,
@@ -54,7 +54,7 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'concise',
     config: {
       temperature: 0.5,
-      maxTokens: 500,
+      maxTokens: 8000,
       topP: 0.8,
       frequencyPenalty: 0.2,
       presencePenalty: 0.1,
@@ -68,7 +68,7 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
     category: 'detailed',
     config: {
       temperature: 0.6,
-      maxTokens: 3000,
+      maxTokens: 8000,
       topP: 0.9,
       frequencyPenalty: -0.1,
       presencePenalty: 0.2,

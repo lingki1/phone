@@ -96,6 +96,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
     const query = searchQuery.toLowerCase();
     return wb.name.toLowerCase().includes(query) ||
            wb.content.toLowerCase().includes(query) ||
+           wb.category.toLowerCase().includes(query) ||
            (wb.description && wb.description.toLowerCase().includes(query));
   });
 

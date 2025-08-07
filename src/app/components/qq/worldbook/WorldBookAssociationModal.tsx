@@ -135,7 +135,10 @@ export default function WorldBookAssociationModal({
                       />
                     </div>
                     <div className="world-book-info">
-                      <div className="world-book-option-title">{worldBook.name}</div>
+                      <div className="world-book-option-title">
+                        {worldBook.name}
+                        <span className="world-book-category-tag">{worldBook.category}</span>
+                      </div>
                       {worldBook.description && (
                         <div className="world-book-option-description">{worldBook.description}</div>
                       )}

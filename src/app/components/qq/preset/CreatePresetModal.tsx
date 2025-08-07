@@ -51,7 +51,7 @@ export default function CreatePresetModal({
       name: customName.trim(),
       description: '自定义预设配置',
       temperature: 0.7,
-      maxTokens: 1500,
+      maxTokens: 8000,
       topP: 0.8,
       frequencyPenalty: 0.0,
       presencePenalty: 0.0,

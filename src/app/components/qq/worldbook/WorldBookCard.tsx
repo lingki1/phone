@@ -70,6 +70,10 @@ export default function WorldBookCard({ worldBook, onEdit, onDelete }: WorldBook
         <p className="world-book-description">{worldBook.description}</p>
       )}
       
+      <div className="world-book-category">
+        <span className="category-tag">{worldBook.category}</span>
+      </div>
+      
       <p className="world-book-preview">{contentPreview}</p>
       
       <div className="world-book-meta">

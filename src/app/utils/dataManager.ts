@@ -864,7 +864,20 @@ class DataManager {
       const request = store.getAll();
 
       request.onerror = () => reject(new Error('Failed to get world books'));
-      request.onsuccess = () => resolve(request.result || []);
+      request.onsuccess = () => {
+        const worldBooks = request.result || [];
+        // 为没有分类的旧数据添加默认分类
+        const migratedWorldBooks = worldBooks.map(wb => {
+          if (!wb.category) {
+            return {
+              ...wb,
+              category: '未分类'
+            };
+          }
+          return wb;
+        });
+        resolve(migratedWorldBooks);
+      };
     });
   }
 

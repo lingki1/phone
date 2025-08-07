@@ -225,7 +225,8 @@
 }
 
 .world-book-name-input,
-.world-book-description-input {
+.world-book-description-input,
+.world-book-category-input {
   background: var(--theme-bg-secondary);
   border: 1px solid var(--theme-border-color);
   border-radius: 8px;
@@ -236,7 +237,8 @@
 }
 
 .world-book-name-input:focus,
-.world-book-description-input:focus {
+.world-book-description-input:focus,
+.world-book-category-input:focus {
   outline: none;
   border-color: var(--theme-accent-color);
 }
@@ -264,7 +266,8 @@
 /* 移动端输入框调整 */
 @media (max-width: 767px) {
   .world-book-name-input,
-  .world-book-description-input {
+  .world-book-description-input,
+  .world-book-category-input {
     font-size: 16px; /* 防止iOS缩放 */
     padding: 12px;
   }
@@ -279,7 +282,8 @@
 /* 超小屏幕输入框调整 */
 @media (max-width: 480px) {
   .world-book-name-input,
-  .world-book-description-input {
+  .world-book-description-input,
+  .world-book-category-input {
     font-size: 16px;
     padding: 10px;
   }
@@ -292,6 +296,7 @@
 }
 
 .world-book-name-input.error,
+.world-book-category-input.error,
 .world-book-content-textarea.error {
   border-color: #ef4444;
 }
