@@ -1754,6 +1754,15 @@ export default function ChatInterface({
             value={message}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
+            onFocus={() => {
+              // 手机端输入框聚焦时滚动到视口
+              setTimeout(() => {
+                textareaRef.current?.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center' 
+                });
+              }, 300);
+            }}
             placeholder={isPending ? "AI正在回复中，请稍候..." : (chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息...")}
             rows={1}
             disabled={isLoading || isPending}

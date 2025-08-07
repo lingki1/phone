@@ -22,12 +22,44 @@ export const ANIMATION_OPTIONS: AnimationOption[] = [
     category: 'none'
   },
   {
-    id: 'move',
+    id: 'slide',
     name: '背景移动',
     description: '背景图片缓慢移动',
-    className: 'background-animation-move',
+    className: 'background-animation-slide',
     icon: '🌊',
     category: 'dynamic'
+  },
+  {
+    id: 'breathe',
+    name: '呼吸效果',
+    description: '背景图片呼吸般缩放',
+    className: 'background-animation-breathe',
+    icon: '💨',
+    category: 'dynamic'
+  },
+  {
+    id: 'pulse',
+    name: '脉冲效果',
+    description: '背景图片脉冲闪烁',
+    className: 'background-animation-pulse',
+    icon: '💓',
+    category: 'dynamic'
+  },
+  {
+    id: 'wave',
+    name: '波浪效果',
+    description: '背景图片波浪般扭曲',
+    className: 'background-animation-wave',
+    icon: '🌊',
+    category: 'artistic'
+  },
+  {
+    id: 'focus',
+    name: '聚焦效果',
+    description: '背景图片模糊聚焦',
+    className: 'background-animation-focus',
+    icon: '🔍',
+    category: 'artistic'
   }
 ];
 
@@ -46,7 +78,8 @@ export default function AnimationSelector({
 
   const categories = [
     { id: 'none', name: '静态' },
-    { id: 'dynamic', name: '动态' }
+    { id: 'dynamic', name: '动态效果' },
+    { id: 'artistic', name: '艺术效果' }
   ];
 
   return (

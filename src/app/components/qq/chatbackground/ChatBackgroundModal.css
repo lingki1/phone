@@ -165,7 +165,11 @@
 }
 
 /* 预览区域的动画效果 */
-.preview.background-animation-move {
+.preview.background-animation-slide,
+.preview.background-animation-breathe,
+.preview.background-animation-pulse,
+.preview.background-animation-wave,
+.preview.background-animation-focus {
   transform-origin: center center;
 }
 
@@ -306,11 +310,11 @@
 }
 
 /* 背景图片动画效果 */
-.background-animation-move {
-  animation: moveBackground 20s ease-in-out infinite;
+.background-animation-slide {
+  animation: slideBackground 20s ease-in-out infinite;
 }
 
-@keyframes moveBackground {
+@keyframes slideBackground {
   0%, 100% {
     transform: scale(1.1) translate(0, 0);
   }
@@ -327,14 +331,94 @@
 
 /* 响应式动画 - 移动端优化 */
 @media (max-width: 768px) {
-  .background-animation-move {
+  .background-animation-slide {
     animation-duration: 15s;
+  }
+}
+
+/* 其他动画效果 */
+.background-animation-breathe {
+  animation: breatheBackground 8s ease-in-out infinite;
+}
+
+@keyframes breatheBackground {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.background-animation-pulse {
+  animation: pulseBackground 6s ease-in-out infinite;
+}
+
+@keyframes pulseBackground {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+.background-animation-wave {
+  animation: waveBackground 15s ease-in-out infinite;
+}
+
+@keyframes waveBackground {
+  0%, 100% {
+    transform: scale(1.1) translate(0, 0) skew(0deg);
+  }
+  25% {
+    transform: scale(1.1) translate(-1%, 1%) skew(1deg);
+  }
+  50% {
+    transform: scale(1.1) translate(1%, -1%) skew(-1deg);
+  }
+  75% {
+    transform: scale(1.1) translate(-1%, -1%) skew(0.5deg);
+  }
+}
+
+.background-animation-focus {
+  animation: focusBackground 10s ease-in-out infinite;
+}
+
+@keyframes focusBackground {
+  0%, 100% {
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(1px);
+    transform: scale(1.05);
+  }
+}
+
+/* 响应式动画 - 移动端优化 */
+@media (max-width: 768px) {
+  .background-animation-slide,
+  .background-animation-breathe,
+  .background-animation-pulse,
+  .background-animation-wave,
+  .background-animation-focus {
+    animation-duration: 1.5s;
   }
 }
 
 /* 减少动画偏好设置 */
 @media (prefers-reduced-motion: reduce) {
-  .background-animation-move {
+  .background-animation-slide,
+  .background-animation-breathe,
+  .background-animation-pulse,
+  .background-animation-wave,
+  .background-animation-focus {
     animation: none;
   }
 }

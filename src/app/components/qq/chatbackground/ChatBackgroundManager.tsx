@@ -100,7 +100,7 @@ export default function ChatBackgroundManager({
       {/* 自定义背景图片层 - 当有自定义背景时显示 */}
       {currentBackground && (
         <div 
-          className={`chat-background-image ${currentAnimation !== 'none' ? `background-animation-${currentAnimation === '3d' ? '3d' : currentAnimation}` : ''}`}
+          className={`chat-background-image ${currentAnimation !== 'none' ? `background-animation-${currentAnimation}` : ''}`}
           style={{
             backgroundImage: `url(${currentBackground})`,
             backgroundSize: 'cover',

@@ -49,7 +49,7 @@
 }
 
 /* 确保动画效果在背景图片上正确显示 */
-.chat-background-image.background-animation-move {
+.chat-background-image.background-animation-slide {
   transform-origin: center center;
 }
 
