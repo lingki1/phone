@@ -109,8 +109,12 @@ export default function ChatInterface({
     return () => {
       // 清除当前活跃聊天ID
       window.currentActiveChatId = null;
+      // 清理AI任务状态，防止组件卸载时状态残留
+      setIsLoading(false);
+      setCurrentAiUser(null);
+      endAiTask();
     };
-  }, [chat.id]);
+  }, [chat.id, endAiTask]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -557,7 +561,7 @@ export default function ChatInterface({
     triggerAiResponse(updatedChat);
   };
 
-  // 触发AI回复的核心函数
+    // 触发AI回复的核心函数
   const triggerAiResponse = async (updatedChat: ChatItem) => {
     // 优先使用聊天设置中的API配置，如果没有则使用传入的apiConfig
     const effectiveApiConfig = {
@@ -604,6 +608,11 @@ export default function ChatInterface({
         timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
       };
       onUpdateChat(chatWithMessage);
+      
+      // 清理AI任务状态，避免页面锁死
+      setIsLoading(false);
+      setCurrentAiUser(null);
+      endAiTask();
       return;
     }
 
