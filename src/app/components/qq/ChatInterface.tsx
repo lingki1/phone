@@ -14,6 +14,7 @@ import { ChatStatusManager, ChatStatusDisplay, ChatStatus } from './chatstatus';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
+import { WorldBookAssociationSwitchModal } from './worldbook';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -86,6 +87,7 @@ export default function ChatInterface({
   const [chatBackground, setChatBackground] = useState<string>('');
   const [chatAnimation, setChatAnimation] = useState<string>('none');
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
+  const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   
   // 使用异步AI状态管理
   const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
@@ -1208,6 +1210,18 @@ export default function ChatInterface({
     document.addEventListener('keydown', handleEsc);
   };
 
+  // 处理世界书关联更新
+  const handleWorldBookAssociationUpdate = (worldBookIds: string[]) => {
+    const updatedChat = {
+      ...chat,
+      settings: {
+        ...chat.settings,
+        linkedWorldBookIds: worldBookIds
+      }
+    };
+    onUpdateChat(updatedChat);
+  };
+
   // 处理语音消息点击
   const handleVoiceMessageClick = (content: string, senderName?: string) => {
     // 创建一个更美观的弹窗来显示语音内容
@@ -1447,6 +1461,13 @@ export default function ChatInterface({
           </div>
         </div>
         <div className="chat-actions">
+          <button 
+            className="action-btn"
+            onClick={() => setShowWorldBookAssociationSwitch(true)}
+            title="世界书关联管理"
+          >
+            📚
+          </button>
           <button 
             className="action-btn"
             onClick={() => setShowBackgroundModal(true)}
@@ -1798,6 +1819,16 @@ export default function ChatInterface({
         <ChatStatusManager
           chatId={chat.id}
           onStatusUpdate={setChatStatus}
+        />
+      )}
+
+      {/* 世界书关联开关模态框 */}
+      {showWorldBookAssociationSwitch && (
+        <WorldBookAssociationSwitchModal
+          isOpen={showWorldBookAssociationSwitch}
+          onClose={() => setShowWorldBookAssociationSwitch(false)}
+          linkedWorldBookIds={chat.settings.linkedWorldBookIds || []}
+          onUpdateLinkedWorldBooks={handleWorldBookAssociationUpdate}
         />
       )}
 
