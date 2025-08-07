@@ -57,6 +57,12 @@
   color: var(--theme-text-primary, #202124);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* 移动端顶部导航栏调整 */
 @media (max-width: 767px) {
   .world-book-header {
@@ -67,6 +73,21 @@
   .back-btn {
     margin-left: -4px;
     margin-right: 6px;
+  }
+  
+  .header-actions {
+    gap: 6px;
+  }
+  
+  .import-btn {
+    padding: 6px 8px;
+    font-size: 13px;
+    gap: 4px;
+  }
+  
+  .import-btn svg {
+    width: 14px;
+    height: 14px;
   }
   
   .create-btn {
@@ -142,6 +163,21 @@
     margin-right: 4px;
   }
   
+  .header-actions {
+    gap: 4px;
+  }
+  
+  .import-btn {
+    padding: 5px 6px;
+    font-size: 12px;
+    gap: 3px;
+  }
+  
+  .import-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+  
   .create-btn {
     padding: 5px 6px;
     font-size: 12px;
@@ -189,6 +225,29 @@
   flex: 1;
 }
 
+.import-btn {
+  background: var(--theme-bg-secondary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.import-btn:hover {
+  background: var(--theme-bg-tertiary);
+  border-color: var(--theme-accent-color);
+  color: var(--theme-accent-color);
+}
+
 .create-btn {
   background: var(--theme-accent-color);
   color: white;
@@ -204,7 +263,6 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
-  width: auto;
 }
 
 .create-btn:hover {

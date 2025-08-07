@@ -5,6 +5,7 @@ import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import WorldBookCard from './WorldBookCard';
 import WorldBookEditor from './WorldBookEditor';
+import WorldBookImportModal from './WorldBookImportModal';
 import './WorldBookListPage.css';
 
 interface WorldBookListPageProps {
@@ -17,6 +18,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const [showEditor, setShowEditor] = useState(false);
   const [editingWorldBook, setEditingWorldBook] = useState<WorldBook | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // 加载世界书列表
   const loadWorldBooks = async () => {
@@ -90,6 +92,47 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
     setEditingWorldBook(null);
   };
 
+  // 导入世界书
+  const handleImport = async (worldBooksData: WorldBook[]) => {
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const worldBookData of worldBooksData) {
+        try {
+          // 生成新的ID和时间戳
+          const newWorldBook: WorldBook = {
+            ...worldBookData,
+            id: `wb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          
+          await dataManager.saveWorldBook(newWorldBook);
+          successCount++;
+        } catch (error) {
+          console.error('Failed to import world book:', worldBookData.name, error);
+          errorCount++;
+        }
+      }
+      
+      // 重新加载世界书列表
+      await loadWorldBooks();
+      
+      // 显示导入结果
+      if (errorCount === 0) {
+        alert(`成功导入 ${successCount} 个世界书`);
+      } else {
+        alert(`导入完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+      }
+      
+      setShowImportModal(false);
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('导入失败，请重试');
+    }
+  };
+
   // 过滤世界书
   const filteredWorldBooks = worldBooks.filter(wb => {
     if (!searchQuery.trim()) return true;
@@ -120,13 +163,23 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           </svg>
         </button>
         <h1 className="page-title">世界书管理</h1>
-        <button className="create-btn" onClick={handleCreateNew}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          创建
-        </button>
+        <div className="header-actions">
+          <button className="import-btn" onClick={() => setShowImportModal(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            导入
+          </button>
+          <button className="create-btn" onClick={handleCreateNew}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            创建
+          </button>
+        </div>
       </div>
 
       <div className="world-book-content">
@@ -210,6 +263,15 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           )}
         </div>
       </div>
+
+      {/* 导入模态框 */}
+      {showImportModal && (
+        <WorldBookImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImport}
+        />
+      )}
     </div>
   );
 }
