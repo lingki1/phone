@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
@@ -111,6 +111,8 @@ export default function ChatInterface({
   }, [chat.id]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   // 自动调整输入框高度
   const adjustTextareaHeight = () => {
@@ -128,6 +130,56 @@ export default function ChatInterface({
     textarea.style.height = `${newHeight}px`;
   };
 
+  // 检测用户是否在查看历史消息
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px容差
+    
+    setShouldAutoScroll(isAtBottom);
+  };
+
+  // 自动滚动到最新消息
+  const scrollToBottom = (smooth = true) => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+  };
+
+  // 强制滚动到底部（用于新消息到达时）
+  const forceScrollToBottom = useCallback(() => {
+    scrollToBottom(false);
+    setShouldAutoScroll(true);
+  }, []);
+
+  // 当消息列表更新时，根据用户行为决定是否自动滚动
+  useEffect(() => {
+    if (shouldAutoScroll) {
+      // 新消息到达时使用平滑滚动
+      scrollToBottom(true);
+    }
+  }, [chat.messages, shouldAutoScroll]);
+
+  // 当用户发送消息时，强制滚动到底部
+  useEffect(() => {
+    if (chat.messages.length > 0) {
+      const lastMessage = chat.messages[chat.messages.length - 1];
+      if (lastMessage.role === 'user') {
+        forceScrollToBottom();
+      }
+    }
+  }, [chat.messages, forceScrollToBottom]);
+
+  // 当AI开始回复时，自动滚动到底部
+  useEffect(() => {
+    if (isLoading || isPending) {
+      forceScrollToBottom();
+    }
+  }, [isLoading, isPending, forceScrollToBottom]);
 
 
   // 加载数据库中的个人信息
@@ -1434,13 +1486,23 @@ export default function ChatInterface({
 
 
       {/* 消息列表 */}
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef} onScroll={handleScroll}>
         {chat.messages.length === 0 ? (
           <div className="empty-chat">
             <p>开始和 {chat.name} 聊天吧！</p>
           </div>
         ) : (
-          chat.messages.map((msg, index) => {
+          <>
+            {!shouldAutoScroll && (
+              <button 
+                className="scroll-to-bottom-btn"
+                onClick={() => scrollToBottom(true)}
+                title="滚动到最新消息"
+              >
+                ↓
+              </button>
+            )}
+            {chat.messages.map((msg, index) => {
             // 获取发送者信息
             const getSenderInfo = () => {
               if (msg.role === 'user') {
@@ -1572,7 +1634,8 @@ export default function ChatInterface({
                 </div>
               </div>
             );
-          })
+          })}
+        </>
         )}
         
         {/* AI正在输入指示器 */}

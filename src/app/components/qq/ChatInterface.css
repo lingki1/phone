@@ -334,6 +334,58 @@
   }
 }
 
+/* 滚动到底部按钮 */
+.scroll-to-bottom-btn {
+  position: fixed;
+  bottom: 120px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--theme-accent-color, #007bff);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-to-bottom-btn:hover {
+  background-color: var(--theme-accent-hover, #0056b3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.scroll-to-bottom-btn:active {
+  transform: translateY(0);
+}
+
+/* 移动端滚动按钮调整 */
+@media (max-width: 767px) {
+  .scroll-to-bottom-btn {
+    bottom: 100px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .scroll-to-bottom-btn {
+    bottom: 90px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
+
 /* 消息样式 */
 .message {
   display: flex;
