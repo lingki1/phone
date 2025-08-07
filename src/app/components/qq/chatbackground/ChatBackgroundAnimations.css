@@ -1,8 +1,8 @@
 /* 背景图片动画效果 */
 
 /* 1. 缓慢移动效果 */
-.background-animation-slide {
-  animation: slideBackground 20s ease-in-out infinite;
+.chat-background-image.background-animation-slide {
+  animation: slideBackground 20s ease-in-out infinite !important;
 }
 
 @keyframes slideBackground {
@@ -21,8 +21,8 @@
 }
 
 /* 2. 呼吸效果 */
-.background-animation-breathe {
-  animation: breatheBackground 8s ease-in-out infinite;
+.chat-background-image.background-animation-breathe {
+  animation: breatheBackground 8s ease-in-out infinite !important;
 }
 
 @keyframes breatheBackground {
@@ -51,8 +51,8 @@
 }
 
 /* 4. 波浪效果 */
-.background-animation-wave {
-  animation: waveBackground 15s ease-in-out infinite;
+.chat-background-image.background-animation-wave {
+  animation: waveBackground 15s ease-in-out infinite !important;
 }
 
 @keyframes waveBackground {
@@ -71,8 +71,8 @@
 }
 
 /* 5. 脉冲效果 */
-.background-animation-pulse {
-  animation: pulseBackground 6s ease-in-out infinite;
+.chat-background-image.background-animation-pulse {
+  animation: pulseBackground 6s ease-in-out infinite !important;
 }
 
 @keyframes pulseBackground {
@@ -104,8 +104,8 @@
 }
 
 /* 7. 模糊聚焦效果 */
-.background-animation-focus {
-  animation: focusBackground 10s ease-in-out infinite;
+.chat-background-image.background-animation-focus {
+  animation: focusBackground 10s ease-in-out infinite !important;
 }
 
 @keyframes focusBackground {
@@ -202,29 +202,29 @@
 
 /* 响应式动画 - 移动端优化 */
 @media (max-width: 768px) {
-  .background-animation-slide,
-  .background-animation-breathe,
-  .background-animation-rotate,
-  .background-animation-wave,
-  .background-animation-pulse,
-  .background-animation-color,
-  .background-animation-focus,
-  .background-animation-3d {
-    animation-duration: 1.5s; /* 移动端减少动画时间以节省电量 */
+  .chat-background-image.background-animation-slide,
+  .chat-background-image.background-animation-breathe,
+  .chat-background-image.background-animation-rotate,
+  .chat-background-image.background-animation-wave,
+  .chat-background-image.background-animation-pulse,
+  .chat-background-image.background-animation-color,
+  .chat-background-image.background-animation-focus,
+  .chat-background-image.background-animation-3d {
+    animation-duration: 1.5s !important; /* 移动端减少动画时间以节省电量 */
   }
 }
 
 /* 减少动画偏好设置 */
 @media (prefers-reduced-motion: reduce) {
-  .background-animation-slide,
-  .background-animation-breathe,
-  .background-animation-rotate,
-  .background-animation-wave,
-  .background-animation-pulse,
-  .background-animation-color,
-  .background-animation-focus,
-  .background-animation-3d,
-  .background-animation-combined {
-    animation: none;
+  .chat-background-image.background-animation-slide,
+  .chat-background-image.background-animation-breathe,
+  .chat-background-image.background-animation-rotate,
+  .chat-background-image.background-animation-wave,
+  .chat-background-image.background-animation-pulse,
+  .chat-background-image.background-animation-color,
+  .chat-background-image.background-animation-focus,
+  .chat-background-image.background-animation-3d,
+  .chat-background-image.background-animation-combined {
+    animation: none !important;
   }
 } 

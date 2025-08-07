@@ -49,6 +49,7 @@ export default function ChatBackgroundManager({
   useEffect(() => {
     const handleBackgroundUpdate = (event: CustomEvent) => {
       if (event.detail.chatId === chatId) {
+        console.log('背景更新事件:', event.detail);
         setCurrentBackground(event.detail.background || '');
         setCurrentAnimation(event.detail.animation || 'none');
         onBackgroundChange(event.detail.background || '', event.detail.animation || 'none');
@@ -102,20 +103,10 @@ export default function ChatBackgroundManager({
         <div 
           className={`chat-background-image ${currentAnimation !== 'none' ? `background-animation-${currentAnimation}` : ''}`}
           style={{
-            backgroundImage: `url(${currentBackground})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: -1,
-            opacity: 0.8,
-            pointerEvents: 'none'
+            backgroundImage: `url(${currentBackground})`
           }}
           data-animation={currentAnimation}
+          data-debug={`background: ${!!currentBackground}, animation: ${currentAnimation}`}
         />
       )}
       

@@ -312,7 +312,7 @@
 }
 
 /* 背景图片动画效果 */
-.background-animation-slide {
+.preview.background-animation-slide {
   animation: slideBackground 20s ease-in-out infinite;
 }
 
