@@ -1,3 +1,28 @@
+/* 聊天背景容器 - 使用系统主题配色 */
+.chat-background-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--theme-bg-primary, #ffffff);
+  transition: background-color 0.3s ease;
+}
+
+/* 主题背景层 */
+.theme-background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--theme-bg-secondary, #f8f9fa);
+  background-image: var(--theme-gradient, none);
+  opacity: 0.1;
+  z-index: -2;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
 /* 聊天背景图片容器 */
 .chat-background-image {
   position: absolute;
@@ -6,15 +31,130 @@
   right: 0;
   bottom: 0;
   z-index: -1;
-  opacity: 0.3;
+  opacity: 0.8;
   pointer-events: none;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   transform-origin: center center;
+  transition: opacity 0.3s ease;
+}
+
+/* 内容层 */
+.chat-content-layer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 /* 确保动画效果在背景图片上正确显示 */
 .chat-background-image.background-animation-move {
   transform-origin: center center;
+}
+
+/* 深色主题适配 */
+.theme-dark .chat-background-container {
+  background-color: var(--theme-bg-primary, #1a1a1a);
+}
+
+.theme-dark .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #2d2d2d);
+}
+
+/* 其他主题适配 */
+.theme-masculine .chat-background-container {
+  background-color: var(--theme-bg-primary, #0f1419);
+}
+
+.theme-masculine .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #1a2332);
+}
+
+.theme-feminine .chat-background-container {
+  background-color: var(--theme-bg-primary, #fdf2f8);
+}
+
+.theme-feminine .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #fce7f3);
+}
+
+.theme-anime .chat-background-container {
+  background-color: var(--theme-bg-primary, #f3e8ff);
+}
+
+.theme-anime .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #e9d5ff);
+}
+
+.theme-cute .chat-background-container {
+  background-color: var(--theme-bg-primary, #fff7ed);
+}
+
+.theme-cute .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #ffedd5);
+}
+
+.theme-metal .chat-background-container {
+  background-color: var(--theme-bg-primary, #f8fafc);
+}
+
+.theme-metal .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #e2e8f0);
+}
+
+.theme-forest .chat-background-container {
+  background-color: var(--theme-bg-primary, #f0fdf4);
+}
+
+.theme-forest .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #dcfce7);
+}
+
+.theme-ocean .chat-background-container {
+  background-color: var(--theme-bg-primary, #ecfeff);
+}
+
+.theme-ocean .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #cffafe);
+}
+
+.theme-sunset .chat-background-container {
+  background-color: var(--theme-bg-primary, #fef3c7);
+}
+
+.theme-sunset .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #fde68a);
+}
+
+.theme-minimal .chat-background-container {
+  background-color: var(--theme-bg-primary, #ffffff);
+}
+
+.theme-minimal .theme-background-layer {
+  background-color: var(--theme-bg-secondary, #f9f9f9);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chat-background-container {
+    transition: background-color 0.2s ease;
+  }
+  
+  .theme-background-layer {
+    transition: all 0.2s ease;
+  }
+  
+  .chat-background-image {
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .chat-background-container,
+  .theme-background-layer,
+  .chat-background-image {
+    transition: none;
+  }
 } 

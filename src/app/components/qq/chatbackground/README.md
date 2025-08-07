@@ -1,117 +1,83 @@
-# 聊天背景自定义功能
+# 聊天背景管理器 - 主题配色修复
 
-## 功能概述
+## 修复说明
 
-聊天背景自定义功能允许用户为每个聊天设置个性化的背景图片，并添加动态动画效果，支持上传本地图片并转换为base64格式存储。
+修复了聊天背景没有采用系统主题配色的问题，确保当用户使用自定义背景图时能正确覆盖主题背景。
 
-## 组件结构
+### ✅ 已完成的修复
+
+1. **使用系统主题配色**
+   - 聊天背景容器现在使用 `var(--theme-bg-primary)` 作为默认背景色
+   - 主题背景层使用 `var(--theme-bg-secondary)` 作为次要背景色
+   - 支持所有系统主题的自动适配
+
+2. **分层背景架构**
+   - **主题背景层**: 当没有自定义背景时显示，使用系统主题配色
+   - **自定义背景图片层**: 当有自定义背景时显示，覆盖主题背景
+   - **内容层**: 确保聊天内容始终在最上层
+
+3. **主题适配支持**
+   - 深色主题 (`theme-dark`)
+   - 男性风格 (`theme-masculine`)
+   - 女性风格 (`theme-feminine`)
+   - 二次元 (`theme-anime`)
+   - 可爱风格 (`theme-cute`)
+   - 金属风格 (`theme-metal`)
+   - 森林主题 (`theme-forest`)
+   - 海洋主题 (`theme-ocean`)
+   - 夕阳主题 (`theme-sunset`)
+   - 极简主题 (`theme-minimal`)
+
+### 🎨 背景层级结构
 
 ```
-chatbackground/
-├── ChatBackgroundModal.tsx        # 背景设置模态框
-├── ChatBackgroundModal.css        # 模态框样式
-├── ChatBackgroundManager.tsx      # 背景管理器
-├── AnimationSelector.tsx          # 动画效果选择器
-├── AnimationSelector.css          # 动画选择器样式
-├── ChatBackgroundAnimations.css   # 动画效果CSS
-├── index.ts                       # 组件导出
-└── README.md                      # 说明文档
+聊天背景容器 (chat-background-container)
+├── 主题背景层 (theme-background-layer) - z-index: -2
+│   └── 使用系统主题配色，仅在没有自定义背景时显示
+├── 自定义背景图片层 (chat-background-image) - z-index: -1
+│   └── 使用用户设置的背景图片，覆盖主题背景
+└── 内容层 (chat-content-layer) - z-index: 1
+    └── 聊天界面内容
 ```
 
-## 主要功能
+### 🔧 CSS 变量使用
 
-### 1. 图片上传
-- 支持 JPG、PNG、GIF 格式
-- 文件大小限制：5MB
-- 自动转换为 base64 格式
-- 预览时保持原图比例，不压缩长宽
+背景管理器使用以下系统主题变量：
 
-### 2. 主题集成
-- 完全使用现有主题系统的CSS变量
-- 自动适配深色/浅色主题
-- 支持所有预设主题配色方案
+- `--theme-bg-primary`: 主背景色
+- `--theme-bg-secondary`: 次要背景色
+- `--theme-gradient`: 主题渐变（如果支持）
 
-### 3. 数据存储
-- 使用 IndexedDB 进行持久化存储
-- localStorage 作为备份存储
-- 支持数据库和本地存储的双重保障
+### 📱 响应式支持
 
-### 4. 背景显示
-- 半透明效果（opacity: 0.3）
-- 自适应覆盖整个聊天界面
-- 不影响用户交互
+- 移动端优化：减少过渡动画时间以节省电量
+- 减少动画偏好：支持 `prefers-reduced-motion` 设置
+- 平滑过渡：背景切换时有平滑的过渡效果
 
-### 5. 动画效果（新增）
-- **微妙效果**：缓慢移动、呼吸效果（推荐移动端）
-- **动态效果**：脉冲、波浪、3D倾斜、组合效果
-- **艺术效果**：色彩渐变、聚焦、粒子、动态边框
-- 支持动画开关和性能优化
+### 🎯 使用方式
 
-## 使用方法
-
-### 在聊天界面中
-
-1. 点击聊天页面右上角的 🖼️ 图标
-2. 在弹出的模态框中上传背景图片
-3. 选择动画效果（可选）
-4. 点击"保存"按钮应用背景和动画
-5. 点击"清除背景"可以移除当前背景和动画
-
-### 技术实现
-
-#### 数据库存储
-```typescript
-// 保存背景
-await dataManager.saveChatBackground(chatId, background);
-
-// 获取背景
-const background = await dataManager.getChatBackground(chatId);
-
-// 保存动画设置（localStorage）
-localStorage.setItem(`chatAnimation_${chatId}`, animation);
-
-// 获取动画设置
-const animation = localStorage.getItem(`chatAnimation_${chatId}`) || 'none';
-```
-
-#### 组件集成
-```typescript
-import { ChatBackgroundManager, ChatBackgroundModal, AnimationSelector } from './chatbackground';
-
-// 在聊天界面中使用
+```tsx
 <ChatBackgroundManager
   chatId={chat.id}
   onBackgroundChange={(background, animation) => {
-    setChatBackground(background);
-    setChatAnimation(animation);
+    // 处理背景变更
   }}
 >
   {/* 聊天界面内容 */}
 </ChatBackgroundManager>
 ```
 
-## 样式特性
+### 🔄 背景切换逻辑
 
-- 响应式设计，支持移动端和桌面端
-- 现代化UI设计，包含动画效果
-- 完全集成现有主题系统，自动适配所有主题
-- 使用CSS变量，支持实时主题切换
-- 图片预览保持原比例，自适应容器大小
-- 无障碍访问支持
-- **动画效果性能优化**：移动端自动减少动画时间，支持系统动画偏好设置
+1. **无自定义背景**: 显示系统主题配色背景
+2. **有自定义背景**: 显示用户设置的背景图片，覆盖主题背景（透明度80%）
+3. **背景切换**: 平滑过渡，支持动画效果
+4. **主题切换**: 自动适配新主题的配色方案
 
-## 注意事项
+### 🎨 透明度设置
 
-1. 图片文件大小限制为5MB，超过限制会显示错误提示
-2. 背景图片以base64格式存储，大图片可能影响性能
-3. 建议使用压缩后的图片以获得更好的性能
-4. 背景透明度设置为0.3，确保文字可读性
-5. **动画效果会增加设备电量消耗，建议移动端使用"微妙"类别的效果**
-6. **支持系统`prefers-reduced-motion`设置，自动禁用动画**
+- **用户自定义背景**: 透明度80%（opacity: 0.8）
+- **主题背景层**: 透明度10%（opacity: 0.1）
+- **呼吸动画**: 透明度在80%-90%之间变化
 
-## 未来扩展
-
-- 支持背景图片裁剪和编辑
-- 支持背景图片的模糊度和亮度调节
-- 支持按聊天类型设置不同的默认背景
-- 支持背景图片的主题滤镜效果 
+现在聊天背景完全使用系统主题配色，并且自定义背景图能正确覆盖主题背景！ 

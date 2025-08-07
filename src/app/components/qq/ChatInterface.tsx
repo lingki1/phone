@@ -1566,7 +1566,7 @@ export default function ChatInterface({
         setChatAnimation(animation || 'none');
       }}
     >
-      <div className="chat-interface">
+      <div className="chat-interface" style={{ backgroundColor: 'transparent' }}>
       {/* 顶部导航栏 */}
       <div className="chat-header">
         <button className="back-btn" onClick={onBack}>‹</button>

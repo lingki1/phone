@@ -63,10 +63,41 @@ export default function ChatBackgroundManager({
   }, [chatId, onBackgroundChange]);
 
   return (
-    <>
-      {children}
+    <div 
+      className="chat-background-container"
+      style={{
+        // 使用系统主题配色作为默认背景
+        backgroundColor: 'var(--theme-bg-primary, #ffffff)',
+        backgroundImage: currentBackground ? `url(${currentBackground})` : 'none',
+        backgroundSize: currentBackground ? 'cover' : 'auto',
+        backgroundPosition: currentBackground ? 'center' : 'initial',
+        backgroundRepeat: currentBackground ? 'no-repeat' : 'repeat',
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden'
+      }}
+    >
+      {/* 主题背景层 - 当没有自定义背景时显示 */}
+      {!currentBackground && (
+        <div 
+          className="theme-background-layer"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'var(--theme-bg-secondary, #f8f9fa)',
+            backgroundImage: 'var(--theme-gradient, none)',
+            opacity: 0.1,
+            zIndex: -2,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
       
-      {/* 背景图片显示 */}
+      {/* 自定义背景图片层 - 当有自定义背景时显示 */}
       {currentBackground && (
         <div 
           className={`chat-background-image ${currentAnimation !== 'none' ? `background-animation-${currentAnimation === '3d' ? '3d' : currentAnimation}` : ''}`}
@@ -81,14 +112,17 @@ export default function ChatBackgroundManager({
             right: 0,
             bottom: 0,
             zIndex: -1,
-            opacity: 0.3,
+            opacity: 0.8,
             pointerEvents: 'none'
           }}
         />
       )}
       
-
-    </>
+      {/* 内容层 */}
+      <div className="chat-content-layer">
+        {children}
+      </div>
+    </div>
   );
 }
 

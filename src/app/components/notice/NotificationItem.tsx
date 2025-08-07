@@ -31,14 +31,6 @@ export default function NotificationItem({ notification, onRemove }: Notificatio
     }, 300); // 等待动画完成
   };
 
-  // 处理动作点击
-  const handleActionClick = () => {
-    if (notification.action) {
-      notification.action.onClick();
-      handleRemove(); // 点击动作后移除通知
-    }
-  };
-
   // 格式化时间
   const formatTime = (timestamp: number) => {
     const now = Date.now();
@@ -60,6 +52,7 @@ export default function NotificationItem({ notification, onRemove }: Notificatio
       className={`notification-item notification-${notification.type} ${
         isVisible ? 'notification-visible' : ''
       } ${isRemoving ? 'notification-removing' : ''}`}
+      data-testid={`notification-${notification.id}`}
     >
       {/* 图标 */}
       {notification.icon && (
@@ -68,26 +61,17 @@ export default function NotificationItem({ notification, onRemove }: Notificatio
         </div>
       )}
 
-      {/* 内容 */}
+      {/* 内容 - 简化为一行显示 */}
       <div className="notification-content">
-        <div className="notification-header">
-          <h4 className="notification-title">{notification.title}</h4>
+        <div className="notification-text">
+          <span className="notification-title">{notification.title}</span>
+          {notification.message && (
+            <span className="notification-message"> - {notification.message}</span>
+          )}
           <span className="notification-time">
             {formatTime(notification.timestamp)}
           </span>
         </div>
-        
-        <p className="notification-message">{notification.message}</p>
-        
-        {/* 动作按钮 */}
-        {notification.action && (
-          <button 
-            className="notification-action"
-            onClick={handleActionClick}
-          >
-            {notification.action.label}
-          </button>
-        )}
       </div>
 
       {/* 关闭按钮 */}
@@ -110,4 +94,20 @@ export default function NotificationItem({ notification, onRemove }: Notificatio
       )}
     </div>
   );
-} 
+}
+
+// 导出测试用的通知创建函数
+export const createTestNotification = (
+  type: 'success' | 'info' | 'warning' | 'error' = 'info',
+  title: string = '测试通知',
+  message: string = '这是一条测试消息'
+): NotificationItemType => ({
+  id: `test-${Date.now()}`,
+  type,
+  title,
+  message,
+  icon: type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ',
+  timestamp: Date.now(),
+  autoRemove: true,
+  duration: 5000
+}); 

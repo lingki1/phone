@@ -12,6 +12,9 @@
   /* 确保占满整个父容器 */
   flex: 1 1 auto;
   min-height: 0;
+  /* 确保背景透明，让背景管理器处理背景 */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* 桌面端布局 - 全屏显示 */

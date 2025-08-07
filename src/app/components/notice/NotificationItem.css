@@ -1,9 +1,10 @@
-/* 通知项样式 */
+/* 通知项样式 - 使用系统主题配色 */
 .notification-item {
-  background: white;
+  background: var(--theme-bg-primary, #ffffff);
+  border: 1px solid var(--theme-border-color, #dee2e6);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 16px;
+  box-shadow: var(--theme-shadow-medium, 0 2px 8px rgba(0, 0, 0, 0.15));
+  padding: 12px 16px;
   margin-bottom: 8px;
   position: relative;
   overflow: hidden;
@@ -12,6 +13,9 @@
   opacity: 0;
   transform: translateX(100%);
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .notification-item.notification-visible {
@@ -24,104 +28,85 @@
   transform: translateX(100%);
 }
 
-/* 通知类型样式 */
+/* 通知类型样式 - 使用主题配色 */
 .notification-item.notification-success {
   border-left: 4px solid #28a745;
+  background: var(--theme-bg-secondary, #f8f9fa);
 }
 
 .notification-item.notification-info {
-  border-left: 4px solid #17a2b8;
+  border-left: 4px solid var(--theme-accent-color, #007bff);
+  background: var(--theme-bg-secondary, #f8f9fa);
 }
 
 .notification-item.notification-warning {
   border-left: 4px solid #ffc107;
+  background: var(--theme-bg-secondary, #f8f9fa);
 }
 
 .notification-item.notification-error {
   border-left: 4px solid #dc3545;
-}
-
-/* 通知内容布局 */
-.notification-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  background: var(--theme-bg-secondary, #f8f9fa);
 }
 
 /* 图标样式 */
 .notification-icon {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
+  color: var(--theme-text-secondary, #6c757d);
 }
 
-/* 内容区域 */
+/* 内容区域 - 一行显示 */
 .notification-content {
   flex: 1;
   min-width: 0;
 }
 
-/* 标题和时间 */
-.notification-header {
+.notification-text {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 4px;
-}
-
-.notification-title {
-  margin: 0;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.2;
+  line-height: 1.4;
+  color: var(--theme-text-primary, #1f1f1f);
 }
 
-.notification-time {
-  font-size: 11px;
-  color: #999;
+/* 标题 */
+.notification-title {
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
   white-space: nowrap;
-  margin-left: 8px;
 }
 
 /* 消息内容 */
 .notification-message {
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  color: #666;
-  line-height: 1.4;
-  word-wrap: break-word;
+  color: var(--theme-text-secondary, #6c757d);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* 动作按钮 */
-.notification-action {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
+/* 时间 */
+.notification-time {
   font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.notification-action:hover {
-  background: #0056b3;
+  color: var(--theme-text-tertiary, #8a8a8a);
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* 关闭按钮 */
 .notification-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  flex-shrink: 0;
   background: none;
   border: none;
   font-size: 18px;
-  color: #999;
+  color: var(--theme-text-tertiary, #8a8a8a);
   cursor: pointer;
   padding: 0;
   width: 20px;
@@ -134,8 +119,8 @@
 }
 
 .notification-close:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #666;
+  background: var(--theme-bg-tertiary, #e9ecef);
+  color: var(--theme-text-secondary, #6c757d);
 }
 
 /* 进度条 */
@@ -144,7 +129,7 @@
   bottom: 0;
   left: 0;
   height: 2px;
-  background: #007bff;
+  background: var(--theme-accent-color, #007bff);
   animation: progressShrink linear forwards;
 }
 
@@ -162,19 +147,14 @@
   .notification-item {
     min-width: 280px;
     max-width: calc(100vw - 40px);
-    padding: 12px;
+    padding: 10px 12px;
   }
   
-  .notification-title {
+  .notification-text {
     font-size: 13px;
   }
   
-  .notification-message {
-    font-size: 12px;
-  }
-  
-  .notification-action {
-    padding: 5px 10px;
+  .notification-time {
     font-size: 11px;
   }
 }
@@ -183,21 +163,17 @@
   .notification-item {
     min-width: 260px;
     max-width: calc(100vw - 20px);
-    padding: 10px;
+    padding: 8px 10px;
   }
   
   .notification-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 16px;
+    width: 18px;
+    height: 18px;
+    font-size: 14px;
   }
   
-  .notification-title {
+  .notification-text {
     font-size: 12px;
-  }
-  
-  .notification-message {
-    font-size: 11px;
   }
   
   .notification-time {
@@ -207,55 +183,37 @@
 
 /* 深色主题适配 */
 .theme-dark .notification-item {
-  background: #2a2a2a;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: var(--theme-bg-primary, #1a1a1a);
+  border-color: var(--theme-border-color, #404040);
+  box-shadow: var(--theme-shadow-medium, 0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.theme-dark .notification-item.notification-success,
+.theme-dark .notification-item.notification-info,
+.theme-dark .notification-item.notification-warning,
+.theme-dark .notification-item.notification-error {
+  background: var(--theme-bg-secondary, #2d2d2d);
 }
 
 .theme-dark .notification-title {
-  color: #fff;
+  color: var(--theme-text-primary, #ffffff);
 }
 
 .theme-dark .notification-message {
-  color: #ccc;
+  color: var(--theme-text-secondary, #b0b0b0);
 }
 
 .theme-dark .notification-time {
-  color: #999;
+  color: var(--theme-text-tertiary, #808080);
 }
 
 .theme-dark .notification-close {
-  color: #ccc;
+  color: var(--theme-text-tertiary, #808080);
 }
 
 .theme-dark .notification-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.theme-dark .notification-action {
-  background: #007bff;
-}
-
-.theme-dark .notification-action:hover {
-  background: #0056b3;
-}
-
-/* 通知类型在深色主题下的边框颜色 */
-.theme-dark .notification-item.notification-success {
-  border-left-color: #28a745;
-}
-
-.theme-dark .notification-item.notification-info {
-  border-left-color: #17a2b8;
-}
-
-.theme-dark .notification-item.notification-warning {
-  border-left-color: #ffc107;
-}
-
-.theme-dark .notification-item.notification-error {
-  border-left-color: #dc3545;
+  background: var(--theme-bg-tertiary, #404040);
+  color: var(--theme-text-secondary, #b0b0b0);
 }
 
 /* 动画优化 */
@@ -277,7 +235,7 @@
 /* 高对比度模式 */
 @media (prefers-contrast: high) {
   .notification-item {
-    border: 2px solid #000;
+    border: 2px solid var(--theme-text-primary, #000);
   }
   
   .notification-item.notification-success {
