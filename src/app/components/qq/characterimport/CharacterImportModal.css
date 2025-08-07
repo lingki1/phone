@@ -110,6 +110,13 @@
   margin-top: 8px !important;
 }
 
+.upload-note {
+  color: #059669 !important;
+  font-size: 12px !important;
+  font-style: italic;
+  margin-top: 4px !important;
+}
+
 /* 错误消息样式 */
 .error-message {
   margin-top: 16px;
@@ -146,6 +153,12 @@
   margin: 0;
   color: #6b7280;
   font-size: 16px;
+}
+
+.loading-subtitle {
+  font-size: 14px !important;
+  color: #9ca3af !important;
+  margin-top: 8px !important;
 }
 
 /* 响应式设计 */

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ChatItem } from '../../types/chat';
+import { compressImage } from '../../utils/imageCompressor';
 import './AddFriendModal.css';
 
 interface EditFriendModalProps {
@@ -41,7 +42,7 @@ export default function EditFriendModal({
     }
   }, [chat, isVisible, mode]);
 
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // 验证文件类型
@@ -50,25 +51,30 @@ export default function EditFriendModal({
         return;
       }
       
-      // 验证文件大小 (限制为 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('图片大小不能超过 5MB');
+      // 验证文件大小 (限制为 10MB，压缩后会变小)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('图片大小不能超过 10MB');
         return;
       }
 
       setIsUploading(true);
       
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setAvatarPreview(result);
+      try {
+        // 压缩图片
+        const compressedImage = await compressImage(file, {
+          quality: 0.8,
+          maxWidth: 400,
+          maxHeight: 400,
+          maxSize: 1 * 1024 * 1024 // 压缩到1MB以下
+        });
+        
+        setAvatarPreview(compressedImage);
+      } catch (error) {
+        console.error('图片压缩失败:', error);
+        alert('图片处理失败，请重试');
+      } finally {
         setIsUploading(false);
-      };
-      reader.onerror = () => {
-        alert('读取文件失败');
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -165,7 +171,7 @@ export default function EditFriendModal({
                 style={{ display: 'none' }}
               />
               <div className="avatar-tips">
-                <p>支持 JPG、PNG、GIF 格式，大小不超过 5MB</p>
+                <p>支持 JPG、PNG、GIF 格式，大小不超过 10MB，会自动压缩优化</p>
               </div>
             </div>
           </div>

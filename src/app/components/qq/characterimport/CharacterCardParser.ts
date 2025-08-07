@@ -1,6 +1,7 @@
 import { SillyTavernCharacter, CharacterParseResult } from './types';
 import { PNGDebugger } from './debug';
 import { EncodingFixer } from './encoding-fix';
+import { compressImage } from '../../../utils/imageCompressor';
 
 export class CharacterCardParser {
   /**
@@ -34,8 +35,8 @@ export class CharacterCardParser {
       const character = this.parseSillyTavernData(metadata);
       console.log('角色数据解析完成:', character.name);
       
-      // 5. 提取图像数据
-      const imageData = this.extractImageData(base64Data);
+      // 5. 提取并压缩图像数据
+      const imageData = await this.extractImageData(base64Data);
 
       return {
         success: true,
@@ -299,10 +300,35 @@ export class CharacterCardParser {
   }
 
   /**
-   * 提取图像数据
+   * 提取并压缩图像数据
    */
-  private static extractImageData(base64Data: string): string {
-    return `data:image/png;base64,${base64Data}`;
+  private static async extractImageData(base64Data: string): Promise<string> {
+    try {
+      // 创建原始图片的 File 对象用于压缩
+      const base64String = `data:image/png;base64,${base64Data}`;
+      
+      // 将 base64 转换为 Blob
+      const response = await fetch(base64String);
+      const blob = await response.blob();
+      
+      // 创建 File 对象
+      const file = new File([blob], 'character-avatar.png', { type: 'image/png' });
+      
+      // 压缩图片
+      const compressedImage = await compressImage(file, {
+        quality: 0.8,
+        maxWidth: 400,
+        maxHeight: 400,
+        maxSize: 1 * 1024 * 1024 // 压缩到1MB以下
+      });
+      
+      console.log('角色头像压缩完成');
+      return compressedImage;
+    } catch (error) {
+      console.error('图片压缩失败，使用原始图片:', error);
+      // 如果压缩失败，返回原始图片
+      return `data:image/png;base64,${base64Data}`;
+    }
   }
 
   /**

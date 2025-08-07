@@ -233,6 +233,7 @@ export default function CharacterImportModal({
                 <h3>选择 SillyTavern 角色卡片</h3>
                 <p>支持 PNG 格式的角色卡片文件</p>
                 <p className="upload-tip">点击选择文件或拖拽到此处</p>
+                <p className="upload-note">头像会自动压缩优化</p>
               </div>
               
               <input
@@ -254,7 +255,8 @@ export default function CharacterImportModal({
           {currentStep === 'loading' && (
             <div className="loading-step">
               <div className="loading-spinner"></div>
-              <p>正在解析角色卡片...</p>
+              <p>正在解析角色卡片并优化头像...</p>
+              <p className="loading-subtitle">这可能需要几秒钟时间</p>
             </div>
           )}
 
