@@ -64,9 +64,10 @@ export default function ChatBackgroundModal({
 
   // 处理保存
   const handleSave = async () => {
-    if (selectedImage) {
-      await onSave(selectedImage, selectedAnimation);
-    }
+    console.log('保存按钮被点击', { selectedImage, currentBackground, selectedAnimation });
+    // 如果有选中的图片，使用选中的图片；否则使用当前背景
+    const backgroundToSave = selectedImage || currentBackground || '';
+    await onSave(backgroundToSave, selectedAnimation);
   };
 
   // 处理清除背景
@@ -169,8 +170,13 @@ export default function ChatBackgroundModal({
             </button>
             <button 
               className="save-btn"
-              onClick={handleSave}
-              disabled={!selectedImage}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('保存按钮点击事件触发');
+                handleSave();
+              }}
+              disabled={!selectedImage && !currentBackground}
             >
               保存
             </button>

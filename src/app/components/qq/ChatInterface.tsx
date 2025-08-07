@@ -301,7 +301,7 @@ export default function ChatInterface({
     }
   }, [chat.messages.length, onUpdateChat, chat]);
 
-  // 加载聊天背景
+  // 加载聊天背景和动画设置
   useEffect(() => {
     const loadBackground = async () => {
       try {
@@ -316,6 +316,10 @@ export default function ChatInterface({
           setChatBackground(fallbackBackground);
         }
       }
+      
+      // 加载动画设置
+      const animation = localStorage.getItem(`chatAnimation_${chat.id}`) || 'none';
+      setChatAnimation(animation);
     };
     
     loadBackground();
@@ -1875,6 +1879,7 @@ export default function ChatInterface({
           currentBackground={chatBackground}
           currentAnimation={chatAnimation}
           onSave={async (background: string, animation: string) => {
+            console.log('ChatInterface onSave被调用', { background, animation });
             try {
               await dataManager.initDB();
               await dataManager.saveChatBackground(chat.id, background);

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { dataManager } from '../../../utils/dataManager';
-import './ChatBackgroundAnimations.css';
 import './ChatBackgroundManager.css';
+import './ChatBackgroundAnimations.css';
 
 interface ChatBackgroundManagerProps {
   chatId: string;
@@ -115,6 +115,7 @@ export default function ChatBackgroundManager({
             opacity: 0.8,
             pointerEvents: 'none'
           }}
+          data-animation={currentAnimation}
         />
       )}
       
