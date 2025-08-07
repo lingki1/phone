@@ -68,17 +68,26 @@
   flex-shrink: 0;
 }
 
+.user-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* 用户名样式 */
 .user-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--theme-text-primary, #202124);
   cursor: pointer;
   transition: color 0.2s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 48px;
+  text-align: center;
 }
 
 .user-name:hover {
@@ -97,8 +106,8 @@
   }
   
   .user-name {
-    font-size: 15px;
-    max-width: 100px;
+    font-size: 11px;
+    max-width: 44px;
   }
   
   /* 移动端特殊适配 - 移除固定高度，使用flex布局 */
@@ -120,8 +129,8 @@
   }
   
   .user-name {
-    font-size: 14px;
-    max-width: 80px;
+    font-size: 10px;
+    max-width: 40px;
   }
   
   /* 超小屏幕特殊适配 - 移除固定高度 */
@@ -284,24 +293,27 @@
   gap: 15px;
 }
 
-.action-btn {
-  font-size: 32px;
-  font-weight: 300;
-  cursor: pointer;
-  width: 36px;
-  height: 36px;
-  text-align: center;
+.add-btn {
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
   color: var(--theme-accent-color, #1a73e8);
+  font-size: 24px;
+  font-weight: 400;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  padding: 0;
+  margin: 0;
+  border-radius: 4px;
   transition: all 0.2s ease;
+  line-height: 1;
 }
 
-.action-btn:hover {
+.add-btn:hover {
   background-color: var(--theme-bg-tertiary, #f1f3f4);
-  transform: scale(1.05);
 }
 
 /* 移动端操作按钮调整 */
@@ -310,10 +322,10 @@
     gap: 12px;
   }
   
-  .action-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 28px;
+  .add-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 22px;
   }
 }
 
@@ -322,10 +334,10 @@
     gap: 10px;
   }
   
-  .action-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 24px;
+  .add-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 20px;
   }
 }
 

@@ -57,22 +57,22 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
           </div>
         )}
 
-        {/* 用户头像 */}
-        <div className="user-avatar-container">
-          <Image 
-            src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
-            alt="用户头像" 
-            width={48}
-            height={48}
-            className="user-avatar"
-            onClick={onOpenMePage}
-            unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
-          />
-        </div>
-
-        {/* 用户名 */}
-        <div className="user-name" onClick={onOpenMePage}>
-          {personalSettings?.userNickname || '用户'}
+        {/* 用户头像和用户名 */}
+        <div className="user-avatar-section">
+          <div className="user-avatar-container">
+            <Image 
+              src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
+              alt="用户头像" 
+              width={48}
+              height={48}
+              className="user-avatar"
+              onClick={onOpenMePage}
+              unoptimized={personalSettings?.userAvatar?.startsWith('data:')}
+            />
+          </div>
+          <div className="user-name" onClick={onOpenMePage}>
+            {personalSettings?.userNickname || '用户'}
+          </div>
         </div>
       </div>
 
@@ -101,12 +101,14 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
       {/* 右侧操作区域 */}
       <div className="header-actions">
         <div className="add-menu-container">
-          <span 
-            className="action-btn"
+          <button 
+            className="add-btn"
             onClick={() => setShowAddDropdown(!showAddDropdown)}
+            type="button"
+            title="添加"
           >
             +
-          </span>
+          </button>
           
           {/* 添加菜单下拉 */}
           {showAddDropdown && (
