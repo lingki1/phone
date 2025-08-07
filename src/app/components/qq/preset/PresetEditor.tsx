@@ -170,12 +170,12 @@ export default function PresetEditor({
                 id="max-tokens"
                 value={formData.maxTokens}
                 onChange={(e) => handleNumberInputChange('maxTokens', e.target.value)}
-                min="1"
-                max="4000"
+                min="0"
+                max="63000"
                 className="number-input"
               />
               <div className="param-explanation">
-                控制AI回复的最大长度，建议范围：100-3000
+                控制AI回复的最大长度，建议范围：100-63000，0表示无限制
               </div>
             </div>
 

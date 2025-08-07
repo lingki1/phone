@@ -286,9 +286,50 @@ export class PresetManager {
       } else {
         console.log('All default presets already exist, skipping initialization');
       }
+      
+      // 检查并修复重复的默认预设
+      await this.cleanupDuplicateDefaultPresets();
     } catch (error) {
       console.error('Failed to initialize default presets:', error);
       throw error;
+    }
+  }
+
+  // 清理重复的默认预设
+  private async cleanupDuplicateDefaultPresets(): Promise<void> {
+    try {
+      const existingPresets = await this.getAllPresets();
+      const defaultPresetNames = DEFAULT_PRESET_TEMPLATES.map(t => t.name);
+      
+      // 找出重复的默认预设（按名称分组）
+      const presetGroups = new Map<string, PresetConfig[]>();
+      
+      for (const preset of existingPresets) {
+        if (defaultPresetNames.includes(preset.name)) {
+          if (!presetGroups.has(preset.name)) {
+            presetGroups.set(preset.name, []);
+          }
+          presetGroups.get(preset.name)!.push(preset);
+        }
+      }
+      
+      // 处理重复的预设
+      for (const [presetName, presets] of presetGroups) {
+        if (presets.length > 1) {
+          console.log(`Found ${presets.length} duplicate presets for "${presetName}", cleaning up...`);
+          
+          // 保留最新的一个，删除其他的
+          const sortedPresets = presets.sort((a, b) => b.updatedAt - a.updatedAt);
+          const deletePresets = sortedPresets.slice(1);
+          
+          for (const deletePreset of deletePresets) {
+            await this.deletePreset(deletePreset.id);
+            console.log(`Deleted duplicate preset: ${deletePreset.name} (ID: ${deletePreset.id})`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cleanup duplicate default presets:', error);
     }
   }
 
@@ -321,8 +362,8 @@ export class PresetManager {
       errors.push('温度值必须在 0-2 之间');
     }
 
-    if (preset.maxTokens !== undefined && (preset.maxTokens < 1 || preset.maxTokens > 4000)) {
-      errors.push('最大令牌数必须在 1-4000 之间');
+    if (preset.maxTokens !== undefined && (preset.maxTokens < 0 || preset.maxTokens > 63000)) {
+      errors.push('最大令牌数必须在 0-63000 之间，0表示无限制');
     }
 
     if (preset.topP !== undefined && (preset.topP < 0 || preset.topP > 1)) {
@@ -348,6 +389,57 @@ export class PresetManager {
   // 获取预设分类
   public getPresetCategories() {
     return PRESET_CATEGORIES;
+  }
+
+  // 手动清理重复的默认预设（供用户主动调用）
+  public async cleanupDuplicatePresets(): Promise<{ cleaned: number; message: string }> {
+    try {
+      const existingPresets = await this.getAllPresets();
+      const defaultPresetNames = DEFAULT_PRESET_TEMPLATES.map(t => t.name);
+      
+      // 找出重复的默认预设（按名称分组）
+      const presetGroups = new Map<string, PresetConfig[]>();
+      
+      for (const preset of existingPresets) {
+        if (defaultPresetNames.includes(preset.name)) {
+          if (!presetGroups.has(preset.name)) {
+            presetGroups.set(preset.name, []);
+          }
+          presetGroups.get(preset.name)!.push(preset);
+        }
+      }
+      
+      let totalCleaned = 0;
+      const cleanedPresets: string[] = [];
+      
+      // 处理重复的预设
+      for (const [presetName, presets] of presetGroups) {
+        if (presets.length > 1) {
+          console.log(`Found ${presets.length} duplicate presets for "${presetName}", cleaning up...`);
+          
+          // 保留最新的一个，删除其他的
+          const sortedPresets = presets.sort((a, b) => b.updatedAt - a.updatedAt);
+          const deletePresets = sortedPresets.slice(1);
+          
+          for (const deletePreset of deletePresets) {
+            await this.deletePreset(deletePreset.id);
+            cleanedPresets.push(deletePreset.name);
+            totalCleaned++;
+            console.log(`Deleted duplicate preset: ${deletePreset.name} (ID: ${deletePreset.id})`);
+          }
+        }
+      }
+      
+      if (totalCleaned > 0) {
+        const message = `成功清理了 ${totalCleaned} 个重复的预设：${cleanedPresets.join(', ')}`;
+        return { cleaned: totalCleaned, message };
+      } else {
+        return { cleaned: 0, message: '没有发现重复的预设' };
+      }
+    } catch (error) {
+      console.error('Failed to cleanup duplicate presets:', error);
+      throw new Error(`清理重复预设失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    }
   }
 
   // 私有方法：从localStorage加载预设

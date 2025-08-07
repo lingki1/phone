@@ -58,6 +58,17 @@
   position: relative;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
 .header-back-btn {
   background: none;
   border: none;
@@ -122,11 +133,6 @@
   width: fit-content;
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
 }
 
 .new-preset-btn:hover {
@@ -138,6 +144,44 @@
 .new-preset-btn:active {
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cleanup-btn {
+  background: var(--theme-bg-tertiary, #e9ecef);
+  color: var(--theme-text-secondary, #6c757d);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  width: fit-content;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cleanup-btn:hover {
+  background: var(--theme-bg-quaternary, #dee2e6);
+  color: var(--theme-text-primary, #1f1f1f);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.cleanup-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cleanup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .btn-icon {
@@ -339,6 +383,11 @@
     flex-wrap: nowrap !important;
   }
 
+  .header-actions {
+    right: 16px;
+    gap: 6px;
+  }
+
   .header-back-btn {
     width: 28px;
     height: 28px;
@@ -360,11 +409,11 @@
     font-size: 16px;
   }
 
-  .new-preset-btn {
+  .new-preset-btn,
+  .cleanup-btn {
     padding: 6px 10px;
     font-size: 12px;
     gap: 3px;
-    right: 16px;
   }
 
   .btn-icon {
@@ -429,6 +478,11 @@
     flex-wrap: nowrap !important;
   }
 
+  .header-actions {
+    right: 12px;
+    gap: 4px;
+  }
+
   .header-back-btn {
     width: 24px;
     height: 24px;
@@ -450,11 +504,11 @@
     font-size: 15px;
   }
 
-  .new-preset-btn {
+  .new-preset-btn,
+  .cleanup-btn {
     padding: 5px 8px;
     font-size: 11px;
     gap: 2px;
-    right: 12px;
   }
 
   .btn-icon {

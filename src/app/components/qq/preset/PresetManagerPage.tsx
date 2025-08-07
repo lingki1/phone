@@ -20,6 +20,7 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PresetConfig | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isCleaning, setIsCleaning] = useState(false);
 
   // 加载预设数据
   useEffect(() => {
@@ -123,6 +124,33 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
     }
   };
 
+  // 清理重复预设
+  const handleCleanupDuplicates = async () => {
+    if (!confirm('确定要清理重复的默认预设吗？这将删除重复的系统预设，保留最新的版本。')) {
+      return;
+    }
+
+    try {
+      setIsCleaning(true);
+      setError(null);
+      
+      const result = await presetManager.cleanupDuplicatePresets();
+      
+      if (result.cleaned > 0) {
+        // 重新加载预设列表
+        await loadPresets();
+        alert(result.message);
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error('Failed to cleanup duplicate presets:', error);
+      setError('清理重复预设失败');
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
   // 过滤预设
   const filteredPresets = presets.filter(preset => {
     if (selectedCategory === 'all') return true;
@@ -158,13 +186,24 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
           <span className="back-icon">‹</span>
         </button>
         <h1 className="header-title">AI 预设管理</h1>
-        <button 
-          className="new-preset-btn"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <span className="btn-icon">+</span>
-          <span className="btn-text">新建预设</span>
-        </button>
+        <div className="header-actions">
+          <button 
+            className="cleanup-btn"
+            onClick={handleCleanupDuplicates}
+            disabled={isCleaning}
+            title="清理重复的默认预设"
+          >
+            <span className="btn-icon">🧹</span>
+            <span className="btn-text">{isCleaning ? '清理中...' : '清理重复'}</span>
+          </button>
+          <button 
+            className="new-preset-btn"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <span className="btn-icon">+</span>
+            <span className="btn-text">新建预设</span>
+          </button>
+        </div>
       </div>
 
       {/* 错误提示 */}
