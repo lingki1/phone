@@ -49,6 +49,10 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     messages?: number;
   }>({});
 
+  // 余额作弊功能状态
+  const [balanceClickCount, setBalanceClickCount] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+
   // 加载新内容计数
   useEffect(() => {
     const loadNewContentCount = async () => {
@@ -275,6 +279,48 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     setShowBalanceInfo(!showBalanceInfo);
   };
 
+  // 处理余额点击作弊功能
+  const handleBalanceClick = async () => {
+    const now = Date.now();
+    
+    // 如果距离上次点击超过5秒，重置计数
+    if (now - lastClickTime > 5000) {
+      setBalanceClickCount(1);
+      setLastClickTime(now);
+      return;
+    }
+    
+    const newCount = balanceClickCount + 1;
+    setBalanceClickCount(newCount);
+    setLastClickTime(now);
+    
+    // 达到10次点击时触发作弊
+    if (newCount >= 10) {
+      try {
+        await dataManager.initDB();
+        const currentBalance = await dataManager.getBalance();
+        const newBalance = currentBalance + 10000;
+        
+        // 保存到数据库
+        await dataManager.saveBalance(newBalance);
+        
+        // 更新本地状态
+        setBalance(newBalance);
+        
+        // 重置计数
+        setBalanceClickCount(0);
+        
+        // 显示成功提示
+        alert(`🎉 作弊成功！余额已增加 ¥10,000\n当前余额：¥${newBalance.toFixed(2)}`);
+        
+        console.log('余额作弊成功，新余额:', newBalance);
+      } catch (error) {
+        console.error('余额作弊失败:', error);
+        alert('作弊失败，请重试');
+      }
+    }
+  };
+
   // 处理底部导航切换
   const handleViewChange = (view: string) => {
     if (view === 'messages') {
@@ -324,18 +370,23 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
           {/* 余额显示区域 */}
           <div className="me-balance-section">
-            <div className="balance-card">
+            <div className="balance-card" onClick={handleBalanceClick}>
               <div className="balance-icon">💰</div>
               <div className="balance-info">
                 <div className="balance-label">我的余额</div>
                 <div className="balance-amount">¥ {balance.toFixed(2)}</div>
               </div>
               <div className="balance-action">
-                <button className="balance-info-btn" onClick={handleBalanceInfo}>
+                <button className="balance-info-btn" onClick={(e) => {
+                  e.stopPropagation(); // 阻止事件冒泡
+                  handleBalanceInfo();
+                }}>
                   如何获得余额
                 </button>
               </div>
             </div>
+            
+
             
             {/* 余额信息弹窗 */}
             {showBalanceInfo && (

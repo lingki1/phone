@@ -128,6 +128,18 @@
   align-items: center;
   box-shadow: var(--theme-shadow-light, 0 1px 3px rgba(0, 0, 0, 0.1));
   border: 1px solid var(--theme-border-color, #e8eaed);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.balance-card:active {
+  transform: translateY(0);
 }
 
 .balance-icon {
@@ -151,6 +163,10 @@
   font-weight: 600;
   color: var(--theme-text-primary, #202124);
 }
+
+
+
+
 
 .balance-action {
   flex-shrink: 0;
