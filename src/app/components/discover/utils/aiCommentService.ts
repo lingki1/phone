@@ -335,7 +335,7 @@ export class AiCommentService {
 
     // 根据模型调整参数
     const isGemini = apiConfig.model?.includes('gemini');
-    const maxTokens = isGemini ? 3000 : 1500; // Gemini需要更多tokens
+    const maxTokens = isGemini ? 4000 : 3000; // 增加token数量，避免内容截断
 
     const requestBody = {
       model: apiConfig.model || 'gpt-3.5-turbo',

@@ -560,7 +560,7 @@ export class AiPostGenerator {
   private async callApi(apiConfig: ApiConfig, requestData: unknown, isBatch: boolean = false): Promise<string> {
     // 根据模型调整参数
     const isGemini = apiConfig.model?.includes('gemini');
-    const maxTokens = isGemini ? 8000 : (isBatch ? 4000 : 3000); // Gemini需要更多tokens
+    const maxTokens = isGemini ? 8000 : (isBatch ? 6000 : 5000); // 增加token数量，避免内容截断
     
     const requestBody = {
       model: apiConfig.model || 'gpt-3.5-turbo',

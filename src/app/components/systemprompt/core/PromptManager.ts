@@ -151,7 +151,7 @@ export class PromptManager {
     // 默认参数
     return {
       temperature: 0.8,
-      max_tokens: 2000,
+      max_tokens: 8000, // 增加到8000，避免AI回复被截断
       top_p: 0.8,
       frequency_penalty: 0.0,
       presence_penalty: 0.0
