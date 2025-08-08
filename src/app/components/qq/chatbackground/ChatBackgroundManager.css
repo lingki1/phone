@@ -48,20 +48,7 @@
   z-index: 1;
 }
 
-/* 确保动画效果在背景图片上正确显示 */
-.chat-background-image.background-animation-slide,
-.chat-background-image.background-animation-breathe,
-.chat-background-image.background-animation-pulse,
-.chat-background-image.background-animation-wave,
-.chat-background-image.background-animation-focus,
-.chat-background-image.background-animation-rotate,
-.chat-background-image.background-animation-color,
-.chat-background-image.background-animation-3d,
-.chat-background-image.background-animation-combined {
-  transform-origin: center center !important;
-  z-index: 0 !important;
-  position: absolute !important;
-}
+
 
 /* 深色主题适配 */
 .theme-dark .chat-background-container {

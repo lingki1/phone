@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem } from '../../../types/chat';
+import { MessageActionButtons } from '../messageactions';
 
 interface PersonalSettings {
   userAvatar: string;
@@ -134,50 +135,21 @@ const MessageItem = React.memo(({
           </div>
         )}
         
+        {/* 直观可见的功能按键：紧贴消息气泡下方 */}
+        <div className="message-inline-actions">
+          <MessageActionButtons
+            message={msg}
+            isUserMessage={msg.role === 'user'}
+            isAIMessage={msg.role === 'assistant'}
+            onQuoteMessage={onQuoteMessage}
+            onEditMessage={onEditMessage}
+            onDeleteMessage={onDeleteMessage}
+            onRegenerateAI={onRegenerateAI}
+          />
+        </div>
+        
         <div className="message-time">
           {formatTime(msg.timestamp)}
-          {/* 消息操作图标 */}
-          <div className="message-actions">
-            {msg.role === 'user' && (
-              <button 
-                className="message-action-btn edit-btn"
-                onClick={() => onEditMessage(msg.id, msg.content)}
-                title="编辑消息"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-            )}
-            {msg.role === 'assistant' && (
-              <button 
-                className="message-action-btn regenerate-btn"
-                onClick={() => onRegenerateAI(msg.id)}
-                title="重新生成"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                  <path d="M21 3v5h-5"/>
-                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                  <path d="M3 21v-5h5"/>
-                </svg>
-              </button>
-            )}
-            <button 
-              className="message-action-btn delete-btn"
-              onClick={() => onDeleteMessage(msg.id)}
-              title="删除消息"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18"/>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                <line x1="10" y1="11" x2="10" y2="17"/>
-                <line x1="14" y1="11" x2="14" y2="17"/>
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
     </div>

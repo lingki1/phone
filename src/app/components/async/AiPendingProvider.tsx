@@ -1,10 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
 // AI异步状态类型定义
+interface PendingTask {
+  pending: true;
+  timestamp: number;
+}
+
 interface AiPendingState {
-  [chatId: string]: boolean;
+  [chatId: string]: boolean | PendingTask;
 }
 
 // Context类型定义
@@ -31,7 +36,24 @@ export const AiPendingProvider: React.FC<AiPendingProviderProps> = ({ children }
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('aiPendingState');
-        return saved ? JSON.parse(saved) : {};
+        const parsed = saved ? JSON.parse(saved) : {};
+        
+        // 清理可能卡住的任务（超过5分钟的任务）
+        const now = Date.now();
+        const cleaned = Object.entries(parsed).reduce<AiPendingState>((acc, [chatId, pending]) => {
+          if (pending && typeof pending === 'object' && 'timestamp' in pending) {
+            const pendingTask = pending as PendingTask;
+            // 如果任务超过5分钟，自动清理
+            if (now - pendingTask.timestamp > 5 * 60 * 1000) {
+              console.log(`自动清理超时的AI任务: ${chatId}`);
+              return acc;
+            }
+            return { ...acc, [chatId]: pendingTask };
+          }
+          return { ...acc, [chatId]: pending as boolean | PendingTask };
+        }, {});
+        
+        return cleaned;
       } catch (error) {
         console.error('Failed to load AI pending state from localStorage:', error);
         return {};
@@ -43,10 +65,14 @@ export const AiPendingProvider: React.FC<AiPendingProviderProps> = ({ children }
   // 设置指定聊天的AI异步状态
   const setAiPending = useCallback((chatId: string, pending: boolean) => {
     setAiPendingState(prev => {
-      if (prev[chatId] === pending) {
+      const currentState = prev[chatId];
+      const newPendingState: boolean | PendingTask = pending ? { pending: true, timestamp: Date.now() } : false;
+      
+      if (currentState === newPendingState) {
         return prev; // 避免不必要的重渲染
       }
-      const newState = { ...prev, [chatId]: pending };
+      
+      const newState = { ...prev, [chatId]: newPendingState };
       
       // 保存到localStorage
       if (typeof window !== 'undefined') {
@@ -63,7 +89,14 @@ export const AiPendingProvider: React.FC<AiPendingProviderProps> = ({ children }
 
   // 检查指定聊天是否有AI异步任务
   const isAiPending = useCallback((chatId: string): boolean => {
-    return !!aiPending[chatId];
+    const state = aiPending[chatId];
+    if (typeof state === 'boolean') {
+      return state; // 兼容旧数据格式
+    }
+    if (state && typeof state === 'object' && state.pending) {
+      return true;
+    }
+    return false;
   }, [aiPending]);
 
   // 清除指定聊天的AI异步状态
@@ -97,6 +130,41 @@ export const AiPendingProvider: React.FC<AiPendingProviderProps> = ({ children }
         console.error('Failed to clear AI pending state from localStorage:', error);
       }
     }
+  }, []);
+
+  // 定期清理超时的AI任务
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      setAiPendingState(prev => {
+        const now = Date.now();
+        const cleaned = Object.entries(prev).reduce<AiPendingState>((acc, [chatId, state]) => {
+          if (state && typeof state === 'object' && 'timestamp' in state) {
+            const pendingTask = state as PendingTask;
+            // 如果任务超过5分钟，自动清理
+            if (now - pendingTask.timestamp > 5 * 60 * 1000) {
+              console.log(`定期清理超时的AI任务: ${chatId}`);
+              return acc;
+            }
+          }
+          return { ...acc, [chatId]: state };
+        }, {});
+
+        if (Object.keys(cleaned).length !== Object.keys(prev).length) {
+          // 保存到localStorage
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('aiPendingState', JSON.stringify(cleaned));
+            } catch (error) {
+              console.error('Failed to save cleaned AI pending state to localStorage:', error);
+            }
+          }
+        }
+
+        return cleaned;
+      });
+    }, 60000); // 每分钟检查一次
+
+    return () => clearInterval(cleanupInterval);
   }, []);
 
   const value: AiPendingContextType = {

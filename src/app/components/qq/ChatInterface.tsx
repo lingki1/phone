@@ -86,7 +86,7 @@ export default function ChatInterface({
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [chatBackground, setChatBackground] = useState<string>('');
-  const [chatAnimation, setChatAnimation] = useState<string>('none');
+
   const [chatOpacity, setChatOpacity] = useState<number>(80);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
@@ -118,10 +118,10 @@ export default function ChatInterface({
     return () => {
       // 清除当前活跃聊天ID
       window.currentActiveChatId = null;
-      // 清理AI任务状态，防止组件卸载时状态残留
+      // 清理本地状态，但保留AI pending状态到localStorage
       setIsLoading(false);
       setCurrentAiUser(null);
-      endAiTask();
+      // 注意：不调用endAiTask()，保持AI pending状态持久化
       
       // 清理防抖定时器
       if (heightAdjustTimerRef.current) {
@@ -131,7 +131,7 @@ export default function ChatInterface({
         clearTimeout(mentionCheckTimerRef.current);
       }
     };
-  }, [chat.id, endAiTask]);
+  }, [chat.id]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -318,15 +318,28 @@ export default function ChatInterface({
         }
       }
       
-      // 加载动画设置
-      const animation = localStorage.getItem(`chatAnimation_${chat.id}`) || 'none';
+      // 加载透明度设置
       const opacity = Number(localStorage.getItem(`chatOpacity_${chat.id}`)) || 80;
-      setChatAnimation(animation);
       setChatOpacity(opacity);
     };
     
     loadBackground();
   }, [chat.id]);
+
+  // 检查并恢复AI pending状态
+  useEffect(() => {
+    // 检查是否有未完成的AI任务
+    if (isPending) {
+      console.log(`检测到聊天 ${chat.id} 有未完成的AI任务，恢复pending状态`);
+      // 如果有pending状态，设置本地loading状态
+      setIsLoading(true);
+      // 设置一个默认的AI用户信息
+      setCurrentAiUser({
+        name: chat.name,
+        avatar: chat.settings.aiAvatar || chat.avatar
+      });
+    }
+  }, [chat.id, isPending, chat.name, chat.settings.aiAvatar, chat.avatar]);
 
   // 监听API配置变更
   useEffect(() => {
@@ -1568,9 +1581,8 @@ export default function ChatInterface({
   return (
     <ChatBackgroundManager
       chatId={chat.id}
-      onBackgroundChange={(background, animation, opacity) => {
+      onBackgroundChange={(background, opacity) => {
         setChatBackground(background);
-        setChatAnimation(animation || 'none');
         setChatOpacity(opacity || 80);
       }}
     >
@@ -1715,6 +1727,18 @@ export default function ChatInterface({
                   <span></span>
                   <span></span>
                 </div>
+                {/* 添加取消按钮，允许用户手动取消AI任务 */}
+                <button 
+                  className="cancel-ai-btn"
+                  onClick={() => {
+                    setIsLoading(false);
+                    setCurrentAiUser(null);
+                    endAiTask();
+                  }}
+                  title="取消AI回复"
+                >
+                  ✕
+                </button>
               </div>
             </div>
           </div>
@@ -1881,10 +1905,10 @@ export default function ChatInterface({
           isOpen={showBackgroundModal}
           onClose={() => setShowBackgroundModal(false)}
           currentBackground={chatBackground}
-            currentAnimation={chatAnimation}
+
             currentOpacity={chatOpacity}
-          onSave={async (background: string, animation: string, opacity?: number) => {
-            console.log('ChatInterface onSave被调用', { background, animation, opacity });
+          onSave={async (background: string, opacity?: number) => {
+            console.log('ChatInterface onSave被调用', { background, opacity });
             try {
               await dataManager.initDB();
               await dataManager.saveChatBackground(chat.id, background);
@@ -1892,23 +1916,20 @@ export default function ChatInterface({
               // 同时保存到localStorage作为备份
               if (background) {
                 localStorage.setItem(`chatBackground_${chat.id}`, background);
-                localStorage.setItem(`chatAnimation_${chat.id}`, animation);
                 localStorage.setItem(`chatOpacity_${chat.id}`, (opacity || 80).toString());
               } else {
                 localStorage.removeItem(`chatBackground_${chat.id}`);
-                localStorage.removeItem(`chatAnimation_${chat.id}`);
                 localStorage.removeItem(`chatOpacity_${chat.id}`);
               }
               
               // 立即更新状态
               setChatBackground(background);
-              setChatAnimation(animation);
               setChatOpacity(opacity || 80);
               
               // 强制重新加载背景
               setTimeout(() => {
                 const event = new CustomEvent('backgroundUpdated', { 
-                  detail: { chatId: chat.id, background, animation, opacity } 
+                  detail: { chatId: chat.id, background, opacity } 
                 });
                 window.dispatchEvent(event);
               }, 100);
@@ -1919,15 +1940,12 @@ export default function ChatInterface({
               // 如果数据库保存失败，只保存到localStorage
               if (background) {
                 localStorage.setItem(`chatBackground_${chat.id}`, background);
-                localStorage.setItem(`chatAnimation_${chat.id}`, animation);
                 localStorage.setItem(`chatOpacity_${chat.id}`, (opacity || 80).toString());
               } else {
                 localStorage.removeItem(`chatBackground_${chat.id}`);
-                localStorage.removeItem(`chatAnimation_${chat.id}`);
                 localStorage.removeItem(`chatOpacity_${chat.id}`);
               }
               setChatBackground(background);
-              setChatAnimation(animation);
               setChatOpacity(opacity || 80);
               setShowBackgroundModal(false);
             }
