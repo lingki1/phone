@@ -94,6 +94,35 @@ export class CharacterCardParser {
         }
       }
 
+      // 尝试从 JSON 格式的元数据中提取 ccv3 字段
+      for (const chunk of textChunks) {
+        try {
+          const jsonData = JSON.parse(chunk.text);
+          if (jsonData.ccv3) {
+            console.log(`找到 ccv3 字段，长度: ${jsonData.ccv3.length}`);
+            return jsonData.ccv3;
+          }
+          if (jsonData.chara) {
+            console.log(`找到 chara 字段，长度: ${jsonData.chara.length}`);
+            return jsonData.chara;
+          }
+          // 检查 ImageMagick 格式的 JSON 结构
+          if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].image && jsonData[0].image.properties) {
+            if (jsonData[0].image.properties.ccv3) {
+              console.log(`找到 ImageMagick ccv3 字段，长度: ${jsonData[0].image.properties.ccv3.length}`);
+              return jsonData[0].image.properties.ccv3;
+            }
+            if (jsonData[0].image.properties.chara) {
+              console.log(`找到 ImageMagick chara 字段，长度: ${jsonData[0].image.properties.chara.length}`);
+              return jsonData[0].image.properties.chara;
+            }
+          }
+        } catch {
+          // 不是有效的 JSON，继续查找
+          continue;
+        }
+      }
+
       // 如果没有找到标准键名，尝试查找包含 JSON 数据的块
       for (const chunk of textChunks) {
         if (chunk.text.trim().startsWith('{') || chunk.text.trim().startsWith('eyJ')) {
@@ -239,11 +268,16 @@ export class CharacterCardParser {
       
       console.log('解析到的角色数据:', character);
       
-      // 处理 SillyTavern v2 格式
+      // 处理 SillyTavern v2 和 CCV3 格式
       let characterData: Record<string, unknown> = character;
-      if (character.data && character.spec === 'chara_card_v2') {
-        console.log('检测到 SillyTavern v2 格式，提取 data 字段');
-        characterData = character.data as Record<string, unknown>;
+      if (character.data) {
+        if (character.spec === 'chara_card_v2') {
+          console.log('检测到 SillyTavern v2 格式，提取 data 字段');
+          characterData = character.data as Record<string, unknown>;
+        } else if (character.spec === 'chara_card_v3') {
+          console.log('检测到 CCV3 格式，提取 data 字段');
+          characterData = character.data as Record<string, unknown>;
+        }
       }
       
       console.log('实际角色数据:', characterData);
