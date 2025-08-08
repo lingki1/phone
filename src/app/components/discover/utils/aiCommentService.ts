@@ -1,5 +1,6 @@
 // AI评论服务 - 基于API的智能评论生成
 import { dataManager } from '../../../utils/dataManager';
+import { presetManager } from '../../../utils/presetManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
 import { ApiConfig } from '../../../types/chat';
@@ -193,6 +194,15 @@ export class AiCommentService {
       })
     );
 
+    // 获取预设、为角色附加状态与物品
+    await dataManager.initDB();
+    const preset = await presetManager.getCurrentPreset();
+    const charactersWithExtras = await Promise.all(characters.map(async (char) => {
+      const status = await dataManager.getChatStatus(char.id);
+      const items = await dataManager.getTransactionsByChatId(char.id);
+      return { char, status, items };
+    }));
+
     return {
       // 当前动态信息
       currentPost: {
@@ -248,6 +258,8 @@ export class AiCommentService {
             senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
           }));
 
+        const extras = charactersWithExtras.find(x => x.char.id === char.id);
+
         return {
           id: char.id,
           name: char.name,
@@ -256,6 +268,9 @@ export class AiCommentService {
           // avatar: char.avatar,
           chatHistory: recentMessages,
           totalMessages: char.messages.length,
+          status: extras?.status || undefined,
+          // 为简洁，仅注入礼物类交易的概要（名称与数量）
+          items: (extras?.items || []).filter(tx => typeof tx.message === 'string' && tx.message.includes('gift_purchase')).slice(0, 10),
           // 添加角色在动态中的活跃度
           recentActivity: {
             postsCommented: recentPostsWithComments.filter(p => 
@@ -288,6 +303,14 @@ export class AiCommentService {
       })),
       
       // 系统上下文
+      preset: preset
+        ? {
+            name: preset.name,
+            temperature: preset.temperature,
+            maxTokens: preset.maxTokens,
+            topP: preset.topP
+          }
+        : undefined,
       context: {
         totalCharacters: characters.length,
         currentPostType: post.type,
@@ -337,7 +360,35 @@ export class AiCommentService {
     const isGemini = apiConfig.model?.includes('gemini');
     const maxTokens = isGemini ? 4000 : 3000; // 增加token数量，避免内容截断
 
-    const requestBody = {
+    // 注入预设映射为API参数
+    const currentPreset = await presetManager.getCurrentPreset();
+    type ChatRequestMessage = { role: 'system' | 'user'; content: string };
+    type ResponseFormat = { type: 'text' | 'json_object' };
+    interface ChatCompletionRequestBody {
+      model: string;
+      messages: ChatRequestMessage[];
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      frequency_penalty?: number;
+      presence_penalty?: number;
+      top_k?: number;
+      stop?: string[];
+      logit_bias?: Record<string, number>;
+      response_format?: ResponseFormat;
+      seed?: number;
+      user?: string;
+    }
+
+    const presetParams: Partial<ChatCompletionRequestBody> = currentPreset ? {
+      temperature: currentPreset.temperature,
+      max_tokens: currentPreset.maxTokens,
+      top_p: currentPreset.topP,
+      frequency_penalty: currentPreset.frequencyPenalty,
+      presence_penalty: currentPreset.presencePenalty
+    } : {};
+
+    const requestBody: ChatCompletionRequestBody = {
       model: apiConfig.model || 'gpt-3.5-turbo',
       messages: [
         {
@@ -349,12 +400,21 @@ export class AiCommentService {
           content: JSON.stringify(requestData)
         }
       ],
-      temperature: isGemini ? 0.7 : 0.7, // Gemini使用稍低的temperature
-      max_tokens: maxTokens,
-      top_p: isGemini ? 0.8 : 0.8, // Gemini使用稍低的top_p
-      frequency_penalty: 0.0,
-      presence_penalty: 0.0
+      temperature: presetParams.temperature ?? (isGemini ? 0.7 : 0.7),
+      max_tokens: presetParams.max_tokens ?? maxTokens,
+      top_p: presetParams.top_p ?? (isGemini ? 0.8 : 0.8),
+      frequency_penalty: presetParams.frequency_penalty ?? 0.0,
+      presence_penalty: presetParams.presence_penalty ?? 0.0
     };
+
+    if (currentPreset) {
+      if (currentPreset.topK !== undefined) requestBody.top_k = currentPreset.topK;
+      if (currentPreset.stopSequences?.length) requestBody.stop = currentPreset.stopSequences;
+      if (currentPreset.logitBias && Object.keys(currentPreset.logitBias).length) requestBody.logit_bias = currentPreset.logitBias;
+      if (currentPreset.responseFormat) requestBody.response_format = { type: currentPreset.responseFormat as 'text' | 'json_object' };
+      if (currentPreset.seed !== undefined) requestBody.seed = currentPreset.seed;
+      if (currentPreset.user) requestBody.user = currentPreset.user;
+    }
 
     // 检查请求体大小
     const requestBodySize = JSON.stringify(requestBody).length;
@@ -365,9 +425,9 @@ export class AiCommentService {
     console.log('💬 完整请求体:', JSON.stringify(requestBody, null, 2));
     console.log('💬 请求体keys:', Object.keys(requestBody));
     console.log('💬 模型:', requestBody.model);
-    console.log('💬 消息数量:', requestBody.messages?.length);
+    console.log('💬 消息数量:', requestBody.messages.length);
     if (requestBody.messages) {
-      requestBody.messages.forEach((msg, index) => {
+      requestBody.messages.forEach((msg: ChatRequestMessage, index: number) => {
         console.log(`💬 消息${index + 1} (${msg.role}):`, msg.content?.substring(0, 200) + (msg.content?.length > 200 ? '...' : ''));
       });
     }

@@ -1,5 +1,6 @@
 // AI动态生成器 - 基于API的智能内容生成
 import { dataManager } from '../../../utils/dataManager';
+import { presetManager } from '../../../utils/presetManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
 import { ApiConfig } from '../../../types/chat';
@@ -49,6 +50,119 @@ export class AiPostGenerator {
   // 使用统一的JSON解析器
   private strongJsonExtract(raw: string): Record<string, unknown> {
     return JsonParser.strongJsonExtract(raw);
+  }
+
+  // 获取当前预设配置（带回退）
+  private async getCurrentPreset() {
+    try {
+      await dataManager.initDB();
+    } catch {}
+    const preset = await presetManager.getCurrentPreset();
+    if (preset) return preset;
+    try {
+      return await dataManager.getDefaultPreset();
+    } catch {
+      return null;
+    }
+  }
+
+  // 根据预设构建API参数
+  private buildApiParamsFromPreset(preset: Partial<{ temperature: number; maxTokens: number; topP: number; frequencyPenalty: number; presencePenalty: number; topK?: number; stopSequences?: string[]; logitBias?: Record<string, number>; responseFormat?: 'text' | 'json_object'; seed?: number; user?: string; }>) {
+    if (!preset) return {} as {
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      frequency_penalty?: number;
+      presence_penalty?: number;
+      top_k?: number;
+      stop?: string[];
+      logit_bias?: Record<string, number>;
+      response_format?: { type: 'text' | 'json_object' };
+      seed?: number;
+      user?: string;
+    };
+    const params: {
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      frequency_penalty?: number;
+      presence_penalty?: number;
+      top_k?: number;
+      stop?: string[];
+      logit_bias?: Record<string, number>;
+      response_format?: { type: 'text' | 'json_object' };
+      seed?: number;
+      user?: string;
+    } = {
+      temperature: preset.temperature ?? 0.8,
+      max_tokens: preset.maxTokens ?? 2000,
+      top_p: preset.topP ?? 0.8,
+      frequency_penalty: preset.frequencyPenalty ?? 0.0,
+      presence_penalty: preset.presencePenalty ?? 0.0
+    };
+    if (preset.topK !== undefined) params.top_k = preset.topK;
+    if (preset.stopSequences && preset.stopSequences.length > 0) params.stop = preset.stopSequences;
+    if (preset.logitBias && Object.keys(preset.logitBias).length > 0) params.logit_bias = preset.logitBias;
+    if (preset.responseFormat) params.response_format = { type: preset.responseFormat } as { type: 'text' | 'json_object' };
+    if (preset.seed !== undefined) params.seed = preset.seed;
+    if (preset.user) params.user = preset.user;
+    return params;
+  }
+
+  // 构建物品清单（礼物等）
+  private async buildItemInventoryForChat(chatId: string) {
+    try {
+      await dataManager.initDB();
+      const transactions = await dataManager.getTransactionsByChatId(chatId);
+      type ParsedItem = {
+        id: string;
+        name: string;
+        description: string;
+        quantity: number;
+        receivedAt: number;
+        fromUser: string;
+        shippingMethod: 'instant' | 'fast' | 'slow';
+      };
+      const parsedItems: ParsedItem[] = [];
+      for (const tx of transactions) {
+        try {
+          if (!tx.message || typeof tx.message !== 'string') continue;
+          const parsed = JSON.parse(tx.message);
+          if (parsed && parsed.kind === 'gift_purchase' && Array.isArray(parsed.items)) {
+            for (const item of parsed.items) {
+              parsedItems.push({
+                id: item.productId,
+                name: item.name,
+                description: `来自${tx.fromUser}的礼物`,
+                quantity: item.quantity,
+                receivedAt: tx.timestamp,
+                fromUser: tx.fromUser,
+                shippingMethod: parsed.shippingMethod || 'instant'
+              });
+            }
+          }
+        } catch {}
+      }
+      // 合并同类项
+      const map = new Map<string, ParsedItem>();
+      for (const it of parsedItems) {
+        const key = it.id;
+        if (map.has(key)) {
+          const existed = map.get(key)!;
+          existed.quantity += it.quantity;
+          if (it.receivedAt > existed.receivedAt) {
+            existed.receivedAt = it.receivedAt;
+            existed.fromUser = it.fromUser;
+            existed.shippingMethod = it.shippingMethod;
+          }
+        } else {
+          map.set(key, { ...it });
+        }
+      }
+      return Array.from(map.values());
+    } catch {
+      return [];
+    }
   }
 
 
@@ -259,7 +373,7 @@ export class AiPostGenerator {
       const apiConfig = await dataManager.getApiConfig();
 
       // 3. 构建API请求
-      const requestData = this.buildPostRequest(character);
+      const requestData = await this.buildPostRequest(character);
 
       // 4. 调用API
       const response = await this.callApi(apiConfig, requestData);
@@ -348,7 +462,7 @@ export class AiPostGenerator {
   }
 
   // 构建动态生成API请求
-  private buildPostRequest(character: ChatItem) {
+  private async buildPostRequest(character: ChatItem) {
     // 获取最近的聊天记录（最多10条）
     const recentMessages = character.messages
       .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -360,14 +474,29 @@ export class AiPostGenerator {
         senderName: msg.senderName || (msg.role === 'user' ? '用户' : character.name)
       }));
 
+    // 注入状态与物品信息
+    await dataManager.initDB();
+    const status = await dataManager.getChatStatus(character.id);
+    const items = await this.buildItemInventoryForChat(character.id);
+    const preset = await this.getCurrentPreset();
+
     return {
       character: {
         id: character.id,
         name: character.name,
-        persona: character.persona,
-        avatar: character.avatar
+        persona: character.persona
       },
       chatHistory: recentMessages,
+      status: status || undefined,
+      items: items,
+      preset: preset
+        ? {
+            name: preset.name,
+            temperature: preset.temperature,
+            maxTokens: preset.maxTokens,
+            topP: preset.topP
+          }
+        : undefined,
       context: {
         timestamp: Date.now(),
         isPublic: true,
@@ -377,7 +506,7 @@ export class AiPostGenerator {
   }
 
   // 构建评论生成API请求
-  private buildCommentRequest(post: DiscoverPost, character: ChatItem) {
+  private async buildCommentRequest(post: DiscoverPost, character: ChatItem) {
     // 获取最近的聊天记录（最多10条）
     const recentMessages = character.messages
       .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -388,6 +517,11 @@ export class AiPostGenerator {
         timestamp: msg.timestamp,
         senderName: msg.senderName || (msg.role === 'user' ? '用户' : character.name)
       }));
+
+    await dataManager.initDB();
+    const status = await dataManager.getChatStatus(character.id);
+    const items = await this.buildItemInventoryForChat(character.id);
+    const preset = await this.getCurrentPreset();
 
     return {
       post: {
@@ -402,10 +536,19 @@ export class AiPostGenerator {
       character: {
         id: character.id,
         name: character.name,
-        persona: character.persona,
-        avatar: character.avatar
+        persona: character.persona
       },
       chatHistory: recentMessages,
+      status: status || undefined,
+      items: items,
+      preset: preset
+        ? {
+            name: preset.name,
+            temperature: preset.temperature,
+            maxTokens: preset.maxTokens,
+            topP: preset.topP
+          }
+        : undefined,
       context: {
         postType: post.type,
         isPublic: post.isPublic,
@@ -428,7 +571,7 @@ export class AiPostGenerator {
         authorName: post.authorName
       }));
 
-    const charactersWithHistory = characters.map(char => {
+    const charactersWithHistory = await Promise.all(characters.map(async (char) => {
       // 减少聊天历史数据量
       const recentMessages = char.messages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -439,6 +582,8 @@ export class AiPostGenerator {
           senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
         }));
 
+      const status = await dataManager.getChatStatus(char.id);
+
       return {
         id: char.id,
         name: char.name,
@@ -446,17 +591,34 @@ export class AiPostGenerator {
         // 不传输头像数据，避免请求体过大
         // avatar: char.avatar,
         chatHistory: recentMessages,
-        totalMessages: char.messages.length
+        totalMessages: char.messages.length,
+        status: status || undefined
       };
-    });
+    }));
 
     // 随机选择一个角色作为发布者
     const selectedCharacter = charactersWithHistory[Math.floor(Math.random() * charactersWithHistory.length)];
+
+    const preset = await this.getCurrentPreset();
+
+    // 为选定角色补充物品信息
+    const selectedStatus = await dataManager.getChatStatus(selectedCharacter.id);
+    const selectedItems = await this.buildItemInventoryForChat(selectedCharacter.id);
 
     return {
       selectedCharacter: selectedCharacter, // 明确指定发布角色
       allCharacters: charactersWithHistory, // 所有角色用于生成评论
       recentPosts: recentPosts,
+      preset: preset
+        ? {
+            name: preset.name,
+            temperature: preset.temperature,
+            maxTokens: preset.maxTokens,
+            topP: preset.topP
+          }
+        : undefined,
+      status: selectedStatus || undefined,
+      items: selectedItems,
       context: {
         timestamp: Date.now(),
         totalCharacters: characters.length
@@ -477,7 +639,7 @@ export class AiPostGenerator {
         authorName: post.authorName
       }));
 
-    const charactersWithHistory = characters.map(char => {
+    const charactersWithHistory = await Promise.all(characters.map(async (char) => {
       // 减少聊天历史数据量
       const recentMessages = char.messages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -488,6 +650,8 @@ export class AiPostGenerator {
           senderName: msg.senderName || (msg.role === 'user' ? '用户' : char.name)
         }));
 
+      const status = await dataManager.getChatStatus(char.id);
+
       return {
         id: char.id,
         name: char.name,
@@ -495,9 +659,12 @@ export class AiPostGenerator {
         // 不传输头像数据，避免请求体过大
         // avatar: char.avatar,
         chatHistory: recentMessages,
-        totalMessages: char.messages.length
+        totalMessages: char.messages.length,
+        status: status || undefined
       };
-    });
+    }));
+
+    const preset = await this.getCurrentPreset();
 
     return {
       characters: charactersWithHistory,
@@ -507,6 +674,14 @@ export class AiPostGenerator {
         maxPostLength: 200,
         maxCommentLength: 50
       },
+      preset: preset
+        ? {
+            name: preset.name,
+            temperature: preset.temperature,
+            maxTokens: preset.maxTokens,
+            topP: preset.topP
+          }
+        : undefined,
       context: {
         timestamp: Date.now(),
         totalCharacters: characters.length,
@@ -561,8 +736,27 @@ export class AiPostGenerator {
     // 根据模型调整参数
     const isGemini = apiConfig.model?.includes('gemini');
     const maxTokens = isGemini ? 8000 : (isBatch ? 6000 : 5000); // 增加token数量，避免内容截断
+    const currentPreset = await this.getCurrentPreset();
+    const presetParams = this.buildApiParamsFromPreset(currentPreset || {});
     
-    const requestBody = {
+    type ChatRequestMessage = { role: 'system' | 'user'; content: string };
+    interface ChatCompletionRequestBody {
+      model: string;
+      messages: ChatRequestMessage[];
+      temperature?: number;
+      max_tokens?: number;
+      top_p?: number;
+      frequency_penalty?: number;
+      presence_penalty?: number;
+      top_k?: number;
+      stop?: string[];
+      logit_bias?: Record<string, number>;
+      response_format?: { type: 'text' | 'json_object' };
+      seed?: number;
+      user?: string;
+    }
+
+    const requestBody: ChatCompletionRequestBody = {
       model: apiConfig.model || 'gpt-3.5-turbo',
       messages: [
         {
@@ -574,12 +768,20 @@ export class AiPostGenerator {
           content: JSON.stringify(requestData)
         }
       ],
-      temperature: isGemini ? 0.7 : 0.8, // Gemini使用稍低的temperature
-      max_tokens: maxTokens,
-      top_p: isGemini ? 0.8 : 0.9, // Gemini使用稍低的top_p
-      frequency_penalty: 0.1,
-      presence_penalty: 0.1
+      temperature: presetParams.temperature ?? (isGemini ? 0.7 : 0.8),
+      max_tokens: presetParams.max_tokens ?? maxTokens,
+      top_p: presetParams.top_p ?? (isGemini ? 0.8 : 0.9),
+      frequency_penalty: presetParams.frequency_penalty ?? 0.1,
+      presence_penalty: presetParams.presence_penalty ?? 0.1
     };
+
+    // 可选API参数
+    if ((presetParams as { top_k?: number }).top_k !== undefined) requestBody.top_k = (presetParams as { top_k?: number }).top_k;
+    if ((presetParams as { stop?: string[] }).stop) requestBody.stop = (presetParams as { stop?: string[] }).stop;
+    if (presetParams.logit_bias) requestBody.logit_bias = presetParams.logit_bias as Record<string, number>;
+    if (presetParams.response_format) requestBody.response_format = presetParams.response_format as { type: 'text' | 'json_object' };
+    if (presetParams.seed !== undefined) requestBody.seed = presetParams.seed as number;
+    if (presetParams.user) requestBody.user = presetParams.user as string;
 
     // 检查请求体大小
     const requestBodySize = JSON.stringify(requestBody).length;
@@ -590,9 +792,9 @@ export class AiPostGenerator {
     console.log('📤 完整请求体:', JSON.stringify(requestBody, null, 2));
     console.log('📤 请求体keys:', Object.keys(requestBody));
     console.log('📤 模型:', requestBody.model);
-    console.log('📤 消息数量:', requestBody.messages?.length);
+    console.log('📤 消息数量:', requestBody.messages.length);
     if (requestBody.messages) {
-      requestBody.messages.forEach((msg, index) => {
+      requestBody.messages.forEach((msg: ChatRequestMessage, index: number) => {
         console.log(`📤 消息${index + 1} (${msg.role}):`, msg.content?.substring(0, 200) + (msg.content?.length > 200 ? '...' : ''));
       });
     }

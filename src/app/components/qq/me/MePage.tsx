@@ -94,6 +94,84 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     };
   }, []);
 
+  // 监听数据导入和清空事件
+  useEffect(() => {
+    const handleDataImported = async () => {
+      try {
+        console.log('MePage - 检测到数据导入事件，刷新页面数据...');
+        setIsLoading(true);
+        
+        // 重新加载所有数据
+        await dataManager.initDB();
+        
+        // 重新加载个人信息
+        const settings = await dataManager.getPersonalSettings();
+        setPersonalSettings(settings);
+        
+        // 重新加载余额
+        const userBalance = await dataManager.getBalance();
+        setBalance(userBalance);
+        
+        // 重新加载API配置
+        try {
+          const savedApiConfig = await dataManager.getApiConfig();
+          setApiConfig(savedApiConfig);
+        } catch (error) {
+          console.error('Failed to reload API config after import:', error);
+        }
+        
+        // 重新加载新内容计数
+        const { newPostsCount, newCommentsCount } = await dataManager.calculateNewContentCount('user');
+        setNewContentCount({
+          moments: newPostsCount + newCommentsCount
+        });
+        
+        console.log('MePage - 数据导入后刷新完成');
+      } catch (error) {
+        console.error('Failed to refresh data after import:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleDataCleared = async () => {
+      try {
+        console.log('MePage - 检测到数据清空事件，重置页面数据...');
+        setIsLoading(true);
+        
+        // 重置所有数据到默认状态
+        setPersonalSettings({
+          userAvatar: '/avatars/user-avatar.svg',
+          userNickname: '用户',
+          userBio: ''
+        });
+        
+        setBalance(0);
+        setApiConfig({
+          proxyUrl: '',
+          apiKey: '',
+          model: ''
+        });
+        
+        setNewContentCount({});
+        
+        console.log('MePage - 数据清空后重置完成');
+      } catch (error) {
+        console.error('Failed to reset data after clear:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    window.addEventListener('dataImported', handleDataImported);
+    window.addEventListener('dataCleared', handleDataCleared);
+    
+    return () => {
+      window.removeEventListener('dataImported', handleDataImported);
+      window.removeEventListener('dataCleared', handleDataCleared);
+    };
+  }, []);
+
   // 加载个人信息和余额
   useEffect(() => {
     const loadData = async () => {

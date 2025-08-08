@@ -22,6 +22,17 @@ interface BackupData {
   };
   balance: number;
   transactions: TransactionRecord[];
+  giftRecords: Array<{
+    id: string;
+    type: 'send' | 'receive';
+    amount: number;
+    chatId: string;
+    fromUser: string;
+    toUser: string;
+    message?: string;
+    timestamp: number;
+    status: 'pending' | 'completed' | 'failed';
+  }>;
   worldBooks: WorldBook[];
   presets: PresetConfig[];
   chatStatuses: Array<{
@@ -98,6 +109,36 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
       setCurrentOperation('正在收集交易记录...');
 
       const transactions = await dataManager.getTransactionHistory();
+      setExportProgress(65);
+      setCurrentOperation('正在收集送礼记录...');
+
+      // 收集所有聊天的送礼记录
+      const giftRecords: Array<{
+        id: string;
+        type: 'send' | 'receive';
+        amount: number;
+        chatId: string;
+        fromUser: string;
+        toUser: string;
+        message?: string;
+        timestamp: number;
+        status: 'pending' | 'completed' | 'failed';
+      }> = [];
+      
+      for (const chat of chats) {
+        try {
+          const chatTransactions = await dataManager.getTransactionsByChatId(chat.id);
+          // 过滤出送礼相关的交易记录
+          const giftTransactions = chatTransactions.filter(tx => 
+            tx.message && typeof tx.message === 'string' && 
+            (tx.message.includes('gift_purchase') || tx.message.includes('gift'))
+          );
+          giftRecords.push(...giftTransactions);
+        } catch (error) {
+          console.warn(`Failed to get gift records for chat ${chat.id}:`, error);
+        }
+      }
+
       setExportProgress(70);
       setCurrentOperation('正在收集世界书...');
 
@@ -147,7 +188,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
 
       const discoverDrafts = await dataManager.getAllDiscoverDrafts();
       
-      setExportProgress(93);
+      setExportProgress(95);
       setCurrentOperation('正在生成导出文件...');
 
       // 构建导出数据
@@ -158,6 +199,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         themeSettings,
         balance,
         transactions,
+        giftRecords, // 新增送礼记录
         worldBooks,
         presets,
         chatStatuses: [], // 暂时为空，后续可以扩展
@@ -168,7 +210,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         discoverNotifications,
         discoverDrafts,
         exportTime: new Date().toISOString(),
-        version: '1.5'
+        version: '1.6' // 更新版本号
       };
 
       // 创建并下载文件
@@ -231,7 +273,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入聊天数据...');
         for (let i = 0; i < importData.chats.length; i++) {
           await dataManager.saveChat(importData.chats[i]);
-          setImportProgress(30 + (i / importData.chats.length) * 20);
+          setImportProgress(30 + (i / importData.chats.length) * 15);
         }
       }
 
@@ -240,35 +282,44 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入API配置...');
         await dataManager.saveApiConfig(importData.apiConfig);
       }
-      setImportProgress(55);
+      setImportProgress(50);
 
       // 导入个人信息
       if (importData.personalSettings) {
         setCurrentOperation('正在导入个人信息...');
         await dataManager.savePersonalSettings(importData.personalSettings);
       }
-      setImportProgress(60);
+      setImportProgress(55);
 
       // 导入主题设置
       if (importData.themeSettings) {
         setCurrentOperation('正在导入主题设置...');
         await dataManager.saveThemeSettings(importData.themeSettings);
       }
-      setImportProgress(65);
+      setImportProgress(60);
 
       // 导入余额
       if (typeof importData.balance === 'number') {
         setCurrentOperation('正在导入余额信息...');
         await dataManager.saveBalance(importData.balance);
       }
-      setImportProgress(70);
+      setImportProgress(65);
 
       // 导入交易记录
       if (importData.transactions && Array.isArray(importData.transactions)) {
         setCurrentOperation('正在导入交易记录...');
         for (let i = 0; i < importData.transactions.length; i++) {
           await dataManager.addTransaction(importData.transactions[i]);
-          setImportProgress(70 + (i / importData.transactions.length) * 10);
+          setImportProgress(65 + (i / importData.transactions.length) * 5);
+        }
+      }
+
+      // 导入送礼记录（新增）
+      if (importData.giftRecords && Array.isArray(importData.giftRecords)) {
+        setCurrentOperation('正在导入送礼记录...');
+        for (let i = 0; i < importData.giftRecords.length; i++) {
+          await dataManager.addTransaction(importData.giftRecords[i]);
+          setImportProgress(70 + (i / importData.giftRecords.length) * 5);
         }
       }
 
@@ -277,7 +328,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入世界书...');
         for (let i = 0; i < importData.worldBooks.length; i++) {
           await dataManager.saveWorldBook(importData.worldBooks[i]);
-          setImportProgress(80 + (i / importData.worldBooks.length) * 10);
+          setImportProgress(75 + (i / importData.worldBooks.length) * 5);
         }
       }
 
@@ -286,7 +337,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入预设配置...');
         for (let i = 0; i < importData.presets.length; i++) {
           await dataManager.savePreset(importData.presets[i]);
-          setImportProgress(85 + (i / importData.presets.length) * 5);
+          setImportProgress(80 + (i / importData.presets.length) * 5);
         }
       }
 
@@ -295,7 +346,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态数据...');
         for (let i = 0; i < importData.discoverPosts.length; i++) {
           await dataManager.saveDiscoverPost(importData.discoverPosts[i]);
-          setImportProgress(90 + (i / importData.discoverPosts.length) * 2);
+          setImportProgress(85 + (i / importData.discoverPosts.length) * 2);
         }
       }
 
@@ -304,7 +355,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态评论...');
         for (let i = 0; i < importData.discoverComments.length; i++) {
           await dataManager.saveDiscoverComment(importData.discoverComments[i]);
-          setImportProgress(92 + (i / importData.discoverComments.length) * 2);
+          setImportProgress(87 + (i / importData.discoverComments.length) * 2);
         }
       }
 
@@ -313,14 +364,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态设置...');
         await dataManager.saveDiscoverSettings(importData.discoverSettings);
       }
-      setImportProgress(94);
+      setImportProgress(90);
 
       // 导入动态通知
       if (importData.discoverNotifications && Array.isArray(importData.discoverNotifications)) {
         setCurrentOperation('正在导入动态通知...');
         for (let i = 0; i < importData.discoverNotifications.length; i++) {
           await dataManager.saveDiscoverNotification(importData.discoverNotifications[i]);
-          setImportProgress(94 + (i / importData.discoverNotifications.length) * 2);
+          setImportProgress(90 + (i / importData.discoverNotifications.length) * 2);
         }
       }
 
@@ -329,18 +380,23 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入动态草稿...');
         for (let i = 0; i < importData.discoverDrafts.length; i++) {
           await dataManager.saveDiscoverDraft(importData.discoverDrafts[i]);
-          setImportProgress(96 + (i / importData.discoverDrafts.length) * 2);
+          setImportProgress(92 + (i / importData.discoverDrafts.length) * 2);
         }
       }
 
       setImportProgress(100);
       setCurrentOperation('导入完成！');
-      setSuccess('数据导入成功！页面将在3秒后刷新以应用更改。');
+      setSuccess('数据导入成功！');
 
-      // 延迟刷新页面
+      // 触发全局事件，通知其他组件刷新数据
+      window.dispatchEvent(new CustomEvent('dataImported'));
+
+      // 延迟关闭
       setTimeout(() => {
-        window.location.reload();
-      }, 3000);
+        setIsImporting(false);
+        setSuccess(null);
+        onClose();
+      }, 2000);
 
     } catch (error) {
       console.error('Import failed:', error);
@@ -349,42 +405,34 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
     }
   };
 
-  // 处理文件选择
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-        setError('请选择JSON格式的文件');
-        return;
-      }
       handleImportData(file);
     }
   };
 
-  // 触发文件选择
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
   };
 
-  // 清空所有数据
   const handleClearAllData = async () => {
-    if (!confirm('⚠️ 警告：此操作将清空所有数据，包括聊天记录、设置、余额等，此操作不可恢复！\n\n确定要继续吗？')) {
-      return;
-    }
-
-    if (!confirm('最后确认：您真的要清空所有数据吗？此操作不可恢复！')) {
+    if (!confirm('确定要清空所有数据吗？此操作不可恢复！')) {
       return;
     }
 
     try {
       setCurrentOperation('正在清空数据...');
-      await dataManager.initDB();
       await dataManager.clearAllData();
-      setSuccess('所有数据已清空！页面将在3秒后刷新。');
+      setSuccess('所有数据已清空！');
+      
+      // 触发全局事件，通知其他组件刷新数据
+      window.dispatchEvent(new CustomEvent('dataCleared'));
       
       setTimeout(() => {
-        window.location.reload();
-      }, 3000);
+        setSuccess(null);
+        onClose();
+      }, 2000);
     } catch (error) {
       console.error('Clear data failed:', error);
       setError(`清空数据失败: ${error instanceof Error ? error.message : '未知错误'}`);
@@ -392,119 +440,95 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
   };
 
   return (
-    <div className="data-backup-manager theme-transition">
-      <div className="backup-content">
+    <div className="backup-overlay" onClick={onClose}>
+      <div className="backup-modal" onClick={(e) => e.stopPropagation()}>
         <div className="backup-header">
           <h2>数据备份管理</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        {/* 错误和成功提示 */}
-        {error && (
-          <div className="error-message">
-            <span>❌ {error}</span>
-            <button onClick={() => setError(null)}>×</button>
-          </div>
-        )}
-
-        {success && (
-          <div className="success-message">
-            <span>✅ {success}</span>
-          </div>
-        )}
-
-        {/* 进度条 */}
-        {(isExporting || isImporting) && (
-          <div className="progress-section">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${isExporting ? exportProgress : importProgress}%` }}
-              ></div>
+        <div className="backup-content">
+          {error && (
+            <div className="error-message">
+              {error}
             </div>
-            <div className="progress-text">{currentOperation}</div>
-          </div>
-        )}
+          )}
 
-        {/* 操作按钮 */}
-        <div className="backup-actions">
-          <div className="action-group">
-            <h3>📤 导出数据</h3>
-            <p>将所有数据导出为JSON文件，包括：</p>
-            <ul>
-              <li>所有聊天记录和角色人设</li>
-              <li>群聊数据</li>
-              <li>API配置</li>
-              <li>个人信息和头像</li>
-              <li>余额和交易记录</li>
-              <li>世界书</li>
-              <li>预设配置</li>
-              <li>主题设置</li>
-              <li>动态内容和评论</li>
-              <li>动态设置和通知</li>
-              <li>动态草稿</li>
-            </ul>
-            <button 
-              className="export-btn"
-              onClick={handleExportData}
-              disabled={isExporting || isImporting}
-            >
-              {isExporting ? '导出中...' : '导出所有数据'}
-            </button>
-          </div>
-
-          <div className="action-group">
-            <h3>📥 导入数据</h3>
-            <p>从JSON文件导入数据，将覆盖现有数据：</p>
-            <ul>
-              <li>支持从其他设备导出的备份文件</li>
-              <li>导入前请确保已备份重要数据</li>
-              <li>导入完成后页面将自动刷新</li>
-            </ul>
-            <button 
-              className="import-btn"
-              onClick={triggerFileSelect}
-              disabled={isExporting || isImporting}
-            >
-              {isImporting ? '导入中...' : '选择文件导入'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-            />
-          </div>
-
-          <div className="action-group danger-zone">
-            <h3>⚠️ 危险操作</h3>
-            <p>清空所有数据，此操作不可恢复：</p>
-            <button 
-              className="clear-btn"
-              onClick={handleClearAllData}
-              disabled={isExporting || isImporting}
-            >
-              清空所有数据
-            </button>
-          </div>
-        </div>
-
-        {/* 使用说明 */}
-        <div className="backup-help">
-          <h3>💡 使用说明</h3>
-          <div className="help-content">
-            <div className="help-item">
-              <strong>导出数据：</strong>
-              <p>点击&ldquo;导出所有数据&rdquo;按钮，系统会自动下载一个包含所有数据的JSON文件。建议定期导出备份重要数据。</p>
+          {success && (
+            <div className="success-message">
+              {success}
             </div>
-            <div className="help-item">
-              <strong>导入数据：</strong>
-              <p>点击&ldquo;选择文件导入&rdquo;按钮，选择之前导出的JSON文件。导入将覆盖现有数据，请谨慎操作。</p>
+          )}
+
+          <div className="backup-actions">
+            <div className="action-section">
+              <h3>导出数据</h3>
+              <p>将所有数据导出为JSON文件，包括聊天记录、设置、送礼记录等</p>
+              <button 
+                className="export-btn"
+                onClick={handleExportData}
+                disabled={isExporting || isImporting}
+              >
+                {isExporting ? '导出中...' : '导出数据'}
+              </button>
+              
+              {isExporting && (
+                <div className="progress-container">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${exportProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">{currentOperation}</div>
+                  <div className="progress-percentage">{Math.round(exportProgress)}%</div>
+                </div>
+              )}
             </div>
-            <div className="help-item">
-              <strong>数据安全：</strong>
-              <p>导出的文件包含敏感信息，请妥善保管，不要分享给他人。建议在安全的环境下进行导入操作。</p>
+
+            <div className="action-section">
+              <h3>导入数据</h3>
+              <p>从备份文件中恢复所有数据，将覆盖当前数据</p>
+              <button 
+                className="import-btn"
+                onClick={triggerFileSelect}
+                disabled={isExporting || isImporting}
+              >
+                {isImporting ? '导入中...' : '选择文件导入'}
+              </button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              
+              {isImporting && (
+                <div className="progress-container">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${importProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">{currentOperation}</div>
+                  <div className="progress-percentage">{Math.round(importProgress)}%</div>
+                </div>
+              )}
+            </div>
+
+            <div className="action-section danger-zone">
+              <h3>危险操作</h3>
+              <p>清空所有数据，此操作不可恢复</p>
+              <button 
+                className="clear-btn"
+                onClick={handleClearAllData}
+                disabled={isExporting || isImporting}
+              >
+                清空所有数据
+              </button>
             </div>
           </div>
         </div>

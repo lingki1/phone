@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import type { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { useCurrentTheme } from '../../../hooks/useTheme';
+import './GiftHistory.css';
 
 interface GiftRecord {
   id: string;
@@ -23,6 +25,8 @@ interface GiftHistoryProps {
 export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps) {
   const [gifts, setGifts] = useState<GiftRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { currentThemeObject } = useCurrentTheme();
+  void currentThemeObject; // avoid unused var warning
 
   useEffect(() => {
     const loadGifts = async () => {
@@ -57,55 +61,110 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
 
   if (!isOpen) return null;
 
+  const getShippingMethodText = (method?: string) => {
+    switch (method) {
+      case 'instant': return '极速立刻';
+      case 'fast': return '快速1分钟';
+      case 'slow': return '慢速10分钟';
+      default: return '标准配送';
+    }
+  };
+
+  const getShippingMethodColor = (method?: string) => {
+    switch (method) {
+      case 'instant': return '#ff4757';
+      case 'fast': return '#ffa502';
+      case 'slow': return '#2ed573';
+      default: return '#747d8c';
+    }
+  };
+
   return (
     <div className="gift-history-overlay" onClick={onClose}>
       <div className="gift-history-modal" onClick={(e) => e.stopPropagation()}>
         <div className="gift-history-header">
-          <h3>礼物记录</h3>
-          <button onClick={onClose}>×</button>
+          <div className="gift-history-title">
+            <div className="gift-icon">🎁</div>
+            <h3>礼物记录</h3>
+            <span className="gift-count">{gifts.length} 条记录</span>
+          </div>
+          <button className="close-button" onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
+        
         <div className="gift-history-content">
           {isLoading ? (
-            <div>加载中...</div>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>正在加载礼物记录...</p>
+            </div>
           ) : gifts.length === 0 ? (
-            <div>暂无礼物记录</div>
+            <div className="empty-state">
+              <div className="empty-icon">🎁</div>
+              <h4>暂无礼物记录</h4>
+              <p>这里会显示您收到的所有礼物</p>
+            </div>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {gifts.map(g => (
-                <li key={g.id} style={{
-                  padding: '10px 12px',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>
-                      <strong>{g.fromUser}</strong> 赠送给 <strong>{g.toUser}</strong>
-                    </span>
-                    <span style={{ color: '#f60' }}>¥{g.amount.toFixed(2)}</span>
+            <div className="gift-list">
+              {gifts.map((gift, index) => (
+                <div key={gift.id} className="gift-card" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="gift-header">
+                    <div className="gift-users">
+                      <span className="from-user">{gift.fromUser}</span>
+                      <div className="gift-arrow">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </div>
+                      <span className="to-user">{gift.toUser}</span>
+                    </div>
+                    <div className="gift-amount">
+                      <span className="amount-symbol">¥</span>
+                      <span className="amount-value">{gift.amount.toFixed(2)}</span>
+                    </div>
                   </div>
-                  {g.items && g.items.length > 0 && (
-                    <div style={{ marginTop: 6, color: '#555' }}>
-                      {g.items.map((it, idx) => (
-                        <div key={idx}>
-                          {it.name} × {it.quantity}（¥{it.unitPrice.toFixed(2)}）
+                  
+                  {gift.items && gift.items.length > 0 && (
+                    <div className="gift-items">
+                      {gift.items.map((item, idx) => (
+                        <div key={idx} className="gift-item">
+                          <span className="item-name">{item.name}</span>
+                          <span className="item-quantity">× {item.quantity}</span>
+                          <span className="item-price">¥{item.unitPrice.toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div style={{ marginTop: 6, fontSize: 12, color: '#888' }}>
-                    配送：{g.shippingMethod === 'instant' ? '极速立刻' : g.shippingMethod === 'fast' ? '快速1分钟' : '慢速10分钟'} · {new Date(g.timestamp).toLocaleString('zh-CN')}
+                  
+                  <div className="gift-footer">
+                    <div className="shipping-info">
+                      <span 
+                        className="shipping-method"
+                        style={{ color: getShippingMethodColor(gift.shippingMethod) }}
+                      >
+                        {getShippingMethodText(gift.shippingMethod)}
+                      </span>
+                    </div>
+                    <div className="gift-time">
+                      {new Date(gift.timestamp).toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </div>
-      <style jsx>{`
-        .gift-history-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index: 1000; }
-        .gift-history-modal { width: 520px; max-width: 92vw; background:#fff; border-radius:10px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
-        .gift-history-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eee; }
-        .gift-history-content { padding: 12px 14px; max-height: 60vh; overflow:auto; }
-      `}</style>
     </div>
   );
 }
