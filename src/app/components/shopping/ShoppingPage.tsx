@@ -5,6 +5,7 @@ import { Product, ShoppingCart, CartItem } from '../../types/shopping';
 import { ProductGenerator } from './ProductGenerator';
 import ProductCard from './ProductCard';
 import ShoppingCartComponent from './ShoppingCart';
+import { useTheme } from '../../hooks/useTheme';
 import './ShoppingPage.css';
 
 interface ApiConfig {
@@ -19,6 +20,7 @@ interface ShoppingPageProps {
 }
 
 export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
+  const { currentTheme, currentThemeObject } = useTheme(); // 移除未使用的变量
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<ShoppingCart>({
     items: [],
@@ -29,116 +31,189 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCart, setShowCart] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'default' | 'price' | 'rating' | 'newest'>('default');
+  const [aiGeneratedCount, setAiGeneratedCount] = useState(0);
+  // 移除未使用的presetCount变量
 
   const productGenerator = useMemo(() => new ProductGenerator(apiConfig), [apiConfig]);
 
-  // 初始化：生成商品
+  // 应用主题到页面
+  useEffect(() => {
+    if (currentThemeObject) {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+    }
+  }, [currentTheme, currentThemeObject]);
+
+  // 初始化：加载预设商品
   useEffect(() => {
     const initProducts = async () => {
-      if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
-        setIsLoading(false);
-        return;
-      }
-
-      setIsGenerating(true);
+      setIsLoading(true);
       try {
-        const generatedProducts = await productGenerator.generateProductsFromAllChats();
-        setProducts(generatedProducts);
+        // 加载预设商品
+        const presetProducts = await productGenerator.getPresetProducts();
+        setProducts(presetProducts);
+        setAiGeneratedCount(0);
       } catch (error) {
-        console.error('生成商品失败:', error);
-        // 如果生成失败，使用示例商品
-        setProducts(getSampleProducts());
+        console.error('加载预设商品失败:', error);
+        setProducts([]);
       } finally {
         setIsLoading(false);
-        setIsGenerating(false);
       }
     };
 
     initProducts();
-  }, [apiConfig, productGenerator]);
+  }, [productGenerator]);
 
-  // 生成商品
-  const generateProducts = async () => {
+  // 搜索处理函数
+  const handleSearch = async (searchValue: string) => {
+    setSearchTerm(searchValue);
+    
+    if (!searchValue.trim()) {
+      // 如果搜索词为空，只显示预设商品
+      const presetProducts = await productGenerator.getPresetProducts();
+      setProducts(presetProducts);
+      setAiGeneratedCount(0);
+      return;
+    }
+
+    // 如果搜索词不为空，保留现有的AI生成商品，只过滤预设商品
+    const presetProducts = await productGenerator.getPresetProducts();
+    const matchingPreset = presetProducts.filter(product =>
+      product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchValue.toLowerCase()) ||
+      product.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
+    );
+
+    // 获取当前的AI生成商品
+    const currentAiProducts = productGenerator.getAiGeneratedProducts();
+    
+    console.log('🔍 搜索处理 - 保留AI商品:', {
+      searchValue,
+      matchingPresetCount: matchingPreset.length,
+      currentAiProductsCount: currentAiProducts.length,
+      totalProducts: matchingPreset.length + currentAiProducts.length
+    });
+    
+    // 合并预设商品和AI生成商品，但不清除AI生成商品
+    setProducts([...matchingPreset, ...currentAiProducts]);
+    // 不清除AI生成商品计数，保持现有状态
+  };
+
+  // 执行AI搜索生成
+  const executeAiSearch = async () => {
+    if (!searchTerm.trim()) {
+      alert('请先输入搜索词');
+      return;
+    }
+
+    // 添加API配置调试信息
+    console.log('🔍 购物搜索 - API配置检查:', {
+      proxyUrl: apiConfig.proxyUrl,
+      apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+      model: apiConfig.model,
+      hasAllConfig: !!(apiConfig.proxyUrl && apiConfig.apiKey && apiConfig.model)
+    });
+
+    // 检查API配置是否完整
     if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
-      setIsLoading(false);
+      alert('API配置不完整，请先在设置中配置代理地址、API密钥和模型名称。');
       return;
     }
 
     setIsGenerating(true);
     try {
-      const generatedProducts = await productGenerator.generateProductsFromAllChats();
-      setProducts(generatedProducts);
+      // 清除之前的AI生成商品
+      productGenerator.clearAiGeneratedProducts();
+      
+      // 执行AI生成
+      const aiProducts = await productGenerator.generateProductsForSearch(searchTerm, 8);
+      
+      if (aiProducts.length > 0) {
+        // 获取预设商品中匹配的结果
+        const presetProducts = await productGenerator.getPresetProducts();
+        const matchingPreset = presetProducts.filter(product =>
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
+        // 合并预设商品和AI生成商品
+        setProducts([...matchingPreset, ...aiProducts]);
+        setAiGeneratedCount(aiProducts.length);
+      } else {
+        alert('AI生成商品失败，请重试');
+      }
     } catch (error) {
-      console.error('生成商品失败:', error);
-      // 如果生成失败，使用示例商品
-      setProducts(getSampleProducts());
+      console.error('AI搜索生成失败:', error);
+      alert('AI搜索生成失败，请检查网络连接或稍后重试');
     } finally {
-      setIsLoading(false);
       setIsGenerating(false);
     }
   };
 
-  // 示例商品（当AI生成失败时使用）
-  const getSampleProducts = (): Product[] => {
-    return [
-      {
-        id: 'sample_1',
-        name: '智能手表',
-        description: '功能强大的智能手表，支持健康监测和运动追踪',
-        price: 299.99,
-        originalPrice: 399.99,
-        image: '📦',
-        category: '电子产品',
-        tags: ['智能', '健康', '运动'],
-        rating: 4.5,
-        reviewCount: 128,
-        stock: 50,
-        isOnSale: true,
-        discountPercentage: 25,
-        createdAt: Date.now(),
-        relatedChatIds: [],
-        generatedFrom: '基于用户兴趣：科技产品'
-      },
-      {
-        id: 'sample_2',
-        name: '无线耳机',
-        description: '高品质无线蓝牙耳机，音质清晰，续航持久',
-        price: 199.99,
-        originalPrice: 249.99,
-        image: '📦',
-        category: '电子产品',
-        tags: ['无线', '蓝牙', '音质'],
-        rating: 4.3,
-        reviewCount: 89,
-        stock: 30,
-        isOnSale: true,
-        discountPercentage: 20,
-        createdAt: Date.now(),
-        relatedChatIds: [],
-        generatedFrom: '基于用户兴趣：音乐设备'
-      },
-      {
-        id: 'sample_3',
-        name: '咖啡机',
-        description: '全自动咖啡机，一键制作美味咖啡',
-        price: 599.99,
-        originalPrice: 699.99,
-        image: '📦',
-        category: '家用电器',
-        tags: ['咖啡', '自动', '家用'],
-        rating: 4.7,
-        reviewCount: 256,
-        stock: 15,
-        isOnSale: true,
-        discountPercentage: 14,
-        createdAt: Date.now(),
-        relatedChatIds: [],
-        generatedFrom: '基于用户兴趣：咖啡文化'
+  // 清除AI生成商品
+  const clearAiGeneratedProducts = async () => {
+    productGenerator.clearAiGeneratedProducts();
+    const presetProducts = await productGenerator.getPresetProducts();
+    setProducts(presetProducts);
+    setAiGeneratedCount(0);
+  };
+
+  // 重新生成AI商品
+  const regenerateAiProducts = async () => {
+    if (!searchTerm.trim()) {
+      alert('请先输入搜索词');
+      return;
+    }
+
+    // 检查API配置是否完整
+    if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
+      alert('API配置不完整，请先在设置中配置代理地址、API密钥和模型名称。');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      // 清除之前的AI生成商品
+      productGenerator.clearAiGeneratedProducts();
+      
+      // 重新生成
+      const aiProducts = await productGenerator.generateProductsForSearch(searchTerm, 8);
+      const presetProducts = await productGenerator.getPresetProducts();
+      const matchingPreset = presetProducts.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      
+      setProducts([...matchingPreset, ...aiProducts]);
+      setAiGeneratedCount(aiProducts.length);
+    } catch (error) {
+      console.error('重新生成AI商品失败:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // 分类标签切换
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
       }
-    ];
+    });
+  };
+
+  // 获取所有可用分类
+  const getAllCategories = () => {
+    const categories = new Set<string>();
+    products.forEach(product => {
+      categories.add(product.category);
+    });
+    return Array.from(categories).sort();
   };
 
   // 添加到购物车
@@ -239,18 +314,16 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
     });
   };
 
-
-
-  // 过滤和排序商品
-  const getFilteredAndSortedProducts = () => {
+  // 过滤商品
+  const getFilteredProducts = () => {
     let filtered = products;
 
     // 按分类过滤
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(product => selectedCategories.includes(product.category));
     }
 
-    // 按搜索词过滤
+    // 按搜索词过滤（已经在搜索时处理，这里作为备用）
     if (searchTerm) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -259,26 +332,11 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
       );
     }
 
-    // 排序
-    switch (sortBy) {
-      case 'price':
-        filtered = [...filtered].sort((a, b) => a.price - b.price);
-        break;
-      case 'rating':
-        filtered = [...filtered].sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        filtered = [...filtered].sort((a, b) => b.createdAt - a.createdAt);
-        break;
-      default:
-        break;
-    }
-
     return filtered;
   };
 
-  const filteredProducts = getFilteredAndSortedProducts();
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+  const filteredProducts = getFilteredProducts();
+  const allCategories = getAllCategories();
 
   // 检查商品是否在购物车中
   const isProductInCart = (productId: string) => {
@@ -299,53 +357,59 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
         </button>
       </div>
 
-      {/* 搜索和筛选 */}
-      <div className="shopping-filters">
+      {/* 搜索 */}
+      <div className="search-section">
         <div className="search-box">
           <input
             type="text"
-            placeholder="搜索商品..."
+            placeholder="输入关键词搜索商品..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                executeAiSearch();
+              }
+            }}
           />
-        </div>
-
-        <div className="filter-controls">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+          <button 
+            className="search-btn"
+            onClick={executeAiSearch}
+            disabled={isGenerating || !searchTerm.trim()}
           >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category === 'all' ? '全部分类' : category}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'default' | 'price' | 'rating' | 'newest')}
-          >
-            <option value="default">默认排序</option>
-            <option value="price">价格排序</option>
-            <option value="rating">评分排序</option>
-            <option value="newest">最新排序</option>
-          </select>
+            {isGenerating ? '🔄 生成中...' : '🔍 搜索'}
+          </button>
         </div>
+        {aiGeneratedCount > 0 && (
+          <div className="ai-status">
+            <span>AI生成: {aiGeneratedCount} 个商品</span>
+            <button 
+              className="clear-ai-btn"
+              onClick={clearAiGeneratedProducts}
+            >
+              🗑️ 清除AI商品
+            </button>
+            <button 
+              className="regenerate-btn"
+              onClick={regenerateAiProducts}
+              disabled={isGenerating}
+            >
+              🔄 重新生成
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 重新生成按钮 */}
-      <div className="regenerate-section">
-        <button 
-          className="regenerate-btn"
-          onClick={generateProducts}
-          disabled={isGenerating}
-        >
-          {isGenerating ? '正在生成...' : '🔄 重新生成商品'}
-        </button>
-        <p className="regenerate-hint">
-          基于您的聊天内容，AI会为您推荐相关商品
-        </p>
+      {/* 分类标签筛选 */}
+      <div className="category-tags">
+        {allCategories.map(category => (
+          <button
+            key={category}
+            className={`category-tag ${selectedCategories.includes(category) ? 'active' : ''}`}
+            onClick={() => toggleCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
       </div>
 
       {/* 商品列表 */}
@@ -353,13 +417,13 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
         {isLoading ? (
           <div className="loading">
             <div className="loading-spinner"></div>
-            <p>正在分析您的聊天内容并生成商品...</p>
+            <p>正在加载预设商品...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="no-products">
             <div className="no-products-icon">📦</div>
             <p>没有找到相关商品</p>
-            <p>尝试调整搜索条件或重新生成商品</p>
+            <p>尝试调整搜索条件或输入新的关键词</p>
           </div>
         ) : (
           <div className="products-grid">
