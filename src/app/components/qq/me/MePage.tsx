@@ -256,23 +256,31 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
   // 处理选项点击
   const handleOptionClick = (option: string) => {
+    console.log('MePage - 选项点击:', option);
+    
     switch (option) {
       case 'api-settings':
+        console.log('MePage - 打开API设置');
         setShowApiSettings(true);
         break;
       case 'personal-settings':
+        console.log('MePage - 打开个人设置');
         setShowPersonalSettings(true);
         break;
       case 'color-settings':
+        console.log('MePage - 打开配色设置');
         setCurrentPage('color-settings');
         break;
       case 'preset-manager':
+        console.log('MePage - 打开预设管理');
         setCurrentPage('preset-manager');
         break;
       case 'data-backup':
+        console.log('MePage - 打开数据备份管理');
         setShowDataBackup(true);
         break;
       default:
+        console.log('MePage - 未知选项:', option);
         break;
     }
   };
@@ -541,7 +549,15 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
               <div 
                 className="option-item"
-                onClick={() => handleOptionClick('data-backup')}
+                onClick={(e) => {
+                  console.log('MePage - 数据备份选项被点击');
+                  console.log('MePage - 事件对象:', e);
+                  console.log('MePage - 当前 showDataBackup 状态:', showDataBackup);
+                  e.stopPropagation();
+                  handleOptionClick('data-backup');
+                  console.log('MePage - handleOptionClick 调用完成');
+                }}
+                style={{ position: 'relative', zIndex: 1 }}
               >
                 <div className="option-icon">💾</div>
                 <div className="option-content">

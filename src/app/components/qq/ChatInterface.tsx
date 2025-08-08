@@ -1595,8 +1595,8 @@ export default function ChatInterface({
           <Image 
             src={chat.avatar} 
             alt={chat.name}
-            width={32}
-            height={32}
+            width={40}
+            height={40}
             className="chat-avatar"
             unoptimized={chat.avatar?.startsWith('data:')}
           />
@@ -1719,8 +1719,8 @@ export default function ChatInterface({
               <Image 
                 src={currentAiUser?.avatar || chat.avatar}
                 alt={currentAiUser?.name || chat.name}
-                width={36}
-                height={36}
+                width={42}
+                height={42}
                 className="avatar-image"
                 unoptimized={(currentAiUser?.avatar || chat.avatar)?.startsWith('data:')}
               />

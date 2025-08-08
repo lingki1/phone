@@ -95,8 +95,8 @@ const MessageItem = React.memo(({
         <Image 
           src={senderInfo.avatar}
           alt={senderInfo.name}
-          width={36}
-          height={36}
+          width={42}
+          height={42}
           className="avatar-image"
           unoptimized={senderInfo.avatar?.startsWith('data:')}
         />
@@ -135,21 +135,45 @@ const MessageItem = React.memo(({
           </div>
         )}
         
-        {/* 直观可见的功能按键：紧贴消息气泡下方 */}
-        <div className="message-inline-actions">
-          <MessageActionButtons
-            message={msg}
-            isUserMessage={msg.role === 'user'}
-            isAIMessage={msg.role === 'assistant'}
-            onQuoteMessage={onQuoteMessage}
-            onEditMessage={onEditMessage}
-            onDeleteMessage={onDeleteMessage}
-            onRegenerateAI={onRegenerateAI}
-          />
-        </div>
-        
-        <div className="message-time">
-          {formatTime(msg.timestamp)}
+        {/* 消息底部信息：时间 + 功能按键（AI消息）或 时间 + 功能按键（用户消息） */}
+        <div className="message-footer">
+          {msg.role === 'assistant' ? (
+            // AI消息：时间 + 功能按键
+            <>
+              <div className="message-time">
+                {formatTime(msg.timestamp)}
+              </div>
+              <div className="message-inline-actions">
+                <MessageActionButtons
+                  message={msg}
+                  isUserMessage={false}
+                  isAIMessage={true}
+                  onQuoteMessage={onQuoteMessage}
+                  onEditMessage={onEditMessage}
+                  onDeleteMessage={onDeleteMessage}
+                  onRegenerateAI={onRegenerateAI}
+                />
+              </div>
+            </>
+          ) : (
+            // 用户消息：时间 + 功能按键（从右到左）
+            <>
+              <div className="message-time">
+                {formatTime(msg.timestamp)}
+              </div>
+              <div className="message-inline-actions">
+                <MessageActionButtons
+                  message={msg}
+                  isUserMessage={true}
+                  isAIMessage={false}
+                  onQuoteMessage={onQuoteMessage}
+                  onEditMessage={onEditMessage}
+                  onDeleteMessage={onDeleteMessage}
+                  onRegenerateAI={onRegenerateAI}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

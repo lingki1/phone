@@ -61,6 +61,8 @@ interface DataBackupManagerProps {
 }
 
 export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
+  console.log('DataBackupManager - 组件渲染');
+  
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
@@ -439,15 +441,18 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
     }
   };
 
+  console.log('DataBackupManager - 渲染模态框');
+  console.log('DataBackupManager - 当前状态:', { isExporting, isImporting, error, success });
+  
   return (
-    <div className="backup-overlay" onClick={onClose}>
-      <div className="backup-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="data-backup-manager" onClick={onClose} style={{ zIndex: 10002 }}>
+      <div className="backup-content" onClick={(e) => e.stopPropagation()}>
         <div className="backup-header">
           <h2>数据备份管理</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        <div className="backup-content">
+        <div className="backup-actions">
           {error && (
             <div className="error-message">
               {error}

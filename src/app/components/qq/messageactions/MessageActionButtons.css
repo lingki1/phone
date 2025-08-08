@@ -2,8 +2,8 @@
 .inline-action-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 4px;
+  margin-top: 0;
   width: fit-content;
   max-width: 100%;
 }
@@ -17,12 +17,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: var(--theme-text-secondary);
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease, transform 0.05s ease;
 }
@@ -35,28 +35,35 @@
 .inline-action-btn:active { transform: translateY(1px); }
 
 /* 图标视觉参数 */
-.inline-action-btn svg { opacity: 0.9; }
+.inline-action-btn svg { 
+  opacity: 0.8; 
+  width: 16px;
+  height: 16px;
+}
 .inline-action-btn:hover svg { opacity: 1; }
 
 /* 危险操作强调 */
 .inline-action-btn.danger:hover { color: #ef4444; }
 
 /* 群聊更紧凑 */
-.group-message .inline-action-bar { gap: 4px; }
-.group-message .inline-action-btn { width: 26px; height: 26px; }
+.group-message .inline-action-bar { gap: 3px; }
+.group-message .inline-action-btn { width: 22px; height: 22px; }
 
 /* 响应式自适配 */
 @media (max-width: 768px) {
-  .inline-action-btn { width: 30px; height: 30px; }
+  .inline-action-btn { width: 26px; height: 26px; }
+  .inline-action-btn svg { width: 17px; height: 17px; }
 }
 
 @media (max-width: 480px) {
-  .inline-action-btn { width: 32px; height: 32px; border-radius: 8px; }
+  .inline-action-btn { width: 28px; height: 28px; border-radius: 6px; }
+  .inline-action-btn svg { width: 18px; height: 18px; }
 }
 
 /* 触摸设备：更大点击区 */
 @media (hover: none) and (pointer: coarse) {
-  .inline-action-btn { width: 36px; height: 36px; }
+  .inline-action-btn { width: 32px; height: 32px; }
+  .inline-action-btn svg { width: 20px; height: 20px; }
 }
 
 /* 高对比度与减少动画 */
