@@ -15,7 +15,7 @@ import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
 import { WorldBookAssociationSwitchModal } from './worldbook';
-import { MessagePaginationManager, MessageItem } from './chat';
+import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -90,6 +90,7 @@ export default function ChatInterface({
   const [chatOpacity, setChatOpacity] = useState<number>(80);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
+  const [showGiftHistory, setShowGiftHistory] = useState(false);
   
   // 分页相关状态
   const [isPaginationEnabled] = useState(true);
@@ -1623,6 +1624,13 @@ export default function ChatInterface({
           >
             🖼️
           </button>
+          <button 
+            className="action-btn"
+            onClick={() => setShowGiftHistory(true)}
+            title="查看礼物记录"
+          >
+            🎁
+          </button>
           {chat.isGroup ? (
             <>
               <button 
@@ -1951,6 +1959,15 @@ export default function ChatInterface({
             }
           }}
           chatName={chat.name}
+        />
+      )}
+
+      {/* 礼物记录 */}
+      {showGiftHistory && (
+        <GiftHistory
+          isOpen={showGiftHistory}
+          onClose={() => setShowGiftHistory(false)}
+          chat={chat}
         />
       )}
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Product, ShoppingCart, CartItem } from '../../types/shopping';
 import { ProductGenerator } from './ProductGenerator';
 import ProductCard from './ProductCard';
-import ShoppingCartComponent from './ShoppingCart';
+import ShoppingCartComponent from '@shopping/ShoppingCart';
 import { useTheme } from '../../hooks/useTheme';
 import './ShoppingPage.css';
 
@@ -129,19 +129,39 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
       // 执行AI生成
       const aiProducts = await productGenerator.generateProductsForSearch(searchTerm, 8);
       
+      console.log('🔍 AI生成结果:', {
+        aiProductsLength: aiProducts.length,
+        aiProducts: aiProducts.map(p => ({ id: p.id, name: p.name }))
+      });
+      
+      // 获取预设商品中匹配的结果
+      const presetProducts = await productGenerator.getPresetProducts();
+      const matchingPreset = presetProducts.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      
+      console.log('🔍 预设商品匹配结果:', {
+        matchingPresetLength: matchingPreset.length,
+        matchingPreset: matchingPreset.map(p => ({ id: p.id, name: p.name }))
+      });
+      
+      // 合并预设商品和AI生成商品
+      const allProducts = [...matchingPreset, ...aiProducts];
+      console.log('🔍 最终商品列表:', {
+        totalProducts: allProducts.length,
+        allProducts: allProducts.map(p => ({ id: p.id, name: p.name, generatedFrom: p.generatedFrom }))
+      });
+      
+      setProducts(allProducts);
+      setAiGeneratedCount(aiProducts.length);
+      
+      // 如果AI生成了商品，显示成功提示
       if (aiProducts.length > 0) {
-        // 获取预设商品中匹配的结果
-        const presetProducts = await productGenerator.getPresetProducts();
-        const matchingPreset = presetProducts.filter(product =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-        
-        // 合并预设商品和AI生成商品
-        setProducts([...matchingPreset, ...aiProducts]);
-        setAiGeneratedCount(aiProducts.length);
+        console.log('✅ AI成功生成商品:', aiProducts.length, '个');
       } else {
+        console.warn('⚠️ AI没有生成任何商品');
         alert('AI生成商品失败，请重试');
       }
     } catch (error) {
@@ -302,10 +322,8 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
     });
   };
 
-  // 结账
+  // 结账（仅余额扣款在购物车组件中处理，这里仅清空购物车）
   const handleCheckout = () => {
-    alert('感谢您的购买！订单已提交，我们会尽快为您处理。');
-    // 清空购物车
     setCart({
       items: [],
       totalItems: 0,
@@ -318,19 +336,33 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
   const getFilteredProducts = () => {
     let filtered = products;
 
+    console.log('🔍 getFilteredProducts - 初始商品:', {
+      totalProducts: products.length,
+      searchTerm,
+      selectedCategories,
+      products: products.map(p => ({ id: p.id, name: p.name, category: p.category, generatedFrom: p.generatedFrom }))
+    });
+
     // 按分类过滤
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(product => selectedCategories.includes(product.category));
+      console.log('🔍 分类过滤后:', filtered.length, '个商品');
     }
 
-    // 按搜索词过滤（已经在搜索时处理，这里作为备用）
-    if (searchTerm) {
+    // 按搜索词过滤（只有在非AI搜索模式下才过滤）
+    if (searchTerm && aiGeneratedCount === 0) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
+      console.log('🔍 搜索词过滤后:', filtered.length, '个商品');
     }
+
+    console.log('🔍 最终过滤结果:', {
+      filteredCount: filtered.length,
+      filteredProducts: filtered.map(p => ({ id: p.id, name: p.name, generatedFrom: p.generatedFrom }))
+    });
 
     return filtered;
   };

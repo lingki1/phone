@@ -9,6 +9,7 @@ export { WorldBookInjector } from './injectors/WorldBookInjector';
 export { MemoryInjector } from './injectors/MemoryInjector';
 export { StatusInjector } from './injectors/StatusInjector';
 export { PresetInjector } from './injectors/PresetInjector';
+export { ItemInjector } from './injectors/ItemInjector';
 
 // 类型定义
 export type {
@@ -23,7 +24,9 @@ export type {
   InjectorConfig,
   PromptTemplateType,
   ActionInstruction,
-  RedPacketRule
+  RedPacketRule,
+  ItemInfo,
+  ItemInventoryInfo
 } from './types';
 
 // 创建默认的提示词管理器实例

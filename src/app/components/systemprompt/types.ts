@@ -105,3 +105,21 @@ export interface RedPacketRule {
   action: string;
   example: string;
 }
+
+// 物品信息
+export interface ItemInfo {
+  id: string;
+  name: string;
+  description: string;
+  quantity: number;
+  receivedAt: number;
+  fromUser: string;
+  shippingMethod: 'instant' | 'fast' | 'slow';
+}
+
+// 物品管理信息
+export interface ItemInventoryInfo {
+  totalItems: number;
+  items: ItemInfo[];
+  lastUpdated: number;
+}

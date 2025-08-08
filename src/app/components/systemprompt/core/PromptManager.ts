@@ -9,6 +9,7 @@ import { WorldBookInjector } from '../injectors/WorldBookInjector';
 import { MemoryInjector } from '../injectors/MemoryInjector';
 import { StatusInjector } from '../injectors/StatusInjector';
 import { PresetInjector } from '../injectors/PresetInjector';
+import { ItemInjector } from '../injectors/ItemInjector';
 
 export class PromptManager {
   private injectors: PromptInjector[] = [];
@@ -21,7 +22,8 @@ export class PromptManager {
       this.presetInjector,
       new WorldBookInjector(),
       new MemoryInjector(),
-      new StatusInjector()
+      new StatusInjector(),
+      new ItemInjector()
     ];
   }
 
