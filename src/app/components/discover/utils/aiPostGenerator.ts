@@ -455,6 +455,15 @@ export class AiPostGenerator {
       const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
       await avatarManager.registerAvatar(characterAvatarId, character.avatar);
 
+      // 获取当前动态的最新评论时间戳，确保AI评论时间戳在其之后
+      const existingComments = await dataManager.getDiscoverCommentsByPost(post.id);
+      const latestCommentTimestamp = existingComments.length > 0 
+        ? Math.max(...existingComments.map(c => c.timestamp))
+        : Date.now();
+      
+      // AI评论的时间戳应该比最新评论晚1分钟，避免排序混乱
+      const aiTimestamp = Math.max(Date.now(), latestCommentTimestamp + 60000);
+
       const comment: DiscoverComment = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         postId: post.id,
@@ -462,7 +471,7 @@ export class AiPostGenerator {
         authorName: character.name,
         authorAvatarId: characterAvatarId,
         content: commentData.content,
-        timestamp: Date.now(),
+        timestamp: aiTimestamp,
         likes: [],
         aiGenerated: true
       };

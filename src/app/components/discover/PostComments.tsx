@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DiscoverComment } from '../../types/discover';
 import AvatarImage from './AvatarImage';
 import './PostComments.css';
@@ -117,9 +117,14 @@ export default function PostComments({
     return result;
   };
 
+  // 按时间戳排序评论（越早的越在上方）
+  const sortedComments = useMemo(() => {
+    return [...comments].sort((a, b) => a.timestamp - b.timestamp);
+  }, [comments]);
+
   // 显示评论数量
-  const displayedComments = showAllComments ? comments : comments.slice(0, 3);
-  const hasMoreComments = comments.length > 3;
+  const displayedComments = showAllComments ? sortedComments : sortedComments.slice(0, 3);
+  const hasMoreComments = sortedComments.length > 3;
 
   if (comments.length === 0) {
     return (

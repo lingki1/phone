@@ -679,7 +679,14 @@ export class AiCommentService {
       }
 
       const comments: DiscoverComment[] = [];
-      const baseTimestamp = Date.now();
+      // 获取当前动态的最新评论时间戳，确保AI评论时间戳在其之后
+      const existingComments = await dataManager.getDiscoverCommentsByPost(post.id);
+      const latestCommentTimestamp = existingComments.length > 0 
+        ? Math.max(...existingComments.map(c => c.timestamp))
+        : Date.now();
+      
+      // AI评论的基础时间戳应该比最新评论晚1分钟，避免排序混乱
+      const baseTimestamp = Math.max(Date.now(), latestCommentTimestamp + 60000);
 
       for (let i = 0; i < commentsArray.length; i++) {
         const commentData = commentsArray[i] as Record<string, unknown>;
