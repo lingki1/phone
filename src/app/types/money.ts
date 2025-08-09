@@ -13,7 +13,7 @@ export interface RedPacketData {
   amount: number;
   message?: string;
   senderName: string;
-  senderAvatar: string;
+  senderAvatarId?: string; // 头像ID引用（替代senderAvatar）
   recipientName: string;
   chatId: string;
   timestamp: number;
@@ -57,7 +57,7 @@ export interface RedPacketMessageData {
   amount: number;
   message?: string;
   senderName: string;
-  senderAvatar: string;
+  senderAvatarId?: string; // 头像ID引用（替代senderAvatar）
   recipientName: string;
   isClaimed: boolean;
   claimedAt?: number;
@@ -76,6 +76,7 @@ export interface SendRedPacketProps {
 // 接收红包组件属性类型
 export interface ReceiveRedPacketProps {
   redPacket: RedPacketData;
+  chat: import('../types/chat').ChatItem; // 添加chat参数以访问avatarMap
   onClaim: (redPacketId: string) => Promise<void>;
   isClaimed: boolean;
 }

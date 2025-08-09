@@ -7,7 +7,7 @@ export interface Message {
   content: string;
   timestamp: number;
   senderName?: string; // 群聊中发送者的名称
-  senderAvatar?: string; // 群聊中发送者的头像
+  senderAvatarId?: string; // 群聊中发送者的头像ID（引用avatarMap中的key）
   type?: 'text' | 'image' | 'voice' | 'sticker' | 'poll' | 'red_packet' | 'transfer' | 'waimai_request' | 'ai_image' | 'voice_message' | 'red_packet_send' | 'red_packet_receive' | 'red_packet_request' | 'ai_red_packet_response';
   quote?: QuoteMessage; // 引用回复
   isHidden?: boolean; // 是否对用户隐藏（系统消息）
@@ -67,6 +67,9 @@ export interface ChatItem {
   
   // 聊天设置
   settings: ChatSettings;
+  
+  // 头像映射表 - 存储所有相关头像的base64数据
+  avatarMap?: Record<string, string>; // avatarId -> base64头像数据
   
   // 单聊特有属性
   relationship?: {

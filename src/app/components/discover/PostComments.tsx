@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { DiscoverComment } from '../../types/discover';
+import AvatarImage from './AvatarImage';
 import './PostComments.css';
 
 interface PostCommentsProps {
@@ -143,8 +143,8 @@ export default function PostComments({
               </div>
             )}
             <div className="comment-avatar">
-              <Image 
-                src={comment.authorAvatar} 
+              <AvatarImage 
+                avatarId={comment.authorAvatarId}
                 alt={comment.authorName}
                 width={32}
                 height={32}

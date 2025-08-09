@@ -128,7 +128,7 @@ const createAiMessage = async (msgData: Record<string, unknown>, chat: ChatItem,
     content,
     timestamp,
     senderName: String(msgData.name || chat.name),
-    senderAvatar: chat.settings.aiAvatar || chat.avatar,
+    senderAvatarId: undefined, // 购物消息暂不使用头像
     type,
     meaning,
     url,

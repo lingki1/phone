@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Message } from '../../../types/chat';
+import { Message, ChatItem } from '../../../types/chat';
 import ReceiveRedPacket from './ReceiveRedPacket';
 import './RedPacketMessage.css';
 
 interface RedPacketMessageProps {
   message: Message;
+  chat: ChatItem; // 添加chat参数以访问avatarMap
   onClaim?: (redPacketId: string) => Promise<void>;
   onSend?: () => void;
   isUserMessage?: boolean;
@@ -14,6 +15,7 @@ interface RedPacketMessageProps {
 
 export default function RedPacketMessage({
   message,
+  chat,
   onClaim,
   onSend,
   isUserMessage = false
@@ -183,13 +185,14 @@ export default function RedPacketMessage({
                 amount: message.redPacketData.amount,
                 message: message.redPacketData.message,
                 senderName: message.redPacketData.senderName,
-                senderAvatar: message.senderAvatar || '/avatars/default-avatar.svg',
+                senderAvatarId: message.senderAvatarId, // 使用消息中的头像ID引用
                 recipientName: message.redPacketData.recipientName,
                 chatId: message.id, // 使用消息ID作为chatId
                 timestamp: message.timestamp,
                 isClaimed: message.redPacketData.isClaimed,
                 claimedAt: message.redPacketData.claimedAt
               }}
+              chat={chat} // 传递chat对象以访问avatarMap
               onClaim={handleClaimRedPacket}
               isClaimed={message.redPacketData.isClaimed}
             />

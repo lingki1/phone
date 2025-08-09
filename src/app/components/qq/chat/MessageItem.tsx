@@ -52,27 +52,49 @@ const MessageItem = React.memo(({
   // 使用useMemo缓存发送者信息计算
   const senderInfo = useMemo(() => {
     if (msg.role === 'user') {
+      // 用户消息头像获取逻辑
+      let avatar = '/avatars/user-avatar.svg'; // 默认头像
+      
+      // 优先从头像映射表获取
+      if (msg.senderAvatarId && chat.avatarMap?.[msg.senderAvatarId]) {
+        avatar = chat.avatarMap[msg.senderAvatarId];
+      } else {
+        // 回退到传统方式
+        avatar = dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || avatar;
+      }
+      
       return {
         name: dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我',
-        avatar: dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || '/avatars/user-avatar.svg'
+        avatar: avatar
       };
     } else {
-      // AI消息，从群成员中查找对应的成员信息
-      if (chat.isGroup && chat.members && msg.senderName) {
-        const member = chat.members.find(m => m.originalName === msg.senderName);
-        if (member) {
-          return {
-            name: member.groupNickname,
-            avatar: member.avatar
-          };
+      // AI消息头像获取逻辑
+      let avatar = chat.avatar; // 默认使用聊天头像
+      let name = msg.senderName || chat.name;
+      
+      // 优先从头像映射表获取
+      if (msg.senderAvatarId && chat.avatarMap?.[msg.senderAvatarId]) {
+        avatar = chat.avatarMap[msg.senderAvatarId];
+      } else {
+        // 回退到传统方式 - 从群成员中查找或使用最新的AI头像
+        if (chat.isGroup && chat.members && msg.senderName) {
+          const member = chat.members.find(m => m.originalName === msg.senderName);
+          if (member) {
+            avatar = member.avatar;
+            name = member.groupNickname;
+          }
+        } else {
+          // 单聊情况：使用最新的AI头像，确保头像更新后能立即显示
+          avatar = chat.settings.aiAvatar || chat.avatar;
         }
       }
+      
       return {
-        name: msg.senderName || chat.name,
-        avatar: msg.senderAvatar || chat.avatar
+        name: name,
+        avatar: avatar
       };
     }
-  }, [msg.role, msg.senderName, msg.senderAvatar, chat.isGroup, chat.members, chat.name, chat.avatar, chat.settings, dbPersonalSettings, personalSettings]);
+  }, [msg.role, msg.senderName, msg.senderAvatarId, chat.isGroup, chat.members, chat.name, chat.avatar, chat.avatarMap, chat.settings, dbPersonalSettings, personalSettings]);
 
   // 使用useMemo缓存连续消息检查
   const isConsecutiveMessage = useMemo(() => {

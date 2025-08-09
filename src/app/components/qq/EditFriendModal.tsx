@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ChatItem } from '../../types/chat';
+import { avatarManager } from '../../utils/avatarManager';
 import { compressImage } from '../../utils/imageCompressor';
 import './AddFriendModal.css';
 
@@ -102,6 +103,37 @@ export default function EditFriendModal({
           aiAvatar: avatarPreview || chat.settings.aiAvatar
         }
       };
+
+      // 如果头像发生了变化，需要同步更新avatarMap
+      if (avatarPreview && avatarPreview !== chat.settings.aiAvatar) {
+        // 确保avatarMap存在
+        if (!updatedChat.avatarMap) {
+          updatedChat.avatarMap = {};
+        }
+        
+        // 更新AI角色的头像数据
+        const aiAvatarId = `ai_${chat.id}`;
+        updatedChat.avatarMap[aiAvatarId] = avatarPreview;
+        
+        // 同步到全局头像管理器（用于动态系统）
+        const characterAvatarId = avatarManager.generateAvatarId('character', chat.id);
+        avatarManager.updateAvatar(characterAvatarId, avatarPreview).catch(error => {
+          console.warn('同步头像到全局管理器失败:', error);
+        });
+        
+        // 如果是群聊，也要更新群成员的头像
+        if (chat.isGroup && chat.members) {
+          updatedChat.members = chat.members.map(member => {
+            if (member.originalName === chat.name) {
+              const memberAvatarId = `member_${member.originalName}`;
+              updatedChat.avatarMap![memberAvatarId] = avatarPreview;
+              return { ...member, avatar: avatarPreview };
+            }
+            return member;
+          });
+        }
+      }
+
       onUpdateFriend(updatedChat);
     }
     

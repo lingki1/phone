@@ -1,5 +1,6 @@
 // AI动态生成器 - 基于API的智能内容生成
 import { dataManager } from '../../../utils/dataManager';
+import { avatarManager } from '../../../utils/avatarManager';
 import { presetManager } from '../../../utils/presetManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
@@ -204,11 +205,15 @@ export class AiPostGenerator {
       for (const postData of batchResponse.posts) {
         const character = characters.find(c => c.id === postData.characterId);
         if (character) {
+          // 注册AI角色头像到全局头像管理器
+          const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
+          await avatarManager.registerAvatar(characterAvatarId, character.avatar);
+
           const post: DiscoverPost = {
             id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             authorId: character.id,
             authorName: character.name,
-            authorAvatar: character.avatar,
+            authorAvatarId: characterAvatarId,
             content: postData.content,
             images: postData.images,
             tags: postData.tags,
@@ -234,12 +239,16 @@ export class AiPostGenerator {
         const post = posts[postIndex];
         
         if (character && post) {
+          // 注册AI角色头像到全局头像管理器
+          const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
+          await avatarManager.registerAvatar(characterAvatarId, character.avatar);
+
           const comment: DiscoverComment = {
             id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             postId: post.id,
             authorId: character.id,
             authorName: character.name,
-            authorAvatar: character.avatar,
+            authorAvatarId: characterAvatarId,
             content: commentData.content,
             timestamp: Date.now(),
             likes: []
@@ -311,7 +320,7 @@ export class AiPostGenerator {
         id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         authorId: selectedCharacter.id,
         authorName: selectedCharacter.name,
-        authorAvatar: selectedCharacter.avatar,
+        authorAvatarId: avatarManager.generateAvatarId('character', selectedCharacter.id),
         content: responseData.post!.content,
         images: responseData.post!.images,
         tags: responseData.post!.tags,
@@ -336,7 +345,7 @@ export class AiPostGenerator {
             postId: post.id,
             authorId: commentCharacter.id,
             authorName: commentCharacter.name,
-            authorAvatar: commentCharacter.avatar,
+            authorAvatarId: avatarManager.generateAvatarId('character', commentCharacter.id),
             content: commentData.content,
             timestamp: Date.now(),
             likes: []
@@ -385,11 +394,15 @@ export class AiPostGenerator {
         throw new Error('API返回的帖子数据无效');
       }
 
+      // 注册AI角色头像到全局头像管理器
+      const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
+      await avatarManager.registerAvatar(characterAvatarId, character.avatar);
+
       const post: DiscoverPost = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         authorId: character.id,
         authorName: character.name,
-        authorAvatar: character.avatar,
+        authorAvatarId: characterAvatarId,
         content: responseData.post.content,
         images: responseData.post.images,
         timestamp: Date.now(),
@@ -438,12 +451,16 @@ export class AiPostGenerator {
         throw new Error('API返回的评论数据无效');
       }
       
+      // 注册AI角色头像到全局头像管理器
+      const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
+      await avatarManager.registerAvatar(characterAvatarId, character.avatar);
+
       const comment: DiscoverComment = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         postId: post.id,
         authorId: character.id,
         authorName: character.name,
-        authorAvatar: character.avatar,
+        authorAvatarId: characterAvatarId,
         content: commentData.content,
         timestamp: Date.now(),
         likes: [],

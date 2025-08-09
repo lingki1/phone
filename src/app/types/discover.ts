@@ -5,7 +5,7 @@ export interface DiscoverPost {
   id: string;
   authorId: string;
   authorName: string;
-  authorAvatar: string;
+  authorAvatarId?: string; // 头像ID引用（替代authorAvatar）
   content: string;
   images?: string[]; // 图片URL数组
   timestamp: number;
@@ -28,7 +28,7 @@ export interface DiscoverComment {
   postId: string;
   authorId: string;
   authorName: string;
-  authorAvatar: string;
+  authorAvatarId?: string; // 头像ID引用（替代authorAvatar）
   content: string;
   timestamp: number;
   likes: string[]; // 评论点赞

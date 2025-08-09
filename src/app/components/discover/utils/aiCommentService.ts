@@ -1,5 +1,6 @@
 // AI评论服务 - 基于API的智能评论生成
 import { dataManager } from '../../../utils/dataManager';
+import { avatarManager } from '../../../utils/avatarManager';
 import { presetManager } from '../../../utils/presetManager';
 import { DiscoverPost, DiscoverComment } from '../../../types/discover';
 import { ChatItem } from '../../../types/chat';
@@ -11,7 +12,7 @@ export interface AiCommentResponse {
   comments: Array<{
     characterId: string;
     characterName: string;
-    characterAvatar: string;
+    characterAvatarId?: string;
     content: string;
     mentions?: string[]; // @提及的用户或AI角色
   }>;
@@ -75,7 +76,7 @@ export class AiCommentService {
         comments: comments.map(comment => ({
           characterId: comment.authorId,
           characterName: comment.authorName,
-          characterAvatar: comment.authorAvatar,
+          characterAvatarId: comment.authorAvatarId,
           content: comment.content,
           mentions: this.extractMentions(comment.content)
         }))
@@ -700,12 +701,16 @@ export class AiCommentService {
         }
 
         // 创建评论对象，使用递增的时间戳确保最新的评论显示在最下方
+        // 注册AI角色头像到全局头像管理器
+        const characterAvatarId = avatarManager.generateAvatarId('character', character.id);
+        await avatarManager.registerAvatar(characterAvatarId, character.avatar);
+
         const comment: DiscoverComment = {
           id: (baseTimestamp + i).toString() + Math.random().toString(36).substr(2, 9),
           postId: post.id,
           authorId: character.id,
           authorName: character.name,
-          authorAvatar: character.avatar,
+          authorAvatarId: characterAvatarId,
           content: String(commentData.content).trim(),
           timestamp: baseTimestamp + i, // 递增时间戳，确保最新的评论显示在最下方
           likes: [],

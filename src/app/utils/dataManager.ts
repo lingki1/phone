@@ -22,6 +22,7 @@ const DISCOVER_SETTINGS_STORE = 'discoverSettings';
 const DISCOVER_NOTIFICATIONS_STORE = 'discoverNotifications';
 const DISCOVER_DRAFTS_STORE = 'discoverDrafts';
 const DISCOVER_VIEW_STATE_STORE = 'discoverViewState';
+const GLOBAL_DATA_STORE = 'globalData';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -145,6 +146,11 @@ class DataManager {
         if (!db.objectStoreNames.contains(DISCOVER_VIEW_STATE_STORE)) {
           const viewStateStore = db.createObjectStore(DISCOVER_VIEW_STATE_STORE, { keyPath: 'userId' });
           viewStateStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+        }
+
+        // 创建全局数据存储（用于头像映射表等）
+        if (!db.objectStoreNames.contains(GLOBAL_DATA_STORE)) {
+          db.createObjectStore(GLOBAL_DATA_STORE, { keyPath: 'key' });
         }
       };
     });
@@ -1591,6 +1597,34 @@ class DataManager {
       console.error('Failed to get chat messages after timestamp:', error);
       return [];
     }
+  }
+
+  // 全局数据存储方法
+  async saveGlobalData(key: string, data: unknown): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([GLOBAL_DATA_STORE], 'readwrite');
+      const store = transaction.objectStore(GLOBAL_DATA_STORE);
+      const request = store.put({ key, data });
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取全局数据
+  async getGlobalData(key: string): Promise<unknown> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([GLOBAL_DATA_STORE], 'readonly');
+      const store = transaction.objectStore(GLOBAL_DATA_STORE);
+      const request = store.get(key);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result?.data || null);
+    });
   }
 }
 

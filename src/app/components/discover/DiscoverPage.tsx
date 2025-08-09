@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { dataManager } from '../../utils/dataManager';
+import { avatarManager } from '../../utils/avatarManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
 import { ChatItem } from '../../types/chat';
 import { aiCommentService } from './utils/aiCommentService';
@@ -88,6 +89,9 @@ export default function DiscoverPage() {
           console.warn('⚠️ 数据加载超时，强制完成加载');
           setIsLoading(false);
         }, 10000); // 10秒超时
+        
+        // 初始化头像管理器
+        await avatarManager.init();
         
         // 并行加载数据
         const [postsData, settingsData, personalSettings] = await Promise.all([
@@ -238,11 +242,15 @@ export default function DiscoverPage() {
     if (!userInfo) return;
 
     try {
+      // 注册用户头像到全局头像管理器
+      const userAvatarId = avatarManager.generateAvatarId('user', 'main');
+      await avatarManager.registerAvatar(userAvatarId, userInfo.avatar);
+
       const newPost: DiscoverPost = {
         id: Date.now().toString(),
         authorId: 'user',
         authorName: userInfo.nickname,
-        authorAvatar: userInfo.avatar,
+        authorAvatarId: userAvatarId,
         content: postData.content,
         images: postData.images,
         timestamp: Date.now(),
@@ -411,12 +419,16 @@ export default function DiscoverPage() {
     if (!userInfo) return;
 
     try {
+      // 注册用户头像到全局头像管理器
+      const userAvatarId = avatarManager.generateAvatarId('user', 'main');
+      await avatarManager.registerAvatar(userAvatarId, userInfo.avatar);
+
       const comment: DiscoverComment = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         postId,
         authorId: 'user',
         authorName: userInfo.nickname,
-        authorAvatar: userInfo.avatar,
+        authorAvatarId: userAvatarId,
         content,
         timestamp: Date.now(),
         likes: [],

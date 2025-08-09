@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { DiscoverPost } from '../../types/discover';
+import AvatarImage from './AvatarImage';
 import PostImages from './PostImages';
 import PostActions from './PostActions';
 import PostComments from './PostComments';
@@ -127,8 +127,8 @@ export default function PostCard({
       {/* 作者信息 */}
       <div className="post-header">
         <div className="post-author">
-          <Image 
-            src={post.authorAvatar} 
+          <AvatarImage 
+            avatarId={post.authorAvatarId}
             alt={post.authorName}
             width={40}
             height={40}

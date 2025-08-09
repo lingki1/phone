@@ -486,6 +486,18 @@ export default function ChatInterface({
       await dataManager.saveBalance(newBalance);
       setCurrentBalance(newBalance);
 
+      // 处理用户头像引用
+      let userAvatarId: string | undefined;
+      if (chat.isGroup && chat.settings.myAvatar) {
+        if (!chat.avatarMap) {
+          chat.avatarMap = {};
+        }
+        userAvatarId = `user_${chat.id}`;
+        if (!chat.avatarMap[userAvatarId]) {
+          chat.avatarMap[userAvatarId] = chat.settings.myAvatar;
+        }
+      }
+
       // 创建红包消息
       const redPacketMessage: Message = {
         id: Date.now().toString(),
@@ -493,7 +505,7 @@ export default function ChatInterface({
         content: `发送了一个红包`,
         timestamp: Date.now(),
         senderName: chat.isGroup ? (chat.settings.myNickname || '我') : undefined,
-        senderAvatar: chat.isGroup ? chat.settings.myAvatar : undefined,
+        senderAvatarId: userAvatarId,
         type: 'red_packet_send',
         redPacketData: {
           id: `redpacket_${Date.now()}`,
@@ -609,13 +621,28 @@ export default function ChatInterface({
   const handleSendMessage = useCallback(async () => {
     if (!message.trim() || isLoading) return;
 
+    // 确保聊天对象有avatarMap
+    if (!chat.avatarMap) {
+      chat.avatarMap = {};
+    }
+    
+    // 处理用户头像引用
+    let userAvatarId: string | undefined;
+    if (chat.isGroup && chat.settings.myAvatar) {
+      userAvatarId = `user_${chat.id}`;
+      // 将用户头像数据存储到映射表中（如果还没有的话）
+      if (!chat.avatarMap[userAvatarId]) {
+        chat.avatarMap[userAvatarId] = chat.settings.myAvatar;
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: message.trim(),
       timestamp: Date.now(),
       senderName: chat.isGroup ? (chat.settings.myNickname || '我') : undefined,
-      senderAvatar: chat.isGroup ? chat.settings.myAvatar : undefined,
+      senderAvatarId: userAvatarId,
       quote: quotedMessage,
       isRead: true // 用户发送的消息默认为已读
     };
@@ -680,7 +707,7 @@ export default function ChatInterface({
         content: '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。',
         timestamp: Date.now(),
         senderName: '系统',
-        senderAvatar: '/avatars/default-avatar.svg'
+        senderAvatarId: undefined // 系统消息不需要头像
       };
 
       const chatWithMessage = {
@@ -868,7 +895,7 @@ export default function ChatInterface({
         content: errorContent,
         timestamp: Date.now(),
         senderName: '系统',
-        senderAvatar: '/avatars/default-avatar.svg'
+        senderAvatarId: undefined // 系统消息不需要头像
       };
 
       const chatWithMessage = {
@@ -954,6 +981,35 @@ export default function ChatInterface({
     let type: Message['type'] = 'text';
     let meaning: string | undefined;
     let url: string | undefined;
+    
+    // 获取头像ID和确保头像映射表存在
+    const senderName = String(msgData.name || chat.name);
+    let senderAvatarId: string | undefined;
+    
+    // 确保聊天对象有avatarMap
+    if (!chat.avatarMap) {
+      chat.avatarMap = {};
+    }
+    
+    if (chat.isGroup && chat.members) {
+      const member = chat.members.find(m => m.originalName === senderName);
+      if (member && member.avatar) {
+        senderAvatarId = `member_${member.originalName}`;
+        // 将头像数据存储到映射表中（如果还没有的话）
+        if (!chat.avatarMap[senderAvatarId]) {
+          chat.avatarMap[senderAvatarId] = member.avatar;
+        }
+      }
+    } else {
+      // 单聊情况
+      if (chat.settings.aiAvatar) {
+        senderAvatarId = `ai_${chat.id}`;
+        // 将头像数据存储到映射表中（如果还没有的话）
+        if (!chat.avatarMap[senderAvatarId]) {
+          chat.avatarMap[senderAvatarId] = chat.settings.aiAvatar;
+        }
+      }
+    }
 
     switch (msgData.type) {
       case 'text':
@@ -1013,7 +1069,7 @@ export default function ChatInterface({
             content,
             timestamp,
             senderName: String(msgData.name || chat.name),
-            senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
+            senderAvatarId: senderAvatarId,
             type,
             redPacketData: {
               id: `redpacket_${timestamp}`,
@@ -1037,7 +1093,7 @@ export default function ChatInterface({
           content,
           timestamp,
           senderName: String(msgData.name || chat.name),
-          senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
+          senderAvatarId: senderAvatarId,
           type,
           redPacketData: {
             id: `redpacket_request_${timestamp}`,
@@ -1164,8 +1220,8 @@ export default function ChatInterface({
       role: 'assistant',
       content,
       timestamp,
-      senderName: String(msgData.name || chat.name),
-      senderAvatar: chat.isGroup ? chat.members?.find(m => m.originalName === String(msgData.name))?.avatar : chat.settings.aiAvatar,
+      senderName: senderName,
+      senderAvatarId: senderAvatarId,
       type,
       meaning,
       url,
@@ -1527,6 +1583,7 @@ export default function ChatInterface({
         return (
           <RedPacketMessage
             message={msg}
+            chat={chat}
             onClaim={handleClaimRedPacket}
             onSend={() => setShowSendRedPacket(true)}
             isUserMessage={msg.role === 'user'}
@@ -1575,7 +1632,7 @@ export default function ChatInterface({
         ));
         return <span>{contentWithBreaks}</span>;
     }
-  }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket]);
+  }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket, chat]);
 
 
 

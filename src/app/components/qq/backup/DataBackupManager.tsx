@@ -193,9 +193,38 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
       setExportProgress(95);
       setCurrentOperation('正在生成导出文件...');
 
+      // 优化聊天数据 - 确保头像数据正确存储在avatarMap中
+      const optimizedChats = chats.map(chat => {
+        // 确保每个聊天都有avatarMap
+        if (!chat.avatarMap) {
+          chat.avatarMap = {};
+        }
+        
+        // 检查消息中是否有旧的senderAvatar字段，迁移到avatarMap
+        chat.messages.forEach(msg => {
+          // 类型断言为包含旧字段的消息类型
+          const msgWithOldField = msg as typeof msg & { senderAvatar?: string };
+          
+          // 如果消息有旧的senderAvatar字段，迁移到avatarMap
+          if (msgWithOldField.senderAvatar && !msg.senderAvatarId) {
+            const avatarData = msgWithOldField.senderAvatar;
+            const avatarId = msg.role === 'user' 
+              ? `user_${chat.id}` 
+              : `member_${msg.senderName || chat.name}`;
+            
+            chat.avatarMap![avatarId] = avatarData;
+            msg.senderAvatarId = avatarId;
+            // 删除旧字段
+            delete msgWithOldField.senderAvatar;
+          }
+        });
+        
+        return chat;
+      });
+
       // 构建导出数据
       const exportData: BackupData = {
-        chats,
+        chats: optimizedChats,
         apiConfig,
         personalSettings,
         themeSettings,
@@ -212,7 +241,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         discoverNotifications,
         discoverDrafts,
         exportTime: new Date().toISOString(),
-        version: '1.6' // 更新版本号
+        version: '1.7' // 更新版本号以支持头像优化
       };
 
       // 创建并下载文件

@@ -1,18 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ReceiveRedPacketProps } from '../../../types/money';
 import './ReceiveRedPacket.css';
 
 export default function ReceiveRedPacket({
   redPacket,
+  chat,
   onClaim,
   isClaimed
 }: ReceiveRedPacketProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [isOpened, setIsOpened] = useState(isClaimed);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [senderAvatar, setSenderAvatar] = useState<string>('/avatars/default-avatar.svg');
+
+  // 获取发送者头像
+  useEffect(() => {
+    const loadSenderAvatar = () => {
+      if (redPacket.senderAvatarId && chat.avatarMap?.[redPacket.senderAvatarId]) {
+        // 优先使用头像映射表中的数据
+        setSenderAvatar(chat.avatarMap[redPacket.senderAvatarId]);
+      } else {
+        // 回退到使用最新的AI头像（确保头像更新后能立即显示）
+        if (!chat.isGroup && chat.settings.aiAvatar) {
+          setSenderAvatar(chat.settings.aiAvatar);
+        } else if (chat.isGroup && chat.members) {
+          // 群聊中查找对应成员的最新头像
+          const member = chat.members.find(m => m.originalName === redPacket.senderName);
+          setSenderAvatar(member?.avatar || '/avatars/default-avatar.svg');
+        } else {
+          setSenderAvatar('/avatars/default-avatar.svg');
+        }
+      }
+    };
+
+    loadSenderAvatar();
+  }, [redPacket.senderAvatarId, redPacket.senderName, chat.avatarMap, chat.settings.aiAvatar, chat.isGroup, chat.members]);
 
   const handleClaim = async () => {
     if (isOpened || isOpening) return;
@@ -56,7 +81,7 @@ export default function ReceiveRedPacket({
           <div className="sender-info">
             <div className="sender-avatar">
               <Image
-                src={redPacket.senderAvatar}
+                src={senderAvatar}
                 alt={redPacket.senderName}
                 width={60}
                 height={60}
