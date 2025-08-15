@@ -21,13 +21,10 @@ export interface AnnouncementDisplayProps {
 export interface AnnouncementEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (announcements: Announcement[]) => void;
   initialAnnouncements?: Announcement[];
 }
 
-export interface AnnouncementManagerState {
-  announcements: Announcement[];
+export interface AnnouncementManagerProps {
   isEditorOpen: boolean;
-  clickCount: number;
-  lastClickTime: number;
+  onEditorClose: () => void;
 }

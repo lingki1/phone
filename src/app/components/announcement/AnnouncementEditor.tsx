@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Announcement, AnnouncementEditorProps } from './types';
+import { createAnnouncement, updateAnnouncement, deleteAnnouncement } from './announcementService';
 import './AnnouncementEditor.css';
 
 export default function AnnouncementEditor({ 
   isOpen, 
   onClose, 
-  onSave, 
   initialAnnouncements = [] 
 }: AnnouncementEditorProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
@@ -52,50 +52,93 @@ export default function AnnouncementEditor({
   };
 
   // 保存公告
-  const handleSaveAnnouncement = () => {
+  const handleSaveAnnouncement = async () => {
     if (!editingAnnouncement || !editingAnnouncement.title.trim()) {
       alert('请填写公告标题');
       return;
     }
 
-    const updatedAnnouncement = {
-      ...editingAnnouncement,
-      updatedAt: new Date()
-    };
+    try {
+      if (isCreating) {
+        // 创建新公告
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, createdAt, updatedAt, ...createData } = editingAnnouncement;
+        const newAnnouncement = await createAnnouncement(createData);
+        if (newAnnouncement) {
+          setAnnouncements(prev => [...prev, newAnnouncement]);
+          alert('公告创建成功！');
+        } else {
+          alert('创建公告失败，请重试');
+          return;
+        }
+      } else {
+        // 更新现有公告
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, createdAt, updatedAt, ...updateData } = editingAnnouncement;
+        const updatedAnnouncement = await updateAnnouncement(id, updateData);
+        if (updatedAnnouncement) {
+          setAnnouncements(prev => 
+            prev.map(a => a.id === updatedAnnouncement.id ? updatedAnnouncement : a)
+          );
+          alert('公告更新成功！');
+        } else {
+          alert('更新公告失败，请重试');
+          return;
+        }
+      }
 
-    if (isCreating) {
-      // 添加新公告
-      setAnnouncements(prev => [...prev, updatedAnnouncement]);
-    } else {
-      // 更新现有公告
-      setAnnouncements(prev => 
-        prev.map(a => a.id === updatedAnnouncement.id ? updatedAnnouncement : a)
-      );
+      setEditingAnnouncement(null);
+      setIsCreating(false);
+    } catch (error) {
+      console.error('保存公告失败:', error);
+      alert('保存失败，请重试');
     }
-
-    setEditingAnnouncement(null);
-    setIsCreating(false);
   };
 
   // 删除公告
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('确定要删除这条公告吗？')) {
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      try {
+        const success = await deleteAnnouncement(id);
+        if (success) {
+          setAnnouncements(prev => prev.filter(a => a.id !== id));
+          alert('公告删除成功！');
+        } else {
+          alert('删除公告失败，请重试');
+        }
+      } catch (error) {
+        console.error('删除公告失败:', error);
+        alert('删除失败，请重试');
+      }
     }
   };
 
   // 切换公告状态
-  const handleToggleActive = (id: string) => {
-    setAnnouncements(prev => 
-      prev.map(a => 
-        a.id === id ? { ...a, isActive: !a.isActive, updatedAt: new Date() } : a
-      )
-    );
+  const handleToggleActive = async (id: string) => {
+    try {
+      const announcement = announcements.find(a => a.id === id);
+      if (!announcement) return;
+
+      const success = await updateAnnouncement(id, { isActive: !announcement.isActive });
+      if (success) {
+        setAnnouncements(prev => 
+          prev.map(a => 
+            a.id === id ? { ...a, isActive: !a.isActive, updatedAt: new Date() } : a
+          )
+        );
+        alert(`公告已${!announcement.isActive ? '启用' : '禁用'}`);
+      } else {
+        alert('状态更新失败，请重试');
+      }
+    } catch (error) {
+      console.error('切换公告状态失败:', error);
+      alert('状态更新失败，请重试');
+    }
   };
 
-  // 保存所有更改
+  // 保存所有更改 - 现在不需要了，因为每个操作都是实时保存的
   const handleSaveAll = () => {
-    onSave(announcements);
+    alert('所有更改已实时保存！');
     onClose();
   };
 

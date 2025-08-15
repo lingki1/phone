@@ -1,0 +1,78 @@
+/* 公告管理器样式 */
+.announcement-manager {
+  position: relative;
+  width: 100%;
+}
+
+/* 加载状态 */
+.announcement-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #666;
+}
+
+.loading-spinner {
+  font-size: 24px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+/* 错误状态 */
+.announcement-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #d32f2f;
+  background: #ffebee;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.error-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.retry-button {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background: #b71c1c;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .announcement-loading,
+  .announcement-error {
+    padding: 15px;
+  }
+  
+  .loading-spinner,
+  .error-icon {
+    font-size: 20px;
+  }
+}

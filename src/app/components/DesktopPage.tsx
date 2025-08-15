@@ -3,20 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import './DesktopPage.css';
 import { AnnouncementDisplay, AnnouncementEditor, Announcement } from './announcement';
+import { fetchAnnouncements } from './announcement/announcementService';
 
-// 用于解析localStorage数据的接口
-interface StoredAnnouncement {
-  id: string;
-  title: string;
-  content: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  priority: 'low' | 'medium' | 'high';
-  isActive: boolean;
-  startDate?: string;
-  endDate?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// 不再需要StoredAnnouncement接口，因为现在使用API
 
 // 电池管理器接口定义
 interface BatteryManager extends EventTarget {
@@ -141,27 +130,20 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
 
   // 初始化公告数据
   useEffect(() => {
-    const loadAnnouncements = () => {
+    const loadAnnouncements = async () => {
       try {
-        const saved = localStorage.getItem('desktop-announcements');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          // 转换日期字符串回Date对象
-          const announcements = parsed.map((a: StoredAnnouncement) => ({
-            ...a,
-            createdAt: new Date(a.createdAt),
-            updatedAt: new Date(a.updatedAt),
-            startDate: a.startDate ? new Date(a.startDate) : undefined,
-            endDate: a.endDate ? new Date(a.endDate) : undefined
-          }));
-          setAnnouncements(announcements);
-        }
+        const data = await fetchAnnouncements();
+        setAnnouncements(data);
       } catch (error) {
         console.error('加载公告数据失败:', error);
       }
     };
 
     loadAnnouncements();
+    
+    // 定期刷新公告数据（每5分钟）
+    const interval = setInterval(loadAnnouncements, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // 检测是否为移动设备
@@ -548,16 +530,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
     }
   };
 
-  // 保存公告数据
-  const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
-    try {
-      localStorage.setItem('desktop-announcements', JSON.stringify(newAnnouncements));
-      setAnnouncements(newAnnouncements);
-    } catch (error) {
-      console.error('保存公告数据失败:', error);
-      alert('保存失败，请稍后重试');
-    }
-  };
+  // 保存公告数据 - 现在不需要了，因为使用API实时保存
+  // const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
+  //   try {
+  //     localStorage.setItem('desktop-announcements', JSON.stringify(newAnnouncements));
+  //     setAnnouncements(newAnnouncements);
+  //   } catch (error) {
+  //     console.error('保存公告数据失败:', error);
+  //     alert('保存失败，请稍后重试');
+  //   }
+  // };
 
   // 关闭公告
   const handleDismissAnnouncement = (id: string) => {
@@ -681,7 +663,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       <AnnouncementEditor
         isOpen={isAnnouncementEditorOpen}
         onClose={() => setIsAnnouncementEditorOpen(false)}
-        onSave={handleSaveAnnouncements}
         initialAnnouncements={announcements}
       />
     </div>
