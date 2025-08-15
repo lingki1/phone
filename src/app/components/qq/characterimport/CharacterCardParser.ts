@@ -310,22 +310,46 @@ export class CharacterCardParser {
         personality = description;
       }
       
+      // 安全转换函数
+      const safeString = (value: unknown): string => {
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number') return String(value);
+        if (typeof value === 'object' && value !== null) {
+          try {
+            return JSON.stringify(value);
+          } catch {
+            return '';
+          }
+        }
+        return '';
+      };
+
+      const safeStringArray = (value: unknown): string[] => {
+        if (Array.isArray(value)) {
+          return value.map(item => safeString(item)).filter(Boolean);
+        }
+        if (typeof value === 'string' && value.trim()) {
+          return [value];
+        }
+        return [];
+      };
+
       // 返回标准化的角色数据
       return {
         name: characterName,
         description,
         personality,
-        scenario: (characterData.scenario || characterData.context || '') as string,
-        first_mes: (characterData.first_mes || characterData.greeting || '') as string,
-        mes_example: (characterData.mes_example || characterData.example_dialogue || '') as string,
-        creator_notes: (characterData.creator_notes || characterData.notes || '') as string,
-        tags: (characterData.tags || []) as string[],
-        creator: (characterData.creator || characterData.author || '') as string,
-        character_version: (characterData.character_version || characterData.version || '') as string,
-        alternate_greetings: (characterData.alternate_greetings || characterData.greetings || []) as string[],
-        post_history_instructions: (characterData.post_history_instructions || characterData.post_history || '') as string,
-        world_scenario: (characterData.world_scenario || characterData.world || '') as string,
-        character_book: (characterData.character_book || characterData.book || '') as string,
+        scenario: safeString(characterData.scenario || characterData.context),
+        first_mes: safeString(characterData.first_mes || characterData.greeting),
+        mes_example: safeString(characterData.mes_example || characterData.example_dialogue),
+        creator_notes: safeString(characterData.creator_notes || characterData.notes),
+        tags: safeStringArray(characterData.tags),
+        creator: safeString(characterData.creator || characterData.author),
+        character_version: safeString(characterData.character_version || characterData.version),
+        alternate_greetings: safeStringArray(characterData.alternate_greetings || characterData.greetings),
+        post_history_instructions: safeString(characterData.post_history_instructions || characterData.post_history),
+        world_scenario: safeString(characterData.world_scenario || characterData.world),
+        character_book: safeString(characterData.character_book || characterData.book),
         extensions: characterData.extensions ? (characterData.extensions as Record<string, unknown>) : {}
       };
     } catch (error) {

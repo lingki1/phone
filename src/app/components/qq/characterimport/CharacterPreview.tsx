@@ -37,7 +37,7 @@ export default function CharacterPreview({ character, onImport, onCancel }: Char
             <div className="name-section">
               <h4>{character.name}</h4>
               <span className="creator">
-                {character.originalData.creator ? `by ${character.originalData.creator}` : '未知创建者'}
+                {typeof character.originalData.creator === 'string' && character.originalData.creator ? `by ${character.originalData.creator}` : '未知创建者'}
               </span>
             </div>
           </div>
@@ -61,21 +61,21 @@ export default function CharacterPreview({ character, onImport, onCancel }: Char
           <div className="info-grid">
             <div className="info-item">
               <span className="label">版本</span>
-              <span className="value">{character.originalData.character_version || 'v1'}</span>
+              <span className="value">{typeof character.originalData.character_version === 'string' ? character.originalData.character_version : 'v1'}</span>
             </div>
             <div className="info-item">
               <span className="label">标签</span>
               <span className="value">
-                {character.originalData.tags?.length > 0 
+                {Array.isArray(character.originalData.tags) && character.originalData.tags.length > 0 
                   ? character.originalData.tags.slice(0, 3).join(', ')
                   : '无'}
-                {character.originalData.tags?.length > 3 && '...'}
+                {Array.isArray(character.originalData.tags) && character.originalData.tags.length > 3 && '...'}
               </span>
             </div>
             <div className="info-item">
               <span className="label">场景</span>
               <span className="value">
-                {character.originalData.scenario 
+                {typeof character.originalData.scenario === 'string' && character.originalData.scenario 
                   ? (character.originalData.scenario.length > 50 
                     ? character.originalData.scenario.substring(0, 50) + '...'
                     : character.originalData.scenario)
@@ -86,47 +86,47 @@ export default function CharacterPreview({ character, onImport, onCancel }: Char
         </div>
 
         {/* 扩展信息 (可折叠) */}
-        {(character.originalData.first_mes || 
-          character.originalData.mes_example || 
-          character.originalData.creator_notes ||
-          character.originalData.post_history_instructions ||
-          character.originalData.world_scenario ||
-          character.originalData.character_book) && (
+        {(typeof character.originalData.first_mes === 'string' && character.originalData.first_mes || 
+          typeof character.originalData.mes_example === 'string' && character.originalData.mes_example || 
+          typeof character.originalData.creator_notes === 'string' && character.originalData.creator_notes ||
+          typeof character.originalData.post_history_instructions === 'string' && character.originalData.post_history_instructions ||
+          typeof character.originalData.world_scenario === 'string' && character.originalData.world_scenario ||
+          typeof character.originalData.character_book === 'string' && character.originalData.character_book) && (
           <div className="info-card">
             <details className="extended-info">
               <summary>查看详细信息</summary>
               <div className="extended-content">
-                {character.originalData.first_mes && (
+                {typeof character.originalData.first_mes === 'string' && character.originalData.first_mes && (
                   <div className="extended-item">
                     <h6>首次消息</h6>
                     <p>{character.originalData.first_mes}</p>
                   </div>
                 )}
-                {character.originalData.mes_example && (
+                {typeof character.originalData.mes_example === 'string' && character.originalData.mes_example && (
                   <div className="extended-item">
                     <h6>示例对话</h6>
                     <p>{character.originalData.mes_example}</p>
                   </div>
                 )}
-                {character.originalData.creator_notes && (
+                {typeof character.originalData.creator_notes === 'string' && character.originalData.creator_notes && (
                   <div className="extended-item">
                     <h6>创建者备注</h6>
                     <p>{character.originalData.creator_notes}</p>
                   </div>
                 )}
-                {character.originalData.post_history_instructions && (
+                {typeof character.originalData.post_history_instructions === 'string' && character.originalData.post_history_instructions && (
                   <div className="extended-item">
                     <h6>历史指令</h6>
                     <p>{character.originalData.post_history_instructions}</p>
                   </div>
                 )}
-                {character.originalData.world_scenario && (
+                {typeof character.originalData.world_scenario === 'string' && character.originalData.world_scenario && (
                   <div className="extended-item">
                     <h6>世界设定</h6>
                     <p>{character.originalData.world_scenario}</p>
                   </div>
                 )}
-                {character.originalData.character_book && (
+                {typeof character.originalData.character_book === 'string' && character.originalData.character_book && (
                   <div className="extended-item">
                     <h6>角色书</h6>
                     <p>{character.originalData.character_book}</p>
