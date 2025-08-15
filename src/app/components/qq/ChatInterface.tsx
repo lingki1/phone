@@ -1868,6 +1868,21 @@ export default function ChatInterface({
           </div>
         )}
         
+        {/* 功能按钮行 */}
+        <div className="action-buttons-row">
+          <button 
+            className="action-btn red-packet-btn"
+            onClick={() => setShowSendRedPacket(true)}
+            disabled={isLoading || isPending}
+            title="发送红包"
+          >
+            <span className="btn-icon">🧧</span>
+            <span className="btn-text">红包</span>
+          </button>
+          {/* 预留位置给未来的功能按钮 */}
+        </div>
+        
+        {/* 输入框和发送按钮行 */}
         <div className="input-wrapper">
           <textarea
             ref={textareaRef}
@@ -1893,29 +1908,26 @@ export default function ChatInterface({
               maxHeight: '120px'
             }}
           />
-          <button 
-            className="red-packet-btn"
-            onClick={() => setShowSendRedPacket(true)}
-            disabled={isLoading || isPending}
-            title="发送红包"
-          >
-            🧧
-          </button>
-          <button 
-            className="send-btn"
-            onClick={handleSendMessage}
-            disabled={!message.trim() || isLoading || isPending}
-          >
-            发送
-          </button>
-          <button 
-            className="generate-btn"
-            onClick={handleGenerateAI}
-            disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
-            title={hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复"}
-          >
-            🤖
-          </button>
+          <div className="send-buttons">
+            <button 
+              className="send-btn"
+              onClick={handleSendMessage}
+              disabled={!message.trim() || isLoading || isPending}
+              title="发送消息"
+            >
+              <span className="btn-icon">📤</span>
+              <span className="btn-text">发送</span>
+            </button>
+            <button 
+              className="generate-btn"
+              onClick={handleGenerateAI}
+              disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
+              title={hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复"}
+            >
+              <span className="btn-icon">🤖</span>
+              <span className="btn-text">AI回复</span>
+            </button>
+          </div>
         </div>
       </div>
 

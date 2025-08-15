@@ -658,6 +658,255 @@
   position: relative;
 }
 
+/* 功能按钮行 */
+.action-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 5px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--theme-bg-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--theme-text-primary, #333);
+  white-space: nowrap;
+  min-width: 70px;
+  min-height: 36px;
+  max-width: fit-content;
+  box-sizing: border-box;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--theme-bg-tertiary, #e9ecef);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-btn .btn-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+}
+
+.action-btn .btn-text {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  display: inline;
+}
+
+/* 红包按钮特殊样式 - 大屏幕保持红色渐变 */
+.action-btn.red-packet-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: white;
+  border-color: #ff6b6b;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.action-btn.red-packet-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #ff7979);
+  border-color: #ff5252;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* 小屏幕下红包按钮使用右上角功能按键样式 */
+@media (max-width: 767px) {
+  .action-btn.red-packet-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--theme-text-secondary, #666) !important;
+    box-shadow: none !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .action-btn.red-packet-btn:hover:not(:disabled) {
+    background-color: var(--theme-bg-tertiary, #f0f0f0) !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* 移动端功能按钮调整 - 模仿右上角功能按键样式 */
+@media (max-width: 767px) {
+  .action-buttons-row {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .action-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--theme-text-secondary, #666);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-text {
+    display: none;
+  }
+  
+  .action-btn:hover {
+    background-color: var(--theme-bg-tertiary, #f0f0f0);
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons-row {
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+  
+  .action-btn {
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: var(--theme-text-secondary, #666);
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    min-width: 24px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-text {
+    display: none;
+  }
+  
+  .action-btn:hover {
+    background-color: var(--theme-bg-tertiary, #f0f0f0);
+  }
+  
+  /* 480px以下红包按钮强制尺寸控制 */
+  .action-btn.red-packet-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--theme-text-secondary, #666) !important;
+    box-shadow: none !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  .action-btn.red-packet-btn:hover:not(:disabled) {
+    background-color: var(--theme-bg-tertiary, #f0f0f0) !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 360px) {
+  .action-buttons-row {
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  
+  .action-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: var(--theme-text-secondary, #666);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    min-width: 20px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  
+  .action-btn .btn-text {
+    display: none;
+  }
+  
+  .action-btn:hover {
+    background-color: var(--theme-bg-tertiary, #f0f0f0);
+  }
+  
+  /* 360px以下红包按钮强制尺寸控制 */
+  .action-btn.red-packet-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--theme-text-secondary, #666) !important;
+    box-shadow: none !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .action-btn.red-packet-btn:hover:not(:disabled) {
+    background-color: var(--theme-bg-tertiary, #f0f0f0) !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
 /* 移动端输入区域调整 */
 @media (max-width: 767px) {
   .input-container {
@@ -772,11 +1021,39 @@
   border: 1px solid var(--theme-border-color, #e0e0e0);
 }
 
+/* 发送按钮组 */
+.send-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 移动端发送按钮组调整 */
+@media (max-width: 767px) {
+  .send-buttons {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .send-buttons {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .send-buttons {
+    gap: 3px;
+  }
+}
+
 /* 移动端输入包装器调整 */
 @media (max-width: 767px) {
   .input-wrapper {
     gap: 8px;
     padding: 6px 12px;
+    border-radius: 16px;
   }
 }
 
@@ -784,6 +1061,16 @@
   .input-wrapper {
     gap: 6px;
     padding: 5px 10px;
+    border-radius: 14px;
+  }
+}
+
+/* 超小屏幕输入包装器调整 */
+@media (max-width: 360px) {
+  .input-wrapper {
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
   }
 }
 
@@ -820,54 +1107,12 @@
   }
 }
 
-/* 红包按钮样式 */
-.red-packet-btn {
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.red-packet-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff5252, #ff7979);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-}
-
-.red-packet-btn:disabled {
-  background: #adb5bd;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* 移动端红包按钮调整 */
-@media (max-width: 767px) {
-  .red-packet-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .red-packet-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-  }
-}
+/* 旧红包按钮样式已移除，使用新的 .action-btn.red-packet-btn 样式 */
 
 .send-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background-color: var(--theme-accent-color, #007bff);
   color: white;
   border: none;
@@ -876,17 +1121,42 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  min-width: 70px;
+  min-height: 36px;
+  box-sizing: border-box;
 }
 
 .send-btn:hover:not(:disabled) {
   background-color: var(--theme-accent-hover, #0056b3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
 }
 
 .send-btn:disabled {
   background-color: var(--theme-text-secondary, #6c757d);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-btn .btn-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+}
+
+.send-btn .btn-text {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 /* 移动端发送按钮调整 */
@@ -895,6 +1165,18 @@
     padding: 6px 12px;
     font-size: 12px;
     border-radius: 12px;
+    min-width: 60px;
+    min-height: 32px;
+  }
+  
+  .send-btn .btn-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  
+  .send-btn .btn-text {
+    font-size: 11px;
+    white-space: nowrap;
   }
 }
 
@@ -903,25 +1185,60 @@
     padding: 5px 10px;
     font-size: 11px;
     border-radius: 10px;
+    min-width: 50px;
+    min-height: 28px;
+  }
+  
+  .send-btn .btn-icon {
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .send-btn .btn-text {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .send-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 8px;
+    min-width: 45px;
+    min-height: 26px;
+  }
+  
+  .send-btn .btn-icon {
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  
+  .send-btn .btn-text {
+    font-size: 9px;
+    white-space: nowrap;
   }
 }
 
 /* 生成AI按钮样式 */
 .generate-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: linear-gradient(135deg, #28a745, #34ce57);
   color: white;
   border: none;
   border-radius: 15px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 4px;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  min-width: 70px;
+  min-height: 36px;
+  box-sizing: border-box;
 }
 
 .generate-btn:hover:not(:disabled) {
@@ -937,20 +1254,81 @@
   box-shadow: none;
 }
 
+.generate-btn .btn-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+}
+
+.generate-btn .btn-text {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
 /* 移动端生成按钮调整 */
 @media (max-width: 767px) {
   .generate-btn {
-    padding: 6px 10px;
+    padding: 6px 12px;
     font-size: 12px;
     border-radius: 12px;
+    min-width: 60px;
+    min-height: 32px;
+  }
+  
+  .generate-btn .btn-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  
+  .generate-btn .btn-text {
+    font-size: 11px;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 480px) {
   .generate-btn {
-    padding: 5px 8px;
+    padding: 5px 10px;
     font-size: 11px;
     border-radius: 10px;
+    min-width: 50px;
+    min-height: 28px;
+  }
+  
+  .generate-btn .btn-icon {
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .generate-btn .btn-text {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .generate-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 8px;
+    min-width: 45px;
+    min-height: 26px;
+  }
+  
+  .generate-btn .btn-icon {
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  
+  .generate-btn .btn-text {
+    font-size: 9px;
+    white-space: nowrap;
   }
 }
 
