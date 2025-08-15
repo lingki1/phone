@@ -2,6 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 import './DesktopPage.css';
+import { AnnouncementDisplay, AnnouncementEditor, Announcement } from './announcement';
+
+// 用于解析localStorage数据的接口
+interface StoredAnnouncement {
+  id: string;
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  priority: 'low' | 'medium' | 'high';
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // 电池管理器接口定义
 interface BatteryManager extends EventTarget {
@@ -46,6 +61,12 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [clickedApp, setClickedApp] = useState<string | null>(null);
+  
+  // 公告系统状态
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isAnnouncementEditorOpen, setIsAnnouncementEditorOpen] = useState(false);
+  const [timeClickCount, setTimeClickCount] = useState(0);
+  const [lastTimeClickTime, setLastTimeClickTime] = useState(0);
   const [appTiles, setAppTiles] = useState<AppTile[]>([
     {
       id: 'qq',
@@ -100,6 +121,9 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
   // 长按检测相关
   const longPressRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
   const isLongPressRef = useRef<{ [key: string]: boolean }>({});
+  
+  // 时间点击重置定时器
+  const timeClickResetTimer = useRef<NodeJS.Timeout | null>(null);
 
   // 更新购物应用状态当余额变化时
   useEffect(() => {
@@ -114,6 +138,31 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       return app;
     }));
   }, [userBalance]);
+
+  // 初始化公告数据
+  useEffect(() => {
+    const loadAnnouncements = () => {
+      try {
+        const saved = localStorage.getItem('desktop-announcements');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // 转换日期字符串回Date对象
+          const announcements = parsed.map((a: StoredAnnouncement) => ({
+            ...a,
+            createdAt: new Date(a.createdAt),
+            updatedAt: new Date(a.updatedAt),
+            startDate: a.startDate ? new Date(a.startDate) : undefined,
+            endDate: a.endDate ? new Date(a.endDate) : undefined
+          }));
+          setAnnouncements(announcements);
+        }
+      } catch (error) {
+        console.error('加载公告数据失败:', error);
+      }
+    };
+
+    loadAnnouncements();
+  }, []);
 
   // 检测是否为移动设备
   const isMobileDevice = () => {
@@ -455,6 +504,67 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
     handleLongPressEnd(appId);
   };
 
+  // 处理时间点击（隐藏入口）
+  const handleTimeClick = () => {
+    const now = Date.now();
+    
+    // 如果距离上次点击超过3秒，重置计数
+    if (now - lastTimeClickTime > 3000) {
+      setTimeClickCount(1);
+    } else {
+      setTimeClickCount(prev => prev + 1);
+    }
+    
+    setLastTimeClickTime(now);
+    
+    // 清除之前的重置定时器
+    if (timeClickResetTimer.current) {
+      clearTimeout(timeClickResetTimer.current);
+    }
+    
+    // 设置新的重置定时器
+    timeClickResetTimer.current = setTimeout(() => {
+      setTimeClickCount(0);
+      setLastTimeClickTime(0);
+    }, 3000);
+    
+    // 检查是否达到10次点击
+    if (timeClickCount >= 9) { // 因为这次点击会让count变成10
+      handleSecretEntrance();
+    }
+  };
+
+  // 处理隐藏入口
+  const handleSecretEntrance = () => {
+    const password = prompt('请输入管理密码：');
+    if (password === 'WWh930117') {
+      setIsAnnouncementEditorOpen(true);
+      setTimeClickCount(0);
+      setLastTimeClickTime(0);
+    } else if (password !== null) {
+      alert('密码错误！');
+      setTimeClickCount(0);
+      setLastTimeClickTime(0);
+    }
+  };
+
+  // 保存公告数据
+  const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
+    try {
+      localStorage.setItem('desktop-announcements', JSON.stringify(newAnnouncements));
+      setAnnouncements(newAnnouncements);
+    } catch (error) {
+      console.error('保存公告数据失败:', error);
+      alert('保存失败，请稍后重试');
+    }
+  };
+
+  // 关闭公告
+  const handleDismissAnnouncement = (id: string) => {
+    // 这里可以记录用户关闭的公告，避免重复显示
+    console.log('用户关闭公告:', id);
+  };
+
   return (
     <div className="desktop-page">
       {/* 状态栏 */}
@@ -483,9 +593,21 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
         </div>
       )}
 
+      {/* 公告显示 */}
+      <AnnouncementDisplay 
+        announcements={announcements}
+        onDismiss={handleDismissAnnouncement}
+      />
+
       {/* 时间显示区域 */}
       <div className="time-section">
-        <div className="current-time">{formatTime(currentTime)}</div>
+        <div 
+          className="current-time" 
+          onClick={handleTimeClick}
+          style={{ userSelect: 'none' }}
+        >
+          {formatTime(currentTime)}
+        </div>
         <div className="current-date">{formatDate(currentDate)}</div>
         <div className="greeting">美好的一天开始了</div>
       </div>
@@ -554,6 +676,14 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
         <div className="floating-circle circle-2"></div>
         <div className="floating-circle circle-3"></div>
       </div>
+
+      {/* 公告编辑器 */}
+      <AnnouncementEditor
+        isOpen={isAnnouncementEditorOpen}
+        onClose={() => setIsAnnouncementEditorOpen(false)}
+        onSave={handleSaveAnnouncements}
+        initialAnnouncements={announcements}
+      />
     </div>
   );
 } 

@@ -1,0 +1,238 @@
+/* 公告显示组件样式 */
+
+.announcement-container {
+  position: fixed;
+  top: 60px; /* 状态栏下方 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  z-index: 1000;
+  pointer-events: none; /* 允许背景点击 */
+}
+
+.announcement-item {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideInDown 0.5s ease-out;
+  pointer-events: auto; /* 公告本身可点击 */
+  position: relative;
+  overflow: hidden;
+}
+
+.announcement-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--type-color, #3b82f6);
+  border-radius: 16px 16px 0 0;
+}
+
+/* 公告类型样式 */
+.announcement-item.info {
+  --type-color: #3b82f6;
+  border-left: 4px solid #3b82f6;
+}
+
+.announcement-item.warning {
+  --type-color: #f59e0b;
+  border-left: 4px solid #f59e0b;
+}
+
+.announcement-item.success {
+  --type-color: #10b981;
+  border-left: 4px solid #10b981;
+}
+
+.announcement-item.error {
+  --type-color: #ef4444;
+  border-left: 4px solid #ef4444;
+}
+
+/* 优先级样式 */
+.announcement-item.priority-high {
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.2);
+  animation: pulseGlow 2s infinite;
+}
+
+.announcement-item.priority-medium {
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+.announcement-item.priority-low {
+  opacity: 0.9;
+}
+
+/* 公告头部 */
+.announcement-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.announcement-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.announcement-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.announcement-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.announcement-close:hover {
+  background: rgba(107, 114, 128, 0.1);
+  color: #374151;
+  transform: scale(1.1);
+}
+
+/* 公告内容 */
+.announcement-content {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.announcement-content p {
+  margin: 0 0 8px 0;
+}
+
+.announcement-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 优先级标签 */
+.announcement-priority-badge {
+  position: absolute;
+  top: 12px;
+  right: 48px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 动画效果 */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .announcement-container {
+    width: 95%;
+    top: 50px;
+  }
+  
+  .announcement-item {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .announcement-title {
+    font-size: 15px;
+  }
+  
+  .announcement-content {
+    font-size: 13px;
+  }
+}
+
+/* 深色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .announcement-item {
+    background: rgba(31, 41, 55, 0.95);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+  }
+  
+  .announcement-title {
+    color: #f9fafb;
+  }
+  
+  .announcement-content {
+    color: #d1d5db;
+  }
+  
+  .announcement-close {
+    color: #9ca3af;
+  }
+  
+  .announcement-close:hover {
+    background: rgba(156, 163, 175, 0.1);
+    color: #f3f4f6;
+  }
+}
+
+/* 主题适配 */
+[data-theme="dark"] .announcement-item {
+  background: rgba(31, 41, 55, 0.95);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+[data-theme="dark"] .announcement-title {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .announcement-content {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .announcement-close {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .announcement-close:hover {
+  background: rgba(156, 163, 175, 0.1);
+  color: #f3f4f6;
+}
