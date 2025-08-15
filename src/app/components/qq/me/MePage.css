@@ -11,6 +11,15 @@
   box-sizing: border-box;
   /* 确保占满整个父容器 */
   flex: 1 1 auto;
+  /* 确保滚动区域不被底部导航遮挡 */
+  scroll-padding-bottom: 85px;
+  /* 使用 CSS 变量便于调整 */
+  --bottom-nav-height: 85px;
+  /* 改善滚动体验 */
+  scroll-behavior: smooth;
+  /* 确保滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-color, #e8eaed) transparent;
 }
 
 /* 移动端特殊适配 - 移除固定高度 */
@@ -19,6 +28,8 @@
     height: 100vh;
     /* 移动端底部导航高度调整 */
     padding-bottom: 75px;
+    scroll-padding-bottom: 75px;
+    --bottom-nav-height: 75px;
   }
 }
 
@@ -295,6 +306,8 @@
 /* 选项列表 */
 .me-options {
   padding: 0 20px 20px 20px;
+  /* 确保选项列表有足够的底部间距，避免被底部导航遮挡 */
+  margin-bottom: calc(var(--bottom-nav-height, 85px) + 10px);
 }
 
 .option-group {
@@ -394,12 +407,20 @@
   .option-title {
     font-size: 15px;
   }
+  
+  /* 移动端滚动优化 */
+  .me-page {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
 
 @media (max-width: 480px) {
   .me-page {
     /* 超小屏幕底部导航高度调整 */
     padding-bottom: 70px;
+    scroll-padding-bottom: 70px;
+    --bottom-nav-height: 70px;
     /* 保持固定高度以支持滚动 */
     height: 100vh;
   }
@@ -443,6 +464,30 @@
 @media (prefers-color-scheme: dark) {
   /* 深色模式下的样式现在由主题系统控制 */
   /* 如果用户选择了深色主题，相应的CSS类会被应用 */
+}
+
+/* 自定义滚动条样式 - Webkit浏览器 */
+.me-page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.me-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.me-page::-webkit-scrollbar-thumb {
+  background-color: var(--theme-border-color, #e8eaed);
+  border-radius: 3px;
+}
+
+.me-page::-webkit-scrollbar-thumb:hover {
+  background-color: var(--theme-text-tertiary, #999);
+}
+
+/* 确保最后一个选项可以完全显示 */
+.me-options .option-group .option-item:last-child {
+  /* 确保最后一个选项有足够的底部间距 */
+  margin-bottom: 0;
 }
 
 /* 个人设置模态框样式 */
