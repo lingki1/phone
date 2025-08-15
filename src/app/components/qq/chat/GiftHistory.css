@@ -269,30 +269,64 @@
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 12px;
+  border: 1px solid var(--theme-border-light, #e1e5e9);
+}
+
+/* 礼品清单标题 */
+.gift-items-header {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--theme-border-light, #e1e5e9);
+}
+
+.gift-items-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-primary-color, #667eea);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .gift-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: 6px 0;
   font-size: 13px;
+  border-bottom: 1px solid var(--theme-border-very-light, rgba(0, 0, 0, 0.05));
+}
+
+.gift-item:last-child {
+  border-bottom: none;
+}
+
+.item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .item-name {
-  flex: 1;
   color: var(--theme-text-primary, #333);
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .item-quantity {
   color: var(--theme-text-secondary, #666);
-  margin: 0 8px;
+  font-weight: 500;
+  background: var(--theme-bg-tertiary, #f1f3f4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .item-price {
   color: var(--theme-accent-color, #ff6b6b);
   font-weight: 600;
+  font-size: 14px;
 }
 
 /* 礼物底部 */
@@ -425,6 +459,27 @@
   .gift-amount {
     align-self: flex-end;
   }
+
+  .gift-items {
+    padding: 10px;
+  }
+
+  .gift-items-title {
+    font-size: 13px;
+  }
+
+  .item-name {
+    font-size: 13px;
+  }
+
+  .item-quantity {
+    font-size: 11px;
+    padding: 1px 4px;
+  }
+
+  .item-price {
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -466,6 +521,27 @@
   .gift-card {
     padding: 10px;
     margin-bottom: 8px;
+  }
+
+  .gift-items {
+    padding: 8px;
+  }
+
+  .gift-items-title {
+    font-size: 12px;
+  }
+
+  .item-name {
+    font-size: 12px;
+  }
+
+  .item-quantity {
+    font-size: 10px;
+    padding: 1px 3px;
+  }
+
+  .item-price {
+    font-size: 12px;
   }
 }
 

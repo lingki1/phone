@@ -130,10 +130,15 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
                   
                   {gift.items && gift.items.length > 0 && (
                     <div className="gift-items">
+                      <div className="gift-items-header">
+                        <span className="gift-items-title">🎁 礼品清单</span>
+                      </div>
                       {gift.items.map((item, idx) => (
                         <div key={idx} className="gift-item">
-                          <span className="item-name">{item.name}</span>
-                          <span className="item-quantity">× {item.quantity}</span>
+                          <div className="item-info">
+                            <span className="item-name">{item.name}</span>
+                            <span className="item-quantity">× {item.quantity}</span>
+                          </div>
                           <span className="item-price">¥{item.unitPrice.toFixed(2)}</span>
                         </div>
                       ))}
