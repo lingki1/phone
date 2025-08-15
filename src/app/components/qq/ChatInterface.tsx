@@ -95,6 +95,16 @@ export default function ChatInterface({
   // 分页相关状态
   const [isPaginationEnabled] = useState(true);
   
+  // 跟踪是否有新的用户消息待AI回复
+  const [hasNewUserMessage, setHasNewUserMessage] = useState(() => {
+    // 初始化时检查最后一条消息是否为用户消息
+    if (chat.messages.length > 0) {
+      const lastMessage = chat.messages[chat.messages.length - 1];
+      return lastMessage.role === 'user';
+    }
+    return false;
+  });
+  
   // 使用异步AI状态管理
   const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
   
@@ -617,7 +627,7 @@ export default function ChatInterface({
 
 
 
-  // 发送消息（优化：使用useCallback缓存）
+  // 发送消息（只发送到聊天内容，不调用API）
   const handleSendMessage = useCallback(async () => {
     if (!message.trim() || isLoading) return;
 
@@ -657,18 +667,31 @@ export default function ChatInterface({
     onUpdateChat(updatedChat);
     setMessage('');
     setQuotedMessage(undefined);
+    
+    // 标记有新的用户消息待AI回复
+    setHasNewUserMessage(true);
 
     // 重置输入框高度
     setTimeout(() => {
       adjustTextareaHeight();
     }, 0);
+  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight]);
 
-    // 触发AI回复（异步执行，不等待完成）
-    startAiTask(); // 开始AI任务
+  // 生成AI回复（点击生成按钮时调用API）
+  const handleGenerateAI = useCallback(async () => {
+    if (isLoading || isPending || !hasNewUserMessage) return;
+
+    // 开始AI任务
+    startAiTask();
+    
+    // 清除新用户消息标志，防止重复生成
+    setHasNewUserMessage(false);
+    
+    // 触发AI回复
     if (triggerAiResponseRef.current) {
-      triggerAiResponseRef.current(updatedChat);
+      triggerAiResponseRef.current(chat);
     }
-  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight, startAiTask]);
+  }, [isLoading, isPending, hasNewUserMessage, chat, startAiTask]);
 
     // 触发AI回复的核心函数（优化：使用useCallback缓存）
   const triggerAiResponse = useCallback(async (updatedChat: ChatItem) => {
@@ -1884,6 +1907,14 @@ export default function ChatInterface({
             disabled={!message.trim() || isLoading || isPending}
           >
             发送
+          </button>
+          <button 
+            className="generate-btn"
+            onClick={handleGenerateAI}
+            disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
+            title={hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复"}
+          >
+            🤖
           </button>
         </div>
       </div>
