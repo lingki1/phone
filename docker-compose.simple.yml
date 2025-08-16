@@ -16,6 +16,8 @@ services:
       - ./data:/app/data
       # 可选：持久化日志文件
       - ./logs:/app/logs
+    # 添加用户映射，确保权限正确
+    user: "1000:1000"
     networks:
       - phone-network
 

@@ -46,10 +46,10 @@ mkdir -p data logs
 chmod 755 data logs
 
 # 3. 构建并启动容器
-docker-compose -f docker-compose.simple.yml up -d --build
+docker compose -f docker-compose.simple.yml up -d --build
 
 # 4. 查看日志
-docker-compose -f docker-compose.simple.yml logs -f
+docker compose -f docker-compose.simple.yml logs -f
 ```
 
 **📝 重要说明：** 现在您的聊天室JSON数据文件会保存在主机的 `data/` 目录中，即使Docker容器重建也不会丢失！

@@ -26,9 +26,9 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-# 如果使用自定义用户，取消注释下面的行
-# RUN addgroup --system --gid 1001 nodejs
-# RUN adduser --system --uid 1001 nextjs
+# 创建数据目录并设置权限
+RUN mkdir -p /app/data /app/logs
+RUN chown -R node:node /app/data /app/logs
 
 # 复制构建产物
 COPY --from=builder /app/public ./public
