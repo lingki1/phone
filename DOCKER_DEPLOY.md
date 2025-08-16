@@ -39,12 +39,20 @@ chmod +x deploy.sh
 #### 方式二：手动部署
 
 ```bash
-# 构建并启动容器
-docker compose -f docker-compose.simple.yml up -d --build
+# 1. 创建数据目录（重要！）
+mkdir -p data logs
 
-# 查看日志
+# 2. 确保目录权限
+chmod 755 data logs
+
+# 3. 构建并启动容器
+docker-compose -f docker-compose.simple.yml up -d --build
+
+# 4. 查看日志
 docker-compose -f docker-compose.simple.yml logs -f
 ```
+
+**📝 重要说明：** 现在您的聊天室JSON数据文件会保存在主机的 `data/` 目录中，即使Docker容器重建也不会丢失！
 
 ### 4. 访问应用
 
@@ -140,12 +148,30 @@ ports:
 
 ### 数据持久化
 
-如果需要持久化数据，可以添加卷挂载：
+**重要：** 为了防止Docker重建时丢失数据，已经配置了数据卷挂载：
 
 ```yaml
 volumes:
-  - ./data:/app/data
-  - ./logs:/app/logs
+  - ./data:/app/data    # 持久化聊天室JSON文件和SQLite数据库
+  - ./logs:/app/logs    # 持久化日志文件（可选）
+```
+
+#### 数据文件说明
+
+`data/` 目录包含以下重要文件：
+- `chatroom-messages.json` - 公共聊天室消息数据
+- `chatroom-users.json` - 公共聊天室用户数据  
+- `phone.db` - SQLite数据库（如果使用）
+- 其他应用数据文件
+
+#### 首次部署前准备
+
+```bash
+# 创建数据目录（如果不存在）
+mkdir -p data logs
+
+# 确保目录权限正确
+chmod 755 data logs
 ```
 
 ## 故障排除
@@ -245,11 +271,57 @@ healthcheck:
 docker stats
 ```
 
-### 2. 备份数据
+### 2. 数据备份与恢复
 
+#### 备份数据
 ```bash
-# 备份容器数据
-docker cp phone-app:/app/data ./backup/
+# 创建备份目录
+mkdir -p backup/$(date +%Y%m%d_%H%M%S)
+
+# 备份数据文件（推荐方法 - 直接复制主机目录）
+cp -r data backup/$(date +%Y%m%d_%H%M%S)/
+
+# 或者从容器中备份（如果容器正在运行）
+docker cp phone-app:/app/data backup/$(date +%Y%m%d_%H%M%S)/data
+```
+
+#### 恢复数据
+```bash
+# 停止容器
+docker-compose -f docker-compose.simple.yml down
+
+# 恢复数据文件
+cp -r backup/20231219_143000/data/* ./data/
+
+# 重新启动容器
+docker-compose -f docker-compose.simple.yml up -d
+```
+
+#### 自动备份脚本
+
+**Windows PowerShell 用户：**
+```powershell
+# 运行备份脚本
+./backup.ps1
+
+# 查看备份列表
+Get-ChildItem backup/ -Directory | Sort-Object Name -Descending
+
+# 恢复特定备份
+./restore.ps1 20231219_143000
+```
+
+**Linux/macOS 用户：**
+创建 `backup.sh` 脚本：
+```bash
+#!/bin/bash
+BACKUP_DIR="backup/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+cp -r data "$BACKUP_DIR/"
+echo "数据已备份到: $BACKUP_DIR"
+
+# 清理7天前的备份
+find backup/ -type d -mtime +7 -exec rm -rf {} +
 ```
 
 ### 3. 更新镜像

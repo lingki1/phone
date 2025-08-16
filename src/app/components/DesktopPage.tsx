@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import './DesktopPage.css';
 import { AnnouncementDisplay, AnnouncementEditor, Announcement } from './announcement';
 import { fetchAnnouncements } from './announcement/announcementService';
+import { PublicChatRoom } from './chatroom';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
 
@@ -56,6 +57,9 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
   const [isAnnouncementEditorOpen, setIsAnnouncementEditorOpen] = useState(false);
   const [timeClickCount, setTimeClickCount] = useState(0);
   const [lastTimeClickTime, setLastTimeClickTime] = useState(0);
+  
+  // 聊天室状态
+  const [isChatRoomOpen, setIsChatRoomOpen] = useState(false);
   const [appTiles, setAppTiles] = useState<AppTile[]>([
     {
       id: 'qq',
@@ -104,6 +108,15 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
       size: 'medium',
       status: 'coming-soon'
+    },
+    {
+      id: 'chatroom',
+      name: '聊天室',
+      icon: '🗣️',
+      color: '#10B981',
+      gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      size: 'medium',
+      status: 'available'
     }
   ]);
 
@@ -466,6 +479,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
       return;
     }
 
+    // 处理聊天室应用
+    if (app.id === 'chatroom') {
+      setClickedApp(app.id);
+      setTimeout(() => {
+        setIsChatRoomOpen(true);
+        setClickedApp(null);
+      }, 300);
+      return;
+    }
+
     // 设置点击的应用，触发转场动画
     setClickedApp(app.id);
 
@@ -664,6 +687,12 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
         isOpen={isAnnouncementEditorOpen}
         onClose={() => setIsAnnouncementEditorOpen(false)}
         initialAnnouncements={announcements}
+      />
+
+      {/* 公共聊天室 */}
+      <PublicChatRoom
+        isOpen={isChatRoomOpen}
+        onClose={() => setIsChatRoomOpen(false)}
       />
     </div>
   );
