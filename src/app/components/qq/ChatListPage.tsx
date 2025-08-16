@@ -692,7 +692,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           <div className="search-bar">
             <input
               type="text"
-              className="search-input"
+              className="chatlist-search-input"
               placeholder="搜索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

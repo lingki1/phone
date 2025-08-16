@@ -245,26 +245,26 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     <div className="public-chatroom">
       {/* 头部导航 */}
       <div className="chatroom-header">
-        <button className="back-button" onClick={onClose}>
+        <button className="chatroom-back-button" onClick={onClose}>
           ←
         </button>
         <h1 className="chatroom-title">
           💬 公共聊天室
         </h1>
-        <div className="online-count">
+        <div className="chatroom-online-count">
           {state.users.length} 人在线
         </div>
       </div>
 
       {/* 昵称设置模态框 */}
       {isNicknameModalOpen && (
-        <div className="nickname-modal">
-          <div className="nickname-form">
+        <div className="chatroom-nickname-modal">
+          <div className="chatroom-nickname-form">
             <h2>设置昵称</h2>
             <p>请设置一个昵称来开始聊天</p>
             <input
               type="text"
-              className="nickname-input"
+              className="chatroom-nickname-input"
               placeholder="输入您的昵称"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
@@ -273,17 +273,17 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               autoFocus
             />
             {nicknameError && (
-              <div className="nickname-error">{nicknameError}</div>
+              <div className="chatroom-nickname-error">{nicknameError}</div>
             )}
-            <div className="nickname-buttons">
+            <div className="chatroom-nickname-buttons">
               <button 
-                className="nickname-button secondary" 
+                className="chatroom-nickname-button secondary" 
                 onClick={onClose}
               >
                 取消
               </button>
               <button 
-                className="nickname-button primary"
+                className="chatroom-nickname-button primary"
                 onClick={handleNicknameSubmit}
                 disabled={!nickname.trim()}
               >
@@ -295,27 +295,27 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       )}
 
       {/* 聊天消息区域 */}
-      <div className="chat-messages">
+      <div className="chatroom-chat-messages">
         {isLoading ? (
-          <div className="loading-messages">
-            <span className="loading-spinner"></span>
+          <div className="chatroom-loading-messages">
+            <span className="chatroom-loading-spinner"></span>
             正在加载聊天记录...
           </div>
         ) : state.messages.length === 0 ? (
-          <div className="empty-messages">
+          <div className="chatroom-empty-messages">
             <span className="icon">💬</span>
             还没有人发言，快来说点什么吧！
           </div>
         ) : (
           state.messages.map((message) => (
-            <div key={message.id} className="message-item">
-              <div className="message-header">
-                <span className="message-nickname">{message.nickname}</span>
-                <span className="message-time">
+            <div key={message.id} className="chatroom-message-item">
+              <div className="chatroom-message-header">
+                <span className="chatroom-message-nickname">{message.nickname}</span>
+                <span className="chatroom-message-time">
                   {formatTimestamp(message.timestamp)}
                 </span>
               </div>
-              <div className="message-content">
+              <div className="chatroom-message-content">
                 {message.content}
               </div>
             </div>
@@ -326,17 +326,17 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
 
       {/* 输入区域 */}
       {state.currentUser && (
-        <div className="chat-input-area">
+        <div className="chatroom-chat-input-area">
           {cooldownTime > 0 && (
-            <div className="cooldown-indicator">
+            <div className="chatroom-cooldown-indicator">
               请等待 {cooldownTime} 秒后再发送消息
             </div>
           )}
           
-          <div className="input-container">
+          <div className="chatroom-input-container">
             <textarea
               ref={inputRef}
-              className="message-input"
+              className="chatroom-message-input"
               placeholder="输入消息..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -345,7 +345,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               maxLength={500}
             />
             <button
-              className="send-button"
+              className="chatroom-send-button"
               onClick={handleSendMessage}
               disabled={!canSend}
               title={canSend ? '发送消息' : '请等待冷却时间'}

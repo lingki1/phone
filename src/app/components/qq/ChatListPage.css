@@ -411,7 +411,7 @@
   border-bottom: 1px solid var(--theme-border-light, #f1f3f4);
 }
 
-.search-input {
+.chatlist-search-input {
   width: 100%;
   height: 32px;
   padding: 0 12px;
@@ -424,13 +424,13 @@
   transition: all 0.2s ease;
 }
 
-.search-input:focus {
+.chatlist-search-input:focus {
   border-color: var(--theme-accent-color, #1a73e8);
   background-color: var(--theme-bg-primary, #ffffff);
   box-shadow: 0 0 0 1px var(--theme-accent-color, #1a73e8);
 }
 
-.search-input::placeholder {
+.chatlist-search-input::placeholder {
   color: var(--theme-text-tertiary, #9aa0a6);
 }
 
@@ -440,7 +440,7 @@
     padding: 6px 12px;
   }
   
-  .search-input {
+  .chatlist-search-input {
     height: 28px;
     font-size: 13px;
   }
@@ -451,7 +451,7 @@
     padding: 4px 10px;
   }
   
-  .search-input {
+  .chatlist-search-input {
     height: 26px;
     font-size: 12px;
   }
