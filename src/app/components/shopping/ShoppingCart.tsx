@@ -157,6 +157,58 @@ export default function ShoppingCart({
   const [selectedRecipientId, setSelectedRecipientId] = useState<string>('');
   const [shippingMethod, setShippingMethod] = useState<'instant' | 'fast' | 'slow'>('instant');
   const [isLoadingRecipients, setIsLoadingRecipients] = useState(false);
+  const [cachedApiConfig, setCachedApiConfig] = useState<{
+    proxyUrl: string;
+    apiKey: string;
+    model: string;
+  } | null>(null);
+  const [configCacheTime, setConfigCacheTime] = useState(0);
+  const CACHE_DURATION = 5000; // 5秒缓存
+
+  // 监听API配置变更事件
+  React.useEffect(() => {
+    const handleApiConfigChange = () => {
+      console.log('🔄 购物车 - 检测到API配置变更，清空缓存');
+      setCachedApiConfig(null);
+      setConfigCacheTime(0);
+    };
+
+    window.addEventListener('apiConfigChanged', handleApiConfigChange);
+    
+    return () => {
+      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
+    };
+  }, []);
+
+  // 获取API配置（带缓存和实时刷新）
+  const getApiConfig = React.useCallback(async () => {
+    const now = Date.now();
+    
+    // 如果缓存存在且未过期，使用缓存
+    if (cachedApiConfig && (now - configCacheTime) < CACHE_DURATION) {
+      return cachedApiConfig;
+    }
+    
+    // 从数据库获取最新配置
+    try {
+      const apiConfig = await dataManager.getApiConfig();
+      console.log('🔄 购物车 - 从数据库获取API配置:', {
+        proxyUrl: apiConfig.proxyUrl ? '已设置' : '未设置',
+        apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+        model: apiConfig.model || '未设置'
+      });
+      
+      // 更新缓存
+      setCachedApiConfig(apiConfig);
+      setConfigCacheTime(now);
+      
+      return apiConfig;
+    } catch (error) {
+      console.error('🔄 购物车 - 获取API配置失败:', error);
+      // 如果数据库失败，返回空配置
+      return { proxyUrl: '', apiKey: '', model: '' };
+    }
+  }, [cachedApiConfig, configCacheTime, CACHE_DURATION]);
 
   // 加载可选AI受赠人列表
   React.useEffect(() => {
@@ -322,36 +374,41 @@ export default function ShoppingCart({
             console.log('🎁 礼物描述:', giftDesc);
 
             if (chat) {
-              // 直接调用AI API，就像ChatInterface中的triggerAiResponse一样
-              const effectiveApiConfig = {
-                proxyUrl: chat.settings.proxyUrl || '',
-                apiKey: chat.settings.apiKey || '',
-                model: chat.settings.model || ''
-              };
-              
-              console.log('🎁 API配置检查:', {
-                proxyUrl: effectiveApiConfig.proxyUrl ? '已设置' : '未设置',
-                apiKey: effectiveApiConfig.apiKey ? '已设置' : '未设置',
-                model: effectiveApiConfig.model ? '已设置' : '未设置'
-              });
-
-              // 如果聊天设置中没有API配置，尝试从全局配置获取
-              if (!effectiveApiConfig.proxyUrl || !effectiveApiConfig.apiKey || !effectiveApiConfig.model) {
-                console.log('🎁 聊天设置中API配置不完整，尝试获取全局API配置...');
-                try {
-                  const globalApiConfig = await dataManager.getApiConfig();
-                  effectiveApiConfig.proxyUrl = effectiveApiConfig.proxyUrl || globalApiConfig.proxyUrl;
-                  effectiveApiConfig.apiKey = effectiveApiConfig.apiKey || globalApiConfig.apiKey;
-                  effectiveApiConfig.model = effectiveApiConfig.model || globalApiConfig.model;
-                  
-                  console.log('🎁 全局API配置检查:', {
+              // 全局模式：优先使用全局配置
+              let effectiveApiConfig;
+              try {
+                const globalApiConfig = await getApiConfig();
+                effectiveApiConfig = {
+                  proxyUrl: globalApiConfig.proxyUrl || chat.settings.proxyUrl || '',
+                  apiKey: globalApiConfig.apiKey || chat.settings.apiKey || '',
+                  model: globalApiConfig.model || chat.settings.model || ''
+                };
+                
+                console.log('🎁 API配置检查（全局模式）:', {
+                  globalConfig: {
+                    proxyUrl: globalApiConfig.proxyUrl ? '已设置' : '未设置',
+                    apiKey: globalApiConfig.apiKey ? '已设置' : '未设置',
+                    model: globalApiConfig.model || '未设置'
+                  },
+                  chatSettings: {
+                    proxyUrl: chat.settings.proxyUrl ? '已设置' : '未设置',
+                    apiKey: chat.settings.apiKey ? '已设置' : '未设置',
+                    model: chat.settings.model || '未设置'
+                  },
+                  effectiveConfig: {
                     proxyUrl: effectiveApiConfig.proxyUrl ? '已设置' : '未设置',
                     apiKey: effectiveApiConfig.apiKey ? '已设置' : '未设置',
-                    model: effectiveApiConfig.model ? '已设置' : '未设置'
-                  });
-                } catch (e) {
-                  console.warn('🎁 获取全局API配置失败:', e);
-                }
+                    model: effectiveApiConfig.model || '未设置',
+                    usingGlobal: effectiveApiConfig.proxyUrl === globalApiConfig.proxyUrl
+                  }
+                });
+              } catch (e) {
+                console.warn('🎁 获取全局API配置失败，使用聊天设置:', e);
+                effectiveApiConfig = {
+                  proxyUrl: chat.settings.proxyUrl || '',
+                  apiKey: chat.settings.apiKey || '',
+                  model: chat.settings.model || ''
+                };
               }
 
               if (effectiveApiConfig.proxyUrl && effectiveApiConfig.apiKey && effectiveApiConfig.model) {

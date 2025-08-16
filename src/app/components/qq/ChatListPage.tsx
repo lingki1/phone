@@ -169,16 +169,20 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         });
         setApiConfig(savedApiConfig);
         
-        // 同时更新所有现有聊天的API配置
-        const updatedChats = chats.map(chat => ({
-          ...chat,
-          settings: {
-            ...chat.settings,
-            proxyUrl: savedApiConfig.proxyUrl,
-            apiKey: savedApiConfig.apiKey,
-            model: savedApiConfig.model
-          }
-        }));
+        // 强制更新所有聊天的API配置为全局设置（全局模式）
+        const updatedChats = chats.map(chat => {
+          console.log(`ChatListPage - 强制更新聊天 ${chat.name} 的API配置为全局设置`);
+          return {
+            ...chat,
+            settings: {
+              ...chat.settings,
+              // 清除个人API设置，强制使用全局设置
+              proxyUrl: undefined,
+              apiKey: undefined,
+              model: undefined
+            }
+          };
+        });
         
         setChats(updatedChats);
         

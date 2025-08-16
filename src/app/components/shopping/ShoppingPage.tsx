@@ -36,7 +36,41 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
   const [aiGeneratedCount, setAiGeneratedCount] = useState(0);
   // 移除未使用的presetCount变量
 
-  const productGenerator = useMemo(() => new ProductGenerator(apiConfig), [apiConfig]);
+  // 本地API配置状态（用于实时更新）
+  const [localApiConfig, setLocalApiConfig] = useState<ApiConfig>(apiConfig);
+
+  const productGenerator = useMemo(() => new ProductGenerator(localApiConfig), [localApiConfig]);
+
+  // 监听API配置变更
+  useEffect(() => {
+    const handleApiConfigChange = async () => {
+      try {
+        const { dataManager } = await import('../../utils/dataManager');
+        await dataManager.initDB();
+        const newApiConfig = await dataManager.getApiConfig();
+        console.log('ShoppingPage - 监听到API配置变更，更新本地配置:', {
+          proxyUrl: newApiConfig.proxyUrl ? '已设置' : '未设置',
+          apiKey: newApiConfig.apiKey ? '已设置' : '未设置',
+          model: newApiConfig.model
+        });
+        // 更新本地API配置状态
+        setLocalApiConfig(newApiConfig);
+      } catch (error) {
+        console.error('Failed to reload API config in ShoppingPage:', error);
+      }
+    };
+
+    window.addEventListener('apiConfigChanged', handleApiConfigChange);
+    
+    return () => {
+      window.removeEventListener('apiConfigChanged', handleApiConfigChange);
+    };
+  }, []);
+
+  // 当props中的apiConfig变化时，同步更新本地状态
+  useEffect(() => {
+    setLocalApiConfig(apiConfig);
+  }, [apiConfig]);
 
   // 应用主题到页面
   useEffect(() => {
@@ -109,14 +143,14 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
 
     // 添加API配置调试信息
     console.log('🔍 购物搜索 - API配置检查:', {
-      proxyUrl: apiConfig.proxyUrl,
-      apiKey: apiConfig.apiKey ? '已设置' : '未设置',
-      model: apiConfig.model,
-      hasAllConfig: !!(apiConfig.proxyUrl && apiConfig.apiKey && apiConfig.model)
+      proxyUrl: localApiConfig.proxyUrl,
+      apiKey: localApiConfig.apiKey ? '已设置' : '未设置',
+      model: localApiConfig.model,
+      hasAllConfig: !!(localApiConfig.proxyUrl && localApiConfig.apiKey && localApiConfig.model)
     });
 
     // 检查API配置是否完整
-    if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
+    if (!localApiConfig.proxyUrl || !localApiConfig.apiKey || !localApiConfig.model) {
       alert('API配置不完整，请先在设置中配置代理地址、API密钥和模型名称。');
       return;
     }
@@ -188,7 +222,7 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
     }
 
     // 检查API配置是否完整
-    if (!apiConfig.proxyUrl || !apiConfig.apiKey || !apiConfig.model) {
+    if (!localApiConfig.proxyUrl || !localApiConfig.apiKey || !localApiConfig.model) {
       alert('API配置不完整，请先在设置中配置代理地址、API密钥和模型名称。');
       return;
     }

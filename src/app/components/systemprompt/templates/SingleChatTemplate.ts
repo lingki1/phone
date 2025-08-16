@@ -14,6 +14,15 @@ export class SingleChatTemplate extends BaseTemplate {
     // 获取基础规则
     const baseRules = this.getBaseRules();
     
+    // 获取情境感知规则
+    const situationalRules = this.getSituationalAwarenessRules();
+    
+    // 获取防出戏规则
+    const antiBreakingRules = this.getAntiBreakingRules();
+    
+    // 获取现实逻辑规则
+    const realityLogicRules = this.getRealityLogicRules();
+    
     // 添加单聊特有规则
     const singleRules = [
       ...baseRules,
@@ -28,6 +37,15 @@ ${chat.settings.aiPersona}
 
 # 你的任务与规则：
 ${singleRules.map((rule, index) => `${index + 1}. **${rule}**`).join('\n')}
+
+# 情境感知规则：
+${this.formatSituationalAwarenessRules(situationalRules)}
+
+# 防出戏规则：
+${this.formatAntiBreakingRules(antiBreakingRules)}
+
+# 现实逻辑规则：
+${this.formatRealityLogicRules(realityLogicRules)}
 
 # 你可以使用的操作指令:
 ${this.formatActionInstructions(singleActionInstructions)}

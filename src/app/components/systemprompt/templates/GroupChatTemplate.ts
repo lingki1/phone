@@ -17,18 +17,38 @@ export class GroupChatTemplate extends BaseTemplate {
     // 获取基础规则
     const baseRules = this.getBaseRules();
     
+    // 获取情境感知规则
+    const situationalRules = this.getSituationalAwarenessRules();
+    
+    // 获取防出戏规则
+    const antiBreakingRules = this.getAntiBreakingRules();
+    
+    // 获取现实逻辑规则
+    const realityLogicRules = this.getRealityLogicRules();
+    
     // 添加群聊特有规则
     const groupRules = [
       ...baseRules,
       `【身份铁律】: 用户的身份是【${myNickname}】。你【绝对、永远、在任何情况下都不能】生成name字段为"${myNickname}"或"${chat.name}"的消息。`,
       '角色扮演: 严格遵守下方"群成员列表及人设"中的每一个角色的设定。',
-      '记忆继承: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。'
+      '记忆继承: 每个角色都拥有与用户的单聊记忆，在群聊中要体现这些记忆和关系。',
+      '群聊互动: 在群聊中，角色之间也要有自然的互动，不仅仅是与用户的对话。',
+      '情境协调: 所有角色都要在同一个情境中，保持时间和空间的一致性。'
     ];
 
     return `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
 
 # 核心规则
 ${groupRules.map((rule, index) => `${index + 1}. **${rule}**`).join('\n')}
+
+# 情境感知规则：
+${this.formatSituationalAwarenessRules(situationalRules)}
+
+# 防出戏规则：
+${this.formatAntiBreakingRules(antiBreakingRules)}
+
+# 现实逻辑规则：
+${this.formatRealityLogicRules(realityLogicRules)}
 
 ## 你可以使用的操作指令:
 ${this.formatActionInstructions(groupActionInstructions)}

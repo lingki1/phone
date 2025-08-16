@@ -352,20 +352,22 @@ export default function ChatInterface({
     }
   }, [chat.id, isPending, chat.name, chat.settings.aiAvatar, chat.avatar]);
 
+  // 本地API配置状态（用于实时更新）
+  const [localApiConfig, setLocalApiConfig] = useState<ApiConfig>(apiConfig);
+  
   // 监听API配置变更
   useEffect(() => {
     const handleApiConfigChange = async () => {
       try {
         await dataManager.initDB();
         const newApiConfig = await dataManager.getApiConfig();
-        console.log('ChatInterface - 监听到API配置变更，重新加载:', {
+        console.log('ChatInterface - 监听到API配置变更，更新本地配置:', {
           proxyUrl: newApiConfig.proxyUrl,
           apiKey: newApiConfig.apiKey ? '已设置' : '未设置',
           model: newApiConfig.model
         });
-        // 注意：这里我们不能直接更新apiConfig，因为它是从props传入的
-        // 但是我们可以通过触发父组件的更新来间接更新
-        // 这里主要是为了调试和日志记录
+        // 更新本地API配置状态
+        setLocalApiConfig(newApiConfig);
       } catch (error) {
         console.error('Failed to reload API config in ChatInterface:', error);
       }
@@ -377,6 +379,11 @@ export default function ChatInterface({
       window.removeEventListener('apiConfigChanged', handleApiConfigChange);
     };
   }, []);
+
+  // 当props中的apiConfig变化时，同步更新本地状态
+  useEffect(() => {
+    setLocalApiConfig(apiConfig);
+  }, [apiConfig]);
 
   // 初始化输入框高度
   useEffect(() => {
@@ -695,30 +702,31 @@ export default function ChatInterface({
 
     // 触发AI回复的核心函数（优化：使用useCallback缓存）
   const triggerAiResponse = useCallback(async (updatedChat: ChatItem) => {
-    // 优先使用聊天设置中的API配置，如果没有则使用传入的apiConfig
+    // 全局模式：优先使用全局配置，确保所有聊天都使用最新的API设置
     const effectiveApiConfig = {
-      proxyUrl: updatedChat.settings.proxyUrl || apiConfig.proxyUrl,
-      apiKey: updatedChat.settings.apiKey || apiConfig.apiKey,
-      model: updatedChat.settings.model || apiConfig.model
+      proxyUrl: localApiConfig.proxyUrl || updatedChat.settings.proxyUrl,
+      apiKey: localApiConfig.apiKey || updatedChat.settings.apiKey,
+      model: localApiConfig.model || updatedChat.settings.model
     };
 
     // 添加调试信息
-    console.log('ChatInterface - API配置检查:', {
+    console.log('ChatInterface - API配置检查（全局模式）:', {
+      globalConfig: {
+        proxyUrl: localApiConfig.proxyUrl,
+        apiKey: localApiConfig.apiKey ? '已设置' : '未设置',
+        model: localApiConfig.model
+      },
       chatSettings: {
         proxyUrl: updatedChat.settings.proxyUrl,
         apiKey: updatedChat.settings.apiKey ? '已设置' : '未设置',
         model: updatedChat.settings.model
       },
-      fallbackConfig: {
-        proxyUrl: apiConfig.proxyUrl,
-        apiKey: apiConfig.apiKey ? '已设置' : '未设置',
-        model: apiConfig.model
-      },
       effectiveConfig: {
         proxyUrl: effectiveApiConfig.proxyUrl,
         apiKey: effectiveApiConfig.apiKey ? '已设置' : '未设置',
         model: effectiveApiConfig.model,
-        hasAllConfig: !!(effectiveApiConfig.proxyUrl && effectiveApiConfig.apiKey && effectiveApiConfig.model)
+        hasAllConfig: !!(effectiveApiConfig.proxyUrl && effectiveApiConfig.apiKey && effectiveApiConfig.model),
+        usingGlobal: effectiveApiConfig.proxyUrl === localApiConfig.proxyUrl
       }
     });
 
@@ -933,7 +941,7 @@ export default function ChatInterface({
       setCurrentAiUser(null); // 清除当前AI用户信息
       endAiTask(); // 结束AI任务
     }
-  }, [apiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask]);
+  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask]);
 
   // 将triggerAiResponse赋值给useRef，避免循环依赖
   useEffect(() => {
@@ -1689,7 +1697,7 @@ export default function ChatInterface({
             )}
           </div>
         </div>
-        <div className="chat-actions">
+                  <div className="chat-actions">
           <button 
             className="action-btn"
             onClick={() => setShowWorldBookAssociationSwitch(true)}
@@ -1711,6 +1719,7 @@ export default function ChatInterface({
           >
             🎁
           </button>
+
           {chat.isGroup ? (
             <>
               <button 

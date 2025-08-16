@@ -22,6 +22,9 @@ export interface AiCommentResponse {
 export class AiCommentService {
   private static instance: AiCommentService;
   private isProcessing = false;
+  private cachedApiConfig: ApiConfig | null = null;
+  private configCacheTime = 0;
+  private readonly CACHE_DURATION = 5000; // 5秒缓存
 
   static getInstance(): AiCommentService {
     if (!AiCommentService.instance) {
@@ -30,7 +33,46 @@ export class AiCommentService {
     return AiCommentService.instance;
   }
 
+  constructor() {
+    // 监听API配置变更事件
+    if (typeof window !== 'undefined') {
+      window.addEventListener('apiConfigChanged', () => {
+        console.log('🔄 AI评论服务 - 检测到API配置变更，清空缓存');
+        this.cachedApiConfig = null;
+        this.configCacheTime = 0;
+      });
+    }
+  }
 
+  // 获取API配置（带缓存和实时刷新）
+  private async getApiConfig(): Promise<ApiConfig> {
+    const now = Date.now();
+    
+    // 如果缓存存在且未过期，使用缓存
+    if (this.cachedApiConfig && (now - this.configCacheTime) < this.CACHE_DURATION) {
+      return this.cachedApiConfig;
+    }
+    
+    // 从数据库获取最新配置
+    try {
+      const apiConfig = await dataManager.getApiConfig();
+      console.log('🔄 AI评论服务 - 从数据库获取API配置:', {
+        proxyUrl: apiConfig.proxyUrl ? '已设置' : '未设置',
+        apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+        model: apiConfig.model || '未设置'
+      });
+      
+      // 更新缓存
+      this.cachedApiConfig = apiConfig;
+      this.configCacheTime = now;
+      
+      return apiConfig;
+    } catch (error) {
+      console.error('🔄 AI评论服务 - 获取API配置失败:', error);
+      // 如果数据库失败，返回空配置
+      return { proxyUrl: '', apiKey: '', model: '' };
+    }
+  }
 
   // 生成AI评论（主要方法）
   async generateCommentsForPost(post: DiscoverPost): Promise<AiCommentResponse> {
@@ -43,8 +85,8 @@ export class AiCommentService {
     try {
       console.log('🚀 开始生成AI评论，跳过API配置验证');
       
-      // 1. 获取API配置
-      const apiConfig = await dataManager.getApiConfig();
+      // 1. 获取API配置（使用带缓存的方法）
+      const apiConfig = await this.getApiConfig();
 
       // 2. 获取用户信息
       const userInfo = await dataManager.getPersonalSettings();

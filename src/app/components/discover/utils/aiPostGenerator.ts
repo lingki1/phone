@@ -40,12 +40,56 @@ export interface BatchGenerationResponse {
 export class AiPostGenerator {
   private static instance: AiPostGenerator;
   private isGenerating = false;
+  private cachedApiConfig: ApiConfig | null = null;
+  private configCacheTime = 0;
+  private readonly CACHE_DURATION = 5000; // 5秒缓存
 
   static getInstance(): AiPostGenerator {
     if (!AiPostGenerator.instance) {
       AiPostGenerator.instance = new AiPostGenerator();
     }
     return AiPostGenerator.instance;
+  }
+
+  constructor() {
+    // 监听API配置变更事件
+    if (typeof window !== 'undefined') {
+      window.addEventListener('apiConfigChanged', () => {
+        console.log('🔄 AI动态生成器 - 检测到API配置变更，清空缓存');
+        this.cachedApiConfig = null;
+        this.configCacheTime = 0;
+      });
+    }
+  }
+
+  // 获取API配置（带缓存和实时刷新）
+  private async getApiConfig(): Promise<ApiConfig> {
+    const now = Date.now();
+    
+    // 如果缓存存在且未过期，使用缓存
+    if (this.cachedApiConfig && (now - this.configCacheTime) < this.CACHE_DURATION) {
+      return this.cachedApiConfig;
+    }
+    
+    // 从数据库获取最新配置
+    try {
+      const apiConfig = await dataManager.getApiConfig();
+      console.log('🔄 AI动态生成器 - 从数据库获取API配置:', {
+        proxyUrl: apiConfig.proxyUrl ? '已设置' : '未设置',
+        apiKey: apiConfig.apiKey ? '已设置' : '未设置',
+        model: apiConfig.model || '未设置'
+      });
+      
+      // 更新缓存
+      this.cachedApiConfig = apiConfig;
+      this.configCacheTime = now;
+      
+      return apiConfig;
+    } catch (error) {
+      console.error('🔄 AI动态生成器 - 获取API配置失败:', error);
+      // 如果数据库失败，返回空配置
+      return { proxyUrl: '', apiKey: '', model: '' };
+    }
   }
 
   // 使用统一的JSON解析器
@@ -185,8 +229,8 @@ export class AiPostGenerator {
     try {
       console.log('🚀 开始批量生成内容');
       
-      // 1. 获取API配置
-      const apiConfig = await dataManager.getApiConfig();
+      // 1. 获取API配置（使用带缓存的方法）
+      const apiConfig = await this.getApiConfig();
 
       // 2. 构建批量请求数据（包含历史状态）
       const requestData = await this.buildBatchRequest(characters, postsCount, commentsPerPost);
@@ -289,8 +333,8 @@ export class AiPostGenerator {
     try {
       console.log('🚀 开始生成单个动态和评论');
       
-      // 1. 获取API配置
-      const apiConfig = await dataManager.getApiConfig();
+      // 1. 获取API配置（使用带缓存的方法）
+      const apiConfig = await this.getApiConfig();
 
       // 2. 构建单动态请求数据
       const requestData = await this.buildSinglePostRequest(characters);
@@ -378,8 +422,8 @@ export class AiPostGenerator {
     try {
       console.log('🚀 开始生成AI动态');
       
-      // 1. 获取API配置
-      const apiConfig = await dataManager.getApiConfig();
+      // 1. 获取API配置（使用带缓存的方法）
+      const apiConfig = await this.getApiConfig();
 
       // 3. 构建API请求
       const requestData = await this.buildPostRequest(character);
@@ -435,8 +479,8 @@ export class AiPostGenerator {
     try {
       console.log('💬 开始生成AI评论');
       
-      // 1. 获取API配置
-      const apiConfig = await dataManager.getApiConfig();
+      // 1. 获取API配置（使用带缓存的方法）
+      const apiConfig = await this.getApiConfig();
 
       // 3. 构建API请求
       const requestData = this.buildCommentRequest(post, character);
