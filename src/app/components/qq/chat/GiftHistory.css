@@ -295,6 +295,7 @@
   padding: 6px 0;
   font-size: 13px;
   border-bottom: 1px solid var(--theme-border-very-light, rgba(0, 0, 0, 0.05));
+  gap: 8px;
 }
 
 .gift-item:last-child {
@@ -306,21 +307,31 @@
   align-items: center;
   gap: 8px;
   flex: 1;
+  min-width: 0; /* 允许flex项目收缩 */
 }
 
 .item-name {
   color: var(--theme-text-primary, #333);
   font-weight: 600;
   font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.item-quantity {
+.gift-item-quantity {
   color: var(--theme-text-secondary, #666);
   font-weight: 500;
   background: var(--theme-bg-tertiary, #f1f3f4);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
+  white-space: nowrap;
+  min-width: auto;
+  max-width: 40px;
+  text-align: center;
 }
 
 .item-price {
@@ -472,9 +483,10 @@
     font-size: 13px;
   }
 
-  .item-quantity {
+  .gift-item-quantity {
     font-size: 11px;
     padding: 1px 4px;
+    max-width: 35px;
   }
 
   .item-price {
@@ -531,17 +543,31 @@
     font-size: 12px;
   }
 
-  .item-name {
-    font-size: 12px;
+  .gift-item {
+    gap: 6px;
   }
 
-  .item-quantity {
+  .item-info {
+    gap: 6px;
+  }
+
+  .item-name {
+    font-size: 12px;
+    max-width: 120px; /* 限制名称最大宽度 */
+  }
+
+  .gift-item-quantity {
     font-size: 10px;
     padding: 1px 3px;
+    max-width: 25px;
+    flex-shrink: 0; /* 防止数量被压缩 */
   }
 
   .item-price {
     font-size: 12px;
+    flex-shrink: 0; /* 防止价格被压缩 */
+    min-width: 50px;
+    text-align: right;
   }
 }
 

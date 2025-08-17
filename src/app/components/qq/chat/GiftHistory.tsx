@@ -137,7 +137,7 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
                         <div key={idx} className="gift-item">
                           <div className="item-info">
                             <span className="item-name">{item.name}</span>
-                            <span className="item-quantity">× {item.quantity}</span>
+                            <span className="gift-item-quantity">× {item.quantity}</span>
                           </div>
                           <span className="item-price">¥{item.unitPrice.toFixed(2)}</span>
                         </div>

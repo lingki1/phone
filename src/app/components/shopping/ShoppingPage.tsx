@@ -445,6 +445,15 @@ export default function ShoppingPage({ apiConfig, onBack }: ShoppingPageProps) {
             {isGenerating ? '🔄 生成中...' : '🔍 搜索'}
           </button>
         </div>
+        
+        {/* AI生成状态提示 */}
+        {isGenerating && (
+          <div className="ai-generating-notice">
+            <div className="ai-generating-spinner"></div>
+            <span>🤖 正在启动AI商品生成，请稍等...</span>
+          </div>
+        )}
+        
         {aiGeneratedCount > 0 && (
           <div className="ai-status">
             <span>AI生成: {aiGeneratedCount} 个商品</span>
