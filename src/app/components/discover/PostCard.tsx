@@ -157,10 +157,7 @@ export default function PostCard({
         </div>
         
         <div className="post-header-actions">
-          <div className="post-privacy">
-            {post.isPublic ? '🌍' : '👥'}
-          </div>
-          {onDelete && post.authorId === currentUserId && (
+          {onDelete && (
             <button 
               className="post-delete-btn"
               onClick={onDelete}

@@ -122,8 +122,8 @@ export default function PostComments({
     return [...comments].sort((a, b) => a.timestamp - b.timestamp);
   }, [comments]);
 
-  // 显示评论数量
-  const displayedComments = showAllComments ? sortedComments : sortedComments.slice(0, 3);
+  // 显示评论数量 - 默认显示最新的3条评论
+  const displayedComments = showAllComments ? sortedComments : sortedComments.slice(-3);
   const hasMoreComments = sortedComments.length > 3;
 
   if (comments.length === 0) {
@@ -212,13 +212,16 @@ export default function PostComments({
         </div>
       )}
 
-      {/* 显示更多评论按钮 */}
+      {/* 显示更多/收起评论按钮 */}
       {hasMoreComments && (
         <button 
           className="show-more-comments-btn"
-          onClick={() => setShowAllComments(true)}
+          onClick={() => setShowAllComments(!showAllComments)}
         >
-          查看全部 {comments.length} 条评论
+          {showAllComments 
+            ? `收起评论（只显示最新 ${Math.min(3, sortedComments.length)} 条）`
+            : `查看全部 ${comments.length} 条评论（包含 ${sortedComments.length - 3} 条老评论）`
+          }
         </button>
       )}
     </div>

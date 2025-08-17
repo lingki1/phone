@@ -448,8 +448,20 @@ export default function DiscoverPage() {
       // 触发新内容计数更新
       window.dispatchEvent(new CustomEvent('viewStateUpdated'));
 
-      // 触发AI评论生成
+      // 显示AI评论生成提示
+      console.log('💬 用户评论已发布，AI角色正在思考回复...');
+
+      // 触发AI评论生成（无论是否@角色都会生成）
       await triggerAiCommentForPost(postId);
+      
+      // 额外确保AI评论生成：如果2秒后还没有AI评论，再次尝试
+      setTimeout(async () => {
+        const currentPost = posts.find(p => p.id === postId);
+        if (currentPost && currentPost.comments.filter(c => c.aiGenerated).length === 0) {
+          console.log('🔄 用户评论后2秒内没有AI评论，重新触发生成');
+          await triggerAiCommentForPost(postId);
+        }
+      }, 2000);
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
@@ -473,19 +485,27 @@ export default function DiscoverPage() {
 
       console.log('💬 用户评论后触发AI评论生成，动态ID:', postId);
 
-      // 使用AI评论服务生成评论
-      const result = await aiCommentService.generateCommentsForPost(currentPost);
-      
-      if (result.success) {
-        console.log('✅ AI评论生成成功，共生成', result.comments.length, '条评论');
-        
-        // 触发评论更新事件，让UI自动刷新
-        window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
-          detail: { postId: postId }
-        }));
-      } else {
-        console.warn('⚠️ AI评论生成失败:', result.error);
-      }
+      // 延迟2秒后生成AI评论，给用户更好的体验
+      setTimeout(async () => {
+        try {
+          // 使用AI评论服务生成评论
+          const result = await aiCommentService.generateCommentsForPost(currentPost);
+          
+          if (result.success) {
+            console.log('✅ AI评论生成成功，共生成', result.comments.length, '条评论');
+            
+            // 触发评论更新事件，让UI自动刷新
+            window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
+              detail: { postId: postId }
+            }));
+          } else {
+            console.warn('⚠️ AI评论生成失败:', result.error);
+          }
+        } catch (error) {
+          console.error('❌ 延迟AI评论生成失败:', error);
+        }
+      }, 2000);
+
     } catch (error) {
       console.error('❌ 触发AI评论生成失败:', error);
     }

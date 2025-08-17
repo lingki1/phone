@@ -100,8 +100,8 @@ export class AiCommentService {
       }
 
       // 4. 智能选择AI角色（基于角色人设和动态内容的相关性）
-      // 如果用户刚评论，生成较少的AI评论
-      const maxCharacters = post.comments.length > 0 ? 2 : 3;
+      // 确保总是生成AI评论，提高用户体验
+      const maxCharacters = Math.min(aiCharacters.length, 3); // 最多3个角色
       const selectedCharacters = this.selectRelevantCharacters(aiCharacters, post, maxCharacters);
 
       // 5. 构建API请求
@@ -150,6 +150,9 @@ export class AiCommentService {
     const scoredCharacters = characters.map(character => {
       let score = 0;
       const persona = character.persona.toLowerCase();
+
+      // 基础分数：确保每个角色都有机会参与
+      score += 5;
 
       // 基于动态内容匹配
       if (postContent.includes('学习') && persona.includes('智慧')) score += 3;
@@ -201,16 +204,23 @@ export class AiCommentService {
       score += Math.min(recentActivity / 10, 3); // 活跃度加分，但不超过3分
 
       // 随机因素（确保多样性）
-      score += Math.random() * 1;
+      score += Math.random() * 3;
 
       return { character, score };
     });
 
     // 按分数排序并选择前N个
-    return scoredCharacters
+    const selectedCharacters = scoredCharacters
       .sort((a, b) => b.score - a.score)
       .slice(0, maxCount)
       .map(item => item.character);
+
+    // 如果没有选到角色，至少选择一个
+    if (selectedCharacters.length === 0 && characters.length > 0) {
+      return [characters[0]];
+    }
+
+    return selectedCharacters;
   }
 
   // 构建API请求数据
