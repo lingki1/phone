@@ -102,6 +102,7 @@ export default function ChatInterface({
   const [isPaginationEnabled] = useState(true);
   const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
   
   // 跟踪是否有新的用户消息待AI回复
   const [hasNewUserMessage, setHasNewUserMessage] = useState(() => {
@@ -148,6 +149,9 @@ export default function ChatInterface({
       }
       if (mentionCheckTimerRef.current) {
         clearTimeout(mentionCheckTimerRef.current);
+      }
+      if (scrollUpdateTimerRef.current) {
+        clearTimeout(scrollUpdateTimerRef.current);
       }
     };
   }, [chat.id]);
@@ -210,11 +214,19 @@ export default function ChatInterface({
 
   // 当消息列表更新时，根据用户行为决定是否自动滚动
   useEffect(() => {
-    if (shouldAutoScroll && chat.messages.length > 0) {
+    console.log('Auto scroll check:', {
+      shouldAutoScroll,
+      messagesLength: chat.messages.length,
+      isLoadingMoreMessages,
+      shouldScroll: shouldAutoScroll && chat.messages.length > 0 && !isLoadingMoreMessages
+    });
+    
+    if (shouldAutoScroll && chat.messages.length > 0 && !isLoadingMoreMessages) {
       // 新消息到达时使用平滑滚动
+      console.log('Triggering auto scroll to bottom');
       scrollToBottom(true);
     }
-  }, [chat.messages.length, shouldAutoScroll]);
+  }, [chat.messages.length, shouldAutoScroll, isLoadingMoreMessages]);
 
 
 
@@ -251,17 +263,8 @@ export default function ChatInterface({
     }
   }, [isLoading, isPending, forceScrollToBottom]);
 
-  // 初始化时直接设置滚动位置到最新消息（不使用滚动动画）
-  useEffect(() => {
-    if (chat.messages.length > 0) {
-      // 使用requestAnimationFrame确保DOM渲染完成后再设置滚动位置
-      requestAnimationFrame(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      });
-    }
-  }, [chat.id]); // 只在聊天ID变化时触发，避免重复执行
+  // 移除初始化时的强制滚动到底部，避免进入页面时的JS滚动
+  // （保留后续基于用户行为/新消息触发的自动滚动逻辑）
 
   // 加载数据库中的个人信息
   useEffect(() => {
@@ -430,6 +433,7 @@ export default function ChatInterface({
   // 防抖定时器引用
   const heightAdjustTimerRef = useRef<NodeJS.Timeout | null>(null);
   const mentionCheckTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 处理@提及功能（添加防抖优化）
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1509,6 +1513,9 @@ export default function ChatInterface({
 
     console.log('Loading more messages:', olderMessages.length, 'messages');
 
+    // 设置加载更多消息状态，防止自动滚动干扰
+    setIsLoadingMoreMessages(true);
+
     // 将新消息插入到当前显示消息列表的开头
     setDisplayedMessages(prev => {
       const newMessages = [...olderMessages, ...prev];
@@ -1526,12 +1533,12 @@ export default function ChatInterface({
       
       return newMessages;
     });
-    
-    // 延迟确保新消息被正确渲染
+
+    // 延迟恢复状态，确保滚动位置调整完成
     setTimeout(() => {
-      console.log('Messages loaded, total displayed messages:', displayedMessages.length);
-    }, 100);
-  }, [chat.messages.length, displayedMessages.length]);
+      setIsLoadingMoreMessages(false);
+    }, 500); // 500ms后恢复
+  }, [chat.messages.length]);
 
   // 处理滚动位置更新（保持用户当前查看的位置）
   const handleUpdateScrollPosition = useCallback((oldHeight: number, newHeight: number) => {
@@ -1548,8 +1555,18 @@ export default function ChatInterface({
       newScrollTop: currentScrollTop + heightDifference
     });
     
-    // 调整滚动位置，保持用户当前查看的内容在相同位置
-    messagesContainerRef.current.scrollTop = currentScrollTop + heightDifference;
+    // 清除之前的定时器
+    if (scrollUpdateTimerRef.current) {
+      clearTimeout(scrollUpdateTimerRef.current);
+    }
+    
+    // 使用防抖机制，延迟更新滚动位置
+    scrollUpdateTimerRef.current = setTimeout(() => {
+      if (messagesContainerRef.current) {
+        // 调整滚动位置，保持用户当前查看的内容在相同位置
+        messagesContainerRef.current.scrollTop = currentScrollTop + heightDifference;
+      }
+    }, 50); // 50ms防抖延迟
   }, []);
 
   // 处理语音消息点击（优化：使用useCallback缓存）
@@ -1863,7 +1880,15 @@ export default function ChatInterface({
       setDisplayedMessages(latestMessages);
       setHasMoreMessages(true);
     }
-  }, [chat.messages]);
+    
+    // 如果用户没有手动滚动，确保滚动到底部
+    if (shouldAutoScroll && messages.length > 0) {
+      console.log('Ensuring scroll to bottom after displayed messages update');
+      setTimeout(() => {
+        scrollToBottom(false); // 使用即时滚动，不使用动画
+      }, 100);
+    }
+  }, [chat.messages, shouldAutoScroll]);
 
   return (
     <ChatBackgroundManager
@@ -1983,6 +2008,7 @@ export default function ChatInterface({
                   onUpdateScrollPosition={handleUpdateScrollPosition}
                   isEnabled={isPaginationEnabled && hasMoreMessages}
                   displayedMessages={displayedMessages}
+                  messagesContainerRef={messagesContainerRef}
                 />
                 
                 {!shouldAutoScroll && (

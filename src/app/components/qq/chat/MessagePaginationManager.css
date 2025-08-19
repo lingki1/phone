@@ -37,17 +37,22 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* 防止点击时的任何滑动 */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .load-more-button:hover:not(:disabled) {
   background: var(--bg-hover, #e8e8e8);
   border-color: var(--border-hover, #d0d0d0);
-  transform: translateY(-1px);
+  /* 移除transform动画，避免滑动 */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .load-more-button:active:not(:disabled) {
-  transform: translateY(0);
+  /* 移除transform动画，避免滑动 */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 

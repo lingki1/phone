@@ -11,6 +11,7 @@ interface MessagePaginationManagerProps {
   onUpdateScrollPosition: (oldHeight: number, newHeight: number) => void;
   isEnabled?: boolean;
   displayedMessages?: Message[]; // 新增：当前显示的消息
+  messagesContainerRef?: React.RefObject<HTMLDivElement | null>; // 新增：消息容器引用
 }
 
 interface PaginationState {
@@ -26,7 +27,8 @@ export default function MessagePaginationManager({
   onLoadMoreMessages,
   onUpdateScrollPosition,
   isEnabled = true,
-  displayedMessages = []
+  displayedMessages = [],
+  messagesContainerRef
 }: MessagePaginationManagerProps) {
   const [paginationState, setPaginationState] = useState<PaginationState>({
     isLoading: false,
@@ -36,8 +38,8 @@ export default function MessagePaginationManager({
     totalLoaded: 0
   });
 
-  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // 自动加载与观察器已禁用，避免未使用变量
+  const scrollPositionRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(null);
 
   // 初始化分页状态
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function MessagePaginationManager({
     };
 
     initializePagination();
-  }, [chat.id, chat.messages.length, displayedMessages.length, isEnabled]);
+  }, [chat.id, chat.messages.length, displayedMessages.length, displayedMessages, isEnabled]);
 
   // 加载更多历史消息
   const loadMoreMessages = useCallback(async () => {
@@ -139,19 +141,27 @@ export default function MessagePaginationManager({
 
       if (olderMessages.length > 0) {
         console.log('Loaded older messages:', olderMessages.length);
-        
-        // 记录滚动位置
-        const messagesContainer = document.querySelector('.messages-container') as HTMLElement;
-        const oldScrollHeight = messagesContainer?.scrollHeight || 0;
 
         // 更新消息列表（将新消息插入到开头）
         onLoadMoreMessages(olderMessages);
 
-        // 更新滚动位置
-        if (messagesContainer) {
-          const newScrollHeight = messagesContainer.scrollHeight;
-          onUpdateScrollPosition(oldScrollHeight, newScrollHeight);
-        }
+        // 使用多重requestAnimationFrame确保DOM完全更新后，由父组件统一修正滚动
+        const applyParentScrollAdjustment = () => {
+          const container = messagesContainerRef?.current || document.querySelector('.messages-container') as HTMLElement;
+          if (container && scrollPositionRef.current) {
+            const newScrollHeight = container.scrollHeight;
+            onUpdateScrollPosition(scrollPositionRef.current.scrollHeight, newScrollHeight);
+            scrollPositionRef.current = null;
+          }
+        };
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              applyParentScrollAdjustment();
+            });
+          });
+        });
 
         // 更新分页状态
         setPaginationState(prev => ({
@@ -170,20 +180,26 @@ export default function MessagePaginationManager({
     } finally {
       setPaginationState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [chat.id, chat.messages, paginationState, onLoadMoreMessages, onUpdateScrollPosition, isEnabled, displayedMessages]);
+  }, [chat.id, chat.messages, paginationState, onLoadMoreMessages, isEnabled, displayedMessages, messagesContainerRef, onUpdateScrollPosition]);
 
-  // 设置交叉观察器 - 暂时禁用自动加载
-  useEffect(() => {
-    // 暂时禁用自动加载，只保留手动加载
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
+  // 自动加载功能禁用，无需设置交叉观察器
 
   // 手动加载更多按钮
   const handleManualLoadMore = () => {
+    // 立即记录滚动位置，避免任何延迟
+    const container = messagesContainerRef?.current || document.querySelector('.messages-container') as HTMLElement;
+    if (container) {
+      scrollPositionRef.current = {
+        scrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight
+      };
+      
+      console.log('Immediately recorded scroll position on button click:', {
+        scrollTop: scrollPositionRef.current.scrollTop,
+        scrollHeight: scrollPositionRef.current.scrollHeight
+      });
+    }
+    
     loadMoreMessages();
   };
 

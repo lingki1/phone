@@ -59,18 +59,16 @@ export default function StoryModeDisplay({
     if (messages.length > 0) {
       scrollToBottom(true);
     }
-  }, [messages.length, scrollToBottom]);
+  }, [messages, messages.length, scrollToBottom]);
 
   // 组件挂载时直接设置滚动位置到最新消息（不使用滚动动画）
   useEffect(() => {
-    if (messages.length > 0) {
-      // 使用requestAnimationFrame确保DOM渲染完成后再设置滚动位置
-      requestAnimationFrame(() => {
-        if (storyContainerRef.current) {
-          storyContainerRef.current.scrollTop = storyContainerRef.current.scrollHeight;
-        }
-      });
-    }
+    // 使用requestAnimationFrame确保DOM渲染完成后再设置滚动位置
+    requestAnimationFrame(() => {
+      if (storyContainerRef.current) {
+        storyContainerRef.current.scrollTop = storyContainerRef.current.scrollHeight;
+      }
+    });
   }, []); // 只在组件挂载时触发一次
   
   const formatTime = useCallback((timestamp: number) => {

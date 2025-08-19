@@ -250,6 +250,24 @@
   flex-direction: column;
   gap: 15px;
   margin-top: 0;
+  /* 优化滚动体验 */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* 防止滚动跳动 */
+  scroll-padding-top: 0;
+  scroll-padding-bottom: 0;
+  /* 确保初始滚动位置在底部 */
+  scroll-snap-type: y proximity;
+}
+
+/* 消息容器初始化时滚动到底部 */
+.messages-container.initialized {
+  scroll-behavior: auto;
+}
+
+/* 强制初始滚动到底部 */
+.messages-container:not(.initialized) {
+  scroll-behavior: auto !important;
 }
 
 /* 加载更多按钮容器 */
