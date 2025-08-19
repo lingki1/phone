@@ -29,7 +29,7 @@ export class MemoryInjector implements PromptInjector {
 
   // 构建群聊记忆内容
   private async buildGroupMemoryContent(context: PromptContext): Promise<string> {
-    const { chat, myNickname, allChats, availableContacts } = context;
+    const { chat, myNickname, allChats, availableContacts, isStoryMode } = context;
     
     const groupMemoryPromises = chat.settings.linkedGroupChatIds!.map(async (groupChatId) => {
       // 优先使用 allChats，后备使用 availableContacts
@@ -62,7 +62,8 @@ ${recentMessages}
     });
     
     if (validMemories.length > 0) {
-      return `\n\n# 群聊记忆信息\n${validMemories.join('\n\n')}`;
+      const title = isStoryMode ? '# 故事背景记忆' : '# 群聊记忆信息';
+      return `\n\n${title}\n${validMemories.join('\n\n')}`;
     }
 
     return '';
@@ -70,7 +71,7 @@ ${recentMessages}
 
   // 构建单聊记忆内容
   private buildSingleMemoryContent(context: PromptContext): string {
-    const { chat, myNickname } = context;
+    const { chat, myNickname, isStoryMode } = context;
     
     if (!chat.members) return '';
 
@@ -89,7 +90,8 @@ ${recentMessages}`;
       .join('\n\n');
 
     if (memoryInfo) {
-      return `\n\n# 单聊记忆信息\n${memoryInfo}`;
+      const title = isStoryMode ? '# 角色关系记忆' : '# 单聊记忆信息';
+      return `\n\n${title}\n${memoryInfo}`;
     }
 
     return '';

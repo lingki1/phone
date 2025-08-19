@@ -18,6 +18,7 @@ export interface PromptContext {
   currentPreset?: PresetConfig;
   dbPersonalSettings?: PersonalSettings;
   personalSettings?: PersonalSettings;
+  isStoryMode?: boolean; // 新增：标识是否是剧情模式
 }
 
 // 聊天状态

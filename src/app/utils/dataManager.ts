@@ -5,7 +5,7 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 11; // 升级数据库版本以支持新内容提示功能
+const DB_VERSION = 12; // 升级数据库版本以支持剧情模式消息存储
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
@@ -23,6 +23,7 @@ const DISCOVER_NOTIFICATIONS_STORE = 'discoverNotifications';
 const DISCOVER_DRAFTS_STORE = 'discoverDrafts';
 const DISCOVER_VIEW_STATE_STORE = 'discoverViewState';
 const GLOBAL_DATA_STORE = 'globalData';
+const STORY_MODE_MESSAGES_STORE = 'storyModeMessages';
 
 class DataManager {
   private db: IDBDatabase | null = null;
@@ -151,6 +152,12 @@ class DataManager {
         // 创建全局数据存储（用于头像映射表等）
         if (!db.objectStoreNames.contains(GLOBAL_DATA_STORE)) {
           db.createObjectStore(GLOBAL_DATA_STORE, { keyPath: 'key' });
+        }
+
+        // 创建剧情模式消息存储
+        if (!db.objectStoreNames.contains(STORY_MODE_MESSAGES_STORE)) {
+          const storyModeMessagesStore = db.createObjectStore(STORY_MODE_MESSAGES_STORE, { keyPath: 'chatId' });
+          storyModeMessagesStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
       };
     });
@@ -381,8 +388,9 @@ class DataManager {
       // 收集聊天状态数据
       const chatStatuses: unknown[] = [];
       const chatBackgrounds: unknown[] = [];
+      const storyModeMessages: unknown[] = [];
       
-      // 为每个聊天收集状态和背景数据
+      // 为每个聊天收集状态、背景和剧情模式消息数据
       for (const chat of chats) {
         try {
           const status = await this.getChatStatus(chat.id);
@@ -394,8 +402,13 @@ class DataManager {
           if (background) {
             chatBackgrounds.push({ chatId: chat.id, background });
           }
+
+          const storyMessages = await this.getStoryModeMessages(chat.id);
+          if (storyMessages && storyMessages.length > 0) {
+            storyModeMessages.push({ chatId: chat.id, messages: storyMessages });
+          }
         } catch (error) {
-          console.warn(`Failed to get status/background for chat ${chat.id}:`, error);
+          console.warn(`Failed to get status/background/story messages for chat ${chat.id}:`, error);
         }
       }
       
@@ -426,13 +439,14 @@ class DataManager {
         presets,
         chatStatuses,
         chatBackgrounds,
+        storyModeMessages,
         discoverPosts,
         discoverComments: [], // 评论数据在posts中已包含
         discoverSettings,
         discoverNotifications,
         discoverDrafts,
         exportTime: new Date().toISOString(),
-        version: '1.5'
+        version: '1.6'
       };
 
       return JSON.stringify(exportData, null, 2);
@@ -515,6 +529,13 @@ class DataManager {
         }
       }
 
+      // 导入剧情模式消息
+      if (data.storyModeMessages && Array.isArray(data.storyModeMessages)) {
+        for (const storyData of data.storyModeMessages) {
+          await this.saveStoryModeMessages(storyData.chatId, storyData.messages);
+        }
+      }
+
       // 导入动态数据
       if (data.discoverPosts && Array.isArray(data.discoverPosts)) {
         for (const post of data.discoverPosts) {
@@ -564,7 +585,7 @@ class DataManager {
       const transaction = this.db!.transaction([
         CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, 
         BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE, PRESET_STORE, 
-        CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, DISCOVER_POSTS_STORE, 
+        CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, STORY_MODE_MESSAGES_STORE, DISCOVER_POSTS_STORE, 
         DISCOVER_COMMENTS_STORE, DISCOVER_SETTINGS_STORE, DISCOVER_NOTIFICATIONS_STORE, 
         DISCOVER_DRAFTS_STORE
       ], 'readwrite');
@@ -584,6 +605,7 @@ class DataManager {
       const discoverSettingsStore = transaction.objectStore(DISCOVER_SETTINGS_STORE);
       const discoverNotificationsStore = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
       const discoverDraftsStore = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const storyModeMessagesStore = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
@@ -600,11 +622,12 @@ class DataManager {
       const clearDiscoverSettings = discoverSettingsStore.clear();
       const clearDiscoverNotifications = discoverNotificationsStore.clear();
       const clearDiscoverDrafts = discoverDraftsStore.clear();
+      const clearStoryModeMessages = storyModeMessagesStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 15) resolve();
+        if (completed === 16) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -651,6 +674,9 @@ class DataManager {
 
       clearDiscoverDrafts.onerror = () => reject(new Error('Failed to clear discover drafts data'));
       clearDiscoverDrafts.onsuccess = checkComplete;
+
+      clearStoryModeMessages.onerror = () => reject(new Error('Failed to clear story mode messages data'));
+      clearStoryModeMessages.onsuccess = checkComplete;
     });
   }
 
@@ -660,17 +686,30 @@ class DataManager {
     groupChats: number;
     privateChats: number;
     totalMessages: number;
+    totalStoryModeMessages: number;
   }> {
     const chats = await this.getAllChats();
     const groupChats = chats.filter(chat => chat.isGroup);
     const privateChats = chats.filter(chat => !chat.isGroup);
     const totalMessages = chats.reduce((sum, chat) => sum + chat.messages.length, 0);
 
+    // 统计剧情模式消息总数
+    let totalStoryModeMessages = 0;
+    for (const chat of chats) {
+      try {
+        const storyMessages = await this.getStoryModeMessages(chat.id);
+        totalStoryModeMessages += storyMessages.length;
+      } catch (error) {
+        console.warn(`Failed to get story mode messages for chat ${chat.id}:`, error);
+      }
+    }
+
     return {
       totalChats: chats.length,
       groupChats: groupChats.length,
       privateChats: privateChats.length,
-      totalMessages
+      totalMessages,
+      totalStoryModeMessages
     };
   }
 
@@ -1562,11 +1601,25 @@ class DataManager {
         return [];
       }
 
+      console.log('getChatMessagesBefore called:', {
+        chatId,
+        timestamp,
+        limit,
+        totalMessages: chat.messages.length,
+        messageTimestamps: chat.messages.map(msg => msg.timestamp).slice(0, 5) // 显示前5个时间戳
+      });
+
       // 过滤出时间戳小于指定时间的消息，按时间戳降序排列
       const olderMessages = chat.messages
         .filter(msg => msg.timestamp < timestamp)
         .sort((a, b) => b.timestamp - a.timestamp) // 降序排列，最新的在前面
         .slice(0, limit);
+
+      console.log('getChatMessagesBefore result:', {
+        filteredCount: olderMessages.length,
+        oldestTimestamp: olderMessages.length > 0 ? Math.min(...olderMessages.map(msg => msg.timestamp)) : null,
+        newestTimestamp: olderMessages.length > 0 ? Math.max(...olderMessages.map(msg => msg.timestamp)) : null
+      });
 
       // 返回时按时间戳升序排列，保持正确的显示顺序
       return olderMessages.reverse();
@@ -1624,6 +1677,87 @@ class DataManager {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result?.data || null);
+    });
+  }
+
+  // ==================== 剧情模式消息相关方法 ====================
+
+  // 保存剧情模式消息
+  async saveStoryModeMessages(chatId: string, messages: import('../types/chat').Message[]): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORY_MODE_MESSAGES_STORE], 'readwrite');
+      const store = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
+      const request = store.put({
+        chatId,
+        messages,
+        timestamp: Date.now()
+      });
+
+      request.onerror = () => reject(new Error('Failed to save story mode messages'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取剧情模式消息
+  async getStoryModeMessages(chatId: string): Promise<import('../types/chat').Message[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORY_MODE_MESSAGES_STORE], 'readonly');
+      const store = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
+      const request = store.get(chatId);
+
+      request.onerror = () => reject(new Error('Failed to get story mode messages'));
+      request.onsuccess = () => {
+        const result = request.result;
+        resolve(result ? result.messages : []);
+      };
+    });
+  }
+
+  // 删除剧情模式消息
+  async deleteStoryModeMessages(chatId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORY_MODE_MESSAGES_STORE], 'readwrite');
+      const store = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
+      const request = store.delete(chatId);
+
+      request.onerror = () => reject(new Error('Failed to delete story mode messages'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 添加单条剧情模式消息
+  async addStoryModeMessage(chatId: string, message: import('../types/chat').Message): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORY_MODE_MESSAGES_STORE], 'readwrite');
+      const store = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
+      
+      // 先获取现有消息
+      const getRequest = store.get(chatId);
+      
+      getRequest.onerror = () => reject(new Error('Failed to get existing story mode messages'));
+      getRequest.onsuccess = () => {
+        const result = getRequest.result;
+        const existingMessages = result ? result.messages : [];
+        const updatedMessages = [...existingMessages, message];
+        
+        // 保存更新后的消息列表
+        const putRequest = store.put({
+          chatId,
+          messages: updatedMessages,
+          timestamp: Date.now()
+        });
+        
+        putRequest.onerror = () => reject(new Error('Failed to save updated story mode messages'));
+        putRequest.onsuccess = () => resolve();
+      };
     });
   }
 }

@@ -4,14 +4,14 @@ export class PresetInjector implements PromptInjector {
   priority = 5; // 预设注入优先级很高，在基础模板之前
 
   async inject(context: PromptContext): Promise<string> {
-    const { currentPreset } = context;
+    const { currentPreset, isStoryMode } = context;
     
     if (!currentPreset) {
       return '';
     }
 
     // 构建预设相关的提示词
-    const presetContent = this.buildPresetContent(currentPreset);
+    const presetContent = this.buildPresetContent(currentPreset, isStoryMode);
     
     console.log(`PresetInjector: 成功注入预设 "${currentPreset.name}"`);
     
@@ -19,7 +19,7 @@ export class PresetInjector implements PromptInjector {
   }
 
   // 构建预设内容
-  private buildPresetContent(preset: PresetConfig): string {
+  private buildPresetContent(preset: PresetConfig, isStoryMode?: boolean): string {
     let content = `\n\n# 预设配置: ${preset.name}`;
     
     if (preset.description) {
@@ -29,16 +29,24 @@ export class PresetInjector implements PromptInjector {
     // 添加预设特定的行为指导
     if (preset.temperature !== undefined) {
       const creativity = this.getCreativityDescription(preset.temperature);
-      content += `\n\n## 创造性设置
-- **创造性水平**: ${creativity} (temperature: ${preset.temperature})
-- **最大回复长度**: ${preset.maxTokens} 个token
-- **回复多样性**: ${this.getDiversityDescription(preset.topP)}`;
+      const settingTitle = isStoryMode ? '## 故事创作设置' : '## 创造性设置';
+      const creativityLabel = isStoryMode ? '故事创意水平' : '创造性水平';
+      const lengthLabel = isStoryMode ? '最大故事长度' : '最大回复长度';
+      const diversityLabel = isStoryMode ? '故事多样性' : '回复多样性';
+      
+      content += `\n\n${settingTitle}
+- **${creativityLabel}**: ${creativity} (temperature: ${preset.temperature})
+- **${lengthLabel}**: ${preset.maxTokens} 个token
+- **${diversityLabel}**: ${this.getDiversityDescription(preset.topP)}`;
     }
 
     // 添加预设特定的规则
     if (preset.responseFormat === 'json_object') {
-      content += `\n\n## 输出格式要求
-- **严格JSON格式**: 所有回复必须使用严格的JSON对象格式
+      const formatTitle = isStoryMode ? '## 故事输出格式要求' : '## 输出格式要求';
+      const formatDesc = isStoryMode ? '故事内容必须使用严格的JSON对象格式' : '所有回复必须使用严格的JSON对象格式';
+      
+      content += `\n\n${formatTitle}
+- **严格JSON格式**: ${formatDesc}
 - **结构化输出**: 确保输出符合预定义的结构`;
     }
 

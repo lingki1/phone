@@ -1,0 +1,249 @@
+.story-display-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.story-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  text-align: center;
+}
+
+.story-empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.story-empty-text {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.story-empty-hint {
+  font-size: 14px;
+  color: #888;
+  font-style: italic;
+}
+
+.story-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.story-message {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.story-message:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.story-user-message {
+  border-left-color: #4CAF50;
+  background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+}
+
+.story-ai-message {
+  border-left-color: #2196F3;
+  background: linear-gradient(135deg, #f8fbff 0%, #e3f2fd 100%);
+}
+
+.story-message-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.story-message-avatar {
+  flex-shrink: 0;
+}
+
+.story-avatar-image {
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.story-message-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.story-message-sender {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.story-message-time {
+  font-size: 12px;
+  color: #888;
+}
+
+.story-message-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.story-message:hover .story-message-actions {
+  opacity: 1;
+}
+
+.story-action-btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.story-action-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  transform: scale(1.1);
+}
+
+.story-message-content {
+  position: relative;
+}
+
+.story-content-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.story-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.story-edit-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 2px solid #2196F3;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.story-edit-textarea:focus {
+  border-color: #1976D2;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.story-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.story-save-btn,
+.story-cancel-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.story-save-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.story-save-btn:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.story-cancel-btn {
+  background: #f44336;
+  color: white;
+}
+
+.story-cancel-btn:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .story-display-container {
+    padding: 12px;
+  }
+  
+  .story-message {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .story-message-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .story-message-sender {
+    font-size: 13px;
+  }
+  
+  .story-message-time {
+    font-size: 11px;
+  }
+  
+  .story-content-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .story-action-btn {
+    padding: 3px 5px;
+    font-size: 12px;
+  }
+  
+  .story-edit-textarea {
+    min-height: 80px;
+    padding: 10px;
+    font-size: 13px;
+  }
+  
+  .story-save-btn,
+  .story-cancel-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+

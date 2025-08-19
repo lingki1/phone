@@ -16,6 +16,7 @@ import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
 import { WorldBookAssociationSwitchModal } from './worldbook';
 import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
+import { StoryModeToggle, StoryModeDisplay } from './storymode';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -92,8 +93,15 @@ export default function ChatInterface({
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   const [showGiftHistory, setShowGiftHistory] = useState(false);
   
+  // 剧情模式相关状态
+  const [isStoryMode, setIsStoryMode] = useState(false);
+  const [storyModeInput, setStoryModeInput] = useState('');
+  const [storyModeMessages, setStoryModeMessages] = useState<Message[]>([]);
+  
   // 分页相关状态
   const [isPaginationEnabled] = useState(true);
+  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
   
   // 跟踪是否有新的用户消息待AI回复
   const [hasNewUserMessage, setHasNewUserMessage] = useState(() => {
@@ -109,7 +117,7 @@ export default function ChatInterface({
   const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
   
   // 使用useRef来避免循环依赖
-  const triggerAiResponseRef = useRef<((updatedChat: ChatItem) => Promise<void>) | null>(null);
+  const triggerAiResponseRef = useRef<((updatedChat: ChatItem, isStoryModeCall?: boolean) => Promise<void>) | null>(null);
   const createAiMessageRef = useRef<((msgData: Record<string, unknown>, chat: ChatItem, timestamp: number) => Promise<Message | null>) | null>(null);
   
   // 聊天状态相关状态
@@ -208,6 +216,8 @@ export default function ChatInterface({
     }
   }, [chat.messages.length, shouldAutoScroll]);
 
+
+
   // 当用户发送消息时，强制滚动到底部
   useEffect(() => {
     if (chat.messages.length > 0) {
@@ -218,6 +228,22 @@ export default function ChatInterface({
     }
   }, [chat.messages, forceScrollToBottom]);
 
+  // 初始化剧情模式消息状态
+  useEffect(() => {
+    const loadStoryModeMessages = async () => {
+      try {
+        const messages = await dataManager.getStoryModeMessages(chat.id);
+        setStoryModeMessages(messages);
+        console.log('Story mode messages loaded:', messages.length, 'messages');
+      } catch (error) {
+        console.error('Failed to load story mode messages:', error);
+        setStoryModeMessages([]);
+      }
+    };
+
+    loadStoryModeMessages();
+  }, [chat.id]);
+
   // 当AI开始回复时，自动滚动到底部
   useEffect(() => {
     if (isLoading || isPending) {
@@ -225,6 +251,17 @@ export default function ChatInterface({
     }
   }, [isLoading, isPending, forceScrollToBottom]);
 
+  // 初始化时直接设置滚动位置到最新消息（不使用滚动动画）
+  useEffect(() => {
+    if (chat.messages.length > 0) {
+      // 使用requestAnimationFrame确保DOM渲染完成后再设置滚动位置
+      requestAnimationFrame(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [chat.id]); // 只在聊天ID变化时触发，避免重复执行
 
   // 加载数据库中的个人信息
   useEffect(() => {
@@ -700,8 +737,35 @@ export default function ChatInterface({
     }
   }, [isLoading, isPending, hasNewUserMessage, chat, startAiTask]);
 
-    // 触发AI回复的核心函数（优化：使用useCallback缓存）
-  const triggerAiResponse = useCallback(async (updatedChat: ChatItem) => {
+  // 剧情模式AI回复处理函数
+  const handleStoryModeAiResponse = useCallback(async (aiMessage: Message) => {
+    // 将AI回复添加到剧情模式消息列表
+    setStoryModeMessages(prev => [...prev, aiMessage]);
+    
+    // 保存到IndexedDB
+    try {
+      await dataManager.addStoryModeMessage(chat.id, aiMessage);
+      console.log('Story mode AI response saved to IndexedDB');
+    } catch (error) {
+      console.error('Failed to save story mode AI response to IndexedDB:', error);
+    }
+    
+    // 触发聊天消息通知（仅对AI消息）
+    if (aiMessage.role === 'assistant') {
+      window.dispatchEvent(new CustomEvent('chatMessageGenerated', {
+        detail: {
+          characterName: aiMessage.senderName || chat.name,
+          chatId: chat.id,
+          messageContent: aiMessage.content
+        }
+      }));
+    }
+    
+
+  }, [chat]);
+
+  // 触发AI回复的核心函数（优化：使用useCallback缓存）
+  const triggerAiResponse = useCallback(async (updatedChat: ChatItem, isStoryModeCall: boolean = false) => {
     // 全局模式：优先使用全局配置，确保所有聊天都使用最新的API设置
     const effectiveApiConfig = {
       proxyUrl: localApiConfig.proxyUrl || updatedChat.settings.proxyUrl,
@@ -788,7 +852,8 @@ export default function ChatInterface({
         chatStatus,
         currentPreset,
         dbPersonalSettings: dbPersonalSettings || undefined,
-        personalSettings
+        personalSettings,
+        isStoryMode: isStoryModeCall // 传递剧情模式标识
       };
 
       // 使用新的提示词注入系统
@@ -848,56 +913,73 @@ export default function ChatInterface({
       const aiResponseContent = data.choices[0].message.content;
       
       // 解析AI回复（支持多条消息）
-      const messagesArray = parseAiResponse(aiResponseContent);
+      const messagesArray = parseAiResponse(aiResponseContent, isStoryModeCall);
       
-      // ★★★ 核心修复：处理每条AI消息，实现一条一条显示 ★★★
-      let messageTimestamp = Date.now();
-      let currentChat = updatedChat;
-      
-      for (const msgData of messagesArray) {
-        if (!msgData || typeof msgData !== 'object') {
-          console.warn("收到了格式不规范的AI指令，已跳过:", msgData);
-          continue;
-        }
+      if (isStoryModeCall) {
+        // 剧情模式：直接处理完整内容，不解析成多条消息
+        const aiMessage: Message = {
+          id: `${chat.id}_story_ai_${Date.now()}`,
+          role: 'assistant',
+          content: aiResponseContent,
+          timestamp: Date.now(),
+          type: 'text',
+          senderName: chat.name,
+          isRead: true
+        };
         
-        if (!msgData.type) {
-          if (chat.isGroup && msgData.name && msgData.message) {
-            msgData.type = 'text';
-          } else {
-            console.warn("收到了格式不规范的AI指令（缺少type），已跳过:", msgData);
+        // 直接添加到剧情模式消息列表
+        await handleStoryModeAiResponse(aiMessage);
+      } else {
+        // 普通模式：解析AI回复（支持多条消息）
+        // ★★★ 核心修复：处理每条AI消息，实现一条一条显示 ★★★
+        let messageTimestamp = Date.now();
+        let currentChat = updatedChat;
+        
+        for (const msgData of messagesArray) {
+          if (!msgData || typeof msgData !== 'object') {
+            console.warn("收到了格式不规范的AI指令，已跳过:", msgData);
             continue;
           }
-        }
-
-        // 创建AI消息对象
-        const aiMessage = await createAiMessageRef.current!(msgData, currentChat, messageTimestamp++);
-        if (aiMessage) {
-          // 更新聊天记录
-          currentChat = {
-            ...currentChat,
-            messages: [...currentChat.messages, aiMessage],
-            lastMessage: aiMessage.content,
-            timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-          };
           
-                  // 立即更新UI，显示这条消息
-        onUpdateChat(currentChat);
-        
-        // 触发聊天消息通知（仅对AI消息）
-        if (aiMessage.role === 'assistant') {
-          window.dispatchEvent(new CustomEvent('chatMessageGenerated', {
-            detail: {
-              characterName: aiMessage.senderName || chat.name,
-              chatId: chat.id,
-              messageContent: aiMessage.content
+          if (!msgData.type) {
+            if (chat.isGroup && msgData.name && msgData.message) {
+              msgData.type = 'text';
+            } else {
+              console.warn("收到了格式不规范的AI指令（缺少type），已跳过:", msgData);
+              continue;
             }
-          }));
-        }
-        
-        // 添加延迟，模拟人类打字效果（除了最后一条消息）
-        if (messagesArray.indexOf(msgData) < messagesArray.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 500));
-        }
+          }
+
+          // 创建AI消息对象
+          const aiMessage = await createAiMessageRef.current!(msgData, currentChat, messageTimestamp++);
+          if (aiMessage) {
+            // 普通模式：更新聊天记录
+            currentChat = {
+              ...currentChat,
+              messages: [...currentChat.messages, aiMessage],
+              lastMessage: aiMessage.content,
+              timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+            };
+            
+            // 立即更新UI，显示这条消息
+            onUpdateChat(currentChat);
+            
+            // 触发聊天消息通知（仅对AI消息）
+            if (aiMessage.role === 'assistant') {
+              window.dispatchEvent(new CustomEvent('chatMessageGenerated', {
+                detail: {
+                  characterName: aiMessage.senderName || chat.name,
+                  chatId: chat.id,
+                  messageContent: aiMessage.content
+                }
+              }));
+            }
+            
+            // 添加延迟，模拟人类打字效果（除了最后一条消息）
+            if (messagesArray.indexOf(msgData) < messagesArray.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 500));
+            }
+          }
         }
       }
 
@@ -941,7 +1023,7 @@ export default function ChatInterface({
       setCurrentAiUser(null); // 清除当前AI用户信息
       endAiTask(); // 结束AI任务
     }
-  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask]);
+  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask, handleStoryModeAiResponse]);
 
   // 将triggerAiResponse赋值给useRef，避免循环依赖
   useEffect(() => {
@@ -954,8 +1036,16 @@ export default function ChatInterface({
 
 
 
+
+
   // 解析AI回复（参考V0.03文件的强大解析逻辑）
-  const parseAiResponse = (content: string) => {
+  const parseAiResponse = (content: string, isStoryMode: boolean = false) => {
+    // 剧情模式不需要解析，直接返回原始内容
+    if (isStoryMode) {
+      console.log("剧情模式：直接返回原始内容，不进行解析");
+      return [{ type: 'text', content: content }];
+    }
+
     const trimmedContent = content.trim();
 
     // 方案1：【最优先】尝试作为标准的、单一的JSON数组解析
@@ -1419,20 +1509,29 @@ export default function ChatInterface({
 
     console.log('Loading more messages:', olderMessages.length, 'messages');
 
-    // 将新消息插入到当前消息列表的开头
-    const updatedChat = {
-      ...chat,
-      messages: [...olderMessages, ...chat.messages]
-    };
-    
-    // 更新聊天记录
-    onUpdateChat(updatedChat);
+    // 将新消息插入到当前显示消息列表的开头
+    setDisplayedMessages(prev => {
+      const newMessages = [...olderMessages, ...prev];
+      
+      // 检查是否还有更多消息可以加载
+      const totalMessages = chat.messages.length;
+      const displayedCount = newMessages.length;
+      setHasMoreMessages(displayedCount < totalMessages);
+      
+      console.log('Updated displayed messages:', {
+        totalMessages,
+        displayedCount,
+        hasMore: displayedCount < totalMessages
+      });
+      
+      return newMessages;
+    });
     
     // 延迟确保新消息被正确渲染
     setTimeout(() => {
-      console.log('Messages loaded, total messages:', updatedChat.messages.length);
+      console.log('Messages loaded, total displayed messages:', displayedMessages.length);
     }, 100);
-  }, [chat, onUpdateChat]);
+  }, [chat.messages.length, displayedMessages.length]);
 
   // 处理滚动位置更新（保持用户当前查看的位置）
   const handleUpdateScrollPosition = useCallback((oldHeight: number, newHeight: number) => {
@@ -1558,6 +1657,90 @@ export default function ChatInterface({
     await triggerAiResponse(updatedChat);
   }, [chat, onUpdateChat, triggerAiResponse]);
 
+  // 剧情模式相关函数
+  const handleStoryModeToggle = useCallback(() => {
+    setIsStoryMode(prev => !prev);
+    // 切换模式时清空输入内容，但保留剧情模式消息（已保存在IndexedDB中）
+    setStoryModeInput('');
+    setMessage('');
+    // 不清空剧情模式消息，因为它们已经保存在IndexedDB中
+    
+    // 模式切换后自动滚动到最新消息
+    setTimeout(() => {
+      forceScrollToBottom();
+    }, 100); // 延迟100ms确保状态更新完成
+  }, [forceScrollToBottom]);
+
+  const handleStoryModeSend = useCallback(async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    // 确保聊天对象有avatarMap
+    if (!chat.avatarMap) {
+      chat.avatarMap = {};
+    }
+    
+    // 处理用户头像引用
+    let userAvatarId: string | undefined;
+    if (chat.isGroup && chat.settings.myAvatar) {
+      userAvatarId = `user_${chat.id}`;
+      if (!chat.avatarMap[userAvatarId]) {
+        chat.avatarMap[userAvatarId] = chat.settings.myAvatar;
+      }
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: content.trim(),
+      timestamp: Date.now(),
+      senderName: chat.isGroup ? (chat.settings.myNickname || '我') : undefined,
+      senderAvatarId: userAvatarId,
+      quote: quotedMessage,
+      isRead: true
+    };
+
+    // 添加用户消息到剧情模式消息记录
+    setStoryModeMessages(prev => [...prev, userMessage]);
+    
+    // 保存到IndexedDB
+    try {
+      await dataManager.addStoryModeMessage(chat.id, userMessage);
+      console.log('Story mode message saved to IndexedDB');
+    } catch (error) {
+      console.error('Failed to save story mode message to IndexedDB:', error);
+    }
+    
+    setQuotedMessage(undefined);
+    
+    // 标记有新的用户消息待AI回复
+    setHasNewUserMessage(true);
+    
+    // 清空输入框
+    setStoryModeInput('');
+    
+
+  }, [isLoading, chat, quotedMessage]);
+
+  const handleStoryModeGenerate = useCallback(async () => {
+    if (isLoading || isPending || !hasNewUserMessage) return;
+
+    // 开始AI任务
+    startAiTask();
+    
+    // 清除新用户消息标志，防止重复生成
+    setHasNewUserMessage(false);
+    
+    // 触发AI回复，但使用剧情模式的消息列表
+    if (triggerAiResponseRef.current) {
+      // 创建一个临时的聊天对象，使用剧情模式的消息
+      const storyModeChat = {
+        ...chat,
+        messages: storyModeMessages
+      };
+      triggerAiResponseRef.current(storyModeChat, true); // 传递true表示是剧情模式调用
+    }
+  }, [isLoading, isPending, hasNewUserMessage, chat, storyModeMessages, startAiTask]);
+
 
 
   // 缓存formatTime函数，避免每次渲染都创建新函数
@@ -1665,7 +1848,22 @@ export default function ChatInterface({
     }
   }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket, chat]);
 
-
+  // 初始化显示的消息（只显示最新的50条）
+  useEffect(() => {
+    const INITIAL_MESSAGE_COUNT = 50;
+    const messages = chat.messages;
+    
+    if (messages.length <= INITIAL_MESSAGE_COUNT) {
+      // 如果消息数量不多，显示所有消息
+      setDisplayedMessages(messages);
+      setHasMoreMessages(false);
+    } else {
+      // 如果消息数量很多，只显示最新的50条
+      const latestMessages = messages.slice(-INITIAL_MESSAGE_COUNT);
+      setDisplayedMessages(latestMessages);
+      setHasMoreMessages(true);
+    }
+  }, [chat.messages]);
 
   return (
     <ChatBackgroundManager
@@ -1753,56 +1951,79 @@ export default function ChatInterface({
 
       {/* 消息列表 */}
       <div className="messages-container" ref={messagesContainerRef} onScroll={handleScroll}>
-        {chat.messages.length === 0 ? (
-          <div className="empty-chat">
-            <p>开始和 {chat.name} 聊天吧！</p>
-          </div>
+        {isStoryMode ? (
+          // 剧情模式显示
+          <StoryModeDisplay
+            messages={storyModeMessages}
+            chat={chat}
+            dbPersonalSettings={dbPersonalSettings}
+            personalSettings={personalSettings}
+            onQuoteMessage={handleQuoteMessage}
+            onEditMessage={handleEditMessage}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            onDeleteMessage={handleDeleteMessage}
+            onRegenerateAI={handleRegenerateAI}
+            editingMessage={editingMessage}
+            setEditingMessage={setEditingMessage}
+          />
         ) : (
+          // 普通聊天模式显示
           <>
-            {/* 消息分页管理器 */}
-            <MessagePaginationManager
-              chat={chat}
-              onLoadMoreMessages={handleLoadMoreMessages}
-              onUpdateScrollPosition={handleUpdateScrollPosition}
-              isEnabled={isPaginationEnabled && chat.messages.length > 10}
-            />
-            
-            {!shouldAutoScroll && (
-              <button 
-                className="scroll-to-bottom-btn"
-                onClick={() => scrollToBottom(true)}
-                title="滚动到最新消息"
-              >
-                ↓
-              </button>
+            {chat.messages.length === 0 ? (
+              <div className="empty-chat">
+                <p>开始和 {chat.name} 聊天吧！</p>
+              </div>
+            ) : (
+              <>
+                {/* 消息分页管理器 */}
+                <MessagePaginationManager
+                  chat={chat}
+                  onLoadMoreMessages={handleLoadMoreMessages}
+                  onUpdateScrollPosition={handleUpdateScrollPosition}
+                  isEnabled={isPaginationEnabled && hasMoreMessages}
+                  displayedMessages={displayedMessages}
+                />
+                
+                {!shouldAutoScroll && (
+                  <button 
+                    className="scroll-to-bottom-btn"
+                    onClick={() => scrollToBottom(true)}
+                    title="滚动到最新消息"
+                  >
+                    ↓
+                  </button>
+                )}
+                
+                {/* 优化消息渲染，支持分页加载 */}
+                {displayedMessages.map((msg, index) => (
+                  <MessageItem
+                    key={msg.id}
+                    msg={msg}
+                    chat={chat}
+                    index={index}
+                    totalMessages={displayedMessages.length}
+                    dbPersonalSettings={dbPersonalSettings}
+                    personalSettings={personalSettings}
+                    editingMessage={editingMessage}
+                    onQuoteMessage={handleQuoteMessage}
+                    onEditMessage={handleEditMessage}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onDeleteMessage={handleDeleteMessage}
+                    onRegenerateAI={handleRegenerateAI}
+                    renderMessageContent={renderMessageContent}
+                    formatTime={formatTime}
+                    setEditingMessage={setEditingMessage}
+                  />
+                ))}
+              </>
             )}
-                        {/* 优化消息渲染，支持分页加载 */}
-            {chat.messages.map((msg, index) => (
-              <MessageItem
-                key={msg.id}
-                msg={msg}
-                chat={chat}
-                index={index}
-                totalMessages={chat.messages.length}
-                dbPersonalSettings={dbPersonalSettings}
-                personalSettings={personalSettings}
-                editingMessage={editingMessage}
-                onQuoteMessage={handleQuoteMessage}
-                onEditMessage={handleEditMessage}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onDeleteMessage={handleDeleteMessage}
-                onRegenerateAI={handleRegenerateAI}
-                renderMessageContent={renderMessageContent}
-                formatTime={formatTime}
-                setEditingMessage={setEditingMessage}
-              />
-            ))}
-        </>
+          </>
         )}
         
         {/* AI正在输入指示器 */}
-        {(isLoading || isPending) && (
+        {(isLoading || isPending) && !isStoryMode && (
           <div className={`message ai-message ${chat.isGroup ? 'group-message' : ''}`}>
             <div className="message-avatar">
               <Image 
@@ -1879,25 +2100,45 @@ export default function ChatInterface({
         
         {/* 功能按钮行 */}
         <div className="action-buttons-row">
-          <button 
-            className="action-btn red-packet-btn"
-            onClick={() => setShowSendRedPacket(true)}
-            disabled={isLoading || isPending}
-            title="发送红包"
-          >
-            <span className="btn-icon">🧧</span>
-            <span className="btn-text">红包</span>
-          </button>
-          {/* 预留位置给未来的功能按钮 */}
+          <div className="action-buttons-left">
+            {!isStoryMode && (
+              <button 
+                className="action-btn red-packet-btn"
+                onClick={() => setShowSendRedPacket(true)}
+                disabled={isLoading || isPending}
+                title="发送红包"
+              >
+                <span className="btn-icon">🧧</span>
+                <span className="btn-text">红包</span>
+              </button>
+            )}
+            {/* 预留位置给未来的功能按钮 */}
+          </div>
+          <div className="action-buttons-right">
+            <StoryModeToggle
+              isStoryMode={isStoryMode}
+              onToggle={handleStoryModeToggle}
+              disabled={isLoading || isPending}
+            />
+          </div>
         </div>
         
         {/* 输入框和发送按钮行 */}
         <div className="input-wrapper">
           <textarea
             ref={textareaRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            value={isStoryMode ? storyModeInput : message}
+            onChange={isStoryMode ? (e) => {
+              setStoryModeInput(e.target.value);
+            } : handleInputChange}
+            onKeyPress={isStoryMode ? (e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (storyModeInput.trim()) {
+                  handleStoryModeSend(storyModeInput);
+                }
+              }
+            } : handleKeyPress}
             onFocus={() => {
               // 手机端输入框聚焦时滚动到视口
               setTimeout(() => {
@@ -1907,7 +2148,11 @@ export default function ChatInterface({
                 });
               }, 300);
             }}
-            placeholder={isPending ? "AI正在回复中，请稍候..." : (chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息...")}
+            placeholder={
+              isPending 
+                ? (isStoryMode ? "AI正在生成剧情中，请稍候..." : "AI正在回复中，请稍候...")
+                : (isStoryMode ? "继续编写剧情..." : (chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息..."))
+            }
             rows={1}
             disabled={isLoading || isPending}
             style={{
@@ -1920,21 +2165,30 @@ export default function ChatInterface({
           <div className="send-buttons">
             <button 
               className="send-btn"
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isLoading || isPending}
-              title="发送消息"
+              onClick={isStoryMode ? () => {
+                // 剧情模式发送逻辑
+                if (storyModeInput.trim()) {
+                  handleStoryModeSend(storyModeInput);
+                }
+              } : handleSendMessage}
+              disabled={isLoading || isPending || (isStoryMode ? !storyModeInput.trim() : !message.trim())}
+              title={isStoryMode ? "继续剧情" : "发送消息"}
             >
               <span className="btn-icon">📤</span>
-              <span className="btn-text">发送</span>
+              <span className="btn-text">{isStoryMode ? "继续" : "发送"}</span>
             </button>
             <button 
               className="generate-btn"
-              onClick={handleGenerateAI}
+              onClick={isStoryMode ? handleStoryModeGenerate : handleGenerateAI}
               disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
-              title={hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复"}
+              title={
+                isStoryMode 
+                  ? (hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成")
+                  : (hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复")
+              }
             >
               <span className="btn-icon">🤖</span>
-              <span className="btn-text">AI回复</span>
+              <span className="btn-text">{isStoryMode ? "AI生成" : "AI回复"}</span>
             </button>
           </div>
         </div>

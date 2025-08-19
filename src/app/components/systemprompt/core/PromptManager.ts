@@ -5,10 +5,14 @@ import {
 } from '../types';
 import { GroupChatTemplate } from '../templates/GroupChatTemplate';
 import { SingleChatTemplate } from '../templates/SingleChatTemplate';
+import { StoryModeTemplate } from '../templates/StoryModeTemplate';
 import { WorldBookInjector } from '../injectors/WorldBookInjector';
 import { MemoryInjector } from '../injectors/MemoryInjector';
 import { StatusInjector } from '../injectors/StatusInjector';
 import { PresetInjector } from '../injectors/PresetInjector';
+import { StoryModeInjector } from '../injectors/StoryModeInjector';
+import { NarrativeStyleInjector } from '../injectors/NarrativeStyleInjector';
+import { CharacterStateInjector } from '../injectors/CharacterStateInjector';
 import { ItemInjector } from '../injectors/ItemInjector';
 
 export class PromptManager {
@@ -23,7 +27,11 @@ export class PromptManager {
       new WorldBookInjector(),
       new MemoryInjector(),
       new StatusInjector(),
-      new ItemInjector()
+      new ItemInjector(),
+      // 剧情模式专用注入器
+      new StoryModeInjector(),
+      new NarrativeStyleInjector(),
+      new CharacterStateInjector()
     ];
   }
 
@@ -89,7 +97,10 @@ export class PromptManager {
 
   // 构建基础模板
   private buildBaseTemplate(context: PromptContext) {
-    if (context.chat.isGroup) {
+    // 检查是否是剧情模式
+    if (context.isStoryMode) {
+      return new StoryModeTemplate(context);
+    } else if (context.chat.isGroup) {
       return new GroupChatTemplate(context);
     } else {
       return new SingleChatTemplate(context);

@@ -10,6 +10,7 @@ interface MessagePaginationManagerProps {
   onLoadMoreMessages: (messages: Message[]) => void;
   onUpdateScrollPosition: (oldHeight: number, newHeight: number) => void;
   isEnabled?: boolean;
+  displayedMessages?: Message[]; // 新增：当前显示的消息
 }
 
 interface PaginationState {
@@ -24,7 +25,8 @@ export default function MessagePaginationManager({
   chat,
   onLoadMoreMessages,
   onUpdateScrollPosition,
-  isEnabled = true
+  isEnabled = true,
+  displayedMessages = []
 }: MessagePaginationManagerProps) {
   const [paginationState, setPaginationState] = useState<PaginationState>({
     isLoading: false,
@@ -44,26 +46,51 @@ export default function MessagePaginationManager({
     const initializePagination = async () => {
       try {
         await dataManager.initDB();
-        const totalMessages = await dataManager.getChatMessageCount(chat.id);
         
-        console.log('Pagination initialized:', {
-          totalMessages,
-          currentMessages: chat.messages.length,
-          hasMore: totalMessages > chat.messages.length
-        });
+        // 检查是否真的有更早的消息可以加载
+        if (displayedMessages.length > 0) {
+          const oldestMessageTimestamp = Math.min(...displayedMessages.map(msg => msg.timestamp));
+          const olderMessages = await dataManager.getChatMessagesBefore(
+            chat.id,
+            oldestMessageTimestamp,
+            1 // 只检查是否有1条更早的消息
+          );
+          
+          console.log('Pagination initialized:', {
+            totalMessages: chat.messages.length,
+            displayedMessages: displayedMessages.length,
+            oldestTimestamp: oldestMessageTimestamp,
+            hasOlderMessages: olderMessages.length > 0,
+            hasMore: olderMessages.length > 0
+          });
+          
+          setPaginationState(prev => ({
+            ...prev,
+            hasMore: olderMessages.length > 0,
+            totalLoaded: displayedMessages.length
+          }));
+        } else {
+          // 如果没有显示的消息，检查数据库中是否有消息
+          const totalMessages = await dataManager.getChatMessageCount(chat.id);
+          console.log('Pagination initialized (no displayed messages):', {
+            totalMessages,
+            hasMore: totalMessages > 0
+          });
+          
+          setPaginationState(prev => ({
+            ...prev,
+            hasMore: totalMessages > 0,
+            totalLoaded: 0
+          }));
+        }
         
-        setPaginationState(prev => ({
-          ...prev,
-          hasMore: totalMessages > chat.messages.length,
-          totalLoaded: chat.messages.length
-        }));
       } catch (error) {
         console.error('Failed to initialize pagination:', error);
       }
     };
 
     initializePagination();
-  }, [chat.id, chat.messages.length, isEnabled]);
+  }, [chat.id, chat.messages.length, displayedMessages.length, isEnabled]);
 
   // 加载更多历史消息
   const loadMoreMessages = useCallback(async () => {
@@ -83,9 +110,16 @@ export default function MessagePaginationManager({
       await dataManager.initDB();
       
       // 获取当前消息列表中最旧消息的时间戳
-      const oldestMessageTimestamp = chat.messages.length > 0 
-        ? Math.min(...chat.messages.map(msg => msg.timestamp))
+      const oldestMessageTimestamp = displayedMessages.length > 0 
+        ? Math.min(...displayedMessages.map(msg => msg.timestamp))
         : Date.now();
+
+      console.log('Loading messages before timestamp:', {
+        oldestMessageTimestamp,
+        displayedMessagesCount: displayedMessages.length,
+        totalMessagesCount: chat.messages.length,
+        pageSize: paginationState.pageSize
+      });
 
       // 从数据库加载更早的消息
       const olderMessages = await dataManager.getChatMessagesBefore(
@@ -93,6 +127,15 @@ export default function MessagePaginationManager({
         oldestMessageTimestamp,
         paginationState.pageSize
       );
+
+      console.log('Database returned older messages:', {
+        count: olderMessages.length,
+        messages: olderMessages.map(msg => ({
+          id: msg.id,
+          timestamp: msg.timestamp,
+          content: msg.content.substring(0, 50) + '...'
+        }))
+      });
 
       if (olderMessages.length > 0) {
         console.log('Loaded older messages:', olderMessages.length);
@@ -127,34 +170,17 @@ export default function MessagePaginationManager({
     } finally {
       setPaginationState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [chat.id, chat.messages, paginationState, onLoadMoreMessages, onUpdateScrollPosition, isEnabled]);
+  }, [chat.id, chat.messages, paginationState, onLoadMoreMessages, onUpdateScrollPosition, isEnabled, displayedMessages]);
 
-  // 设置交叉观察器
+  // 设置交叉观察器 - 暂时禁用自动加载
   useEffect(() => {
-    if (!isEnabled || !loadMoreTriggerRef.current) return;
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && paginationState.hasMore && !paginationState.isLoading) {
-          loadMoreMessages();
-        }
-      },
-      {
-        root: null, // 使用viewport作为root
-        rootMargin: '200px', // 提前200px触发加载
-        threshold: 0.1
-      }
-    );
-
-    observerRef.current.observe(loadMoreTriggerRef.current);
-
+    // 暂时禁用自动加载，只保留手动加载
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
-  }, [loadMoreMessages, paginationState.hasMore, paginationState.isLoading, isEnabled]);
+  }, []);
 
   // 手动加载更多按钮
   const handleManualLoadMore = () => {
@@ -165,11 +191,10 @@ export default function MessagePaginationManager({
     return null;
   }
 
+  const remainingMessages = chat.messages.length - displayedMessages.length;
+
   return (
     <div className="message-pagination-manager">
-      {/* 加载触发器（用于自动检测） */}
-      <div ref={loadMoreTriggerRef} className="load-more-trigger" />
-      
       {/* 手动加载按钮 */}
       <div className="load-more-button-container">
         <button
@@ -184,9 +209,9 @@ export default function MessagePaginationManager({
             </>
           ) : (
             <>
-              <span>加载更多消息</span>
+              <span>加载更多历史消息</span>
               <span className="message-count">
-                (已加载 {paginationState.totalLoaded} 条)
+                (还有 {remainingMessages} 条消息)
               </span>
             </>
           )}

@@ -662,9 +662,21 @@
 .action-buttons-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
   margin-bottom: 10px;
   padding: 0 5px;
+}
+
+.action-buttons-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-buttons-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .action-btn {

@@ -5,7 +5,7 @@ export class WorldBookInjector implements PromptInjector {
   priority = 10; // 世界书注入优先级较低，在基础模板之后
 
   async inject(context: PromptContext): Promise<string> {
-    const { chat } = context;
+    const { chat, isStoryMode } = context;
     const linkedWorldBookIds = chat.settings.linkedWorldBookIds || [];
 
     console.log('WorldBookInjector: 开始注入世界书', {
@@ -43,7 +43,9 @@ export class WorldBookInjector implements PromptInjector {
         worldBooks: validWorldBooks.map(wb => ({ id: wb.id, name: wb.name, category: wb.category }))
       });
       
-      const injectedContent = `\n\n# 世界设定\n${worldBookContent}`;
+      const injectedContent = isStoryMode 
+        ? `\n\n# 故事世界观设定\n${worldBookContent}`
+        : `\n\n# 世界设定\n${worldBookContent}`;
       console.log('WorldBookInjector: 注入内容长度:', injectedContent.length);
       
       return injectedContent;
