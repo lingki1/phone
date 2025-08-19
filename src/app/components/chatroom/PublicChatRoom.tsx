@@ -13,7 +13,8 @@ import {
   canUserSendMessage,
   getRemainingWaitTime,
   formatTimestamp,
-  cleanupOldUsers
+  cleanupOldUsers,
+  updateUserNickname
 } from './chatService';
 
 interface PublicChatRoomProps {
@@ -179,6 +180,30 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
 
   const handleSendMessage = async () => {
     if (!state.currentUser || !inputMessage.trim()) return;
+
+    // 支持命令：/name 新名字 —— 修改当前用户昵称，不发送消息
+    if (inputMessage.trim().toLowerCase().startsWith('/name ')) {
+      const newName = inputMessage.trim().slice(6).trim();
+      const validation = validateNickname(newName);
+      if (!validation.valid) {
+        alert(validation.error || '昵称无效');
+        return;
+      }
+      try {
+        const updatedUser = await updateUserNickname(state.currentUser.id, newName);
+        localStorage.setItem('chatroom-nickname', updatedUser.nickname);
+        setState(prev => ({
+          ...prev,
+          currentUser: prev.currentUser ? { ...prev.currentUser, nickname: updatedUser.nickname } : prev.currentUser
+        }));
+        setInputMessage('');
+        // 刷新消息与在线用户列表
+        setTimeout(refreshMessages, 100);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : '更新昵称失败');
+      }
+      return;
+    }
 
     // 检查冷却时间
     if (!canUserSendMessage(state.currentUser)) {

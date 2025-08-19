@@ -97,6 +97,8 @@ export default function ChatInterface({
   const [isStoryMode, setIsStoryMode] = useState(false);
   const [storyModeInput, setStoryModeInput] = useState('');
   const [storyModeMessages, setStoryModeMessages] = useState<Message[]>([]);
+  // 回复触发方式：false=按键生成，true=发送键生成
+  const [autoGenerateOnSend, setAutoGenerateOnSend] = useState<boolean>(false);
   
   // 分页相关状态
   const [isPaginationEnabled] = useState(true);
@@ -155,6 +157,20 @@ export default function ChatInterface({
       }
     };
   }, [chat.id]);
+
+  // 加载与持久化“发送即生成”设置
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`autoGenerateOnSend_${chat.id}`);
+      setAutoGenerateOnSend(saved === 'true');
+    } catch {}
+  }, [chat.id]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`autoGenerateOnSend_${chat.id}`, autoGenerateOnSend ? 'true' : 'false');
+    } catch {}
+  }, [chat.id, autoGenerateOnSend]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -723,7 +739,17 @@ export default function ChatInterface({
     setTimeout(() => {
       adjustTextareaHeight();
     }, 0);
-  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight]);
+    
+    // 如果开启“发送键生成回复”，则自动触发AI
+    if (autoGenerateOnSend && !isPending && !isLoading) {
+      // 开始AI任务并清除新消息标志，避免重复
+      startAiTask();
+      setHasNewUserMessage(false);
+      if (triggerAiResponseRef.current) {
+        triggerAiResponseRef.current(updatedChat);
+      }
+    }
+  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight, autoGenerateOnSend, isPending, startAiTask]);
 
   // 生成AI回复（点击生成按钮时调用API）
   const handleGenerateAI = useCallback(async () => {
@@ -1716,8 +1742,11 @@ export default function ChatInterface({
       isRead: true
     };
 
+    // 先构造更新后的剧情消息列表，便于后续可能的自动生成
+    const updatedStoryMessages = [...storyModeMessages, userMessage];
+    
     // 添加用户消息到剧情模式消息记录
-    setStoryModeMessages(prev => [...prev, userMessage]);
+    setStoryModeMessages(updatedStoryMessages);
     
     // 保存到IndexedDB
     try {
@@ -1735,8 +1764,19 @@ export default function ChatInterface({
     // 清空输入框
     setStoryModeInput('');
     
-
-  }, [isLoading, chat, quotedMessage]);
+    // 如果开启“发送键生成回复”，则自动触发剧情模式AI
+    if (autoGenerateOnSend && !isPending && !isLoading) {
+      startAiTask();
+      setHasNewUserMessage(false);
+      if (triggerAiResponseRef.current) {
+        const storyModeChat = {
+          ...chat,
+          messages: updatedStoryMessages
+        };
+        triggerAiResponseRef.current(storyModeChat, true);
+      }
+    }
+  }, [isLoading, chat, quotedMessage, autoGenerateOnSend, isPending, startAiTask, storyModeMessages]);
 
   const handleStoryModeGenerate = useCallback(async () => {
     if (isLoading || isPending || !hasNewUserMessage) return;
@@ -2146,6 +2186,19 @@ export default function ChatInterface({
               onToggle={handleStoryModeToggle}
               disabled={isLoading || isPending}
             />
+            <div className="reply-trigger-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
+              <label title={autoGenerateOnSend ? '发送消息后自动调用AI生成回复' : '发送消息后需要点击AI生成按钮'} style={{ display: 'flex', alignItems: 'center', cursor: (isLoading || isPending) ? 'not-allowed' : 'pointer', gap: '6px' }}>
+                <input
+                  type="checkbox"
+                  checked={autoGenerateOnSend}
+                  onChange={(e) => setAutoGenerateOnSend(e.target.checked)}
+                  disabled={isLoading || isPending}
+                />
+                <span style={{ fontSize: '12px', color: '#666' }}>
+                  {autoGenerateOnSend ? '发送即生成' : '按键生成'}
+                </span>
+              </label>
+            </div>
           </div>
         </div>
         
@@ -2203,19 +2256,21 @@ export default function ChatInterface({
               <span className="btn-icon">📤</span>
               <span className="btn-text">{isStoryMode ? "继续" : "发送"}</span>
             </button>
-            <button 
-              className="generate-btn"
-              onClick={isStoryMode ? handleStoryModeGenerate : handleGenerateAI}
-              disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
-              title={
-                isStoryMode 
-                  ? (hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成")
-                  : (hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复")
-              }
-            >
-              <span className="btn-icon">🤖</span>
-              <span className="btn-text">{isStoryMode ? "AI生成" : "AI回复"}</span>
-            </button>
+            {!autoGenerateOnSend && (
+              <button 
+                className="generate-btn"
+                onClick={isStoryMode ? handleStoryModeGenerate : handleGenerateAI}
+                disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
+                title={
+                  isStoryMode 
+                    ? (hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成")
+                    : (hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复")
+                }
+              >
+                <span className="btn-icon">🤖</span>
+                <span className="btn-text">{isStoryMode ? "AI生成" : "AI回复"}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

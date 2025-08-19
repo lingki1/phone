@@ -157,6 +157,33 @@ export async function getOrCreateUser(nickname: string): Promise<ChatUser> {
   }
 }
 
+// 更新已有用户昵称
+export async function updateUserNickname(userId: string, nickname: string): Promise<ChatUser> {
+  try {
+    const response = await fetch(API_BASE, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        nickname: nickname.trim()
+      }),
+    });
+
+    const result: ApiResponse<{ user: ChatUser }> = await response.json();
+
+    if (result.success && result.data) {
+      return result.data.user;
+    } else {
+      throw new Error(result.error || '更新用户昵称失败');
+    }
+  } catch (error) {
+    console.error('更新用户昵称失败:', error);
+    throw error;
+  }
+}
+
 // 验证昵称
 export function validateNickname(nickname: string): { valid: boolean; error?: string } {
   if (!nickname || nickname.trim().length === 0) {
