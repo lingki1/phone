@@ -126,7 +126,7 @@ export default function StoryModeDisplay({
             >
               💬
             </button>
-            {isUser && (
+            {(isUser || !isUser) && (
               <>
                 <button 
                   className="story-action-btn"

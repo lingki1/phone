@@ -1434,6 +1434,60 @@ export default function ChatInterface({
     }
   }, [chat, onUpdateChat]);
 
+  // ==================== 剧情模式下的消息操作 ====================
+  // 保存剧情模式编辑的消息
+  const handleStorySaveEdit = useCallback(async () => {
+    if (!editingMessage) return;
+    try {
+      const updatedMessages = storyModeMessages.map(msg =>
+        msg.id === editingMessage.id
+          ? { ...msg, content: editingMessage.content }
+          : msg
+      );
+      setStoryModeMessages(updatedMessages);
+      await dataManager.saveStoryModeMessages(chat.id, updatedMessages);
+    } catch (error) {
+      console.error('保存剧情模式编辑消息失败:', error);
+    } finally {
+      setEditingMessage(null);
+    }
+  }, [editingMessage, storyModeMessages, chat.id]);
+
+  // 删除剧情模式消息
+  const handleStoryDeleteMessage = useCallback(async (messageId: string) => {
+    if (!confirm('确定要删除这条剧情消息吗？')) return;
+    try {
+      const updated = storyModeMessages.filter(m => m.id !== messageId);
+      setStoryModeMessages(updated);
+      await dataManager.saveStoryModeMessages(chat.id, updated);
+    } catch (error) {
+      console.error('删除剧情模式消息失败:', error);
+    }
+  }, [storyModeMessages, chat.id]);
+
+  // 剧情模式下重新生成AI回复
+  const handleStoryRegenerateAI = useCallback(async (messageId: string) => {
+    // 找到要重新生成的消息在剧情列表中的位置
+    const messageIndex = storyModeMessages.findIndex(msg => msg.id === messageId);
+    if (messageIndex === -1) return;
+
+    // 删除该消息及之后的所有AI消息（保持与普通模式一致的行为）
+    const messagesToKeep = storyModeMessages.slice(0, messageIndex);
+    setStoryModeMessages(messagesToKeep);
+    try {
+      await dataManager.saveStoryModeMessages(chat.id, messagesToKeep);
+    } catch (error) {
+      console.error('更新剧情模式消息失败:', error);
+    }
+
+    // 使用剧情模式上下文重新触发AI
+    const storyModeChat = {
+      ...chat,
+      messages: messagesToKeep
+    };
+    await triggerAiResponse(storyModeChat, true);
+  }, [storyModeMessages, chat, triggerAiResponse]);
+
   // 处理图片消息点击
   // 处理图片消息点击（优化：使用useCallback缓存）
   const handleImageMessageClick = useCallback((content: string, senderName?: string) => {
@@ -2042,10 +2096,10 @@ export default function ChatInterface({
             personalSettings={personalSettings}
             onQuoteMessage={handleQuoteMessage}
             onEditMessage={handleEditMessage}
-            onSaveEdit={handleSaveEdit}
+            onSaveEdit={handleStorySaveEdit}
             onCancelEdit={handleCancelEdit}
-            onDeleteMessage={handleDeleteMessage}
-            onRegenerateAI={handleRegenerateAI}
+            onDeleteMessage={handleStoryDeleteMessage}
+            onRegenerateAI={handleStoryRegenerateAI}
             editingMessage={editingMessage}
             setEditingMessage={setEditingMessage}
           />
