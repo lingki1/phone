@@ -56,7 +56,8 @@ export class PromptManager {
       isGroup: context.chat.isGroup,
       hasPreset: !!context.currentPreset,
       hasWorldBooks: !!(context.chat.settings.linkedWorldBookIds?.length),
-      hasMemory: !!(context.chat.settings.linkedGroupChatIds?.length)
+      hasMemory: !!(context.chat.settings.linkedGroupChatIds?.length),
+      isStoryMode: context.isStoryMode
     });
 
     // 1. 构建基础模板

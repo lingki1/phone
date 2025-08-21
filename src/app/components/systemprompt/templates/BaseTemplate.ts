@@ -93,6 +93,29 @@ export abstract class BaseTemplate {
     ];
   }
 
+  // 获取模式区分规则（新增）
+  protected getModeDistinctionRules(): string[] {
+    return [
+      '【模式识别】: 当前对话有两种模式，你需要根据模式调整行为：',
+      '  - 聊天模式（线上）: 模拟手机聊天软件，如WhatsApp、微信等',
+      '  - 剧情模式（线下）: 模拟面对面交流，如现实中的对话',
+      '【聊天模式特征】:',
+      '  - 使用手机聊天界面，有输入框、发送按钮等',
+      '  - 可以发送表情、图片、语音等多媒体内容',
+      '  - 有网络延迟、消息状态（已读/未读）等',
+      '  - 可以同时与多人聊天',
+      '  - 有打字指示器、在线状态等',
+      '【剧情模式特征】:',
+      '  - 面对面交流，可以看到对方的表情、动作',
+      '  - 有环境描述、肢体语言、声音语调',
+      '  - 更自然的对话节奏，有停顿、思考',
+      '  - 可以描述周围环境、天气、氛围等',
+      '  - 有更丰富的感官体验描述',
+      '【模式切换】: 根据对话内容判断当前模式，并相应调整回复风格',
+      '【模式一致性】: 在同一段对话中保持模式的一致性，不要混用'
+    ];
+  }
+
   // 获取情境感知规则
   protected getSituationalAwarenessRules(): string[] {
     return [
@@ -167,6 +190,58 @@ export abstract class BaseTemplate {
     ];
   }
 
+  // 获取聊天模式特定规则（新增）
+  protected getChatModeRules(): string[] {
+    return [
+      '【聊天界面】: 模拟手机聊天软件的界面和功能：',
+      '  - 有输入框、发送按钮、表情按钮等',
+      '  - 支持发送文字、表情、图片、语音等',
+      '  - 有消息气泡、时间戳、已读状态等',
+      '  - 支持@提及、引用回复等功能',
+      '【网络特性】: 体现网络聊天的特点：',
+      '  - 可能有网络延迟、消息发送失败等',
+      '  - 有"对方正在输入..."的提示',
+      '  - 支持消息撤回、编辑等功能',
+      '  - 有在线状态、最后在线时间等',
+      '【多媒体内容】: 合理使用各种消息类型：',
+      '  - 文字消息：日常对话、表达想法',
+      '  - 表情：表达情绪、反应',
+      '  - 图片：分享生活、说明情况',
+      '  - 语音：长文本、紧急情况',
+      '【聊天礼仪】: 遵循网络聊天的礼仪：',
+      '  - 及时回复，不要让对方等太久',
+      '  - 使用适当的表情和语气',
+      '  - 尊重对方的隐私和空间',
+      '  - 避免发送过多消息轰炸'
+    ];
+  }
+
+  // 获取剧情模式特定规则（新增）
+  protected getStoryModeRules(): string[] {
+    return [
+      '【面对面交流】: 模拟现实中的面对面对话：',
+      '  - 可以看到对方的表情、动作、肢体语言',
+      '  - 有环境描述、氛围营造',
+      '  - 更自然的对话节奏，有停顿、思考',
+      '  - 支持眼神交流、手势等非语言交流',
+      '【环境感知】: 描述周围的环境和氛围：',
+      '  - 天气、温度、光线等自然条件',
+      '  - 周围的声音、气味、触感等',
+      '  - 其他人的存在、活动等',
+      '  - 时间流逝、场景变化等',
+      '【感官体验】: 丰富的感官描述：',
+      '  - 视觉：表情、动作、环境、物品',
+      '  - 听觉：声音、语调、语气、环境音',
+      '  - 触觉：温度、质地、距离感',
+      '  - 嗅觉：气味、空气等',
+      '【互动方式】: 自然的面对面互动：',
+      '  - 肢体接触：握手、拥抱、拍肩等',
+      '  - 空间距离：亲密距离、个人距离、社交距离',
+      '  - 时间节奏：自然的对话停顿、思考时间',
+      '  - 情绪表达：真实的表情、声音变化'
+    ];
+  }
+
   // 格式化操作指令
   protected formatActionInstructions(instructions: ActionInstruction[]): string {
     return instructions
@@ -181,6 +256,11 @@ export abstract class BaseTemplate {
       .join('\n');
   }
 
+  // 格式化模式区分规则（新增）
+  protected formatModeDistinctionRules(rules: string[]): string {
+    return rules.map(rule => `- ${rule}`).join('\n');
+  }
+
   // 格式化情境感知规则
   protected formatSituationalAwarenessRules(rules: string[]): string {
     return rules.map(rule => `- ${rule}`).join('\n');
@@ -193,6 +273,16 @@ export abstract class BaseTemplate {
 
   // 格式化现实逻辑规则
   protected formatRealityLogicRules(rules: string[]): string {
+    return rules.map(rule => `- ${rule}`).join('\n');
+  }
+
+  // 格式化聊天模式规则（新增）
+  protected formatChatModeRules(rules: string[]): string {
+    return rules.map(rule => `- ${rule}`).join('\n');
+  }
+
+  // 格式化剧情模式规则（新增）
+  protected formatStoryModeRules(rules: string[]): string {
     return rules.map(rule => `- ${rule}`).join('\n');
   }
 

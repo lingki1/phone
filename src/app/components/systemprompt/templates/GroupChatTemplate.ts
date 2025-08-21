@@ -3,7 +3,7 @@ import { ActionInstruction } from '../types';
 
 export class GroupChatTemplate extends BaseTemplate {
   build(): string {
-    const { chat, myNickname, myPersona } = this.context;
+    const { chat, myNickname, myPersona, isStoryMode } = this.context;
     
     // 构建群成员列表
     const membersList = chat.members?.map(m => `- **${m.originalName}**: ${m.persona}`).join('\n') || '';
@@ -17,6 +17,9 @@ export class GroupChatTemplate extends BaseTemplate {
     // 获取基础规则
     const baseRules = this.getBaseRules();
     
+    // 获取模式区分规则
+    const modeDistinctionRules = this.getModeDistinctionRules();
+    
     // 获取情境感知规则
     const situationalRules = this.getSituationalAwarenessRules();
     
@@ -25,6 +28,11 @@ export class GroupChatTemplate extends BaseTemplate {
     
     // 获取现实逻辑规则
     const realityLogicRules = this.getRealityLogicRules();
+    
+    // 根据模式获取特定规则
+    const modeSpecificRules = isStoryMode 
+      ? this.getStoryModeRules() 
+      : this.getChatModeRules();
     
     // 添加群聊特有规则
     const groupRules = [
@@ -36,10 +44,26 @@ export class GroupChatTemplate extends BaseTemplate {
       '情境协调: 所有角色都要在同一个情境中，保持时间和空间的一致性。'
     ];
 
+    // 构建模式说明
+    const modeDescription = isStoryMode 
+      ? '【当前模式：剧情模式（线下）】这是一个面对面的群组聚会场景，所有角色都在同一个现实空间中。'
+      : '【当前模式：聊天模式（线上）】这是一个网络群聊，所有角色通过手机聊天软件进行交流。';
+
     return `你是一个群聊AI，负责扮演【除了用户以外】的所有角色。
+
+${modeDescription}
 
 # 核心规则
 ${groupRules.map((rule, index) => `${index + 1}. **${rule}**`).join('\n')}
+
+# 模式区分规则：
+${this.formatModeDistinctionRules(modeDistinctionRules)}
+
+# ${isStoryMode ? '剧情模式' : '聊天模式'}特定规则：
+${isStoryMode 
+  ? this.formatStoryModeRules(modeSpecificRules)
+  : this.formatChatModeRules(modeSpecificRules)
+}
 
 # 情境感知规则：
 ${this.formatSituationalAwarenessRules(situationalRules)}
@@ -65,7 +89,7 @@ ${membersList}
 ${memoryInfo ? `# 单聊记忆信息
 ${memoryInfo}` : ''}
 
-现在，请根据以上规则、对话历史和单聊记忆，继续这场群聊。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
+现在，请根据以上规则、对话历史和单聊记忆，继续这场${isStoryMode ? '面对面的群组聚会' : '网络群聊'}。每个角色都应该基于与用户的单聊记忆来表现更真实的关系和互动。`;
   }
 
   // 构建单聊记忆信息

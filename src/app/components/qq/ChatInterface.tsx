@@ -1701,18 +1701,35 @@ export default function ChatInterface({
   }, [chat, onUpdateChat, triggerAiResponse]);
 
   // 剧情模式相关函数
-  const handleStoryModeToggle = useCallback(() => {
-    setIsStoryMode(prev => !prev);
-    // 切换模式时清空输入内容，但保留剧情模式消息（已保存在IndexedDB中）
+  const handleStoryModeToggle = useCallback(async () => {
+    const newStoryMode = !isStoryMode;
+    
+    // 保存模式切换记录
+    try {
+      await dataManager.saveModeTransition(chat.id, isStoryMode ? 'story' : 'normal', newStoryMode ? 'story' : 'normal');
+      console.log(`模式切换记录已保存: ${isStoryMode ? 'story' : 'normal'} -> ${newStoryMode ? 'story' : 'normal'}`);
+    } catch (error) {
+      console.error('保存模式切换记录失败:', error);
+    }
+    
+    setIsStoryMode(newStoryMode);
+    
+    // 切换模式时清空输入内容，但保留消息记忆
     setStoryModeInput('');
     setMessage('');
-    // 不清空剧情模式消息，因为它们已经保存在IndexedDB中
     
     // 模式切换后自动滚动到最新消息
     setTimeout(() => {
       forceScrollToBottom();
     }, 100); // 延迟100ms确保状态更新完成
-  }, [forceScrollToBottom]);
+    
+    // 显示模式切换提示
+    const transitionMessage = newStoryMode 
+      ? '已切换到剧情模式（线下），AI将记住之前的聊天内容'
+      : '已切换到聊天模式（线上），AI将记住之前的剧情发展';
+    
+    console.log(transitionMessage);
+  }, [isStoryMode, chat.id, forceScrollToBottom]);
 
   const handleStoryModeSend = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;

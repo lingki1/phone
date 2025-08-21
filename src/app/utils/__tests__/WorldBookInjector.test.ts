@@ -1,6 +1,7 @@
 // WorldBookInjector 测试用例
-import { WorldBookInjector } from '../WorldBookInjector';
+import { injectWorldBooks, validateWorldBookIds, cleanupInvalidWorldBooks } from '../WorldBookInjector';
 import { dataManager } from '../dataManager';
+import { WorldBook } from '../../types/chat';
 
 // Mock dataManager
 jest.mock('../dataManager', () => ({
@@ -18,43 +19,48 @@ describe('WorldBookInjector', () => {
 
   describe('injectWorldBooks', () => {
     it('should return original prompt when no world book IDs provided', async () => {
-      const originalPrompt = 'Test prompt';
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, []);
-      
+      const originalPrompt = 'Original prompt content';
+      const result = await injectWorldBooks(originalPrompt, undefined);
+
       expect(result).toBe(originalPrompt);
       expect(mockDataManager.getWorldBook).not.toHaveBeenCalled();
     });
 
     it('should return original prompt when world book IDs array is empty', async () => {
-      const originalPrompt = 'Test prompt';
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, []);
-      
+      const originalPrompt = 'Original prompt content';
+      const result = await injectWorldBooks(originalPrompt, []);
+
       expect(result).toBe(originalPrompt);
     });
 
     it('should inject world book content when valid world books exist', async () => {
-      const originalPrompt = 'Test prompt';
-      const worldBook1 = {
+      const originalPrompt = 'Original prompt content';
+      const worldBookIds = ['wb1', 'wb2'];
+
+      const mockWorldBook1: WorldBook = {
         id: 'wb1',
         name: 'Fantasy World',
         content: 'This is a fantasy world with magic.',
+        category: '奇幻',
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      const worldBook2 = {
+
+      const mockWorldBook2: WorldBook = {
         id: 'wb2',
         name: 'Sci-Fi Setting',
         content: 'This is a futuristic sci-fi setting.',
+        category: '科幻',
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
 
       mockDataManager.getWorldBook
-        .mockResolvedValueOnce(worldBook1)
-        .mockResolvedValueOnce(worldBook2);
+        .mockResolvedValueOnce(mockWorldBook1)
+        .mockResolvedValueOnce(mockWorldBook2);
 
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, ['wb1', 'wb2']);
-      
+      const result = await injectWorldBooks(originalPrompt, worldBookIds);
+
       expect(result).toContain(originalPrompt);
       expect(result).toContain('# 世界设定');
       expect(result).toContain('## Fantasy World');
@@ -64,97 +70,111 @@ describe('WorldBookInjector', () => {
     });
 
     it('should filter out null world books', async () => {
-      const originalPrompt = 'Test prompt';
-      const worldBook1 = {
+      const originalPrompt = 'Original prompt content';
+      const worldBookIds = ['wb1', 'wb2'];
+
+      const mockWorldBook1: WorldBook = {
         id: 'wb1',
         name: 'Valid World',
-        content: 'Valid content.',
+        content: 'This is a valid world.',
+        category: '奇幻',
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
 
       mockDataManager.getWorldBook
-        .mockResolvedValueOnce(worldBook1)
+        .mockResolvedValueOnce(mockWorldBook1)
         .mockResolvedValueOnce(null);
 
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, ['wb1', 'wb2']);
-      
+      const result = await injectWorldBooks(originalPrompt, worldBookIds);
+
       expect(result).toContain('## Valid World');
       expect(result).not.toContain('wb2');
     });
 
     it('should return original prompt when all world books are null', async () => {
-      const originalPrompt = 'Test prompt';
+      const originalPrompt = 'Original prompt content';
+      const worldBookIds = ['wb1', 'wb2'];
 
       mockDataManager.getWorldBook
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(null);
 
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, ['wb1', 'wb2']);
-      
+      const result = await injectWorldBooks(originalPrompt, worldBookIds);
+
       expect(result).toBe(originalPrompt);
     });
 
     it('should handle errors gracefully and return original prompt', async () => {
-      const originalPrompt = 'Test prompt';
+      const originalPrompt = 'Original prompt content';
+      const worldBookIds = ['wb1'];
 
-      mockDataManager.getWorldBook.mockRejectedValue(new Error('Database error'));
+      mockDataManager.getWorldBook.mockRejectedValueOnce(new Error('Database error'));
 
-      const result = await WorldBookInjector.injectWorldBooks('chat1', originalPrompt, ['wb1']);
-      
+      const result = await injectWorldBooks(originalPrompt, worldBookIds);
+
       expect(result).toBe(originalPrompt);
     });
   });
 
   describe('validateWorldBookIds', () => {
     it('should return empty array when no IDs provided', async () => {
-      const result = await WorldBookInjector.validateWorldBookIds([]);
+      const result = await validateWorldBookIds(undefined);
+
       expect(result).toEqual([]);
     });
 
     it('should return valid IDs only', async () => {
-      const worldBook1 = {
+      const worldBookIds = ['wb1', 'wb2'];
+
+      const mockWorldBook1: WorldBook = {
         id: 'wb1',
         name: 'Valid World',
-        content: 'Valid content.',
+        content: 'This is a valid world.',
+        category: '奇幻',
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
 
       mockDataManager.getWorldBook
-        .mockResolvedValueOnce(worldBook1)
+        .mockResolvedValueOnce(mockWorldBook1)
         .mockResolvedValueOnce(null);
 
-      const result = await WorldBookInjector.validateWorldBookIds(['wb1', 'wb2']);
-      
+      const result = await validateWorldBookIds(worldBookIds);
+
       expect(result).toEqual(['wb1']);
     });
 
     it('should handle errors and return empty array', async () => {
-      mockDataManager.getWorldBook.mockRejectedValue(new Error('Database error'));
+      const worldBookIds = ['wb1'];
 
-      const result = await WorldBookInjector.validateWorldBookIds(['wb1']);
-      
+      mockDataManager.getWorldBook.mockRejectedValueOnce(new Error('Database error'));
+
+      const result = await validateWorldBookIds(worldBookIds);
+
       expect(result).toEqual([]);
     });
   });
 
   describe('cleanupInvalidWorldBooks', () => {
     it('should return only valid world book IDs', async () => {
-      const worldBook1 = {
+      const worldBookIds = ['wb1', 'wb2'];
+
+      const mockWorldBook1: WorldBook = {
         id: 'wb1',
         name: 'Valid World',
-        content: 'Valid content.',
+        content: 'This is a valid world.',
+        category: '奇幻',
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
 
       mockDataManager.getWorldBook
-        .mockResolvedValueOnce(worldBook1)
+        .mockResolvedValueOnce(mockWorldBook1)
         .mockResolvedValueOnce(null);
 
-      const result = await WorldBookInjector.cleanupInvalidWorldBooks('chat1', ['wb1', 'wb2']);
-      
+      const result = await cleanupInvalidWorldBooks(worldBookIds);
+
       expect(result).toEqual(['wb1']);
     });
   });

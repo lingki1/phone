@@ -22,7 +22,7 @@ export default function StoryModeToggle({
       title={isStoryMode ? "切换到普通聊天模式" : "切换到剧情模式"}
     >
       <span className="story-toggle-text">
-        {isStoryMode ? '聊天' : '剧情'}
+        {isStoryMode ? '线上' : '剧情'}
       </span>
     </button>
   );

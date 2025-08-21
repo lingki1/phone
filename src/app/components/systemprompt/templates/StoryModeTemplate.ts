@@ -5,7 +5,7 @@ export class StoryModeTemplate extends BaseTemplate {
     const { chat, myPersona } = this.context;
     
     // 获取剧情模式专用的规则
-    const storyRules = this.getStoryModeRules();
+    const storyRules = this.getStoryModeSpecificRules();
     
     // 获取叙述风格规则
     const narrativeRules = this.getNarrativeStyleRules();
@@ -46,13 +46,16 @@ ${myPersona}
   }
 
   // 获取剧情模式专用规则
-  private getStoryModeRules(): string[] {
+  private getStoryModeSpecificRules(): string[] {
     return [
       '剧情推展: 专注于推进故事情节，让故事不断发展',
       '角色发展: 深化角色性格，展现角色成长和变化',
       '叙述风格: 采用小说风格的叙述方式，注重描写和细节',
       '沉浸体验: 创造引人入胜的阅读体验',
-      '状态描写: 自然地融入角色状态变化，让故事更真实'
+      '状态描写: 自然地融入角色状态变化，让故事更真实',
+      '记忆延续: 记住与用户在聊天模式中的互动，在剧情中体现这些关系发展',
+      '模式融合: 将线上聊天的关系发展自然地融入到线下剧情中',
+      '情感连贯: 保持对用户的情感态度，不受模式切换影响'
     ];
   }
 

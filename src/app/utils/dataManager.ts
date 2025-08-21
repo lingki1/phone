@@ -1760,6 +1760,219 @@ class DataManager {
       };
     });
   }
+
+  // ==================== 记忆互通相关方法 ====================
+
+  // 获取聊天记忆（包括普通消息和剧情模式消息）
+  async getChatMemory(chatId: string, includeStoryMode: boolean = true): Promise<import('../types/chat').Message[]> {
+    try {
+      // 获取普通聊天消息
+      const chat = await this.getChat(chatId);
+      const normalMessages = chat ? chat.messages : [];
+      
+      if (!includeStoryMode) {
+        return normalMessages;
+      }
+      
+      // 获取剧情模式消息
+      const storyModeMessages = await this.getStoryModeMessages(chatId);
+      
+      // 合并消息并按时间排序
+      const allMessages = [...normalMessages, ...storyModeMessages];
+      return allMessages.sort((a, b) => a.timestamp - b.timestamp);
+    } catch (error) {
+      console.error('Failed to get chat memory:', error);
+      return [];
+    }
+  }
+
+  // 获取聊天记忆摘要（用于AI上下文）
+  async getChatMemorySummary(chatId: string, maxMessages: number = 20): Promise<{
+    recentMessages: import('../types/chat').Message[];
+    totalMessages: number;
+    lastInteractionTime: number;
+    memoryType: 'normal' | 'story' | 'mixed';
+  }> {
+    try {
+      const allMessages = await this.getChatMemory(chatId, true);
+      
+      if (allMessages.length === 0) {
+        return {
+          recentMessages: [],
+          totalMessages: 0,
+          lastInteractionTime: 0,
+          memoryType: 'normal'
+        };
+      }
+      
+      // 获取最近的消息
+      const recentMessages = allMessages
+        .slice(-maxMessages)
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant');
+      
+      // 确定记忆类型
+      const normalMessages = allMessages.filter(msg => !msg.id.includes('_story_'));
+      const storyMessages = allMessages.filter(msg => msg.id.includes('_story_'));
+      
+      let memoryType: 'normal' | 'story' | 'mixed' = 'normal';
+      if (storyMessages.length > 0 && normalMessages.length > 0) {
+        memoryType = 'mixed';
+      } else if (storyMessages.length > 0) {
+        memoryType = 'story';
+      }
+      
+      return {
+        recentMessages,
+        totalMessages: allMessages.length,
+        lastInteractionTime: Math.max(...allMessages.map(msg => msg.timestamp)),
+        memoryType
+      };
+    } catch (error) {
+      console.error('Failed to get chat memory summary:', error);
+      return {
+        recentMessages: [],
+        totalMessages: 0,
+        lastInteractionTime: 0,
+        memoryType: 'normal'
+      };
+    }
+  }
+
+  // 获取跨模式记忆（用于模式切换时的上下文传递）
+  async getCrossModeMemory(chatId: string, targetMode: 'normal' | 'story'): Promise<{
+    contextMessages: import('../types/chat').Message[];
+    modeTransition: string;
+    lastMode: 'normal' | 'story' | 'unknown';
+  }> {
+    try {
+      const allMessages = await this.getChatMemory(chatId, true);
+      
+      if (allMessages.length === 0) {
+        return {
+          contextMessages: [],
+          modeTransition: '首次对话',
+          lastMode: 'unknown'
+        };
+      }
+      
+      // 分析消息模式
+      const normalMessages = allMessages.filter(msg => !msg.id.includes('_story_'));
+      const storyMessages = allMessages.filter(msg => msg.id.includes('_story_'));
+      
+      // 确定最后使用的模式
+      let lastMode: 'normal' | 'story' | 'unknown' = 'unknown';
+      if (normalMessages.length > 0 && storyMessages.length > 0) {
+        const lastNormalTime = Math.max(...normalMessages.map(msg => msg.timestamp));
+        const lastStoryTime = Math.max(...storyMessages.map(msg => msg.timestamp));
+        lastMode = lastNormalTime > lastStoryTime ? 'normal' : 'story';
+      } else if (normalMessages.length > 0) {
+        lastMode = 'normal';
+      } else if (storyMessages.length > 0) {
+        lastMode = 'story';
+      }
+      
+      // 生成模式转换描述
+      let modeTransition = '';
+      if (lastMode === 'unknown') {
+        modeTransition = '首次对话';
+      } else if (lastMode === targetMode) {
+        modeTransition = '继续当前模式';
+      } else if (lastMode === 'normal' && targetMode === 'story') {
+        modeTransition = '从线上聊天切换到线下剧情';
+      } else if (lastMode === 'story' && targetMode === 'normal') {
+        modeTransition = '从线下剧情切换到线上聊天';
+      }
+      
+      // 获取最近的上下文消息（最近10条）
+      const contextMessages = allMessages
+        .slice(-10)
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant');
+      
+      return {
+        contextMessages,
+        modeTransition,
+        lastMode
+      };
+    } catch (error) {
+      console.error('Failed to get cross mode memory:', error);
+      return {
+        contextMessages: [],
+        modeTransition: '获取记忆失败',
+        lastMode: 'unknown'
+      };
+    }
+  }
+
+  // 保存模式切换记录
+  async saveModeTransition(chatId: string, fromMode: 'normal' | 'story', toMode: 'normal' | 'story'): Promise<void> {
+    try {
+      const transitionRecord = {
+        chatId,
+        fromMode,
+        toMode,
+        timestamp: Date.now(),
+        transitionType: `${fromMode}_to_${toMode}`
+      };
+      
+      // 保存到全局数据存储
+      await this.saveGlobalData(`mode_transition_${chatId}_${Date.now()}`, transitionRecord);
+    } catch (error) {
+      console.error('Failed to save mode transition:', error);
+    }
+  }
+
+  // 获取聊天记忆统计信息
+  async getChatMemoryStats(chatId: string): Promise<{
+    normalMessageCount: number;
+    storyMessageCount: number;
+    totalInteractions: number;
+    lastNormalInteraction: number;
+    lastStoryInteraction: number;
+    memoryBalance: 'normal' | 'story' | 'balanced';
+  }> {
+    try {
+      const allMessages = await this.getChatMemory(chatId, true);
+      
+      const normalMessages = allMessages.filter(msg => !msg.id.includes('_story_'));
+      const storyMessages = allMessages.filter(msg => msg.id.includes('_story_'));
+      
+      const lastNormalInteraction = normalMessages.length > 0 
+        ? Math.max(...normalMessages.map(msg => msg.timestamp))
+        : 0;
+      
+      const lastStoryInteraction = storyMessages.length > 0
+        ? Math.max(...storyMessages.map(msg => msg.timestamp))
+        : 0;
+      
+      // 确定记忆平衡
+      let memoryBalance: 'normal' | 'story' | 'balanced' = 'balanced';
+      const normalRatio = normalMessages.length / allMessages.length;
+      if (normalRatio > 0.7) {
+        memoryBalance = 'normal';
+      } else if (normalRatio < 0.3) {
+        memoryBalance = 'story';
+      }
+      
+      return {
+        normalMessageCount: normalMessages.length,
+        storyMessageCount: storyMessages.length,
+        totalInteractions: allMessages.length,
+        lastNormalInteraction,
+        lastStoryInteraction,
+        memoryBalance
+      };
+    } catch (error) {
+      console.error('Failed to get chat memory stats:', error);
+      return {
+        normalMessageCount: 0,
+        storyMessageCount: 0,
+        totalInteractions: 0,
+        lastNormalInteraction: 0,
+        lastStoryInteraction: 0,
+        memoryBalance: 'balanced'
+      };
+    }
+  }
 }
 
 // 创建单例实例

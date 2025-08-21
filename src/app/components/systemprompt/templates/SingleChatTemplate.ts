@@ -3,7 +3,7 @@ import { ActionInstruction } from '../types';
 
 export class SingleChatTemplate extends BaseTemplate {
   build(): string {
-    const { chat, myPersona } = this.context;
+    const { chat, myPersona, isStoryMode } = this.context;
     
     // 构建群聊记忆信息
     const groupMemoryInfo = this.buildGroupMemoryInfo();
@@ -14,6 +14,9 @@ export class SingleChatTemplate extends BaseTemplate {
     // 获取基础规则
     const baseRules = this.getBaseRules();
     
+    // 获取模式区分规则
+    const modeDistinctionRules = this.getModeDistinctionRules();
+    
     // 获取情境感知规则
     const situationalRules = this.getSituationalAwarenessRules();
     
@@ -23,20 +26,42 @@ export class SingleChatTemplate extends BaseTemplate {
     // 获取现实逻辑规则
     const realityLogicRules = this.getRealityLogicRules();
     
+    // 根据模式获取特定规则
+    const modeSpecificRules = isStoryMode 
+      ? this.getStoryModeRules() 
+      : this.getChatModeRules();
+    
     // 添加单聊特有规则
     const singleRules = [
       ...baseRules,
       '群聊记忆: 你拥有在群聊中与用户的互动记忆，在单聊中要体现这些记忆和关系。请参考下方的"群聊记忆信息"部分，了解你在群聊中的表现和与用户的关系。',
-      '状态实时性: 每次对话都应该根据当前时间、对话内容和情境实时更新你的状态，让对话更有真实感。'
+      '状态实时性: 每次对话都应该根据当前时间、对话内容和情境实时更新你的状态，让对话更有真实感。',
+      ...this.getMemoryInterconnectionRules()
     ];
 
+    // 构建模式说明
+    const modeDescription = isStoryMode 
+      ? '【当前模式：剧情模式（线下）】你正在与用户进行面对面的现实对话，请模拟真实的面对面交流体验。'
+      : '【当前模式：聊天模式（线上）】你正在与用户通过手机聊天软件交流，请模拟网络聊天的体验。';
+
     return `你现在扮演一个名为"${chat.name}"的角色。
+
+${modeDescription}
 
 # 你的角色设定：
 ${chat.settings.aiPersona}
 
 # 你的任务与规则：
 ${singleRules.map((rule, index) => `${index + 1}. **${rule}**`).join('\n')}
+
+# 模式区分规则：
+${this.formatModeDistinctionRules(modeDistinctionRules)}
+
+# ${isStoryMode ? '剧情模式' : '聊天模式'}特定规则：
+${isStoryMode 
+  ? this.formatStoryModeRules(modeSpecificRules)
+  : this.formatChatModeRules(modeSpecificRules)
+}
 
 # 情境感知规则：
 ${this.formatSituationalAwarenessRules(situationalRules)}
@@ -56,7 +81,7 @@ ${this.formatRedPacketRules(this.getRedPacketRules())}
 # 对话者的角色设定：
 ${myPersona}${groupMemoryInfo}
 
-现在，请根据以上规则、对话历史和群聊记忆，继续进行对话。`;
+现在，请根据以上规则、对话历史和群聊记忆，继续进行${isStoryMode ? '面对面的剧情对话' : '网络聊天'}。`;
   }
 
   // 构建群聊记忆信息
@@ -73,6 +98,17 @@ ${myPersona}${groupMemoryInfo}
 
 # 群聊记忆信息
 [群聊记忆将在注入器中动态添加]`;
+  }
+
+  // 获取记忆互通规则
+  private getMemoryInterconnectionRules(): string[] {
+    return [
+      '记忆连续性: 无论在线聊天还是线下剧情，你都要记住与用户的所有互动历史',
+      '模式适应: 根据当前模式调整回应风格，但保持角色性格和关系的一致性',
+      '上下文传递: 在模式切换时，要自然地承接之前的对话内容和关系发展',
+      '情感延续: 保持对用户的情感态度和关系深度，不受模式切换影响',
+      '记忆整合: 将两种模式的互动记忆整合，形成完整的角色关系认知'
+    ];
   }
 
   // 获取单聊专用的操作指令

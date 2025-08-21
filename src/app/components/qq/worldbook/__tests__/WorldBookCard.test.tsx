@@ -7,17 +7,14 @@ import { WorldBook } from '../../../../types/chat';
 
 // Mock window.confirm
 const mockConfirm = jest.fn();
-Object.defineProperty(window, 'confirm', {
-  value: mockConfirm,
-  writable: true
-});
 
 describe('WorldBookCard', () => {
   const mockWorldBook: WorldBook = {
     id: 'wb1',
     name: 'Test World Book',
-    content: 'This is a test world book content that is longer than 100 characters to test the preview functionality and ensure it gets truncated properly.',
+    content: 'This is a test world book content that is longer than 100 characters to test truncation functionality',
     description: 'Test description',
+    category: '科幻', // 添加缺失的category字段
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
@@ -27,7 +24,7 @@ describe('WorldBookCard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockConfirm.mockReturnValue(true);
+    window.confirm = mockConfirm;
   });
 
   it('should render world book information correctly', () => {
@@ -91,13 +88,15 @@ describe('WorldBookCard', () => {
       />
     );
 
-    const editButton = screen.getByTitle('编辑');
+    const editButton = screen.getByText('编辑');
     fireEvent.click(editButton);
 
     expect(mockOnEdit).toHaveBeenCalledWith(mockWorldBook);
   });
 
   it('should call onDelete when delete button is clicked and confirmed', () => {
+    mockConfirm.mockReturnValue(true);
+
     render(
       <WorldBookCard
         worldBook={mockWorldBook}
@@ -106,7 +105,7 @@ describe('WorldBookCard', () => {
       />
     );
 
-    const deleteButton = screen.getByTitle('删除');
+    const deleteButton = screen.getByText('删除');
     fireEvent.click(deleteButton);
 
     expect(mockConfirm).toHaveBeenCalledWith('确定要删除世界书"Test World Book"吗？');
@@ -124,7 +123,7 @@ describe('WorldBookCard', () => {
       />
     );
 
-    const deleteButton = screen.getByTitle('删除');
+    const deleteButton = screen.getByText('删除');
     fireEvent.click(deleteButton);
 
     expect(mockConfirm).toHaveBeenCalled();
@@ -146,14 +145,14 @@ describe('WorldBookCard', () => {
   });
 
   it('should handle short content without truncation', () => {
-    const shortContentWorldBook = {
+    const shortWorldBook = {
       ...mockWorldBook,
       content: 'Short content'
     };
 
     render(
       <WorldBookCard
-        worldBook={shortContentWorldBook}
+        worldBook={shortWorldBook}
         onEdit={mockOnEdit}
         onDelete={mockOnDelete}
       />

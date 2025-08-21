@@ -78,6 +78,15 @@ export default function ApiSettingsModal({
       ...prev,
       [field]: value
     }));
+    
+    // 当用户修改URL或API Key时，清空模型列表
+    if (field === 'proxyUrl' || field === 'apiKey') {
+      setModels([]);
+      // 清空localStorage中的模型列表
+      localStorage.removeItem('savedModels');
+      // 清空当前选择的模型
+      setConfig(prev => ({ ...prev, model: '' }));
+    }
   };
 
   const fetchModels = async () => {
@@ -102,12 +111,14 @@ export default function ApiSettingsModal({
       const data = await response.json();
       const modelList = data.data?.map((model: { id: string }) => model.id) || [];
       
-      // 合并新获取的模型和已保存的模型，去重
-      const existingModels = loadSavedModels();
-      const allModels = [...new Set([...existingModels, ...modelList])];
+      // 直接使用新获取的模型列表，不合并旧的模型
+      setModels(modelList);
+      saveModelsToStorage(modelList);
       
-      setModels(allModels);
-      saveModelsToStorage(allModels);
+      // 如果当前选择的模型不在新列表中，清空选择
+      if (config.model && !modelList.includes(config.model)) {
+        setConfig(prev => ({ ...prev, model: '' }));
+      }
       
       // 如果当前没有选择模型，选择第一个
       if (modelList.length > 0 && !config.model) {
