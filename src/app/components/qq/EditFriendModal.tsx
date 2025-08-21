@@ -11,7 +11,7 @@ interface EditFriendModalProps {
   isVisible: boolean;
   onClose: () => void;
   mode: 'create' | 'edit';
-  onAddFriend?: (name: string, persona: string, avatar?: string) => void;
+  onAddFriend?: (name: string, persona: string, avatar?: string, firstMsg?: string) => void;
   onUpdateFriend?: (updatedChat: ChatItem) => void;
   chat?: ChatItem | null;
 }
@@ -27,6 +27,7 @@ export default function EditFriendModal({
   const [friendName, setFriendName] = useState('');
   const [friendPersona, setFriendPersona] = useState(mode === 'create' ? '你是谁呀。' : '');
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [firstMsg, setFirstMsg] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,11 +36,13 @@ export default function EditFriendModal({
       setFriendName(chat.name);
       setFriendPersona(chat.persona || '');
       setAvatarPreview(chat.avatar || '');
+      setFirstMsg(chat.settings.firstMsg || '');
     } else if (mode === 'create' && isVisible) {
       // 重置为创建模式
       setFriendName('');
       setFriendPersona('你是谁呀。');
       setAvatarPreview('');
+      setFirstMsg('');
     }
   }, [chat, isVisible, mode]);
 
@@ -90,7 +93,7 @@ export default function EditFriendModal({
     }
     
     if (mode === 'create' && onAddFriend) {
-      onAddFriend(friendName.trim(), friendPersona.trim(), avatarPreview);
+      onAddFriend(friendName.trim(), friendPersona.trim(), avatarPreview, firstMsg.trim() || undefined);
     } else if (mode === 'edit' && onUpdateFriend && chat) {
       const updatedChat: ChatItem = {
         ...chat,
@@ -100,7 +103,8 @@ export default function EditFriendModal({
         settings: {
           ...chat.settings,
           aiPersona: friendPersona.trim(),
-          aiAvatar: avatarPreview || chat.settings.aiAvatar
+          aiAvatar: avatarPreview || chat.settings.aiAvatar,
+          firstMsg: firstMsg.trim() || undefined
         }
       };
 
@@ -228,6 +232,17 @@ export default function EditFriendModal({
               onChange={(e) => setFriendPersona(e.target.value)}
               placeholder="描述这个AI角色的性格、背景等..."
               rows={4}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="friend-firstmsg">剧情模式开场白 {mode === 'create' ? '(可选)' : ''}</label>
+            <textarea
+              id="friend-firstmsg"
+              value={firstMsg}
+              onChange={(e) => setFirstMsg(e.target.value)}
+              placeholder="例如：我们坐在咖啡馆，你走向我..."
+              rows={3}
             />
           </div>
 

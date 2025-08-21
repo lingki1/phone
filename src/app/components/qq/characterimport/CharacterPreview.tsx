@@ -55,6 +55,19 @@ export default function CharacterPreview({ character, onImport, onCancel }: Char
           </div>
         </div>
 
+        {/* 开场白信息 */}
+        {typeof character.originalData.first_mes === 'string' && character.originalData.first_mes && (
+          <div className="info-card first-message-card">
+            <h5>🎭 剧情模式开场白</h5>
+            <div className="first-message-content">
+              <p>{character.originalData.first_mes}</p>
+              <div className="first-message-note">
+                <small>💡 导入后，在剧情模式中首次进入时会自动发送此开场白</small>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 关键信息 */}
         <div className="info-card">
           <h5>角色信息</h5>

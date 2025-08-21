@@ -138,6 +138,10 @@ export default function CharacterImportModal({
         previewCharacter.description
       ].filter(Boolean).join('\n\n');
 
+      // 从原始角色数据中提取开场白，并替换 {{user}} 为用户昵称
+      const rawFirstMsg = previewCharacter.originalData.first_mes?.trim();
+      const firstMsg = rawFirstMsg ? rawFirstMsg.replace(/\{\{user\}\}/g, personalSettings.userNickname || '我') : undefined;
+
       // 创建新的聊天项目
       const newChat: ChatItem = {
         id: Date.now().toString(),
@@ -165,6 +169,7 @@ export default function CharacterImportModal({
           aiAvatarLibrary: [],
           aiAvatarFrame: '',
           myAvatarFrame: '',
+          firstMsg: firstMsg,
           // 使用当前API配置
           proxyUrl: apiConfig.proxyUrl,
           apiKey: apiConfig.apiKey,

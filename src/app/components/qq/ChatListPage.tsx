@@ -363,7 +363,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   };
 
   // 添加好友
-  const handleAddFriend = async (name: string, persona: string, avatar?: string) => {
+  const handleAddFriend = async (name: string, persona: string, avatar?: string, firstMsg?: string) => {
     // 获取全局设置中的maxMemory
     const globalSettings = localStorage.getItem('globalSettings');
     const maxMemory = globalSettings ? JSON.parse(globalSettings).maxMemory || 20 : 20;
@@ -394,6 +394,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         aiAvatarLibrary: [],
         aiAvatarFrame: '',
         myAvatarFrame: '',
+        firstMsg: firstMsg,
         // 使用当前API配置
         proxyUrl: apiConfig.proxyUrl,
         apiKey: apiConfig.apiKey,

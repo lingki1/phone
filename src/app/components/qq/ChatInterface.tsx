@@ -272,6 +272,40 @@ export default function ChatInterface({
     loadStoryModeMessages();
   }, [chat.id]);
 
+  // 剧情模式开场白：进入剧情模式且首次对话时自动发送 firstMsg
+  useEffect(() => {
+    const trySendFirstMsg = async () => {
+      if (!isStoryMode) return;
+      const opening = chat.settings.firstMsg?.trim();
+      if (!opening) return;
+      if (storyModeMessages.length > 0) return;
+
+      // 获取用户昵称并替换开场白中的 {{user}}
+      const userNickname = dbPersonalSettings?.userNickname || personalSettings?.userNickname || '我';
+      const processedOpening = opening.replace(/\{\{user\}\}/g, userNickname);
+
+      const aiMessage: Message = {
+        id: `${chat.id}_story_ai_${Date.now()}`,
+        role: 'assistant',
+        content: processedOpening,
+        timestamp: Date.now(),
+        type: 'text',
+        senderName: chat.name,
+        isRead: true
+      };
+
+      // 更新内存与持久化
+      setStoryModeMessages([aiMessage]);
+      try {
+        await dataManager.addStoryModeMessage(chat.id, aiMessage);
+      } catch (error) {
+        console.error('Failed to persist firstMsg for story mode:', error);
+      }
+    };
+
+    trySendFirstMsg();
+  }, [isStoryMode, chat.id, chat.name, chat.settings.firstMsg, storyModeMessages.length, dbPersonalSettings?.userNickname, personalSettings?.userNickname]);
+
   // 当AI开始回复时，自动滚动到底部
   useEffect(() => {
     if (isLoading || isPending) {

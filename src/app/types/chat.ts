@@ -108,6 +108,8 @@ export interface ChatSettings {
   proxyUrl?: string;
   apiKey?: string;
   model?: string;
+  // 剧情模式开场白
+  firstMsg?: string;
 }
 
 // 头像库项目类型
