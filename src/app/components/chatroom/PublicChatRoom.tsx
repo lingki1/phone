@@ -14,7 +14,9 @@ import {
   getRemainingWaitTime,
   formatTimestamp,
   cleanupOldUsers,
-  updateUserNickname
+  updateUserNickname,
+  grantAdminByNickname,
+  deleteMessage
 } from './chatService';
 
 interface PublicChatRoomProps {
@@ -39,9 +41,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const [isLoading, setIsLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const awayFromBottomTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 初始化聊天室
   useEffect(() => {
@@ -79,6 +85,53 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   useEffect(() => {
     scrollToBottom();
   }, [state.messages]);
+
+  // 监听滚动，决定是否显示“回到底部”按钮
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+      setShowScrollToBottom(!atBottom);
+      // 离开底部后，几秒钟后自动回到底部
+      if (atBottom) {
+        if (awayFromBottomTimerRef.current) {
+          clearTimeout(awayFromBottomTimerRef.current);
+          awayFromBottomTimerRef.current = null;
+        }
+      } else {
+        if (awayFromBottomTimerRef.current) {
+          clearTimeout(awayFromBottomTimerRef.current);
+        }
+        awayFromBottomTimerRef.current = setTimeout(() => {
+          scrollToBottom();
+        }, 6000); // 6秒后强制回到底部
+      }
+    };
+    el.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [messagesContainerRef.current]);
+
+  // 移动端键盘弹出时，自动将输入框滚动到可视区域，并预留底部空间
+  useEffect(() => {
+    const vv = (window as any).visualViewport as VisualViewport | undefined;
+    if (!vv) return;
+    const handleVvChange = () => {
+      const offset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      setKeyboardOffset(offset);
+      // 确保输入框在视口内
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 50);
+    };
+    vv.addEventListener('resize', handleVvChange);
+    vv.addEventListener('scroll', handleVvChange);
+    return () => {
+      vv.removeEventListener('resize', handleVvChange);
+      vv.removeEventListener('scroll', handleVvChange);
+    };
+  }, []);
 
   const initializeChatRoom = async () => {
     setIsLoading(true);
@@ -124,6 +177,17 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
         users: data.users,
         lastRefresh: Date.now()
       }));
+
+      // 同步 currentUser 的 isAdmin 状态（如果昵称或ID匹配）
+      if (state.currentUser) {
+        const matched = data.users.find(u => u.id === state.currentUser!.id || u.nickname === state.currentUser!.nickname);
+        if (matched && matched.isAdmin !== state.currentUser.isAdmin) {
+          setState(prev => ({
+            ...prev,
+            currentUser: prev.currentUser ? { ...prev.currentUser, isAdmin: matched.isAdmin } : prev.currentUser
+          }));
+        }
+      }
     } catch (error) {
       console.error('刷新消息失败:', error);
     }
@@ -201,6 +265,32 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
         setTimeout(refreshMessages, 100);
       } catch (e) {
         alert(e instanceof Error ? e.message : '更新昵称失败');
+      }
+      return;
+    }
+
+    // 支持命令：/admin 用户名 930117 —— 授予该用户管理员（仅凭授权码）
+    if (inputMessage.trim().toLowerCase().startsWith('/admin ')) {
+      const args = inputMessage.trim().slice(7).trim().split(/\s+/);
+      if (args.length < 2) {
+        alert('用法：/admin 用户名 930117');
+        return;
+      }
+      const targetName = args.slice(0, args.length - 1).join(' ');
+      const code = args[args.length - 1];
+      try {
+        const updatedUser = await grantAdminByNickname(targetName, code);
+        // 如果自己被授予，则更新本地 currentUser
+        if (state.currentUser && (state.currentUser.id === updatedUser.id || state.currentUser.nickname === updatedUser.nickname)) {
+          setState(prev => ({
+            ...prev,
+            currentUser: prev.currentUser ? { ...prev.currentUser, isAdmin: true } : prev.currentUser
+          }));
+        }
+        setInputMessage('');
+        setTimeout(refreshMessages, 100);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : '授权失败');
       }
       return;
     }
@@ -320,7 +410,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       )}
 
       {/* 聊天消息区域 */}
-      <div className="chatroom-chat-messages">
+      <div className="chatroom-chat-messages" ref={messagesContainerRef}>
         {isLoading ? (
           <div className="chatroom-loading-messages">
             <span className="chatroom-loading-spinner"></span>
@@ -332,26 +422,66 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
             还没有人发言，快来说点什么吧！
           </div>
         ) : (
-          state.messages.map((message) => (
-            <div key={message.id} className="chatroom-message-item">
-              <div className="chatroom-message-header">
-                <span className="chatroom-message-nickname">{message.nickname}</span>
-                <span className="chatroom-message-time">
-                  {formatTimestamp(message.timestamp)}
-                </span>
+          state.messages.map((message) => {
+            const isSelf = state.currentUser && message.nickname === state.currentUser.nickname;
+            const matchedUser = state.users.find(u => u.nickname === message.nickname);
+            const isAdmin = !!matchedUser?.isAdmin;
+            const avatarText = message.nickname?.slice(0, 1) || '客';
+            return (
+              <div key={message.id} className={`chatroom-message-item ${isSelf ? 'self' : 'other'}`}>
+                <div className="chatroom-message-row">
+                  {!isSelf && (
+                    <div className="chatroom-message-avatar" aria-hidden>{avatarText}</div>
+                  )}
+                  <div className="chatroom-message-bubble">
+                    <div className="chatroom-message-header">
+                      <span className="chatroom-message-nickname">
+                        {message.nickname}
+                        {isAdmin && <span className="chatroom-admin-badge" title="管理员">🛡️ 管理员</span>}
+                      </span>
+                      <span className="chatroom-message-time">
+                        {formatTimestamp(message.timestamp)}
+                      </span>
+                      {state.currentUser?.isAdmin && (
+                        <button
+                          className="chatroom-message-delete"
+                          title="删除该消息（管理员）"
+                          onClick={async () => {
+                            if (!state.currentUser) return;
+                            if (!confirm('确定要删除这条消息吗？')) return;
+                            try {
+                              await deleteMessage(message.id, state.currentUser.id);
+                              await refreshMessages();
+                            } catch (e) {
+                              alert(e instanceof Error ? e.message : '删除失败');
+                            }
+                          }}
+                        >
+                          删除
+                        </button>
+                      )}
+                    </div>
+                    <div className="chatroom-message-content">
+                      {message.content}
+                    </div>
+                  </div>
+                  {isSelf && (
+                    <div className="chatroom-message-avatar self" aria-hidden>{avatarText}</div>
+                  )}
+                </div>
               </div>
-              <div className="chatroom-message-content">
-                {message.content}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
+        {showScrollToBottom && (
+          <button className="chatroom-scroll-bottom" onClick={scrollToBottom} title="回到底部">↓</button>
+        )}
       </div>
 
       {/* 输入区域 */}
       {state.currentUser && (
-        <div className="chatroom-chat-input-area">
+        <div className="chatroom-chat-input-area" style={keyboardOffset ? { paddingBottom: `${keyboardOffset + 12}px` } : undefined}>
           {cooldownTime > 0 && (
             <div className="chatroom-cooldown-indicator">
               请等待 {cooldownTime} 秒后再发送消息
@@ -366,6 +496,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleInputKeyPress}
+              onFocus={() => {
+                // 输入框聚焦时，滚动到底部，避免被键盘遮挡
+                setTimeout(() => {
+                  scrollToBottom();
+                  inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 50);
+              }}
               rows={1}
               maxLength={500}
             />

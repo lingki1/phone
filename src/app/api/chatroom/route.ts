@@ -23,6 +23,7 @@ interface ChatUser {
   id: string;
   nickname: string;
   lastMessageTime: number;
+  isAdmin?: boolean;
 }
 
 // 确保数据目录存在
@@ -182,7 +183,8 @@ export async function POST(request: NextRequest) {
       user = {
         id: userId,
         nickname: nickname.trim(),
-        lastMessageTime: 0
+        lastMessageTime: 0,
+        isAdmin: false
       };
       users.push(user);
     }
@@ -273,7 +275,8 @@ export async function PUT(request: NextRequest) {
       user = {
         id: userId,
         nickname: nickname.trim(),
-        lastMessageTime: 0
+        lastMessageTime: 0,
+        isAdmin: false
       };
       users.push(user);
     } else {
@@ -292,6 +295,105 @@ export async function PUT(request: NextRequest) {
     console.error('更新用户信息失败:', error);
     return NextResponse.json(
       { success: false, error: '更新用户信息失败' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH: 授予管理员（需要密钥）
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { action, nickname, userId, code } = body as {
+      action?: string;
+      nickname?: string;
+      userId?: string;
+      code?: string;
+    };
+
+    if (action !== 'grantAdmin') {
+      return NextResponse.json(
+        { success: false, error: '不支持的操作' },
+        { status: 400 }
+      );
+    }
+
+    if (code !== '930117') {
+      return NextResponse.json(
+        { success: false, error: '授权码无效' },
+        { status: 403 }
+      );
+    }
+
+    const users = await readUsers();
+
+    let target: ChatUser | undefined;
+    if (userId) {
+      target = users.find(u => u.id === userId);
+    } else if (nickname) {
+      target = users.find(u => u.nickname === nickname.trim());
+    }
+
+    if (!target) {
+      return NextResponse.json(
+        { success: false, error: '未找到目标用户' },
+        { status: 404 }
+      );
+    }
+
+    target.isAdmin = true;
+    await writeUsers(users);
+
+    return NextResponse.json({ success: true, data: { user: target } });
+  } catch (error) {
+    console.error('授予管理员失败:', error);
+    return NextResponse.json(
+      { success: false, error: '授予管理员失败' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: 删除消息（需要管理员权限）
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { messageId, userId } = body as { messageId?: string; userId?: string };
+
+    if (!messageId || !userId) {
+      return NextResponse.json(
+        { success: false, error: '缺少必要参数' },
+        { status: 400 }
+      );
+    }
+
+    const users = await readUsers();
+    const requester = users.find(u => u.id === userId);
+
+    if (!requester || !requester.isAdmin) {
+      return NextResponse.json(
+        { success: false, error: '权限不足，仅管理员可删除消息' },
+        { status: 403 }
+      );
+    }
+
+    const messages = await readMessages();
+    const index = messages.findIndex(m => m.id === messageId);
+    if (index === -1) {
+      return NextResponse.json(
+        { success: false, error: '消息不存在' },
+        { status: 404 }
+      );
+    }
+
+    messages.splice(index, 1);
+    await writeMessages(messages);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('删除消息失败:', error);
+    return NextResponse.json(
+      { success: false, error: '删除消息失败' },
       { status: 500 }
     );
   }

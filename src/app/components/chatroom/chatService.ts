@@ -152,7 +152,8 @@ export async function getOrCreateUser(nickname: string): Promise<ChatUser> {
     return {
       id: generateId(),
       nickname: nickname.trim(),
-      lastMessageTime: 0
+      lastMessageTime: 0,
+      isAdmin: false
     };
   }
 }
@@ -211,4 +212,31 @@ export function validateNickname(nickname: string): { valid: boolean; error?: st
 export function cleanupOldUsers(): void {
   // 服务器端API会自动清理过期用户数据
   console.log('用户数据清理由服务器端自动处理');
+}
+
+// 授予管理员（通过昵称 + 授权码）
+export async function grantAdminByNickname(nickname: string, code: string): Promise<ChatUser> {
+  const response = await fetch(API_BASE, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'grantAdmin', nickname: nickname.trim(), code: code.trim() })
+  });
+  const result: ApiResponse<{ user: ChatUser }> = await response.json();
+  if (!result.success || !result.data) {
+    throw new Error(result.error || '授予管理员失败');
+  }
+  return result.data.user;
+}
+
+// 删除消息（需要管理员 userId）
+export async function deleteMessage(messageId: string, userId: string): Promise<void> {
+  const response = await fetch(API_BASE, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messageId, userId })
+  });
+  const result: ApiResponse<unknown> = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || '删除消息失败');
+  }
 }

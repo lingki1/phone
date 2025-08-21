@@ -11,6 +11,7 @@ export interface ChatUser {
   id: string;
   nickname: string;
   lastMessageTime: number; // 用于30秒间隔限制
+  isAdmin?: boolean;
 }
 
 export interface ChatRoomState {

@@ -2,11 +2,24 @@
   {
     "id": "mee0jcfzedn3fh9pog",
     "nickname": "lingki",
-    "lastMessageTime": 1755333996327
+    "lastMessageTime": 1755333996327,
+    "isAdmin": true
   },
   {
     "id": "mee1o2sduzfbxoes5ue",
     "nickname": "lingki",
     "lastMessageTime": 1755335897338
+  },
+  {
+    "id": "mel4vc3dkazia69ndef",
+    "nickname": "lingki",
+    "lastMessageTime": 1755764561263,
+    "isAdmin": false
+  },
+  {
+    "id": "mel52rre66842v6q39a",
+    "nickname": "lingki",
+    "lastMessageTime": 1755764925678,
+    "isAdmin": false
   }
 ]
