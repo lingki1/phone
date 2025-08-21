@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './PublicChatRoom.css';
 import { 
   ChatRoomState 
@@ -49,6 +49,29 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const awayFromBottomTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const refreshMessages = useCallback(async () => {
+    try {
+      const data = await loadChatData();
+      setState(prev => {
+        const matched = prev.currentUser
+          ? data.users.find(u => u.id === prev.currentUser!.id || u.nickname === prev.currentUser!.nickname)
+          : undefined;
+        const updatedCurrentUser = prev.currentUser && matched && matched.isAdmin !== prev.currentUser.isAdmin
+          ? { ...prev.currentUser, isAdmin: matched.isAdmin }
+          : prev.currentUser;
+        return {
+          ...prev,
+          messages: data.messages,
+          users: data.users,
+          lastRefresh: Date.now(),
+          currentUser: updatedCurrentUser
+        };
+      });
+    } catch (error) {
+      console.error('刷新消息失败:', error);
+    }
+  }, []);
+
   // 初始化聊天室
   useEffect(() => {
     if (isOpen) {
@@ -68,7 +91,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       refreshTimerRef.current = interval;
       return () => clearInterval(interval);
     }
-  }, [isOpen, state.currentUser]);
+  }, [isOpen, state.currentUser, refreshMessages]);
 
   // 冷却时间倒计时
   useEffect(() => {
@@ -111,11 +134,11 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     el.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [messagesContainerRef.current]);
+  }, []);
 
   // 移动端键盘弹出时，自动将输入框滚动到可视区域，并预留底部空间
   useEffect(() => {
-    const vv = (window as any).visualViewport as VisualViewport | undefined;
+    const vv = typeof window !== 'undefined' ? window.visualViewport : undefined;
     if (!vv) return;
     const handleVvChange = () => {
       const offset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
@@ -165,32 +188,6 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     }
     
     setIsLoading(false);
-  };
-
-  const refreshMessages = async () => {
-    try {
-      const data = await loadChatData();
-      
-      setState(prev => ({
-        ...prev,
-        messages: data.messages,
-        users: data.users,
-        lastRefresh: Date.now()
-      }));
-
-      // 同步 currentUser 的 isAdmin 状态（如果昵称或ID匹配）
-      if (state.currentUser) {
-        const matched = data.users.find(u => u.id === state.currentUser!.id || u.nickname === state.currentUser!.nickname);
-        if (matched && matched.isAdmin !== state.currentUser.isAdmin) {
-          setState(prev => ({
-            ...prev,
-            currentUser: prev.currentUser ? { ...prev.currentUser, isAdmin: matched.isAdmin } : prev.currentUser
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('刷新消息失败:', error);
-    }
   };
 
   const cleanup = () => {
