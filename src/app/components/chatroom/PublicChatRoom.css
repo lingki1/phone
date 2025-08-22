@@ -169,11 +169,47 @@
   padding: 20px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(5px);
+  /* 优化滚动性能 */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* 硬件加速 */
+  transform: translateZ(0);
+  will-change: scroll-position;
+  /* 优化滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Webkit 滚动条样式 */
+.chatroom-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatroom-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatroom-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.chatroom-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .chatroom-message-item {
   margin-bottom: 16px;
-  animation: messageSlideIn 0.3s ease-out;
+  /* 优化动画性能，减少对滚动的影响 */
+  animation: messageSlideIn 0.2s ease-out;
+  /* 硬件加速 */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* 只在消息首次出现时播放动画，避免滚动时重复播放 */
+.chatroom-message-item.animate {
+  animation: messageSlideIn 0.2s ease-out;
 }
 
 .chatroom-message-item.self .chatroom-message-row {
@@ -212,11 +248,11 @@
 @keyframes messageSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px) translateZ(0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
   }
 }
 
@@ -446,22 +482,45 @@
 
 /* 回到底部按钮 */
 .chatroom-scroll-bottom {
-  position: sticky;
-  left: 100%;
-  bottom: 12px;
-  transform: translateX(-56px);
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
+  position: fixed;
+  right: 20px;
+  bottom: 100px;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
   border: none;
-  background: rgba(0,0,0,0.5);
+  background: rgba(102, 126, 234, 0.9);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001;
+  /* 硬件加速 */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  /* 初始状态隐藏 */
+  opacity: 0;
+  transform: translateY(20px) translateZ(0);
+  pointer-events: none;
+}
+
+.chatroom-scroll-bottom.show {
+  opacity: 1;
+  transform: translateY(0) translateZ(0);
+  pointer-events: auto;
 }
 
 .chatroom-scroll-bottom:hover {
-  background: rgba(0,0,0,0.6);
+  background: rgba(102, 126, 234, 1);
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.chatroom-scroll-bottom:active {
+  transform: translateY(0) translateZ(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* 待办事项功能样式 */
@@ -553,6 +612,23 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* 只读模式提示 */
+.chatroom-todo-readonly-notice {
+  background: rgba(255, 193, 7, 0.1);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+  padding: 8px 20px;
+  font-size: 12px;
+  color: #f57c00;
+  text-align: center;
+}
+
+.chatroom-todo-readonly-notice span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
 .chatroom-todo-content {
   max-height: 320px;
   overflow-y: auto;
@@ -585,6 +661,27 @@
 .chatroom-todo-item.completed {
   opacity: 0.6;
   background: #f8f9fa;
+}
+
+/* 非管理员用户的待办事项状态指示器 */
+.chatroom-todo-item:not(.admin-view) .chatroom-todo-content-text::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.chatroom-todo-item:not(.admin-view).completed .chatroom-todo-content-text::before {
+  background: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.chatroom-todo-item:not(.admin-view):not(.completed) .chatroom-todo-content-text::before {
+  background: #ff9800;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
 }
 
 .chatroom-todo-checkbox {

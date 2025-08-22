@@ -53,7 +53,9 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
-  const awayFromBottomTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const refreshMessages = useCallback(async () => {
     try {
@@ -116,36 +118,53 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     }
   }, [cooldownTime]);
 
-  // 自动滚动到底部
+  // 自动滚动到底部 - 只在用户在底部时才自动滚动
   useEffect(() => {
-    scrollToBottom();
-  }, [state.messages]);
+    if (isUserAtBottom) {
+      // 使用 requestAnimationFrame 优化滚动性能
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        scrollToBottom();
+      }, 50);
+    }
+  }, [state.messages, isUserAtBottom]);
 
-  // 监听滚动，决定是否显示“回到底部”按钮
+  // 监听滚动，决定是否显示"回到底部"按钮
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
+    
     const handleScroll = () => {
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-      setShowScrollToBottom(!atBottom);
-      // 离开底部后，几秒钟后自动回到底部
-      if (atBottom) {
-        if (awayFromBottomTimerRef.current) {
-          clearTimeout(awayFromBottomTimerRef.current);
-          awayFromBottomTimerRef.current = null;
-        }
-      } else {
-        if (awayFromBottomTimerRef.current) {
-          clearTimeout(awayFromBottomTimerRef.current);
-        }
-        awayFromBottomTimerRef.current = setTimeout(() => {
-          scrollToBottom();
-        }, 6000); // 6秒后强制回到底部
+      // 防抖处理，避免频繁触发
+      if (scrollDebounceRef.current) {
+        clearTimeout(scrollDebounceRef.current);
+      }
+      
+      scrollDebounceRef.current = setTimeout(() => {
+        const scrollTop = el.scrollTop;
+        const scrollHeight = el.scrollHeight;
+        const clientHeight = el.clientHeight;
+        const atBottom = scrollHeight - scrollTop - clientHeight < 40;
+        
+        setIsUserAtBottom(atBottom);
+        setShowScrollToBottom(!atBottom);
+      }, 16); // 约60fps的刷新率
+    };
+    
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (scrollDebounceRef.current) {
+        clearTimeout(scrollDebounceRef.current);
       }
     };
-    el.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => el.removeEventListener('scroll', handleScroll);
   }, []);
 
   // 移动端键盘弹出时，自动将输入框滚动到可视区域，并预留底部空间
@@ -212,9 +231,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'end'
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    
+    // 使用更流畅的滚动方式
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: 'smooth'
     });
   };
 
@@ -419,7 +442,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           💬 公共聊天室
         </h1>
         <div className="chatroom-header-actions">
-          {state.currentUser?.isAdmin && (
+          {state.currentUser && (
             <button 
               className="chatroom-todo-button"
               onClick={() => setIsTodoWindowOpen(!isTodoWindowOpen)}
@@ -473,7 +496,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       )}
 
       {/* 待办事项窗口 */}
-      {isTodoWindowOpen && state.currentUser?.isAdmin && (
+      {isTodoWindowOpen && state.currentUser && (
         <div className="chatroom-todo-window">
           <div className="chatroom-todo-header">
             <h3>📋 待办事项</h3>
@@ -484,6 +507,11 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               ×
             </button>
           </div>
+          {!state.currentUser?.isAdmin && (
+            <div className="chatroom-todo-readonly-notice">
+              <span>👁️ 只读模式 - 只有管理员可以添加和完成待办事项</span>
+            </div>
+          )}
           <div className="chatroom-todo-content">
             {state.todos.length === 0 ? (
               <div className="chatroom-todo-empty">
@@ -492,15 +520,17 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
             ) : (
               <div className="chatroom-todo-list">
                 {state.todos.map((todo) => (
-                  <div key={todo.id} className={`chatroom-todo-item ${todo.isCompleted ? 'completed' : ''}`}>
-                    <div className="chatroom-todo-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={todo.isCompleted}
-                        onChange={() => handleCompleteTodo(todo.id)}
-                        disabled={todo.isCompleted}
-                      />
-                    </div>
+                  <div key={todo.id} className={`chatroom-todo-item ${todo.isCompleted ? 'completed' : ''} ${state.currentUser?.isAdmin ? 'admin-view' : ''}`}>
+                    {state.currentUser?.isAdmin && (
+                      <div className="chatroom-todo-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={todo.isCompleted}
+                          onChange={() => handleCompleteTodo(todo.id)}
+                          disabled={todo.isCompleted}
+                        />
+                      </div>
+                    )}
                     <div className="chatroom-todo-content-text">
                       <div className="chatroom-todo-text">{todo.content}</div>
                       <div className="chatroom-todo-meta">
@@ -612,9 +642,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           })
         )}
         <div ref={messagesEndRef} />
-        {showScrollToBottom && (
-          <button className="chatroom-scroll-bottom" onClick={scrollToBottom} title="回到底部">↓</button>
-        )}
+        <button 
+          className={`chatroom-scroll-bottom ${showScrollToBottom ? 'show' : ''}`} 
+          onClick={scrollToBottom} 
+          title="回到底部"
+        >
+          ↓
+        </button>
       </div>
 
       {/* 输入区域 */}

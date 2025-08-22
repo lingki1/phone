@@ -47,6 +47,7 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border-left: 4px solid transparent;
+  max-width: 80%;
 }
 
 .story-message:hover {
@@ -57,11 +58,17 @@
 .story-user-message {
   border-left-color: #4CAF50;
   background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+  align-self: flex-end;
+  margin-left: auto;
+  border-left: none;
+  border-right: 4px solid #4CAF50;
 }
 
 .story-ai-message {
   border-left-color: #2196F3;
   background: linear-gradient(135deg, #f8fbff 0%, #e3f2fd 100%);
+  align-self: flex-start;
+  margin-right: auto;
 }
 
 .story-message-header {
@@ -69,16 +76,7 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-}
-
-.story-message-avatar {
-  flex-shrink: 0;
-}
-
-.story-avatar-image {
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
 }
 
 .story-message-info {
@@ -209,6 +207,7 @@
   .story-message {
     padding: 12px;
     border-radius: 12px;
+    max-width: 90%;
   }
   
   .story-message-header {

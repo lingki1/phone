@@ -52,6 +52,11 @@ interface BackupData {
   discoverSettings: DiscoverSettings;
   discoverNotifications: DiscoverNotification[];
   discoverDrafts: DiscoverDraft[];
+  storyModeMessages: Array<{
+    chatId: string;
+    messages: import('../../../types/chat').Message[];
+    timestamp: number;
+  }>;
   exportTime: string;
   version: string;
 }
@@ -150,10 +155,35 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
 
       const presets = await dataManager.getAllPresets();
       setExportProgress(85);
+      setCurrentOperation('正在收集剧情模式消息...');
+
+      // 收集所有聊天的剧情模式消息
+      const storyModeMessages: Array<{
+        chatId: string;
+        messages: import('../../../types/chat').Message[];
+        timestamp: number;
+      }> = [];
+      
+      for (const chat of chats) {
+        try {
+          const messages = await dataManager.getStoryModeMessages(chat.id);
+          if (messages && messages.length > 0) {
+            storyModeMessages.push({
+              chatId: chat.id,
+              messages,
+              timestamp: Date.now()
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to get story mode messages for chat ${chat.id}:`, error);
+        }
+      }
+
+      setExportProgress(87);
       setCurrentOperation('正在收集动态数据...');
 
       const discoverPosts = await dataManager.getAllDiscoverPosts();
-      setExportProgress(87);
+      setExportProgress(89);
       setCurrentOperation('正在收集动态评论...');
 
       // 收集所有动态的评论
@@ -167,11 +197,11 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         }
       }
 
-      setExportProgress(89);
+      setExportProgress(91);
       setCurrentOperation('正在收集动态设置...');
 
       const discoverSettings = await dataManager.getDiscoverSettings();
-      setExportProgress(91);
+      setExportProgress(93);
       setCurrentOperation('正在收集动态通知...');
 
       // 收集所有动态的通知
@@ -185,12 +215,12 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         }
       }
 
-      setExportProgress(93);
+      setExportProgress(95);
       setCurrentOperation('正在收集动态草稿...');
 
       const discoverDrafts = await dataManager.getAllDiscoverDrafts();
       
-      setExportProgress(95);
+      setExportProgress(97);
       setCurrentOperation('正在生成导出文件...');
 
       // 优化聊天数据 - 确保头像数据正确存储在avatarMap中
@@ -240,8 +270,9 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         discoverSettings,
         discoverNotifications,
         discoverDrafts,
+        storyModeMessages, // 新增剧情模式消息
         exportTime: new Date().toISOString(),
-        version: '1.7' // 更新版本号以支持头像优化
+        version: '1.8' // 更新版本号以支持剧情模式消息备份
       };
 
       // 创建并下载文件
@@ -304,7 +335,17 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         setCurrentOperation('正在导入聊天数据...');
         for (let i = 0; i < importData.chats.length; i++) {
           await dataManager.saveChat(importData.chats[i]);
-          setImportProgress(30 + (i / importData.chats.length) * 15);
+          setImportProgress(30 + (i / importData.chats.length) * 10);
+        }
+      }
+
+      // 导入剧情模式消息
+      if (importData.storyModeMessages && Array.isArray(importData.storyModeMessages)) {
+        setCurrentOperation('正在导入剧情模式消息...');
+        for (let i = 0; i < importData.storyModeMessages.length; i++) {
+          const storyData = importData.storyModeMessages[i];
+          await dataManager.saveStoryModeMessages(storyData.chatId, storyData.messages);
+          setImportProgress(40 + (i / importData.storyModeMessages.length) * 5);
         }
       }
 
@@ -497,7 +538,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
           <div className="backup-actions">
             <div className="action-section">
               <h3>导出数据</h3>
-              <p>将所有数据导出为JSON文件，包括聊天记录、设置、送礼记录等</p>
+              <p>将所有数据导出为JSON文件，包括聊天记录、剧情模式消息、设置、送礼记录等</p>
               <button 
                 className="export-btn"
                 onClick={handleExportData}

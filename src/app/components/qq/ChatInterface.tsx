@@ -2126,8 +2126,6 @@ export default function ChatInterface({
           <StoryModeDisplay
             messages={storyModeMessages}
             chat={chat}
-            dbPersonalSettings={dbPersonalSettings}
-            personalSettings={personalSettings}
             onQuoteMessage={handleQuoteMessage}
             onEditMessage={handleEditMessage}
             onSaveEdit={handleStorySaveEdit}

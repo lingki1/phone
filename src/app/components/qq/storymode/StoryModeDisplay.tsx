@@ -1,23 +1,12 @@
 'use client';
 
 import React, { useCallback, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { Message, ChatItem } from '../../../types/chat';
 import './StoryModeDisplay.css';
 
 interface StoryModeDisplayProps {
   messages: Message[];
   chat: ChatItem;
-  dbPersonalSettings?: {
-    userAvatar: string;
-    userNickname: string;
-    userBio: string;
-  } | null;
-  personalSettings?: {
-    userAvatar: string;
-    userNickname: string;
-    userBio: string;
-  };
   onQuoteMessage: (msg: Message) => void;
   onEditMessage: (messageId: string, currentContent: string) => void;
   onSaveEdit: () => void;
@@ -31,8 +20,6 @@ interface StoryModeDisplayProps {
 export default function StoryModeDisplay({
   messages,
   chat,
-  dbPersonalSettings,
-  personalSettings,
   onQuoteMessage,
   onEditMessage,
   onSaveEdit,
@@ -100,16 +87,6 @@ export default function StoryModeDisplay({
         className={`story-message ${isUser ? 'story-user-message' : 'story-ai-message'}`}
       >
         <div className="story-message-header">
-          <div className="story-message-avatar">
-            <Image 
-              src={isUser ? (dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || '/avatars/user-avatar.svg') : (msg.senderAvatarId && chat.avatarMap?.[msg.senderAvatarId] ? chat.avatarMap[msg.senderAvatarId] : chat.avatar)}
-              alt={isUser ? '我' : (msg.senderName || chat.name)}
-              width={32}
-              height={32}
-              className="story-avatar-image"
-              unoptimized={(isUser ? (dbPersonalSettings?.userAvatar || personalSettings?.userAvatar) : (msg.senderAvatarId && chat.avatarMap?.[msg.senderAvatarId] ? chat.avatarMap[msg.senderAvatarId] : chat.avatar))?.startsWith('data:')}
-            />
-          </div>
           <div className="story-message-info">
             <div className="story-message-sender">
               {isUser ? '我' : (msg.senderName || chat.name)}
@@ -188,7 +165,7 @@ export default function StoryModeDisplay({
         </div>
       </div>
     );
-  }, [chat, dbPersonalSettings, personalSettings, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage]);
+  }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage]);
 
   return (
     <div className="story-display-container" ref={storyContainerRef}>
