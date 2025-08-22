@@ -463,3 +463,231 @@
 .chatroom-scroll-bottom:hover {
   background: rgba(0,0,0,0.6);
 }
+
+/* 待办事项功能样式 */
+
+/* 头部操作区域 */
+.chatroom-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 待办事项按钮 */
+.chatroom-todo-button {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.chatroom-todo-button:hover {
+  background: #ff5252;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* 待办事项窗口 */
+.chatroom-todo-window {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  width: 350px;
+  max-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 1002;
+  overflow: hidden;
+  animation: slideInTodo 0.3s ease-out;
+}
+
+@keyframes slideInTodo {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chatroom-todo-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chatroom-todo-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chatroom-todo-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.chatroom-todo-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.chatroom-todo-content {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.chatroom-todo-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.chatroom-todo-list {
+  padding: 0;
+}
+
+.chatroom-todo-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.chatroom-todo-item:hover {
+  background: #f8f9fa;
+}
+
+.chatroom-todo-item.completed {
+  opacity: 0.6;
+  background: #f8f9fa;
+}
+
+.chatroom-todo-checkbox {
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+.chatroom-todo-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4CAF50;
+}
+
+.chatroom-todo-content-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatroom-todo-text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  margin-bottom: 6px;
+  word-wrap: break-word;
+}
+
+.chatroom-todo-item.completed .chatroom-todo-text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.chatroom-todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: #999;
+}
+
+.chatroom-todo-author,
+.chatroom-todo-time,
+.chatroom-todo-completed-by,
+.chatroom-todo-completed-time {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 消息标记按钮样式 */
+.chatroom-message-mark,
+.chatroom-message-unmark {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 4px;
+}
+
+.chatroom-message-mark:hover {
+  background: #ff5252;
+}
+
+.chatroom-message-unmark {
+  background: #ff9800;
+}
+
+.chatroom-message-unmark:hover {
+  background: #f57c00;
+}
+
+/* 已标记消息的样式 */
+.chatroom-message-item.marked {
+  border-left: 3px solid #ff6b6b;
+  background: rgba(255, 107, 107, 0.05);
+}
+
+.chatroom-message-item.marked .chatroom-message-bubble {
+  border-left: 3px solid #ff6b6b;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chatroom-todo-window {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 350px;
+    max-height: 70vh;
+  }
+  
+  .chatroom-header-actions {
+    gap: 8px;
+  }
+  
+  .chatroom-todo-button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}

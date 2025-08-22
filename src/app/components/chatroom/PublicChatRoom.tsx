@@ -16,7 +16,11 @@ import {
   cleanupOldUsers,
   updateUserNickname,
   grantAdminByNickname,
-  deleteMessage
+  deleteMessage,
+  markMessageAsTodo,
+  loadTodos,
+  completeTodo,
+  unmarkMessageAsTodo
 } from './chatService';
 
 interface PublicChatRoomProps {
@@ -30,7 +34,8 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     users: [],
     currentUser: null,
     isConnected: false,
-    lastRefresh: 0
+    lastRefresh: 0,
+    todos: []
   });
 
   const [inputMessage, setInputMessage] = useState('');
@@ -39,6 +44,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTodoWindowOpen, setIsTodoWindowOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -51,18 +57,24 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
 
   const refreshMessages = useCallback(async () => {
     try {
-      const data = await loadChatData();
+      const [data, todos] = await Promise.all([
+        loadChatData(),
+        loadTodos()
+      ]);
       setState(prev => {
         const matched = prev.currentUser
           ? data.users.find(u => u.id === prev.currentUser!.id || u.nickname === prev.currentUser!.nickname)
           : undefined;
+        
         const updatedCurrentUser = prev.currentUser && matched && matched.isAdmin !== prev.currentUser.isAdmin
           ? { ...prev.currentUser, isAdmin: matched.isAdmin }
           : prev.currentUser;
+        
         return {
           ...prev,
           messages: data.messages,
           users: data.users,
+          todos: todos,
           lastRefresh: Date.now(),
           currentUser: updatedCurrentUser
         };
@@ -277,6 +289,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       const code = args[args.length - 1];
       try {
         const updatedUser = await grantAdminByNickname(targetName, code);
+        
         // 如果自己被授予，则更新本地 currentUser
         if (state.currentUser && (state.currentUser.id === updatedUser.id || state.currentUser.nickname === updatedUser.nickname)) {
           setState(prev => ({
@@ -285,7 +298,8 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           }));
         }
         setInputMessage('');
-        setTimeout(refreshMessages, 100);
+        // 立即刷新消息以获取最新状态
+        await refreshMessages();
       } catch (e) {
         alert(e instanceof Error ? e.message : '授权失败');
       }
@@ -347,6 +361,47 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     }
   };
 
+  // 标记消息为待办事项
+  const handleMarkAsTodo = async (messageId: string) => {
+    if (!state.currentUser?.isAdmin) {
+      return;
+    }
+    
+    try {
+      await markMessageAsTodo(messageId, state.currentUser.id, state.currentUser.nickname);
+      await refreshMessages();
+    } catch (error) {
+      console.error('标记待办事项失败:', error);
+      alert(error instanceof Error ? error.message : '标记失败');
+    }
+  };
+
+  // 完成待办事项
+  const handleCompleteTodo = async (todoId: string) => {
+    if (!state.currentUser?.isAdmin) return;
+    
+    try {
+      await completeTodo(todoId, state.currentUser.id, state.currentUser.nickname);
+      await refreshMessages();
+    } catch (error) {
+      console.error('完成待办事项失败:', error);
+      alert(error instanceof Error ? error.message : '操作失败');
+    }
+  };
+
+  // 取消标记消息为待办事项
+  const handleUnmarkAsTodo = async (messageId: string) => {
+    if (!state.currentUser?.isAdmin) return;
+    
+    try {
+      await unmarkMessageAsTodo(messageId, state.currentUser.id);
+      await refreshMessages();
+    } catch (error) {
+      console.error('取消标记失败:', error);
+      alert(error instanceof Error ? error.message : '操作失败');
+    }
+  };
+
   const canSend = state.currentUser && 
                  inputMessage.trim().length > 0 && 
                  canUserSendMessage(state.currentUser);
@@ -363,8 +418,19 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
         <h1 className="chatroom-title">
           💬 公共聊天室
         </h1>
-        <div className="chatroom-online-count">
-          {state.users.length} 人在线
+        <div className="chatroom-header-actions">
+          {state.currentUser?.isAdmin && (
+            <button 
+              className="chatroom-todo-button"
+              onClick={() => setIsTodoWindowOpen(!isTodoWindowOpen)}
+              title="待办事项"
+            >
+              📋 {state.todos.filter(todo => !todo.isCompleted).length}
+            </button>
+          )}
+          <div className="chatroom-online-count">
+            {state.users.length} 人在线
+          </div>
         </div>
       </div>
 
@@ -406,6 +472,62 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
         </div>
       )}
 
+      {/* 待办事项窗口 */}
+      {isTodoWindowOpen && state.currentUser?.isAdmin && (
+        <div className="chatroom-todo-window">
+          <div className="chatroom-todo-header">
+            <h3>📋 待办事项</h3>
+            <button 
+              className="chatroom-todo-close"
+              onClick={() => setIsTodoWindowOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="chatroom-todo-content">
+            {state.todos.length === 0 ? (
+              <div className="chatroom-todo-empty">
+                暂无待办事项
+              </div>
+            ) : (
+              <div className="chatroom-todo-list">
+                {state.todos.map((todo) => (
+                  <div key={todo.id} className={`chatroom-todo-item ${todo.isCompleted ? 'completed' : ''}`}>
+                    <div className="chatroom-todo-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={todo.isCompleted}
+                        onChange={() => handleCompleteTodo(todo.id)}
+                        disabled={todo.isCompleted}
+                      />
+                    </div>
+                    <div className="chatroom-todo-content-text">
+                      <div className="chatroom-todo-text">{todo.content}</div>
+                      <div className="chatroom-todo-meta">
+                        <span className="chatroom-todo-author">由 {todo.createdBy} 创建</span>
+                        <span className="chatroom-todo-time">
+                          {formatTimestamp(todo.createdAt)}
+                        </span>
+                        {todo.isCompleted && (
+                          <>
+                            <span className="chatroom-todo-completed-by">
+                              由 {todo.completedBy} 完成
+                            </span>
+                            <span className="chatroom-todo-completed-time">
+                              {formatTimestamp(todo.completedAt!)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 聊天消息区域 */}
       <div className="chatroom-chat-messages" ref={messagesContainerRef}>
         {isLoading ? (
@@ -425,7 +547,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
             const isAdmin = !!matchedUser?.isAdmin;
             const avatarText = message.nickname?.slice(0, 1) || '客';
             return (
-              <div key={message.id} className={`chatroom-message-item ${isSelf ? 'self' : 'other'}`}>
+              <div key={message.id} className={`chatroom-message-item ${isSelf ? 'self' : 'other'} ${message.isMarked ? 'marked' : ''}`}>
                 <div className="chatroom-message-row">
                   {!isSelf && (
                     <div className="chatroom-message-avatar" aria-hidden>{avatarText}</div>
@@ -440,22 +562,41 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
                         {formatTimestamp(message.timestamp)}
                       </span>
                       {state.currentUser?.isAdmin && (
-                        <button
-                          className="chatroom-message-delete"
-                          title="删除该消息（管理员）"
-                          onClick={async () => {
-                            if (!state.currentUser) return;
-                            if (!confirm('确定要删除这条消息吗？')) return;
-                            try {
-                              await deleteMessage(message.id, state.currentUser.id);
-                              await refreshMessages();
-                            } catch (e) {
-                              alert(e instanceof Error ? e.message : '删除失败');
-                            }
-                          }}
-                        >
-                          删除
-                        </button>
+                        <>
+                          <button
+                            className="chatroom-message-delete"
+                            title="删除该消息（管理员）"
+                            onClick={async () => {
+                              if (!state.currentUser) return;
+                              if (!confirm('确定要删除这条消息吗？')) return;
+                              try {
+                                await deleteMessage(message.id, state.currentUser.id);
+                                await refreshMessages();
+                              } catch (e) {
+                                alert(e instanceof Error ? e.message : '删除失败');
+                              }
+                            }}
+                          >
+                            删除
+                          </button>
+                          {message.isMarked ? (
+                            <button
+                              className="chatroom-message-unmark"
+                              title="取消标记为待办事项"
+                              onClick={() => handleUnmarkAsTodo(message.id)}
+                            >
+                              取消标记
+                            </button>
+                          ) : (
+                            <button
+                              className="chatroom-message-mark"
+                              title="标记为待办事项"
+                              onClick={() => handleMarkAsTodo(message.id)}
+                            >
+                              标记待办
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                     <div className="chatroom-message-content">

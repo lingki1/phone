@@ -1,5 +1,5 @@
 // 聊天室数据服务 - 基于API的服务端存储
-import { ChatMessage, ChatUser } from './types';
+import { ChatMessage, ChatUser, TodoItem } from './types';
 
 const API_BASE = '/api/chatroom';
 
@@ -98,8 +98,7 @@ export async function addMessage(content: string, user: ChatUser): Promise<ChatM
       },
       body: JSON.stringify({
         nickname: user.nickname,
-        content: content.trim(),
-        userId: user.id
+        content: content.trim()
       }),
     });
     
@@ -134,7 +133,6 @@ export async function getOrCreateUser(nickname: string): Promise<ChatUser> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: generateId(),
         nickname: nickname.trim()
       }),
     });
@@ -161,7 +159,7 @@ export async function getOrCreateUser(nickname: string): Promise<ChatUser> {
 // 更新已有用户昵称
 export async function updateUserNickname(userId: string, nickname: string): Promise<ChatUser> {
   try {
-    const response = await fetch(API_BASE, {
+    const response = await fetch(`${API_BASE}/user`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -238,5 +236,77 @@ export async function deleteMessage(messageId: string, userId: string): Promise<
   const result: ApiResponse<unknown> = await response.json();
   if (!result.success) {
     throw new Error(result.error || '删除消息失败');
+  }
+}
+
+// 标记消息为待办事项（需要管理员权限）
+export async function markMessageAsTodo(messageId: string, adminId: string, adminNickname: string): Promise<TodoItem> {
+  const response = await fetch(`${API_BASE}/todos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      messageId, 
+      adminId, 
+      adminNickname 
+    })
+  });
+  
+  const result: ApiResponse<{ todo: TodoItem }> = await response.json();
+  if (!result.success || !result.data) {
+    throw new Error(result.error || '标记待办事项失败');
+  }
+  return result.data.todo;
+}
+
+// 获取待办事项列表
+export async function loadTodos(): Promise<TodoItem[]> {
+  try {
+    const response = await fetch(`${API_BASE}/todos`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    const result: ApiResponse<{ todos: TodoItem[] }> = await response.json();
+    
+    if (result.success && result.data) {
+      return result.data.todos;
+    } else {
+      throw new Error(result.error || '获取待办事项失败');
+    }
+  } catch (error) {
+    console.error('加载待办事项失败:', error);
+    return [];
+  }
+}
+
+// 完成待办事项（需要管理员权限）
+export async function completeTodo(todoId: string, adminId: string, adminNickname: string): Promise<TodoItem> {
+  const response = await fetch(`${API_BASE}/todos/${todoId}/complete`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      adminId, 
+      adminNickname 
+    })
+  });
+  
+  const result: ApiResponse<{ todo: TodoItem }> = await response.json();
+  if (!result.success || !result.data) {
+    throw new Error(result.error || '完成待办事项失败');
+  }
+  return result.data.todo;
+}
+
+// 取消标记消息为待办事项（需要管理员权限）
+export async function unmarkMessageAsTodo(messageId: string, adminId: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/todos/unmark`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messageId, adminId })
+  });
+  
+  const result: ApiResponse<unknown> = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || '取消标记失败');
   }
 }

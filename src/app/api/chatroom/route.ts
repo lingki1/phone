@@ -9,6 +9,7 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), 'data');
 const MESSAGES_FILE = path.join(DATA_DIR, 'chatroom-messages.json');
 const USERS_FILE = path.join(DATA_DIR, 'chatroom-users.json');
+const TODOS_FILE = path.join(DATA_DIR, 'chatroom-todos.json');
 
 // 类型定义
 interface ChatMessage {
@@ -17,6 +18,9 @@ interface ChatMessage {
   content: string;
   timestamp: number;
   createdAt: string;
+  isMarked?: boolean; // 是否被标记为待办事项
+  markedBy?: string; // 标记者的昵称
+  markedAt?: number; // 标记时间
 }
 
 interface ChatUser {
@@ -24,6 +28,17 @@ interface ChatUser {
   nickname: string;
   lastMessageTime: number;
   isAdmin?: boolean;
+}
+
+interface TodoItem {
+  id: string;
+  messageId: string; // 关联的消息ID
+  content: string; // 待办事项内容
+  createdBy: string; // 创建者昵称
+  createdAt: number; // 创建时间
+  isCompleted: boolean; // 是否已完成
+  completedBy?: string; // 完成者昵称
+  completedAt?: number; // 完成时间
 }
 
 // 确保数据目录存在
@@ -69,6 +84,23 @@ async function writeUsers(users: ChatUser[]): Promise<void> {
   await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
+// 读取待办事项数据
+async function readTodos(): Promise<TodoItem[]> {
+  try {
+    await ensureDataDir();
+    const data = await fs.readFile(TODOS_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+// 写入待办事项数据
+async function writeTodos(todos: TodoItem[]): Promise<void> {
+  await ensureDataDir();
+  await fs.writeFile(TODOS_FILE, JSON.stringify(todos, null, 2));
+}
+
 // 生成唯一ID
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -106,8 +138,11 @@ function canUserSendMessage(user: ChatUser): boolean {
 // GET: 获取聊天消息和用户列表
 export async function GET() {
   try {
-    const messages = await readMessages();
-    const users = await readUsers();
+    const [messages, users, todos] = await Promise.all([
+      readMessages(),
+      readUsers(),
+      readTodos()
+    ]);
     
     // 清理7天前的用户数据
     const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
@@ -119,10 +154,21 @@ export async function GET() {
       await writeUsers(activeUsers);
     }
     
+    // 确保消息包含标记信息
+    const messagesWithMarking = messages.map((message: ChatMessage) => {
+      const todo = todos.find(t => t.messageId === message.id);
+      return {
+        ...message,
+        isMarked: !!todo,
+        markedBy: todo?.createdBy,
+        markedAt: todo?.createdAt
+      };
+    });
+    
     return NextResponse.json({
       success: true,
       data: {
-        messages: messages.sort((a: ChatMessage, b: ChatMessage) => a.timestamp - b.timestamp),
+        messages: messagesWithMarking.sort((a: ChatMessage, b: ChatMessage) => a.timestamp - b.timestamp),
         users: activeUsers
       }
     });
@@ -139,10 +185,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nickname, content, userId } = body;
+    const { nickname, content } = body;
     
     // 验证输入
-    if (!nickname || !content || !userId) {
+    if (!nickname || !content) {
       return NextResponse.json(
         { success: false, error: '缺少必要参数' },
         { status: 400 }
@@ -177,11 +223,12 @@ export async function POST(request: NextRequest) {
     const messages = await readMessages();
     const users = await readUsers();
     
-    // 查找或创建用户
-    let user = users.find((u: ChatUser) => u.id === userId);
+    // 查找用户（基于昵称）
+    let user = users.find((u: ChatUser) => u.nickname === nickname.trim());
     if (!user) {
+      // 如果找不到用户，创建新用户
       user = {
-        id: userId,
+        id: generateId(),
         nickname: nickname.trim(),
         lastMessageTime: 0,
         isAdmin: false
@@ -244,13 +291,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT: 更新用户信息
+// PUT: 获取或创建用户（基于昵称）
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, nickname } = body;
+    const { nickname } = body;
     
-    if (!userId || !nickname) {
+    if (!nickname) {
       return NextResponse.json(
         { success: false, error: '缺少必要参数' },
         { status: 400 }
@@ -269,18 +316,18 @@ export async function PUT(request: NextRequest) {
     // 读取用户数据
     const users = await readUsers();
     
-    // 查找或创建用户
-    let user = users.find((u: ChatUser) => u.id === userId);
+    // 查找现有用户（基于昵称）
+    let user = users.find((u: ChatUser) => u.nickname === nickname.trim());
+    
     if (!user) {
+      // 创建新用户
       user = {
-        id: userId,
+        id: generateId(),
         nickname: nickname.trim(),
         lastMessageTime: 0,
         isAdmin: false
       };
       users.push(user);
-    } else {
-      user.nickname = nickname.trim();
     }
     
     // 保存数据
@@ -292,9 +339,9 @@ export async function PUT(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('更新用户信息失败:', error);
+    console.error('获取或创建用户失败:', error);
     return NextResponse.json(
-      { success: false, error: '更新用户信息失败' },
+      { success: false, error: '获取或创建用户失败' },
       { status: 500 }
     );
   }
@@ -386,8 +433,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // 删除消息
     messages.splice(index, 1);
     await writeMessages(messages);
+
+    // 删除对应的待办事项（如果存在）
+    const todos = await readTodos();
+    const todoIndex = todos.findIndex(t => t.messageId === messageId);
+    if (todoIndex !== -1) {
+      todos.splice(todoIndex, 1);
+      await writeTodos(todos);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
