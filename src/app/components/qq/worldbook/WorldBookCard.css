@@ -7,6 +7,7 @@
   margin-bottom: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .world-book-card:hover {
@@ -19,6 +20,35 @@
 .world-book-card:active {
   transform: translateY(0);
   box-shadow: var(--theme-shadow-light, 0 2px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* 选择模式样式 */
+.world-book-card.selection-mode {
+  padding-left: 48px;
+}
+
+.world-book-card.selected {
+  border-color: var(--theme-accent-color);
+  background: var(--theme-accent-color-light, rgba(59, 130, 246, 0.1));
+}
+
+.world-book-card.selected:hover {
+  background: var(--theme-accent-color-light, rgba(59, 130, 246, 0.15));
+}
+
+.selection-checkbox {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.selection-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--theme-accent-color);
 }
 
 .world-book-header {

@@ -19,6 +19,11 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const [editingWorldBook, setEditingWorldBook] = useState<WorldBook | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
+  
+  // 批量删除相关状态
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 加载世界书列表
   const loadWorldBooks = async () => {
@@ -133,6 +138,80 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
     }
   };
 
+  // 切换选择模式
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedIds(new Set());
+  };
+
+  // 选择/取消选择世界书
+  const toggleSelection = (id: string) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (newSelectedIds.has(id)) {
+      newSelectedIds.delete(id);
+    } else {
+      newSelectedIds.add(id);
+    }
+    setSelectedIds(newSelectedIds);
+  };
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredWorldBooks.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredWorldBooks.map(wb => wb.id)));
+    }
+  };
+
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) {
+      alert('请先选择要删除的世界书');
+      return;
+    }
+
+    const confirmMessage = `确定要删除选中的 ${selectedIds.size} 个世界书吗？此操作不可撤销。`;
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          await dataManager.deleteWorldBook(id);
+          successCount++;
+        } catch (error) {
+          console.error('Failed to delete world book:', id, error);
+          errorCount++;
+        }
+      }
+
+      // 重新加载世界书列表
+      await loadWorldBooks();
+      
+      // 退出选择模式
+      setIsSelectionMode(false);
+      setSelectedIds(new Set());
+
+      // 显示删除结果
+      if (errorCount === 0) {
+        alert(`成功删除 ${successCount} 个世界书`);
+      } else {
+        alert(`删除完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+      }
+    } catch (error) {
+      console.error('Batch delete failed:', error);
+      alert('批量删除失败，请重试');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // 过滤世界书
   const filteredWorldBooks = worldBooks.filter(wb => {
     if (!searchQuery.trim()) return true;
@@ -164,21 +243,54 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
         </button>
         <h1 className="page-title">世界书管理</h1>
         <div className="header-actions">
-          <button className="import-btn" onClick={() => setShowImportModal(true)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            导入
-          </button>
-          <button className="create-btn" onClick={handleCreateNew}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            创建
-          </button>
+          {isSelectionMode ? (
+            <>
+              <button 
+                className="select-all-btn"
+                onClick={toggleSelectAll}
+              >
+                {selectedIds.size === filteredWorldBooks.length ? '取消全选' : '全选'}
+              </button>
+              <button 
+                className="batch-delete-btn"
+                onClick={handleBatchDelete}
+                disabled={selectedIds.size === 0 || isDeleting}
+              >
+                {isDeleting ? '删除中...' : `删除 (${selectedIds.size})`}
+              </button>
+              <button 
+                className="cancel-selection-btn"
+                onClick={toggleSelectionMode}
+              >
+                取消
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="selection-mode-btn" onClick={toggleSelectionMode}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                批量操作
+              </button>
+              <button className="import-btn" onClick={() => setShowImportModal(true)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                导入
+              </button>
+              <button className="create-btn" onClick={handleCreateNew}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                创建
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -250,6 +362,11 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 <span className="result-count">
                   {searchQuery ? `找到 ${filteredWorldBooks.length} 个结果` : `共 ${worldBooks.length} 个世界书`}
                 </span>
+                {isSelectionMode && (
+                  <span className="selection-count">
+                    已选择 {selectedIds.size} 个
+                  </span>
+                )}
               </div>
               {filteredWorldBooks.map(worldBook => (
                 <WorldBookCard
@@ -257,6 +374,9 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   worldBook={worldBook}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedIds.has(worldBook.id)}
+                  onToggleSelection={() => toggleSelection(worldBook.id)}
                 />
               ))}
             </>
