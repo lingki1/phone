@@ -110,7 +110,42 @@
   letter-spacing: 0.5px !important;
 }
 
-/* 用户管理表格优化 - 7列布局 */
+/* 用户管理表格优化 - 8列布局 */
+.dos .grid.grid-cols-8 {
+  display: grid !important;
+  grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr 1.2fr 1.2fr 1.2fr 1.2fr !important;
+  gap: 0 !important;
+  align-items: center !important;
+}
+
+.dos .grid.grid-cols-8 > div {
+  padding: 8px 12px !important;
+  border-right: 1px dotted var(--dos-dim) !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+}
+
+.dos .grid.grid-cols-8 > div:last-child {
+  border-right: none !important;
+}
+
+/* 用户管理表头样式优化 */
+.dos .grid.grid-cols-8.bg-gray-50 {
+  background-color: #001a00 !important;
+  border-bottom: 2px solid var(--dos-border) !important;
+}
+
+.dos .grid.grid-cols-8.bg-gray-50 > div {
+  font-weight: bold !important;
+  color: var(--dos-accent) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* 保留7列布局支持（向后兼容） */
 .dos .grid.grid-cols-7 {
   display: grid !important;
   grid-template-columns: 1.5fr 1fr 1fr 1.5fr 1.5fr 1.5fr 1.5fr !important;
@@ -132,7 +167,6 @@
   border-right: none !important;
 }
 
-/* 用户管理表头样式优化 */
 .dos .grid.grid-cols-7.bg-gray-50 {
   background-color: #001a00 !important;
   border-bottom: 2px solid var(--dos-border) !important;
@@ -170,7 +204,30 @@
   border-color: var(--dos-accent) !important;
 }
 
-/* 用户管理表格中的按钮样式 */
+/* 用户管理表格中的按钮样式 - 8列 */
+.dos .grid.grid-cols-8 button {
+  background: #001a00 !important;
+  color: var(--dos-fg) !important;
+  border: 1px solid var(--dos-border) !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  margin-right: 8px !important;
+}
+
+.dos .grid.grid-cols-8 button:hover {
+  background: #002200 !important;
+  color: var(--dos-accent) !important;
+  border-color: var(--dos-accent) !important;
+}
+
+.dos .grid.grid-cols-8 button:last-child {
+  margin-right: 0 !important;
+}
+
+/* 用户管理表格中的按钮样式 - 7列（向后兼容） */
 .dos .grid.grid-cols-7 button {
   background: #001a00 !important;
   color: var(--dos-fg) !important;
@@ -268,17 +325,23 @@
 }
 
 /* 表单输入框优化 */
-.dos input[type="number"], .dos input[type="text"] {
+.dos input[type="number"], .dos input[type="text"], .dos select {
   background-color: #000000 !important;
   color: var(--dos-fg) !important;
   border: 2px solid var(--dos-border) !important;
   border-radius: 0 !important;
 }
 
-.dos input[type="number"]:focus, .dos input[type="text"]:focus {
+.dos input[type="number"]:focus, .dos input[type="text"]:focus, .dos select:focus {
   border-color: var(--dos-accent) !important;
   box-shadow: 0 0 5px var(--dos-accent) !important;
   outline: none !important;
+}
+
+/* 下拉选择器选项样式 */
+.dos select option {
+  background-color: #000000 !important;
+  color: var(--dos-fg) !important;
 }
 
 /* 标签文字样式 */

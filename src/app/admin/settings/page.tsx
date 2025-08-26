@@ -21,6 +21,7 @@ export default function AdminSettingsPage() {
   const [generating, setGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState(10);
   const [lastGeneratedCodes, setLastGeneratedCodes] = useState<string[]>([]);
+  const [downloadType, setDownloadType] = useState<'all' | 'used' | 'unused'>('all');
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -116,6 +117,49 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // 处理不同类型的激活码下载
+  const handleDownloadCodes = (type: 'all' | 'used' | 'unused') => {
+    let filteredCodes: ActivationCode[];
+    let filename: string;
+    let content: string[];
+
+    switch (type) {
+      case 'all':
+        filteredCodes = codes;
+        filename = 'activation-codes-all.txt';
+        content = [
+          '全部激活码：',
+          ...filteredCodes.map(c => `${c.code} - ${c.used_by || '未使用'} - ${c.created_by}`)
+        ];
+        break;
+      case 'used':
+        filteredCodes = codes.filter(c => c.used_by);
+        filename = 'activation-codes-used.txt';
+        content = [
+          '已经使用的激活码：',
+          ...filteredCodes.map(c => `${c.code} - ${c.used_by} - ${c.created_by}`)
+        ];
+        break;
+      case 'unused':
+        filteredCodes = codes.filter(c => !c.used_by);
+        filename = 'activation-codes-unused.txt';
+        content = [
+          '未用的激活码：',
+          ...filteredCodes.map(c => c.code)
+        ];
+        break;
+      default:
+        return;
+    }
+
+    if (filteredCodes.length === 0) {
+      alert('没有符合条件的激活码');
+      return;
+    }
+
+    downloadTxt(content, filename);
+  };
+
   if (loading) {
     return (
       <div className="p-6">加载中...</div>
@@ -159,12 +203,21 @@ export default function AdminSettingsPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">激活码管理</h2>
           <div className="flex items-center gap-3">
+            <select
+              value={downloadType}
+              onChange={(e) => setDownloadType(e.target.value as 'all' | 'used' | 'unused')}
+              className="px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="all">全部激活码</option>
+              <option value="used">已使用激活码</option>
+              <option value="unused">未使用激活码</option>
+            </select>
             <button
               type="button"
-              onClick={() => downloadTxt(codes.map(c => c.code), 'activation-codes-all.txt')}
+              onClick={() => handleDownloadCodes(downloadType)}
               className="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
             >
-              下载全部TXT
+              下载TXT
             </button>
             {lastGeneratedCodes.length > 0 && (
               <button
@@ -264,7 +317,8 @@ async function copyToClipboard(text: string) {
 }
 
 function downloadTxt(lines: string[], filename: string) {
-  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/plain;charset=utf-8' });
+  const content = lines.join('\n') + '\n';
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

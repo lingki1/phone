@@ -11,8 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10002;
-  backdrop-filter: blur(12px);
+  z-index: 9999;
+  /* 移除backdrop-filter，避免影响公告显示 */
   animation: auth-fade-in 0.3s ease-out;
   /* 确保模态窗口在所有元素之上 */
   isolation: isolate;

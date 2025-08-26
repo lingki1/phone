@@ -32,7 +32,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
     <div className="auth-modal-overlay">
       <div className="auth-modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="auth-modal-header">
-          {/* 移除关闭按钮，防止未登录用户关闭窗口 */}
+          <button 
+            className="auth-modal-close" 
+            onClick={onClose}
+            title="关闭登录窗口（可查看公告）"
+          >
+            ×
+          </button>
         </div>
         
         <div className="auth-modal-content">

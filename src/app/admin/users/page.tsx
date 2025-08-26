@@ -28,6 +28,7 @@ export default function UsersManagementPage() {
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -207,6 +208,17 @@ export default function UsersManagementPage() {
     return group ? group.name : groupId;
   };
 
+  // 过滤用户
+  const filteredUsers = users.filter(user => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      user.username.toLowerCase().includes(term) ||
+      user.uid.toLowerCase().includes(term) ||
+      (user.email && user.email.toLowerCase().includes(term))
+    );
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -246,10 +258,22 @@ export default function UsersManagementPage() {
               </div>
             </div>
 
+            {/* 搜索框 */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="搜索用户名、UID或邮箱..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+
             {/* 用户列表 */}
             <div className="border border-gray-200 rounded">
-              <div className="grid grid-cols-7 text-sm font-medium bg-gray-50 border-b">
+              <div className="grid grid-cols-8 text-sm font-medium bg-gray-50 border-b">
                 <div className="p-2">用户名</div>
+                <div className="p-2">UID</div>
                 <div className="p-2">角色</div>
                 <div className="p-2">分组</div>
                 <div className="p-2">邮箱</div>
@@ -258,9 +282,10 @@ export default function UsersManagementPage() {
                 <div className="p-2">操作</div>
               </div>
               <div className="divide-y">
-                {users.map((user) => (
-                  <div key={user.uid} className="grid grid-cols-7 text-sm items-center">
+                {filteredUsers.map((user) => (
+                  <div key={user.uid} className="grid grid-cols-8 text-sm items-center">
                     <div className="p-2 font-medium">{user.username}</div>
+                    <div className="p-2 font-mono text-xs">{user.uid}</div>
                     <div className="p-2">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
@@ -298,8 +323,10 @@ export default function UsersManagementPage() {
                     </div>
                   </div>
                 ))}
-                {users.length === 0 && (
-                  <div className="p-3 text-sm text-gray-500">暂无用户</div>
+                {filteredUsers.length === 0 && (
+                  <div className="p-3 text-sm text-gray-500">
+                    {searchTerm ? '没有找到匹配的用户' : '暂无用户'}
+                  </div>
                 )}
               </div>
             </div>

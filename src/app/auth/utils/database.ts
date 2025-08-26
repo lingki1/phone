@@ -198,13 +198,20 @@ class DatabaseManager {
   private async initSuperAdmin(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
+    // 检查是否已存在超级管理员
+    const existingSuperAdmin = await this.get('SELECT uid FROM users WHERE role = ?', ['super_admin']);
+    if (existingSuperAdmin) {
+      return; // 已存在超级管理员，跳过初始化
+    }
+    
     const now = new Date().toISOString();
     const hashedPassword = await bcrypt.hash('11111111', 10);
     
+    // 超级管理员使用固定UID "1"
     await this.run(`
-      INSERT OR IGNORE INTO users (uid, username, password, role, group_id, created_at, updated_at)
+      INSERT INTO users (uid, username, password, role, group_id, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [uuidv4(), 'lingki', hashedPassword, 'super_admin', 'default', now, now]);
+    `, ['1', 'lingki', hashedPassword, 'super_admin', 'default', now, now]);
   }
 
   // 辅助方法：执行SQL语句
@@ -262,14 +269,31 @@ class DatabaseManager {
   }
 
   // 用户相关方法
+  // 生成下一个数字UID
+  private async getNextNumericUid(): Promise<string> {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    // 获取当前最大的数字UID
+    const result = await this.get(`
+      SELECT MAX(CAST(uid AS INTEGER)) as max_uid 
+      FROM users 
+      WHERE uid GLOB '[0-9]*'
+    `) as { max_uid: number | null };
+    
+    // 确保从2开始（1被超级管理员使用）
+    const nextUid = Math.max((result?.max_uid || 0) + 1, 2);
+    return nextUid.toString();
+  }
+
   async createUser(userData: Omit<User, 'uid' | 'created_at' | 'updated_at'>): Promise<User> {
     if (!this.db) throw new Error('Database not initialized');
 
     const now = new Date().toISOString();
+    const uid = await this.getNextNumericUid();
     
     const user: User = {
       ...userData,
-      uid: uuidv4(),
+      uid,
       created_at: now,
       updated_at: now
     };

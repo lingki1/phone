@@ -10,6 +10,9 @@ import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 import MePage from './components/qq/me/MePage';
 import AuthModal from './components/auth/AuthModal';
+import { AnnouncementDisplay } from './components/announcement';
+import { fetchAnnouncements } from './components/announcement/announcementService';
+import type { Announcement } from './components/announcement/types';
 
 export default function Home() {
   const router = useRouter();
@@ -24,6 +27,7 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   // 检查用户认证状态
   useEffect(() => {
@@ -116,6 +120,55 @@ export default function Home() {
     return () => {
       window.removeEventListener('apiConfigChanged', handleApiConfigChange);
     };
+  }, []);
+
+  // 监听用户交互，未登录时重新显示登录窗口
+  useEffect(() => {
+    if (isAuthenticated || isCheckingAuth) return;
+
+    const handleUserInteraction = (e: Event) => {
+       // 如果点击的是公告相关元素，允许交互
+       const target = e.target as HTMLElement;
+       if (target.closest('[data-announcement]') || target.closest('.auth-modal-overlay')) {
+         return;
+       }
+       
+       // 阻止交互生效并显示登录窗口
+       e.preventDefault();
+       e.stopPropagation();
+       if (!showAuthModal) {
+         setShowAuthModal(true);
+       }
+     };
+
+    // 监听点击和键盘事件
+    document.addEventListener('click', handleUserInteraction, true);
+    document.addEventListener('keydown', handleUserInteraction, true);
+    document.addEventListener('touchstart', handleUserInteraction, true);
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction, true);
+      document.removeEventListener('keydown', handleUserInteraction, true);
+      document.removeEventListener('touchstart', handleUserInteraction, true);
+    };
+  }, [isAuthenticated, isCheckingAuth, showAuthModal]);
+
+  // 加载公告数据
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        const data = await fetchAnnouncements();
+        setAnnouncements(data);
+      } catch (error) {
+        console.error('加载公告数据失败:', error);
+      }
+    };
+
+    loadAnnouncements();
+    
+    // 定期刷新公告数据（每5分钟）
+    const interval = setInterval(loadAnnouncements, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // 获取用户余额
@@ -273,15 +326,30 @@ export default function Home() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => {
-          // 如果用户关闭登录窗口但未登录，保持显示
-          if (!isAuthenticated) {
-            setShowAuthModal(true);
-          } else {
-            setShowAuthModal(false);
-          }
+          // 允许未登录用户关闭窗口查看公告
+          setShowAuthModal(false);
         }}
         onLoginSuccess={handleLoginSuccess}
       />
+      
+      {/* 公告显示 - 在最上层，确保未登录用户也能看到 */}
+       <div style={{ 
+         position: 'fixed', 
+         top: 0, 
+         left: 0, 
+         right: 0, 
+         zIndex: 10000, 
+         pointerEvents: 'none' 
+       }}>
+         <div style={{ pointerEvents: 'auto' }} data-announcement>
+           <AnnouncementDisplay 
+             announcements={announcements}
+             onDismiss={(id) => {
+               console.log('用户关闭公告:', id);
+             }}
+           />
+         </div>
+       </div>
     </>
   );
 }
