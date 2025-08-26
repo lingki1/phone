@@ -95,10 +95,35 @@ export async function PUT(
       );
     }
 
+    // 获取目标用户信息
+    const targetUser = await databaseManager.getUserByUid(uid);
+    if (!targetUser) {
+      return NextResponse.json(
+        { success: false, message: '用户不存在' },
+        { status: 404 }
+      );
+    }
+
+    // 超级管理员权限保护：超级管理员的角色不能被修改
+    if (targetUser.role === 'super_admin' && body.role && body.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, message: '超级管理员权限不可被修改' },
+        { status: 403 }
+      );
+    }
+
     // 普通用户不能修改角色和分组
     if (!authService.hasPermission(authUser.role, 'admin')) {
       delete body.role;
       delete body.group;
+    }
+
+    // 只有超级管理员可以修改其他用户的角色为super_admin
+    if (body.role === 'super_admin' && authUser.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, message: '只有超级管理员可以设置超级管理员权限' },
+        { status: 403 }
+      );
     }
 
     // 如果包含密码，需要加密
@@ -183,6 +208,14 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, message: '用户不存在' },
         { status: 404 }
+      );
+    }
+
+    // 超级管理员保护：超级管理员不能被删除
+    if (user.role === 'super_admin') {
+      return NextResponse.json(
+        { success: false, message: '超级管理员账户不能被删除' },
+        { status: 403 }
       );
     }
 

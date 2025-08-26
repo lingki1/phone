@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface User {
   uid: string;
@@ -20,12 +21,26 @@ interface Group {
 }
 
 export default function UsersManagementPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // 键盘快捷键处理
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        router.push('/admin/settings');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [router]);
 
   // 新用户表单状态
   const [newUser, setNewUser] = useState({
@@ -220,7 +235,7 @@ export default function UsersManagementPage() {
                   href="/admin/settings"
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
-                  激活码与注册设置
+                  激活码与注册设置 (Ctrl+S)
                 </Link>
                 <button
                   onClick={() => setShowCreateForm(true)}
@@ -232,78 +247,61 @@ export default function UsersManagementPage() {
             </div>
 
             {/* 用户列表 */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      用户名
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      角色
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      分组
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      邮箱
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      创建时间
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      最后登录
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      操作
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.uid}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.username}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
-                          user.role === 'admin' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {getRoleLabel(user.role)}
+            <div className="border border-gray-200 rounded">
+              <div className="grid grid-cols-7 text-sm font-medium bg-gray-50 border-b">
+                <div className="p-2">用户名</div>
+                <div className="p-2">角色</div>
+                <div className="p-2">分组</div>
+                <div className="p-2">邮箱</div>
+                <div className="p-2">创建时间</div>
+                <div className="p-2">最后登录</div>
+                <div className="p-2">操作</div>
+              </div>
+              <div className="divide-y">
+                {users.map((user) => (
+                  <div key={user.uid} className="grid grid-cols-7 text-sm items-center">
+                    <div className="p-2 font-medium">{user.username}</div>
+                    <div className="p-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
+                        user.role === 'admin' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {getRoleLabel(user.role)}
+                      </span>
+                    </div>
+                    <div className="p-2">{getGroupName(user.group)}</div>
+                    <div className="p-2">{user.email || '-'}</div>
+                    <div className="p-2">{new Date(user.created_at).toLocaleString()}</div>
+                    <div className="p-2">{user.last_login ? new Date(user.last_login).toLocaleString() : '-'}</div>
+                    <div className="p-2">
+                      {user.role === 'super_admin' ? (
+                        <span className="text-gray-400 text-xs">
+                          超级管理员权限受保护
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {getGroupName(user.group)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.email || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.last_login ? new Date(user.last_login).toLocaleString() : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => startEditUser(user)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
-                        >
-                          编辑
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.uid)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          删除
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditUser(user)}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          >
+                            编辑
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.uid)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            删除
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {users.length === 0 && (
+                  <div className="p-3 text-sm text-gray-500">暂无用户</div>
+                )}
+              </div>
             </div>
           </div>
         </div>

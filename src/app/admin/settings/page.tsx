@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ActivationCode {
   code: string;
@@ -11,6 +13,7 @@ interface ActivationCode {
 }
 
 export default function AdminSettingsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [requireActivation, setRequireActivation] = useState(false);
@@ -18,6 +21,19 @@ export default function AdminSettingsPage() {
   const [generating, setGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState(10);
   const [lastGeneratedCodes, setLastGeneratedCodes] = useState<string[]>([]);
+
+  // 键盘快捷键处理
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault();
+        router.push('/admin/users');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [router]);
 
   useEffect(() => {
     fetchSettings();
@@ -36,7 +52,7 @@ export default function AdminSettingsPage() {
       } else {
         setError(data.message || '获取设置失败');
       }
-    } catch (e) {
+    } catch (_e) {
       setError('网络错误');
     } finally {
       setLoading(false);
@@ -56,7 +72,7 @@ export default function AdminSettingsPage() {
         setError(data.message || '更新失败');
         setRequireActivation(!value);
       }
-    } catch (e) {
+    } catch (_e) {
       setError('网络错误');
       setRequireActivation(!value);
     }
@@ -69,7 +85,7 @@ export default function AdminSettingsPage() {
       if (data.success) {
         setCodes(data.codes || []);
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   };
@@ -93,7 +109,7 @@ export default function AdminSettingsPage() {
       } else {
         setError(data.message || '生成失败');
       }
-    } catch (e) {
+    } catch (_e) {
       setError('网络错误');
     } finally {
       setGenerating(false);
@@ -107,15 +123,26 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">系统设置</h1>
+    <div className="space-y-8">
+      {/* 页面标题和导航 */}
+      <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+        <h1 className="text-2xl font-semibold">系统设置</h1>
+        <Link
+          href="/admin/users"
+          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+        >
+          用户管理 (Ctrl+U)
+        </Link>
+      </div>
 
+      {/* 错误提示 */}
       {error && (
         <div className="p-3 border border-red-300 text-red-700 rounded bg-red-50">{error}</div>
       )}
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-medium">注册设置</h2>
+      {/* 注册设置区域 */}
+      <section className="bg-white p-6 border border-gray-200 rounded-lg">
+        <h2 className="text-lg font-medium mb-4">注册设置</h2>
         <label className="inline-flex items-center space-x-2">
           <input
             type="checkbox"
@@ -126,7 +153,9 @@ export default function AdminSettingsPage() {
         </label>
       </section>
 
-      <section className="space-y-4">
+      {/* 激活码管理区域 */}
+      <section className="bg-white p-6 border border-gray-200 rounded-lg space-y-6">
+        {/* 激活码管理标题和下载按钮 */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">激活码管理</h2>
           <div className="flex items-center gap-3">
@@ -149,30 +178,34 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <form className="flex items-end space-x-3" onSubmit={handleGenerate}>
-          <div>
-            <label className="block text-sm text-gray-600">生成数量 (1-200)</label>
-            <input
-              className="mt-1 w-32 border border-gray-300 rounded px-3 py-2"
-              type="number"
-              min={1}
-              max={200}
-              value={generateCount}
-              onChange={(e) => setGenerateCount(Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={generating}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {generating ? '生成中...' : '生成激活码'}
-          </button>
-        </form>
+        {/* 生成激活码表单 */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <form className="flex items-end space-x-3" onSubmit={handleGenerate}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">生成数量 (1-200)</label>
+              <input
+                className="w-32 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="number"
+                min={1}
+                max={200}
+                value={generateCount}
+                onChange={(e) => setGenerateCount(Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={generating}
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+            >
+              {generating ? '生成中...' : '生成激活码'}
+            </button>
+          </form>
+        </div>
 
         <div className="border border-gray-200 rounded">
-          <div className="grid grid-cols-5 text-sm font-medium bg-gray-50 border-b">
+          <div className="grid grid-cols-6 text-sm font-medium bg-gray-50 border-b">
             <div className="p-2">激活码</div>
+            <div className="p-2">创建者</div>
             <div className="p-2">创建时间</div>
             <div className="p-2">使用者</div>
             <div className="p-2">使用时间</div>
@@ -180,8 +213,9 @@ export default function AdminSettingsPage() {
           </div>
           <div className="divide-y">
             {codes.map((c) => (
-              <div key={c.code} className="grid grid-cols-5 text-sm items-center">
+              <div key={c.code} className="grid grid-cols-6 text-sm items-center">
                 <div className="p-2 font-mono break-all">{c.code}</div>
+                <div className="p-2">{c.created_by || '-'}</div>
                 <div className="p-2">{formatDate(c.created_at)}</div>
                 <div className="p-2">{c.used_by || '-'}</div>
                 <div className="p-2">{c.used_at ? formatDate(c.used_at) : '-'}</div>

@@ -505,9 +505,36 @@ class DatabaseManager {
 
   async listActivationCodes(includeUsed = false): Promise<ActivationCode[]> {
     if (!this.db) throw new Error('Database not initialized');
-    const sql = includeUsed ? 'SELECT * FROM activation_codes ORDER BY created_at DESC' : 'SELECT * FROM activation_codes WHERE used_by IS NULL ORDER BY created_at DESC';
-    const rows = await this.all(sql);
-    return rows as ActivationCode[];
+    const sql = includeUsed ? 
+      `SELECT ac.code, ac.used_by, ac.used_at, ac.created_at, 
+              cu.username as created_by, uu.username as used_by_username
+       FROM activation_codes ac 
+       LEFT JOIN users cu ON ac.created_by = cu.uid
+       LEFT JOIN users uu ON ac.used_by = uu.uid
+       ORDER BY ac.created_at DESC` : 
+      `SELECT ac.code, ac.used_by, ac.used_at, ac.created_at, 
+              cu.username as created_by, uu.username as used_by_username
+       FROM activation_codes ac 
+       LEFT JOIN users cu ON ac.created_by = cu.uid
+       LEFT JOIN users uu ON ac.used_by = uu.uid
+       WHERE ac.used_by IS NULL 
+       ORDER BY ac.created_at DESC`;
+    const rows = await this.all(sql) as Array<{
+      code: string;
+      used_by?: string;
+      used_at?: string;
+      created_by: string;
+      created_at: string;
+      used_by_username?: string;
+    }>;
+    // 转换结果，将used_by_username映射到used_by字段
+    return rows.map((row) => ({
+      code: row.code,
+      used_by: row.used_by_username || row.used_by,
+      used_at: row.used_at,
+      created_by: row.created_by,
+      created_at: row.created_at
+    })) as ActivationCode[];
   }
 
   async consumeActivationCode(code: string, usedBy: string): Promise<boolean> {

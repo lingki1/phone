@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -16,16 +15,35 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
   const [activationCode, setActivationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 防止重复提交
+    if (loading) {
+      return;
+    }
+    
     setLoading(true);
     setError('');
+    setSuccess('');
 
-    // 验证密码确认
-    if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
+    // 基本验证
+    if (!username.trim()) {
+      setError('请输入用户名');
+      setLoading(false);
+      return;
+    }
+
+    if (username.trim().length < 3 || username.trim().length > 20) {
+      setError('用户名长度必须在3-20个字符之间');
+      setLoading(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('请输入密码');
       setLoading(false);
       return;
     }
@@ -37,6 +55,13 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
       return;
     }
 
+    // 验证密码确认
+    if (password !== confirmPassword) {
+      setError('两次输入的密码不一致');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -44,31 +69,42 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          username, 
-          password, 
-          email: email || undefined,
-          activationCode: activationCode || undefined
+          username: username.trim(), 
+          password: password.trim(), 
+          email: email.trim() || undefined,
+          activationCode: activationCode.trim() || undefined
         }),
+        credentials: 'include'
       });
 
       const data = await response.json();
 
       if (data.success) {
         // 注册成功
+        setSuccess('注册成功！正在跳转...');
+        
+        // 立即调用回调函数
         if (onRegisterSuccess) {
           onRegisterSuccess();
+          // 即使有回调，也要跳转到首页
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
+          setLoading(false);
         } else {
-          // 如果没有回调，则跳转到主页
-          router.push('/');
-          router.refresh();
+          // 如果没有回调，则延迟跳转让用户看到成功消息
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
+          setLoading(false);
         }
       } else {
         setError(data.message || '注册失败');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Register error:', error);
       setError('网络错误，请稍后重试');
-    } finally {
       setLoading(false);
     }
   };
@@ -77,6 +113,10 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
     <form className="auth-form" onSubmit={handleSubmit}>
       {error && (
         <div className="auth-error">{error}</div>
+      )}
+      
+      {success && (
+        <div className="auth-success">{success}</div>
       )}
 
       <div className="auth-form-group">

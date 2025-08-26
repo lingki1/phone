@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -13,12 +12,26 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 防止重复提交
+    if (loading) {
+      return;
+    }
+    
     setLoading(true);
     setError('');
+    setSuccess('');
+
+    // 基本验证
+    if (!username.trim() || !password.trim()) {
+      setError('请填写用户名和密码');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -26,27 +39,41 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ 
+          username: username.trim(), 
+          password: password.trim() 
+        }),
+        credentials: 'include'
       });
 
       const data = await response.json();
 
       if (data.success) {
         // 登录成功
+        setSuccess('登录成功！正在跳转...');
+        
+        // 立即调用回调函数
         if (onLoginSuccess) {
           onLoginSuccess();
+          // 即使有回调，也要跳转到首页
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+          setLoading(false);
         } else {
-          // 如果没有回调，则跳转到主页
-          router.push('/');
-          router.refresh();
+          // 如果没有回调，则延迟跳转让用户看到成功消息
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+          setLoading(false);
         }
       } else {
         setError(data.message || '登录失败');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Login error:', error);
       setError('网络错误，请稍后重试');
-    } finally {
       setLoading(false);
     }
   };
@@ -55,6 +82,10 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
     <form className="auth-form" onSubmit={handleSubmit}>
       {error && (
         <div className="auth-error">{error}</div>
+      )}
+      
+      {success && (
+        <div className="auth-success">{success}</div>
       )}
 
       <div className="auth-form-group">

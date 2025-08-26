@@ -48,6 +48,25 @@
   border: 2px solid var(--dos-border) !important;
 }
 
+/* 导航按钮样式 */
+.dos .border.border-gray-300.rounded-md {
+  background: #001a00 !important;
+  color: var(--dos-fg) !important;
+  border: 2px solid var(--dos-border) !important;
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.2s ease !important;
+}
+
+.dos .border.border-gray-300.rounded-md:hover {
+  background: #002200 !important;
+  color: var(--dos-accent) !important;
+  border-color: var(--dos-accent) !important;
+  box-shadow: 0 0 5px var(--dos-accent) !important;
+}
+
 /* 表格样式 */
 .dos-table {
   border: 2px solid var(--dos-border) !important;
@@ -56,13 +75,223 @@
   border-bottom: 1px dotted var(--dos-dim) !important;
 }
 
+/* 激活码表格优化 - 修复grid对齐问题 */
+.dos .grid.grid-cols-6 {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1.5fr 1fr !important;
+  gap: 0 !important;
+  align-items: center !important;
+}
+
+.dos .grid.grid-cols-6 > div {
+  padding: 8px 12px !important;
+  border-right: 1px dotted var(--dos-dim) !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+}
+
+.dos .grid.grid-cols-6 > div:last-child {
+  border-right: none !important;
+}
+
+/* 表头样式优化 */
+.dos .grid.grid-cols-6.bg-gray-50 {
+  background-color: #001a00 !important;
+  border-bottom: 2px solid var(--dos-border) !important;
+}
+
+.dos .grid.grid-cols-6.bg-gray-50 > div {
+  font-weight: bold !important;
+  color: var(--dos-accent) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* 用户管理表格优化 - 7列布局 */
+.dos .grid.grid-cols-7 {
+  display: grid !important;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr 1.5fr 1.5fr 1.5fr !important;
+  gap: 0 !important;
+  align-items: center !important;
+}
+
+.dos .grid.grid-cols-7 > div {
+  padding: 8px 12px !important;
+  border-right: 1px dotted var(--dos-dim) !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+}
+
+.dos .grid.grid-cols-7 > div:last-child {
+  border-right: none !important;
+}
+
+/* 用户管理表头样式优化 */
+.dos .grid.grid-cols-7.bg-gray-50 {
+  background-color: #001a00 !important;
+  border-bottom: 2px solid var(--dos-border) !important;
+}
+
+.dos .grid.grid-cols-7.bg-gray-50 > div {
+  font-weight: bold !important;
+  color: var(--dos-accent) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* 激活码字体样式 */
+.dos .font-mono {
+  font-family: Consolas, "Courier New", Courier, monospace !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* 按钮在表格中的样式 */
+.dos .grid.grid-cols-6 button {
+  background: #001a00 !important;
+  color: var(--dos-fg) !important;
+  border: 1px solid var(--dos-border) !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.dos .grid.grid-cols-6 button:hover {
+  background: #002200 !important;
+  color: var(--dos-accent) !important;
+  border-color: var(--dos-accent) !important;
+}
+
+/* 用户管理表格中的按钮样式 */
+.dos .grid.grid-cols-7 button {
+  background: #001a00 !important;
+  color: var(--dos-fg) !important;
+  border: 1px solid var(--dos-border) !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  margin-right: 8px !important;
+}
+
+.dos .grid.grid-cols-7 button:hover {
+  background: #002200 !important;
+  color: var(--dos-accent) !important;
+  border-color: var(--dos-accent) !important;
+}
+
+.dos .grid.grid-cols-7 button:last-child {
+  margin-right: 0 !important;
+}
+
+/* 用户角色标签DOS风格 */
+.dos .bg-red-100 {
+  background-color: #330000 !important;
+  color: #ff6666 !important;
+  border: 1px solid #660000 !important;
+}
+
+.dos .bg-yellow-100 {
+  background-color: #332200 !important;
+  color: #ffcc66 !important;
+  border: 1px solid #664400 !important;
+}
+
+.dos .bg-green-100 {
+  background-color: #003300 !important;
+  color: #66ff66 !important;
+  border: 1px solid #006600 !important;
+}
+
+.dos .text-red-800, .dos .text-yellow-800, .dos .text-green-800 {
+  /* 颜色已在上面的背景样式中定义 */
+}
+
 /* 轻度文本 */
 .dos-dim { color: var(--dos-dim) !important; }
 
+/* 超级管理员保护提示 */
+.dos .text-gray-400 {
+  color: var(--dos-dim) !important;
+  font-style: italic !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* 权限不足提示 */
+.dos .text-red-400 {
+  color: #ff6b6b !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* 表格容器优化 */
+.dos .border.border-gray-200.rounded {
+  border: 2px solid var(--dos-border) !important;
+  border-radius: 0 !important;
+  background-color: #000000 !important;
+  overflow: hidden !important;
+}
+
+.dos .divide-y > * {
+  border-bottom: 1px dotted var(--dos-dim) !important;
+}
+
+.dos .divide-y > *:last-child {
+  border-bottom: none !important;
+}
+
+/* 页面布局优化 */
+.dos .space-y-8 > * + * {
+  margin-top: 2rem !important;
+}
+
+/* 区域卡片样式 */
+.dos .bg-white {
+  background-color: #000000 !important;
+  border: 2px solid var(--dos-border) !important;
+}
+
+.dos .bg-gray-50 {
+  background-color: #001a00 !important;
+  border: 1px solid var(--dos-dim) !important;
+}
+
+/* 表单输入框优化 */
+.dos input[type="number"], .dos input[type="text"] {
+  background-color: #000000 !important;
+  color: var(--dos-fg) !important;
+  border: 2px solid var(--dos-border) !important;
+  border-radius: 0 !important;
+}
+
+.dos input[type="number"]:focus, .dos input[type="text"]:focus {
+  border-color: var(--dos-accent) !important;
+  box-shadow: 0 0 5px var(--dos-accent) !important;
+  outline: none !important;
+}
+
+/* 标签文字样式 */
+.dos .text-gray-700 {
+  color: var(--dos-fg) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
 /* 将现有 Tailwind 常用 class 对应覆盖为 DOS 风格（尽量非侵入） */
 .dos a { color: var(--dos-accent) !important; }
-.dos .text-gray-900, .dos .text-gray-700, .dos .text-gray-600, .dos .text-gray-500 { color: var(--dos-fg) !important; }
-.dos .bg-white, .dos .bg-gray-50, .dos .bg-gray-100 { background-color: #000000 !important; }
+.dos .text-gray-900, .dos .text-gray-600, .dos .text-gray-500 { color: var(--dos-fg) !important; }
 .dos .border, .dos .divide-y > * { border-color: var(--dos-border) !important; }
 .dos .rounded, .dos .rounded-md, .dos .rounded-lg { border-radius: 0 !important; }
 .dos .shadow, .dos .shadow-lg { box-shadow: none !important; }
