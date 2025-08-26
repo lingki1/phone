@@ -171,7 +171,6 @@
   backdrop-filter: blur(5px);
   /* 优化滚动性能 */
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   /* 硬件加速 */
   transform: translateZ(0);
   will-change: scroll-position;

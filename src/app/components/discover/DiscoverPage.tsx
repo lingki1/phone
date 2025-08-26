@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { dataManager } from '../../utils/dataManager';
 import { avatarManager } from '../../utils/avatarManager';
 import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/discover';
@@ -17,8 +17,14 @@ import './DiscoverPage.css';
 
 export default function DiscoverPage() {
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
+  const [visiblePosts, setVisiblePosts] = useState<DiscoverPost[]>([]);
   const [settings, setSettings] = useState<DiscoverSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const pageSizeRef = useRef<number>(10);
+  const loadedCountRef = useRef<number>(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [showComposer, setShowComposer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [userInfo, setUserInfo] = useState<{
@@ -112,6 +118,11 @@ export default function DiscoverPage() {
         );
 
         setPosts(postsWithComments);
+        // 初始化可见列表为首屏数据
+        const initialCount = Math.min(pageSizeRef.current, postsWithComments.length);
+        setVisiblePosts(postsWithComments.slice(0, initialCount));
+        loadedCountRef.current = initialCount;
+        setHasMore(postsWithComments.length > initialCount);
         setSettings(settingsData);
         setUserInfo({
           nickname: personalSettings.userNickname,
@@ -188,6 +199,11 @@ export default function DiscoverPage() {
           );
           
           setPosts(postsWithComments);
+          // 同步刷新可见列表（保持当前已加载数量）
+          const currentLoaded = Math.min(loadedCountRef.current || pageSizeRef.current, postsWithComments.length);
+          setVisiblePosts(postsWithComments.slice(0, currentLoaded));
+          loadedCountRef.current = currentLoaded;
+          setHasMore(postsWithComments.length > currentLoaded);
           
           // 触发新内容计数更新
           window.dispatchEvent(new CustomEvent('viewStateUpdated'));
@@ -342,6 +358,9 @@ export default function DiscoverPage() {
       setPosts(prev => prev.map(p => 
         p.id === post.id ? updatedPost : p
       ));
+      setVisiblePosts(prev => prev.map(p => 
+        p.id === post.id ? updatedPost : p
+      ));
     } catch (error) {
       console.error('Failed to generate AI like:', error);
     }
@@ -366,6 +385,9 @@ export default function DiscoverPage() {
       await dataManager.saveDiscoverPost(updatedPost);
       
       setPosts(prev => prev.map(p => 
+        p.id === postId ? updatedPost : p
+      ));
+      setVisiblePosts(prev => prev.map(p => 
         p.id === postId ? updatedPost : p
       ));
       
@@ -403,6 +425,24 @@ export default function DiscoverPage() {
       
       // 更新本地状态
       setPosts(prev => prev.filter(p => p.id !== postId));
+      setVisiblePosts(prev => {
+        const next = prev.filter(p => p.id !== postId);
+        // 如有更多未加载的，补齐一条
+        if (hasMore) {
+          const allAfterDelete = posts.filter(p => p.id !== postId);
+          const need = Math.max(0, loadedCountRef.current - next.length);
+          if (need > 0) {
+            const start = next.length;
+            const extra = allAfterDelete.slice(start, start + need);
+            return [...next, ...extra];
+          }
+        }
+        return next;
+      });
+      // 同步 hasMore/loadedCount
+      const totalAfter = posts.filter(p => p.id !== postId).length;
+      loadedCountRef.current = Math.min(loadedCountRef.current, totalAfter);
+      setHasMore(totalAfter > loadedCountRef.current);
       
       // 触发新内容计数更新
       window.dispatchEvent(new CustomEvent('viewStateUpdated'));
@@ -440,6 +480,11 @@ export default function DiscoverPage() {
       
       // 更新本地状态，立即显示用户评论
       setPosts(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, comments: [...p.comments, comment] }
+          : p
+      ));
+      setVisiblePosts(prev => prev.map(p => 
         p.id === postId 
           ? { ...p, comments: [...p.comments, comment] }
           : p
@@ -532,6 +577,36 @@ export default function DiscoverPage() {
     }, 100);
   };
 
+  // 加载更多
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const start = loadedCountRef.current;
+      const end = Math.min(start + pageSizeRef.current, posts.length);
+      const nextSlice = posts.slice(start, end);
+      setVisiblePosts(prev => [...prev, ...nextSlice]);
+      loadedCountRef.current = end;
+      setHasMore(posts.length > end);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, posts]);
+
+  // 触底监听器（必须在任何 return 之前定义）
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting) {
+        loadMore();
+      }
+    }, { root: null, rootMargin: '200px', threshold: 0 });
+    observer.observe(el);
+    return () => observer.unobserve(el);
+  }, [loadMore]);
+
   if (isLoading) {
     return (
       <div className="discover-page discover-loading">
@@ -553,12 +628,20 @@ export default function DiscoverPage() {
         />
         
         <PostList 
-          posts={posts}
+          posts={visiblePosts}
           onLike={handleLike}
           onComment={handleComment}
           onDelete={handleDeletePost}
           currentUserId="user"
         />
+        {/* 触底加载锚点 */}
+        <div ref={sentinelRef} style={{ height: 1 }} />
+        {isLoadingMore && (
+          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>加载中...</div>
+        )}
+        {!hasMore && visiblePosts.length > 0 && (
+          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>没有更多了</div>
+        )}
       </div>
 
       {/* 底部导航 */}

@@ -233,12 +233,12 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const scrollToBottom = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
+    // 若用户不在底部且主动上滑，则直接跳过，不滚动
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    if (!atBottom) return;
+    const behavior: ScrollBehavior = 'smooth';
     
-    // 使用更流畅的滚动方式
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: 'smooth'
-    });
+    el.scrollTo({ top: el.scrollHeight, behavior });
   };
 
   const handleNicknameSubmit = async () => {
@@ -669,7 +669,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleInputKeyPress}
               onFocus={() => {
-                // 输入框聚焦时，滚动到底部，避免被键盘遮挡
+                // 输入框聚焦时，尽量不打断用户手动浏览，上面 scrollToBottom 内部已做“是否在底部”判断
                 setTimeout(() => {
                   scrollToBottom();
                   inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });

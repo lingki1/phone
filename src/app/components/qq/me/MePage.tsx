@@ -570,19 +570,19 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         </div>
       ),
       direction: 'down' as const,
-      duration: 300
+      duration: 0
     },
     {
       id: 'color-settings',
       component: <ColorSettingsPage onBack={handleBackToMain} />,
       direction: 'left' as const,
-      duration: 300
+      duration: 0
     },
     {
       id: 'preset-manager',
       component: <PresetManagerPage onBack={handleBackToMain} />,
       direction: 'left' as const,
-      duration: 300
+      duration: 0
     }
   ];
 
@@ -592,7 +592,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         pages={pages}
         currentPageId={currentPage}
         defaultDirection="left"
-        defaultDuration={300}
+        defaultDuration={0}
       />
 
       {/* 底部导航 - 只在主页面显示 */}

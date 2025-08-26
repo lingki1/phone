@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
 

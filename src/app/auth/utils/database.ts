@@ -75,9 +75,9 @@ class DatabaseManager {
       throw new Error(`无法创建数据目录: ${error}`);
     }
 
-    // 只在运行时初始化数据库，避免构建时权限问题
-    // 构建时跳过数据库初始化
-    if (!process.env.NEXT_PHASE) {
+    // 只在 Node.js 运行时（非构建阶段、非 Edge）自动初始化数据库
+    // 开发模式下避免在构建/编译阶段触发，防止 sqlite3 在非 Node 环境报错
+    if (!process.env.NEXT_PHASE && process.env.NEXT_RUNTIME === 'nodejs') {
       this.autoInit();
     }
   }

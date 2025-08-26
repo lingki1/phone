@@ -198,6 +198,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // 开发环境自动初始化数据库（调用后端 /api/init）
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    // 仅在开发环境尝试初始化一次，不阻塞UI
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    fetch('/api/init', { method: 'POST', signal: controller.signal })
+      .catch(() => {})
+      .finally(() => clearTimeout(timeoutId));
+  }, []);
+
   // 获取用户余额
   const fetchUserBalance = async () => {
     try {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const runtime = 'nodejs';
 import databaseManager from '@/app/auth/utils/database';
 
 export async function POST() {

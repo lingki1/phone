@@ -444,14 +444,8 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       // 跳转到个人页面
       window.dispatchEvent(new CustomEvent('navigateToMe'));
     } else if (view === 'moments') {
-      // 跳转到动态页面
-      if (onBackToDesktop) {
-        onBackToDesktop();
-        // 延迟一下再打开动态应用，确保回到桌面
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('openApp', { detail: 'discover' }));
-        }, 100);
-      }
+      // 直接跳转到动态页面，避免中转桌面造成的时序问题
+      window.dispatchEvent(new CustomEvent('navigateToDiscover'));
     }
   };
 
@@ -711,7 +705,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         </div>
       ),
       direction: 'right' as const,
-      duration: 300
+      duration: 0
     },
     {
       id: 'chat',
@@ -728,7 +722,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         />
       ) : <div>聊天加载中...</div>,
       direction: 'left' as const,
-      duration: 300
+      duration: 0
     },
 
     {
@@ -737,7 +731,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         <WorldBookListPage onBack={() => setCurrentScreen('list')} />
       ),
       direction: 'left' as const,
-      duration: 300
+      duration: 0
     }
   ];
 
@@ -747,7 +741,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         pages={pages}
         currentPageId={currentScreen}
         defaultDirection="left"
-        defaultDuration={300}
+        defaultDuration={0}
       />
       
       {/* 底部导航 - 只在消息列表显示 */}
