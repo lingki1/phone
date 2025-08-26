@@ -44,6 +44,9 @@ export default function AnnouncementDisplay({ announcements, onDismiss }: Announ
 
   // 处理关闭公告
   const handleDismiss = (id: string) => {
+    // 立即从可见列表移除，避免需要点击两次
+    setVisibleAnnouncements(prev => prev.filter(a => a.id !== id));
+    // 记录已关闭ID，确保后续计算不会再出现
     setDismissedIds(prev => new Set([...prev, id]));
     onDismiss?.(id);
   };

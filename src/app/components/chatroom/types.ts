@@ -8,6 +8,12 @@ export interface ChatMessage {
   isMarked?: boolean; // 是否被标记为待办事项
   markedBy?: string; // 标记者的昵称
   markedAt?: number; // 标记时间
+  // 可选：引用消息
+  quote?: {
+    timestamp: number;
+    senderName: string;
+    content: string;
+  };
 }
 
 export interface ChatUser {

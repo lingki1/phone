@@ -6,6 +6,21 @@
   margin-top: 0;
   width: fit-content;
   max-width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* 显示状态 */
+.inline-action-bar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 隐藏状态 */
+.inline-action-bar.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 左右方向跟随消息方向 */

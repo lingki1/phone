@@ -12,6 +12,7 @@ export interface MessageActionButtonsProps {
   onEditMessage: (messageId: string, currentContent: string) => void;
   onDeleteMessage: (messageId: string) => void;
   onRegenerateAI?: (messageId: string) => void;
+  isVisible?: boolean;
 }
 
 export default function MessageActionButtons({
@@ -21,7 +22,8 @@ export default function MessageActionButtons({
   onQuoteMessage,
   onEditMessage,
   onDeleteMessage,
-  onRegenerateAI
+  onRegenerateAI,
+  isVisible = false
 }: MessageActionButtonsProps) {
   const handleQuote = () => onQuoteMessage(message);
   const handleEdit = () => onEditMessage(message.id, message.content);
@@ -31,7 +33,16 @@ export default function MessageActionButtons({
   const handleRegenerate = () => onRegenerateAI?.(message.id);
 
   return (
-    <div className="inline-action-bar" role="toolbar" aria-label="消息操作工具栏">
+    <div 
+      className={`inline-action-bar ${isVisible ? 'visible' : 'hidden'}`}
+      role="toolbar" 
+      aria-label="消息操作工具栏"
+      style={{ 
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease'
+      }}
+    >
       <button className="inline-action-btn" onClick={handleQuote} title="引用" aria-label="引用">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>

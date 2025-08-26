@@ -89,6 +89,9 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('');
+  // 搜索匹配缓存（包含线上+剧情消息），保存首条命中消息用于跳转
+  const [searchMessageMatches, setSearchMessageMatches] = useState<Record<string, { messageId: string; content: string } | null>>({});
+  const [_isSearching, setIsSearching] = useState(false);
 
   // 新内容计数状态
   const [newContentCount, setNewContentCount] = useState<{
@@ -136,6 +139,47 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       window.removeEventListener('viewStateUpdated', handleNewContentUpdate);
     };
   }, []);
+
+  // 异步搜索：在所有聊天的 线上+剧情 消息里检索
+  useEffect(() => {
+    const controller = new AbortController();
+    const run = async () => {
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) {
+        setSearchMessageMatches({});
+        return;
+      }
+      setIsSearching(true);
+      try {
+        await dataManager.initDB();
+        const results: Record<string, { messageId: string; content: string } | null> = {};
+        await Promise.all(
+          chats.map(async (chat) => {
+            try {
+              const allMessages = await dataManager.getChatMemory(chat.id, true);
+              const hit = allMessages.find((m) => (m.content || '').toLowerCase().includes(q));
+              if (hit) {
+                results[chat.id] = { messageId: hit.id, content: hit.content };
+              } else {
+                // 也同时匹配开场白（如果消息尚未生成）
+                const opening = (chat.settings.firstMsg || '').toLowerCase();
+                results[chat.id] = opening.includes(q)
+                  ? { messageId: `${chat.id}_opening`, content: chat.settings.firstMsg || '' }
+                  : null;
+              }
+            } catch (_e) {
+              results[chat.id] = null;
+            }
+          })
+        );
+        if (!controller.signal.aborted) setSearchMessageMatches(results);
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    };
+    run();
+    return () => controller.abort();
+  }, [searchQuery, chats]);
 
   // 监听预设变更
   useEffect(() => {
@@ -430,6 +474,13 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const handleOpenChat = (chatId: string) => {
     setSelectedChatId(chatId);
     setCurrentScreen('chat');
+    // 若为搜索打开，携带需要定位的 messageId（含剧情/开场白）
+    const hit = searchMessageMatches[chatId];
+    if (hit?.messageId) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('scrollToMessage', { detail: { chatId, messageId: hit.messageId } }));
+      }, 50);
+    }
   };
 
   // 处理底部导航切换
@@ -612,10 +663,14 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
       // 搜索人设
       if (chat.persona && chat.persona.toLowerCase().includes(query)) return true;
       
-      // 搜索聊天记录内容
-      if (chat.messages && chat.messages.some(msg => 
-        msg.content && msg.content.toLowerCase().includes(query)
-      )) return true;
+      // 搜索聊天记录内容（本地普通消息快速路径）
+      if (chat.messages && chat.messages.some(msg => msg.content && msg.content.toLowerCase().includes(query))) return true;
+
+      // 搜索剧情消息与合并记忆的异步匹配结果
+      if (searchMessageMatches[chat.id]) return true;
+
+      // 兜底：匹配开场白（若未被生成为消息）
+      if ((chat.settings.firstMsg || '').toLowerCase().includes(query)) return true;
       
       // 搜索群成员名字（如果是群聊）
       if (chat.isGroup && chat.members) {
@@ -701,6 +756,8 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onDeleteChat={handleDeleteChat}
             onEditChat={handleEditChat}
             onAssociateWorldBook={handleAssociateWorldBook}
+            searchQuery={searchQuery}
+            searchHitMap={searchMessageMatches}
           />
         </div>
       ),

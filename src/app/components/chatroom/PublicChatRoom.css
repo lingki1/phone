@@ -7,7 +7,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 背景更换为更通透的蓝青色渐变 */
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -756,14 +757,35 @@
   background: #f57c00;
 }
 
-/* 已标记消息的样式 */
+/* 已标记消息的样式（简约高亮） */
 .chatroom-message-item.marked {
-  border-left: 3px solid #ff6b6b;
-  background: rgba(255, 107, 107, 0.05);
+  background: transparent;
 }
 
 .chatroom-message-item.marked .chatroom-message-bubble {
-  border-left: 3px solid #ff6b6b;
+  position: relative;
+}
+
+.chatroom-message-item.marked .chatroom-message-bubble::after {
+  content: '待办';
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  font-size: 10px;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid rgba(255, 152, 0, 0.35);
+  border-radius: 10px;
+  padding: 1px 6px;
+}
+
+.chatroom-message-item.marked .chatroom-message-content {
+  outline: 1px dashed rgba(255, 152, 0, 0.5);
+  outline-offset: -2px;
+}
+
+.chatroom-message-item.marked .chatroom-message-avatar {
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.35);
 }
 
 /* 响应式设计 */

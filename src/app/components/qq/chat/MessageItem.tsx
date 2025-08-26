@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem } from '../../../types/chat';
 import { MessageActionButtons } from '../messageactions';
@@ -15,26 +15,26 @@ interface MessageItemProps {
   msg: Message;
   chat: ChatItem;
   index: number;
-  totalMessages: number;
+  _totalMessages: number;
   dbPersonalSettings: PersonalSettings | null;
   personalSettings: PersonalSettings | undefined;
   editingMessage: { id: string; content: string } | null;
-  onQuoteMessage: (msg: Message) => void;
+  onQuoteMessage: (message: Message) => void;
   onEditMessage: (messageId: string, currentContent: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onDeleteMessage: (messageId: string) => void;
-  onRegenerateAI: (messageId: string) => void;
+  onRegenerateAI?: (messageId: string) => void;
   renderMessageContent: (msg: Message) => React.ReactNode;
   formatTime: (timestamp: number) => string;
-  setEditingMessage: (editing: { id: string; content: string } | null) => void;
+  setEditingMessage: (editingMessage: { id: string; content: string } | null) => void;
 }
 
-const MessageItem = React.memo(({
+const MessageItem = memo(({
   msg,
   chat,
   index,
-  totalMessages,
+  _totalMessages,
   dbPersonalSettings,
   personalSettings,
   editingMessage,
@@ -48,9 +48,78 @@ const MessageItem = React.memo(({
   formatTime,
   setEditingMessage
 }: MessageItemProps) => {
-  
-  // 使用useMemo缓存发送者信息计算
-  const senderInfo = useMemo(() => {
+  const [showActions, setShowActions] = useState(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // 长按检测逻辑
+  const handleMouseDown = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    
+    longPressTimerRef.current = setTimeout(() => {
+      setShowActions(true);
+    }, 500); // 500ms长按触发
+  };
+
+  const handleMouseUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  // 触摸设备支持
+  const handleTouchStart = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    
+    longPressTimerRef.current = setTimeout(() => {
+      setShowActions(true);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  // 点击外部关闭操作按钮
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showActions && messageRef.current && !messageRef.current.contains(event.target as Node)) {
+        setShowActions(false);
+      }
+    };
+
+    if (showActions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActions]);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  // 获取发送者信息
+  const senderInfo = React.useMemo(() => {
     if (msg.role === 'user') {
       // 用户消息头像获取逻辑
       let avatar = '/avatars/user-avatar.svg'; // 默认头像
@@ -96,22 +165,28 @@ const MessageItem = React.memo(({
     }
   }, [msg.role, msg.senderName, msg.senderAvatarId, chat.isGroup, chat.members, chat.name, chat.avatar, chat.avatarMap, chat.settings, dbPersonalSettings, personalSettings]);
 
-  // 使用useMemo缓存连续消息检查
-  const isConsecutiveMessage = useMemo(() => {
+  // 检查是否为连续消息
+  const isConsecutiveMessage = React.useMemo(() => {
     if (index === 0) return false;
     
-    const prevIndex = totalMessages - 51 + index - 1;
+    const prevIndex = _totalMessages - 51 + index - 1;
     const prevMessage = chat.messages[prevIndex];
     
     return prevMessage?.senderName === msg.senderName &&
            prevMessage?.role === msg.role &&
            Math.abs(msg.timestamp - (prevMessage?.timestamp || 0)) < 30000; // 30秒内
-  }, [index, totalMessages, chat.messages, msg.senderName, msg.role, msg.timestamp]);
+  }, [index, _totalMessages, chat.messages, msg.senderName, msg.role, msg.timestamp]);
 
   return (
     <div 
+      ref={messageRef}
       className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''} ${isConsecutiveMessage ? 'consecutive' : ''}`}
       onDoubleClick={() => onQuoteMessage(msg)}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="message-avatar">
         <Image 
@@ -174,6 +249,7 @@ const MessageItem = React.memo(({
                   onEditMessage={onEditMessage}
                   onDeleteMessage={onDeleteMessage}
                   onRegenerateAI={onRegenerateAI}
+                  isVisible={showActions}
                 />
               </div>
             </>
@@ -192,6 +268,7 @@ const MessageItem = React.memo(({
                   onEditMessage={onEditMessage}
                   onDeleteMessage={onDeleteMessage}
                   onRegenerateAI={onRegenerateAI}
+                  isVisible={showActions}
                 />
               </div>
             </>

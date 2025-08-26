@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ChatItem } from '../../types/chat';
 import { avatarManager } from '../../utils/avatarManager';
 import { compressImage } from '../../utils/imageCompressor';
+import TrimUploadPhotoModal from '../trimuploadphoto/TrimUploadPhotoModal';
 import './AddFriendModal.css';
 
 interface EditFriendModalProps {
@@ -30,6 +31,8 @@ export default function EditFriendModal({
   const [firstMsg, setFirstMsg] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropModalVisible, setCropModalVisible] = useState(false);
+  const [rawImageUrl, setRawImageUrl] = useState<string>('');
 
   useEffect(() => {
     if (mode === 'edit' && chat && isVisible) {
@@ -60,25 +63,10 @@ export default function EditFriendModal({
         alert('图片大小不能超过 10MB');
         return;
       }
-
-      setIsUploading(true);
-      
-      try {
-        // 压缩图片
-        const compressedImage = await compressImage(file, {
-          quality: 0.8,
-          maxWidth: 400,
-          maxHeight: 400,
-          maxSize: 1 * 1024 * 1024 // 压缩到1MB以下
-        });
-        
-        setAvatarPreview(compressedImage);
-      } catch (error) {
-        console.error('图片压缩失败:', error);
-        alert('图片处理失败，请重试');
-      } finally {
-        setIsUploading(false);
-      }
+      // 不直接压缩，先进入裁剪
+      const objectUrl = URL.createObjectURL(file);
+      setRawImageUrl(objectUrl);
+      setCropModalVisible(true);
     }
   };
 
@@ -257,6 +245,38 @@ export default function EditFriendModal({
             {mode === 'create' ? '添加好友' : '保存修改'}
           </button>
         </div>
+        <TrimUploadPhotoModal
+          visible={cropModalVisible}
+          imageSrc={rawImageUrl}
+          onCancel={() => {
+            setCropModalVisible(false);
+            if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
+          }}
+          onConfirm={async (dataUrl) => {
+            try {
+              setIsUploading(true);
+              // 将裁剪结果数据转为 File 再复用压缩逻辑
+              const res = await fetch(dataUrl);
+              const blob = await res.blob();
+              const fileFromDataUrl = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+              const compressed = await compressImage(fileFromDataUrl, {
+                quality: 0.8,
+                maxWidth: 400,
+                maxHeight: 400,
+                maxSize: 1 * 1024 * 1024
+              });
+              setAvatarPreview(compressed);
+            } catch (e) {
+              console.error(e);
+              alert('图片处理失败，请重试');
+            } finally {
+              setIsUploading(false);
+              setCropModalVisible(false);
+              if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
+              setRawImageUrl('');
+            }
+          }}
+        />
       </div>
     </div>
   );

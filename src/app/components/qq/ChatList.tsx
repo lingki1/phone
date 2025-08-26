@@ -20,9 +20,12 @@ interface ChatListProps {
   onDeleteChat?: (chatId: string) => void;
   onEditChat?: (chatId: string) => void;
   onAssociateWorldBook?: (chatId: string) => void;
+  // 可选：搜索高亮摘要
+  searchQuery?: string;
+  searchHitMap?: Record<string, { messageId: string; content: string } | null>;
 }
 
-export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook }: ChatListProps) {
+export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook, searchQuery, searchHitMap }: ChatListProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -133,6 +136,11 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
                 {chat.isGroup && <span className="group-tag">群聊</span>}
               </div>
               <div className="last-msg">{chat.lastMessage}</div>
+              {searchQuery?.trim() && searchHitMap?.[chat.id]?.content && (
+                <div className="search-snippet">
+                  {renderHighlightedSnippet(searchHitMap![chat.id]!.content, searchQuery!)}
+                </div>
+              )}
             </div>
             
             <div className="meta">
@@ -188,5 +196,27 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
         </div>
       )}
     </>
+  );
+}
+
+function renderHighlightedSnippet(text: string, query: string) {
+  const q = query.trim();
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(q.toLowerCase());
+  if (idx === -1) return text;
+  const start = Math.max(0, idx - 16);
+  const end = Math.min(text.length, idx + q.length + 16);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < text.length ? '…' : '';
+  const before = text.slice(start, idx);
+  const hit = text.slice(idx, idx + q.length);
+  const after = text.slice(idx + q.length, end);
+  return (
+    <span>
+      {prefix}{before}
+      <mark>{hit}</mark>
+      {after}{suffix}
+    </span>
   );
 }

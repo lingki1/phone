@@ -89,7 +89,7 @@ export async function loadChatData(): Promise<ChatData> {
 }
 
 // 发送新消息到服务器
-export async function addMessage(content: string, user: ChatUser): Promise<ChatMessage> {
+export async function addMessage(content: string, user: ChatUser, quote?: { timestamp: number; senderName: string; content: string }): Promise<ChatMessage> {
   try {
     const response = await fetch(API_BASE, {
       method: 'POST',
@@ -98,7 +98,8 @@ export async function addMessage(content: string, user: ChatUser): Promise<ChatM
       },
       body: JSON.stringify({
         nickname: user.nickname,
-        content: content.trim()
+        content: content.trim(),
+        quote
       }),
     });
     
@@ -116,6 +117,12 @@ export async function addMessage(content: string, user: ChatUser): Promise<ChatM
     console.error('发送消息失败:', error);
     throw error;
   }
+}
+
+// 拉取管理员列表（从 users 里筛 isAdmin）
+export async function getAdmins(): Promise<ChatUser[]> {
+  const data = await loadChatData();
+  return (data.users || []).filter(u => !!u.isAdmin);
 }
 
 // 获取所有消息

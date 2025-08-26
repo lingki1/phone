@@ -20,7 +20,8 @@ import {
   markMessageAsTodo,
   loadTodos,
   completeTodo,
-  unmarkMessageAsTodo
+  unmarkMessageAsTodo,
+  getAdmins
 } from './chatService';
 
 interface PublicChatRoomProps {
@@ -45,6 +46,9 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const [cooldownTime, setCooldownTime] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTodoWindowOpen, setIsTodoWindowOpen] = useState(false);
+  const [quotePreview, setQuotePreview] = useState<{ timestamp: number; senderName: string; content: string } | null>(null);
+  const [isAdminPickerOpen, setIsAdminPickerOpen] = useState(false);
+  const [adminCandidates, setAdminCandidates] = useState<{ id: string; nickname: string }[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -277,6 +281,19 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const handleSendMessage = async () => {
     if (!state.currentUser || !inputMessage.trim()) return;
 
+    // 管理员选择命令：/setup —— 弹出管理员列表
+    if (inputMessage.trim().toLowerCase() === '/setup') {
+      try {
+        const admins = await getAdmins();
+        setAdminCandidates(admins.map(a => ({ id: a.id, nickname: a.nickname })));
+        setIsAdminPickerOpen(true);
+        setInputMessage('');
+      } catch (_e) {
+        alert('获取管理员列表失败');
+      }
+      return;
+    }
+
     // 支持命令：/name 新名字 —— 修改当前用户昵称，不发送消息
     if (inputMessage.trim().toLowerCase().startsWith('/name ')) {
       const newName = inputMessage.trim().slice(6).trim();
@@ -337,7 +354,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     }
 
     try {
-      const message = await addMessage(inputMessage.trim(), state.currentUser);
+      const message = await addMessage(inputMessage.trim(), state.currentUser, quotePreview || undefined);
       
       // 更新本地状态
       setState(prev => ({
@@ -350,6 +367,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       }));
 
       setInputMessage('');
+      setQuotePreview(null);
       setCooldownTime(30); // 设置30秒冷却时间
       
       // 立即刷新消息以获取最新状态
@@ -629,7 +647,16 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
                         </>
                       )}
                     </div>
-                    <div className="chatroom-message-content">
+                    <div className="chatroom-message-content" onClick={() => setQuotePreview({ timestamp: message.timestamp, senderName: message.nickname, content: message.content })}>
+                      {message.quote && (
+                        <div className="chatroom-quote-block">
+                          <div className="quote-header">
+                            <span className="quote-nickname">{message.quote.senderName}</span>
+                            <span className="quote-time">{formatTimestamp(message.quote.timestamp)}</span>
+                          </div>
+                          <div className="quote-content">{message.quote.content}</div>
+                        </div>
+                      )}
                       {message.content}
                     </div>
                   </div>
@@ -661,6 +688,15 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           )}
           
           <div className="chatroom-input-container">
+            {quotePreview && (
+              <div className="chatroom-quote-preview" style={{ width: '100%' }}>
+                <div className="quote-header">
+                  <span className="quote-nickname">{quotePreview.senderName}</span>
+                  <button className="quote-cancel" onClick={() => setQuotePreview(null)} title="取消引用">×</button>
+                </div>
+                <div className="quote-content">{quotePreview.content}</div>
+              </div>
+            )}
             <textarea
               ref={inputRef}
               className="chatroom-message-input"
@@ -686,6 +722,39 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
             >
               ➤
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 管理员选择器 */}
+      {isAdminPickerOpen && (
+        <div className="chatroom-nickname-modal" onClick={(e) => { if (e.target === e.currentTarget) setIsAdminPickerOpen(false); }}>
+          <div className="chatroom-nickname-form" style={{ maxWidth: 360 }}>
+            <h2>选择管理员身份</h2>
+            <p>点击一个管理员昵称以切换你的身份</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {adminCandidates.length === 0 ? (
+                <div style={{ color: '#666' }}>暂无管理员</div>
+              ) : (
+                adminCandidates.map(a => (
+                  <button
+                    key={a.id}
+                    className="chatroom-nickname-button primary"
+                    onClick={() => {
+                      setState(prev => prev.currentUser ? { ...prev, currentUser: { ...prev.currentUser!, id: a.id, nickname: a.nickname, isAdmin: true, lastMessageTime: prev.currentUser.lastMessageTime } } : prev);
+                      localStorage.setItem('chatroom-nickname', a.nickname);
+                      setIsAdminPickerOpen(false);
+                      setTimeout(refreshMessages, 100);
+                    }}
+                  >
+                    {a.nickname}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="chatroom-nickname-buttons" style={{ marginTop: 12 }}>
+              <button className="chatroom-nickname-button secondary" onClick={() => setIsAdminPickerOpen(false)}>关闭</button>
+            </div>
           </div>
         </div>
       )}

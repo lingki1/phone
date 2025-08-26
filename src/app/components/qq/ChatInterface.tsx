@@ -174,6 +174,25 @@ export default function ChatInterface({
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  // 支持从聊天列表跳转定位到指定消息
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { chatId, messageId } = (e as CustomEvent).detail || {};
+      if (!messageId || chatId !== chat.id) return;
+      // 优先在已展示消息中查找
+      const el = document.querySelector(`[data-message-id="${CSS.escape(messageId)}"]`);
+      if (el && messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTo({
+          top: (el as HTMLElement).offsetTop - 80,
+          behavior: 'smooth'
+        });
+      } else {
+        // TODO: 如需支持分页自动加载直到找到，可在此扩展
+      }
+    };
+    window.addEventListener('scrollToMessage', handler as EventListener);
+    return () => window.removeEventListener('scrollToMessage', handler as EventListener);
+  }, [chat.id]);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   // 自动调整输入框高度（添加防抖优化）
@@ -2198,10 +2217,11 @@ export default function ChatInterface({
                 {displayedMessages.map((msg, index) => (
                   <MessageItem
                     key={msg.id}
+                    data-message-id={msg.id}
                     msg={msg}
                     chat={chat}
                     index={index}
-                    totalMessages={displayedMessages.length}
+                    _totalMessages={displayedMessages.length}
                     dbPersonalSettings={dbPersonalSettings}
                     personalSettings={personalSettings}
                     editingMessage={editingMessage}

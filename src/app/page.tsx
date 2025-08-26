@@ -10,9 +10,7 @@ import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 import MePage from './components/qq/me/MePage';
 import AuthModal from './components/auth/AuthModal';
-import { AnnouncementDisplay } from './components/announcement';
-import { fetchAnnouncements } from './components/announcement/announcementService';
-import type { Announcement } from './components/announcement/types';
+// 公告展示仅在 DesktopPage 中渲染，这里不再引入
 import { FirstLoadPage } from './components/firstloadpage';
 
 export default function Home() {
@@ -28,7 +26,7 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  // 公告列表状态移至 DesktopPage 内部
 
   // 检查用户认证状态
   useEffect(() => {
@@ -180,23 +178,7 @@ export default function Home() {
     };
   }, [isAuthenticated, isCheckingAuth, showAuthModal]);
 
-  // 加载公告数据
-  useEffect(() => {
-    const loadAnnouncements = async () => {
-      try {
-        const data = await fetchAnnouncements();
-        setAnnouncements(data);
-      } catch (error) {
-        console.error('加载公告数据失败:', error);
-      }
-    };
-
-    loadAnnouncements();
-    
-    // 定期刷新公告数据（每5分钟）
-    const interval = setInterval(loadAnnouncements, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // 这里不再负责公告数据加载
 
   // 开发环境自动初始化数据库（调用后端 /api/init）
   useEffect(() => {
@@ -371,24 +353,7 @@ export default function Home() {
         onLoginSuccess={handleLoginSuccess}
       />
       
-      {/* 公告显示 - 在最上层，确保未登录用户也能看到 */}
-       <div style={{ 
-         position: 'fixed', 
-         top: 0, 
-         left: 0, 
-         right: 0, 
-         zIndex: 10000, 
-         pointerEvents: 'none' 
-       }}>
-         <div style={{ pointerEvents: 'auto' }} data-announcement>
-           <AnnouncementDisplay 
-             announcements={announcements}
-             onDismiss={(id) => {
-               console.log('用户关闭公告:', id);
-             }}
-           />
-         </div>
-       </div>
+      {/* 公告在 DesktopPage 内部渲染 */}
     </>
   );
 }
