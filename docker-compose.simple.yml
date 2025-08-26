@@ -1,4 +1,20 @@
 services:
+  # 权限初始化服务
+  init-permissions:
+    image: alpine:latest
+    volumes:
+      - /home/ubuntu/data:/data
+      - /home/ubuntu/logs:/logs
+    command: |
+      sh -c '
+        echo "正在初始化目录权限..."
+        mkdir -p /data /logs
+        chown -R 1000:1000 /data /logs
+        chmod -R 755 /data /logs
+        echo "权限初始化完成！"
+      '
+    restart: "no"
+
   phone-app:
     build:
       context: .
@@ -11,16 +27,19 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
     restart: unless-stopped
+    depends_on:
+      init-permissions:
+        condition: service_completed_successfully
     volumes:
       # 持久化数据目录 - 包含聊天室JSON文件和SQLite数据库
       - /home/ubuntu/data:/app/data
       # 可选：持久化日志文件
       - /home/ubuntu/logs:/app/logs
-    # 添加用户映射，确保权限正确
-    user: "1000:1000"
+    # 移除用户映射，使用Dockerfile中的node用户
+    # user: "1000:1000"
     networks:
       - phone-network
 
 networks:
   phone-network:
-    driver: bridge 
+    driver: bridge

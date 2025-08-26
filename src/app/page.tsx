@@ -13,6 +13,7 @@ import AuthModal from './components/auth/AuthModal';
 import { AnnouncementDisplay } from './components/announcement';
 import { fetchAnnouncements } from './components/announcement/announcementService';
 import type { Announcement } from './components/announcement/types';
+import { FirstLoadPage } from './components/firstloadpage';
 
 export default function Home() {
   const router = useRouter();
@@ -327,14 +328,13 @@ export default function Home() {
     }
   ];
 
-  // 如果正在检查认证状态，显示加载中
+  // 如果正在检查认证状态，显示加载页面
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-        <div className="text-lg text-gray-700 mb-2">检查登录状态...</div>
-        <div className="text-sm text-gray-500">如果长时间无响应，请刷新页面</div>
-      </div>
+      <FirstLoadPage 
+        message="检查登录状态"
+        subMessage="如果长时间无响应，请刷新页面"
+      />
     );
   }
 
