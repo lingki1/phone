@@ -75,8 +75,11 @@ class DatabaseManager {
       throw new Error(`无法创建数据目录: ${error}`);
     }
 
-    // 自动初始化数据库（开发和生产环境都需要）
-    this.autoInit();
+    // 只在运行时初始化数据库，避免构建时权限问题
+    // 构建时跳过数据库初始化
+    if (!process.env.NEXT_PHASE) {
+      this.autoInit();
+    }
   }
 
   private async autoInit(): Promise<void> {
