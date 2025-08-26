@@ -59,6 +59,87 @@
   gap: 12px;
 }
 
+/* authuser: 用户头像与菜单 */
+.authuser-menu {
+  position: relative;
+}
+
+.authuser-avatar-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  opacity: 0.95;
+}
+
+.authuser-avatar-button:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  opacity: 1;
+}
+
+.authuser-dropdown {
+  position: fixed;
+  right: 12px;
+  top: 56px;
+  min-width: 200px;
+  background: rgba(17, 24, 39, 0.95);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: fadeInUp 0.18s ease-out both;
+}
+
+.authuser-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.authuser-name {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.authuser-meta {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.authuser-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.authuser-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.authuser-logout {
+  color: #fca5a5;
+}
+
 .logout-button {
   background: none;
   border: none;

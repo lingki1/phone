@@ -23,6 +23,14 @@ interface NetworkInformation extends EventTarget {
   saveData: boolean;
 }
 
+interface CurrentUser {
+  username?: string;
+  name?: string;
+  role?: string;
+  group?: string;
+  group_id?: string;
+}
+
 interface DesktopPageProps {
   onOpenApp: (appName: string) => Promise<void>;
   userBalance: number;
@@ -46,6 +54,9 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [batteryLevel, setBatteryLevel] = useState<number>(85);
   const [isCharging, setIsCharging] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   
   // 拖拽和编辑状态
   const [isEditMode, setIsEditMode] = useState(false);
@@ -289,6 +300,36 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       window.removeEventListener('openApp', handleOpenApp as EventListener);
     };
   }, [onOpenApp]);
+
+  // 获取当前用户信息
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.success) {
+          setCurrentUser(data.user);
+        }
+      } catch (_e) {
+        // ignore
+      }
+    };
+    fetchMe();
+  }, []);
+
+  // 点击外部关闭用户菜单
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!isUserMenuOpen) return;
+      const target = e.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isUserMenuOpen]);
 
   // 格式化时间
   const formatTime = (date: Date) => {
@@ -581,6 +622,19 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     }
   };
 
+  const getUserInitial = () => {
+    const name: string | undefined = currentUser?.username || currentUser?.name;
+    if (!name || typeof name !== 'string' || name.length === 0) return '👤';
+    return name.charAt(0).toUpperCase();
+  };
+
+  const getUserGroupName = () => {
+    const groupId: string | undefined = currentUser?.group || currentUser?.group_id;
+    if (!groupId) return '未分组';
+    if (groupId === 'default') return '默认分组';
+    return groupId;
+  };
+
   // 保存公告数据 - 现在不需要了，因为使用API实时保存
   // const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
   //   try {
@@ -611,13 +665,25 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
           )}
         </div>
         <div className="status-right">
-          <button 
-            className="logout-button" 
-            onClick={handleLogout}
-            title="退出登录"
-          >
-            🚪
-          </button>
+          <div className="authuser-menu" ref={userMenuRef}>
+            <button
+              className="authuser-avatar-button"
+              title={currentUser?.username || '用户'}
+              onClick={() => setIsUserMenuOpen(v => !v)}
+            >
+              {getUserInitial()}
+            </button>
+            {isUserMenuOpen && (
+              <div className="authuser-dropdown">
+                <div className="authuser-header">
+                  <div className="authuser-name">{currentUser?.username || '未登录'}</div>
+                  <div className="authuser-meta">角色：{currentUser?.role || 'user'}</div>
+                  <div className="authuser-meta">分组：{getUserGroupName()}</div>
+                </div>
+                <button className="authuser-item authuser-logout" onClick={handleLogout}>退出登录</button>
+              </div>
+            )}
+          </div>
           <span className="battery-icon" title={`电池状态: ${batteryLevel}% ${isCharging ? '充电中' : '未充电'}`}>
             {getBatteryIcon()}
           </span>
