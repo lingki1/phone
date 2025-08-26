@@ -242,7 +242,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           </svg>
         </button>
         <h1 className="page-title">世界书管理</h1>
-        <div className="header-actions">
+                    <div className="wb-header-actions">
           {isSelectionMode ? (
             <>
               <button 

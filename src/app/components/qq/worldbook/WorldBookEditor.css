@@ -124,7 +124,7 @@
   flex: 1;
 }
 
-.save-btn {
+.wb-save-btn {
   background: var(--theme-accent-color);
   color: white;
   border: none;
@@ -138,25 +138,25 @@
   white-space: nowrap;
 }
 
-.save-btn:hover:not(:disabled) {
+.wb-save-btn:hover:not(:disabled) {
   background: var(--theme-accent-color-hover, var(--theme-accent-color));
   transform: translateY(-1px);
 }
 
-.save-btn:active:not(:disabled) {
+.wb-save-btn:active:not(:disabled) {
   transform: translateY(0);
   background: var(--theme-accent-color);
 }
 
-.save-btn:disabled,
-.save-btn.saving {
+.wb-save-btn:disabled,
+.wb-save-btn.saving {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
 /* Header中的取消按钮样式 */
-.editor-header .cancel-btn {
+.editor-header .wb-cancel-btn {
   background: transparent;
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border-color);
@@ -169,12 +169,12 @@
   white-space: nowrap;
 }
 
-.editor-header .cancel-btn:hover {
+.editor-header .wb-cancel-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
 
-.editor-header .cancel-btn:active {
+.editor-header .wb-cancel-btn:active {
   transform: scale(0.98);
 }
 
@@ -331,7 +331,7 @@
     justify-content: center;
   }
   
-  .save-btn {
+  .wb-save-btn {
     width: auto;
     padding: 12px 24px;
     font-size: 14px;
@@ -344,13 +344,13 @@
     padding: 10px 12px;
   }
   
-  .save-btn {
+  .wb-save-btn {
     padding: 10px 20px;
     font-size: 13px;
   }
 }
 
-.cancel-btn {
+.wb-cancel-btn {
   background: transparent;
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border-color);
@@ -361,12 +361,12 @@
   transition: all 0.2s ease;
 }
 
-.cancel-btn:hover {
+.wb-cancel-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
 
-.cancel-btn:active {
+.wb-cancel-btn:active {
   transform: scale(0.98);
 }
 

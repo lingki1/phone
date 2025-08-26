@@ -55,6 +55,13 @@ export default function Home() {
     checkAuth();
   }, [router]);
 
+  // 当用户未认证时，确保认证模态窗口显示
+  useEffect(() => {
+    if (!isAuthenticated && !isCheckingAuth) {
+      setShowAuthModal(true);
+    }
+  }, [isAuthenticated, isCheckingAuth]);
+
   // 加载API配置和用户余额
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -110,6 +117,19 @@ export default function Home() {
       window.removeEventListener('apiConfigChanged', handleApiConfigChange);
     };
   }, []);
+
+  // 获取用户余额
+  const fetchUserBalance = async () => {
+    try {
+      await dataManager.initDB();
+      const balance = await dataManager.getBalance();
+      setUserBalance(balance);
+    } catch (error) {
+      console.error('Failed to fetch user balance:', error);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
 
   // 刷新余额
   const refreshBalance = async () => {
@@ -171,32 +191,14 @@ export default function Home() {
     refreshBalance();
   };
 
-  // 重新检查认证状态的函数
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      const data = await response.json();
-      
-      if (data.success) {
-        setIsAuthenticated(true);
-        setShowAuthModal(false);
-      } else {
-        setIsAuthenticated(false);
-        setShowAuthModal(true);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setIsAuthenticated(false);
-      setShowAuthModal(true);
-    }
-  };
+
 
   // 处理登录成功
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     setShowAuthModal(false);
-    // 重新检查认证状态
-    checkAuth();
+    // 重新加载用户数据
+    fetchUserBalance();
   };
 
   // 处理退出登录
@@ -257,33 +259,17 @@ export default function Home() {
 
   return (
     <>
-      {/* 只有认证通过才显示应用内容 */}
-      {isAuthenticated ? (
-        <div className="app-container">
-          <PageTransitionManager
-            pages={pages}
-            currentPageId={currentPage}
-            defaultDirection="left"
-            defaultDuration={350}
-          />
-        </div>
-      ) : (
-        /* 未认证时显示空白背景 */
-        <div className="app-container" style={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{ color: 'white', textAlign: 'center' }}>
-            <h2>请先登录</h2>
-            <p>登录后即可使用所有功能</p>
-          </div>
-        </div>
-      )}
+      {/* 始终显示桌面页面作为背景 */}
+      <div className="app-container">
+        <PageTransitionManager
+          pages={pages}
+          currentPageId={currentPage}
+          defaultDirection="left"
+          defaultDuration={350}
+        />
+      </div>
       
-      {/* 认证模态窗口 */}
+      {/* 认证模态窗口覆盖在桌面页面上 */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => {

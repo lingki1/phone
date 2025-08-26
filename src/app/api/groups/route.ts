@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import authService from '@/app/utils/auth';
-import databaseManager from '@/app/utils/database';
+import authService from '@/app/auth/utils/auth';
+import databaseManager from '@/app/auth/utils/database';
 
 // 获取分组列表
 export async function GET(request: NextRequest) {

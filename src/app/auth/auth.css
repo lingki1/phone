@@ -1,32 +1,35 @@
 /* 认证页面样式 - 所有样式以auth开头 */
 
-/* 模态窗口样式 */
+/* 模态窗口样式 - 覆盖在桌面页面上 */
 .auth-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(8px);
+  z-index: 10002;
+  backdrop-filter: blur(12px);
   animation: auth-fade-in 0.3s ease-out;
+  /* 确保模态窗口在所有元素之上 */
+  isolation: isolate;
 }
 
 .auth-modal-container {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
   width: 90%;
   max-width: 420px;
   max-height: 90vh;
   overflow: hidden;
   position: relative;
   animation: auth-slide-up 0.3s ease-out;
-  border: 1px solid #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .auth-modal-header {
@@ -91,6 +94,34 @@
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 20px;
 }
+
+/* 确保模态窗口在桌面页面上正确显示 */
+.auth-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 10002 !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+  /* 确保模态窗口在所有元素之上 */
+  isolation: isolate !important;
+}
+
+.auth-modal-container {
+  position: relative !important;
+  z-index: 10003 !important;
+  overflow: visible !important;
+}
+
+/* 确保模态窗口内容可以滚动 */
+.auth-modal-content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+
 
 .auth-card {
   background: white;
@@ -424,8 +455,9 @@
 /* 深色模式支持 */
 @media (prefers-color-scheme: dark) {
   .auth-modal-container {
-    background: #1a202c;
-    border-color: #2d3748;
+    background: rgba(26, 32, 44, 0.95);
+    backdrop-filter: blur(20px);
+    border-color: rgba(255, 255, 255, 0.1);
   }
   
   .auth-card {

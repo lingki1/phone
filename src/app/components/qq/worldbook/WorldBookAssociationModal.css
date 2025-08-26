@@ -25,7 +25,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.association-header {
+.wb-association-header {
   padding: 20px;
   border-bottom: 1px solid var(--theme-border-color);
   display: flex;
@@ -34,14 +34,14 @@
   flex-shrink: 0;
 }
 
-.association-title {
+.wb-association-title {
   color: var(--theme-text-primary);
   font-size: 18px;
   font-weight: 600;
   margin: 0;
 }
 
-.close-btn {
+.wb-close-btn {
   background: transparent;
   border: none;
   color: var(--theme-text-secondary);
@@ -54,7 +54,7 @@
   transition: all 0.2s ease;
 }
 
-.close-btn:hover {
+.wb-close-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
@@ -223,7 +223,7 @@
   overflow: hidden;
 }
 
-.association-footer {
+.wb-association-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--theme-border-color);
   display: flex;
@@ -232,17 +232,17 @@
   flex-shrink: 0;
 }
 
-.selection-summary {
+.wb-selection-summary {
   color: var(--theme-text-secondary);
   font-size: 14px;
 }
 
-.footer-actions {
+.wb-footer-actions {
   display: flex;
   gap: 12px;
 }
 
-.cancel-btn {
+.wb-cancel-btn {
   background: transparent;
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border-color);
@@ -253,12 +253,12 @@
   transition: all 0.2s ease;
 }
 
-.cancel-btn:hover {
+.wb-cancel-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
 
-.save-btn {
+.wb-save-btn {
   background: var(--theme-accent-color);
   color: white;
   border: none;
@@ -270,13 +270,13 @@
   transition: all 0.2s ease;
 }
 
-.save-btn:hover:not(:disabled) {
+.wb-save-btn:hover:not(:disabled) {
   background: var(--theme-accent-color-hover, var(--theme-accent-color));
   transform: translateY(-1px);
 }
 
-.save-btn:disabled,
-.save-btn.saving {
+.wb-save-btn:disabled,
+.wb-save-btn.saving {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -292,11 +292,11 @@
     max-height: 90vh;
   }
   
-  .association-header {
+  .wb-association-header {
     padding: 16px;
   }
   
-  .association-title {
+  .wb-association-title {
     font-size: 16px;
   }
   
@@ -312,19 +312,19 @@
     padding: 10px;
   }
   
-  .association-footer {
+  .wb-association-footer {
     padding: 12px 16px;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
   
-  .footer-actions {
+  .wb-footer-actions {
     width: 100%;
   }
   
-  .cancel-btn,
-  .save-btn {
+  .wb-cancel-btn,
+  .wb-save-btn {
     flex: 1;
     padding: 10px;
   }

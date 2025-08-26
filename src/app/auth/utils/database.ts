@@ -37,6 +37,7 @@ export interface UserSession {
 class DatabaseManager {
   private db: sqlite3.Database | null = null;
   private dbPath: string;
+  private isInitialized = false;
 
   constructor() {
     // 根据环境确定数据库路径
@@ -53,9 +54,27 @@ class DatabaseManager {
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
+
+    // 在开发环境中自动初始化
+    if (process.env.NODE_ENV === 'development') {
+      this.autoInit();
+    }
+  }
+
+  private async autoInit(): Promise<void> {
+    try {
+      await this.init();
+      console.log('✅ 开发环境数据库自动初始化成功');
+    } catch (error) {
+      console.warn('⚠️ 开发环境数据库自动初始化失败:', error);
+    }
   }
 
   async init(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
     try {
       // 创建数据库连接
       this.db = new sqlite3.Database(this.dbPath);
@@ -118,6 +137,7 @@ class DatabaseManager {
       // 初始化超级管理员（如果不存在）
       await this.initSuperAdmin();
 
+      this.isInitialized = true;
       console.log('Database initialized successfully');
     } catch (error) {
       console.error('Database initialization failed:', error);

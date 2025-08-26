@@ -105,9 +105,9 @@ export default function WorldBookAssociationSwitchModal({
     <div className="world-book-association-switch-modal-overlay" onClick={onClose}>
       <div className="world-book-association-switch-modal" onClick={e => e.stopPropagation()}>
         {/* 模态框头部 */}
-        <div className="association-modal-header">
+        <div className="wb-association-switch-modal-header">
           <h2>世界书关联管理</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="wb-close-btn" onClick={onClose}>×</button>
         </div>
 
         {/* 搜索区域 */}
@@ -184,8 +184,8 @@ export default function WorldBookAssociationSwitchModal({
         </div>
 
         {/* 底部信息 */}
-        <div className="association-modal-footer">
-          <div className="footer-info">
+        <div className="wb-association-switch-modal-footer">
+          <div className="wb-footer-info">
             <span>已关联: {linkedCount} 个</span>
           </div>
         </div>

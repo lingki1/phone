@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import authService from './auth';
+import authService from '../auth/utils/auth';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {

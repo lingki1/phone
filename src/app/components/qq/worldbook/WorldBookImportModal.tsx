@@ -252,9 +252,9 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
     <div className="world-book-import-modal-overlay" onClick={onClose}>
       <div className="world-book-import-modal" onClick={e => e.stopPropagation()}>
         {/* 模态框头部 */}
-        <div className="import-modal-header">
+        <div className="wb-import-modal-header">
           <h2>导入预设</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="wb-close-btn" onClick={onClose}>×</button>
         </div>
 
         {/* 说明文字 */}
@@ -272,7 +272,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
             style={{ display: 'none' }}
           />
           <button 
-            className="upload-btn"
+            className="wb-upload-btn"
             onClick={() => fileInputRef.current?.click()}
           >
             📁 选择预设文件
@@ -281,16 +281,16 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
 
         {/* JSON输入区域 */}
         <div className="json-input-section">
-          <div className="input-header">
+          <div className="wb-input-header">
             <label htmlFor="json-input">预设JSON数据</label>
-            <div className="input-actions">
-              <button className="action-btn" onClick={generateExample}>
+            <div className="wb-input-actions">
+              <button className="wb-action-btn" onClick={generateExample}>
                 📝 生成示例
               </button>
-              <button className="action-btn" onClick={clearInput}>
+              <button className="wb-action-btn" onClick={clearInput}>
                 🗑️ 清空
               </button>
-              <button className="action-btn" onClick={handlePreview}>
+              <button className="wb-action-btn" onClick={handlePreview}>
                 👁️ 预览转换
               </button>
             </div>
@@ -336,12 +336,12 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
         )}
 
         {/* 操作按钮 */}
-        <div className="import-modal-footer">
-          <button className="cancel-btn" onClick={onClose}>
+        <div className="wb-import-modal-footer">
+          <button className="wb-cancel-btn" onClick={onClose}>
             取消
           </button>
           <button 
-            className={`import-btn ${isImporting ? 'importing' : ''}`}
+            className={`wb-import-btn ${isImporting ? 'importing' : ''}`}
             onClick={handleImport}
             disabled={isImporting || !jsonInput.trim()}
           >

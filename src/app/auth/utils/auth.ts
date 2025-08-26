@@ -14,7 +14,7 @@ export interface RegisterRequest {
   username: string;
   password: string;
   email?: string;
-  role?: 'user' | 'admin';
+  role?: 'super_admin' | 'admin' | 'user';
 }
 
 export interface AuthResponse {
@@ -201,21 +201,23 @@ class AuthService {
   }
 
   /**
-   * 验证JWT token
+   * 验证Token
    */
   async verifyToken(token: string): Promise<AuthUser | null> {
     try {
       // 验证JWT token
       const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
-
+      
       // 检查会话是否存在且未过期
       const session = await databaseManager.getSessionByToken(token);
       if (!session) {
         return null;
       }
 
-      // 检查会话是否过期
-      if (new Date(session.expires_at) < new Date()) {
+      const now = new Date();
+      const expiresAt = new Date(session.expires_at);
+      if (now > expiresAt) {
+        // 删除过期会话
         await databaseManager.deleteSession(token);
         return null;
       }
@@ -241,75 +243,9 @@ class AuthService {
   }
 
   /**
-   * 刷新token
+   * 检查权限
    */
-  async refreshToken(token: string): Promise<AuthResponse> {
-    try {
-      // 验证当前token
-      const authUser = await this.verifyToken(token);
-      if (!authUser) {
-        return {
-          success: false,
-          message: 'Token无效或已过期'
-        };
-      }
-
-      // 获取用户信息
-      const user = await databaseManager.getUserByUid(authUser.uid);
-      if (!user) {
-        return {
-          success: false,
-          message: '用户不存在'
-        };
-      }
-
-      // 删除旧会话
-      await databaseManager.deleteSession(token);
-
-      // 生成新token
-      const newToken = jwt.sign(
-        { 
-          uid: user.uid, 
-          username: user.username, 
-          role: user.role,
-          group: user.group
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
-
-      // 创建新会话
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      await databaseManager.createSession({
-        uid: user.uid,
-        token: newToken,
-        expires_at: expiresAt.toISOString()
-      });
-
-      // 返回用户信息（不包含密码）
-      const { password: _userPassword, ...userWithoutPassword } = user;
-
-      return {
-        success: true,
-        message: 'Token刷新成功',
-        token: newToken,
-        user: userWithoutPassword
-      };
-    } catch (error) {
-      console.error('Token refresh error:', error);
-      return {
-        success: false,
-        message: 'Token刷新失败'
-      };
-    }
-  }
-
-  /**
-   * 检查用户权限
-   */
-  hasPermission(userRole: User['role'], requiredRole: User['role']): boolean {
+  hasPermission(userRole: User['role'], requiredRole: 'super_admin' | 'admin' | 'user'): boolean {
     const roleHierarchy = {
       'super_admin': 3,
       'admin': 2,

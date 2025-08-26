@@ -38,7 +38,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
         <div className="auth-modal-content">
           <div className="auth-header">
             <h1 className="auth-title">
-              {isLogin ? '欢迎回来' : '创建账户'}
+              {isLogin ? 'Lingki-傻瓜机' : '创建账户'}
             </h1>
             <p className="auth-subtitle">
               {isLogin ? '请登录您的账户' : '请填写以下信息创建账户'}

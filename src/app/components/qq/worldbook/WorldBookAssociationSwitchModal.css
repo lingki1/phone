@@ -25,7 +25,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.association-modal-header {
+.wb-association-switch-modal-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--theme-border-color);
   display: flex;
@@ -34,14 +34,14 @@
   flex-shrink: 0;
 }
 
-.association-modal-header h2 {
+.wb-association-switch-modal-header h2 {
   color: var(--theme-text-primary);
   font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
 
-.close-btn {
+.wb-close-btn {
   background: transparent;
   border: none;
   color: var(--theme-text-secondary);
@@ -57,7 +57,7 @@
   height: 32px;
 }
 
-.close-btn:hover {
+.wb-close-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
@@ -280,7 +280,7 @@ input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
 
-.association-modal-footer {
+.wb-association-switch-modal-footer {
   padding: 12px 20px;
   border-top: 1px solid var(--theme-border-color);
   display: flex;
@@ -288,7 +288,7 @@ input:checked + .toggle-slider:before {
   flex-shrink: 0;
 }
 
-.footer-info {
+.wb-footer-info {
   color: var(--theme-text-secondary);
   font-size: 13px;
 }
@@ -303,11 +303,11 @@ input:checked + .toggle-slider:before {
     max-height: 90vh;
   }
   
-  .association-modal-header {
+  .wb-association-switch-modal-header {
     padding: 12px 16px;
   }
   
-  .association-modal-header h2 {
+  .wb-association-switch-modal-header h2 {
     font-size: 15px;
   }
   
@@ -327,7 +327,7 @@ input:checked + .toggle-slider:before {
     font-size: 13px;
   }
   
-  .association-modal-footer {
+  .wb-association-switch-modal-footer {
     padding: 10px 16px;
   }
 }

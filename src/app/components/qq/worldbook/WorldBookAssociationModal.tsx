@@ -82,9 +82,9 @@ export default function WorldBookAssociationModal({
   return (
     <div className="world-book-association-modal-overlay" onClick={handleCancel}>
       <div className="world-book-association-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="association-header">
-          <h2 className="association-title">关联世界书</h2>
-          <button className="close-btn" onClick={handleCancel}>
+        <div className="wb-association-header">
+          <h2 className="wb-association-title">关联世界书</h2>
+          <button className="wb-close-btn" onClick={handleCancel}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="m18 6-12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="m6 6 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -155,12 +155,12 @@ export default function WorldBookAssociationModal({
           <div className="selection-summary">
             已选择 {selectedIds.length} 个世界书
           </div>
-          <div className="footer-actions">
-            <button className="cancel-btn" onClick={handleCancel}>
+          <div className="wb-footer-actions">
+            <button className="wb-cancel-btn" onClick={handleCancel}>
               取消
             </button>
             <button 
-              className={`save-btn ${isSaving ? 'saving' : ''}`}
+              className={`wb-save-btn ${isSaving ? 'saving' : ''}`}
               onClick={handleSave}
               disabled={isSaving || worldBooks.length === 0}
             >

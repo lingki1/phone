@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import databaseManager from '@/app/utils/database';
+import databaseManager from '@/app/auth/utils/database';
 
 export async function POST() {
   try {

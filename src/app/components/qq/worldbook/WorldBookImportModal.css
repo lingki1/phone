@@ -25,7 +25,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.import-modal-header {
+.wb-import-modal-header {
   padding: 20px;
   border-bottom: 1px solid var(--theme-border-color);
   display: flex;
@@ -34,14 +34,14 @@
   flex-shrink: 0;
 }
 
-.import-modal-header h2 {
+.wb-import-modal-header h2 {
   color: var(--theme-text-primary);
   font-size: 18px;
   font-weight: 600;
   margin: 0;
 }
 
-.close-btn {
+.wb-close-btn {
   background: transparent;
   border: none;
   color: var(--theme-text-secondary);
@@ -57,7 +57,7 @@
   height: 32px;
 }
 
-.close-btn:hover {
+.wb-close-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
@@ -82,7 +82,7 @@
   flex-shrink: 0;
 }
 
-.upload-btn {
+.wb-upload-btn {
   background: var(--theme-bg-secondary);
   color: var(--theme-text-primary);
   border: 2px dashed var(--theme-border-color);
@@ -95,7 +95,7 @@
   width: 100%;
 }
 
-.upload-btn:hover {
+.wb-upload-btn:hover {
   background: var(--theme-bg-tertiary);
   border-color: var(--theme-accent-color);
   color: var(--theme-accent-color);
@@ -109,7 +109,7 @@
   min-height: 0;
 }
 
-.input-header {
+.wb-input-header {
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -118,7 +118,7 @@
   gap: 12px;
 }
 
-.input-header label {
+.wb-input-header label {
   color: var(--theme-text-primary);
   font-size: 14px;
   font-weight: 500;
@@ -126,7 +126,7 @@
   white-space: nowrap;
 }
 
-.input-actions {
+.wb-input-actions {
   display: flex;
   gap: 8px;
   flex-wrap: nowrap;
@@ -134,7 +134,7 @@
   flex-shrink: 0;
 }
 
-.action-btn {
+.wb-action-btn {
   background: var(--theme-bg-secondary);
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border-color);
@@ -148,7 +148,7 @@
   min-width: fit-content;
 }
 
-.action-btn:hover {
+.wb-action-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
@@ -185,7 +185,7 @@
   flex-shrink: 0;
 }
 
-.import-modal-footer {
+.wb-import-modal-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--theme-border-color);
   display: flex;
@@ -194,7 +194,7 @@
   flex-shrink: 0;
 }
 
-.cancel-btn {
+.wb-cancel-btn {
   background: transparent;
   color: var(--theme-text-secondary);
   border: 1px solid var(--theme-border-color);
@@ -205,12 +205,12 @@
   transition: all 0.2s ease;
 }
 
-.cancel-btn:hover {
+.wb-cancel-btn:hover {
   background: var(--theme-bg-tertiary);
   color: var(--theme-text-primary);
 }
 
-.import-btn {
+.wb-import-btn {
   background: var(--theme-accent-color);
   color: white;
   border: none;
@@ -222,13 +222,13 @@
   transition: all 0.2s ease;
 }
 
-.import-btn:hover:not(:disabled) {
+.wb-import-btn:hover:not(:disabled) {
   background: var(--theme-accent-color-hover, var(--theme-accent-color));
   transform: translateY(-1px);
 }
 
-.import-btn:disabled,
-.import-btn.importing {
+.wb-import-btn:disabled,
+.wb-import-btn.importing {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -374,8 +374,8 @@
     padding: 12px 16px;
   }
   
-  .cancel-btn,
-  .import-btn {
+  .wb-cancel-btn,
+  .wb-import-btn {
     padding: 8px 12px;
     font-size: 13px;
   }
@@ -439,8 +439,8 @@
     flex-direction: column;
   }
   
-  .cancel-btn,
-  .import-btn {
+  .wb-cancel-btn,
+  .wb-import-btn {
     width: 100%;
   }
   

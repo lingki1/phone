@@ -57,7 +57,7 @@
   color: var(--theme-text-primary, #202124);
 }
 
-.header-actions {
+.wb-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -155,7 +155,7 @@
     margin-right: 6px;
   }
   
-  .header-actions {
+  .wb-header-actions {
     gap: 6px;
   }
   
@@ -215,7 +215,7 @@
     margin-right: 6px;
   }
   
-  .header-actions {
+  .wb-header-actions {
     gap: 4px;
     flex-shrink: 0;
   }
@@ -271,7 +271,7 @@
     margin-right: 4px;
   }
   
-  .header-actions {
+  .wb-header-actions {
     gap: 3px;
   }
   
@@ -317,7 +317,7 @@
     margin-right: 3px;
   }
   
-  .header-actions {
+  .wb-header-actions {
     gap: 2px;
   }
   
