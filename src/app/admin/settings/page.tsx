@@ -167,13 +167,13 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="dos space-y-8">
       {/* 页面标题和导航 */}
       <div className="flex justify-between items-center pb-4 border-b border-gray-200">
         <h1 className="text-2xl font-semibold">系统设置</h1>
         <Link
           href="/admin/users"
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
         >
           用户管理 (Ctrl+U)
         </Link>
@@ -215,7 +215,7 @@ export default function AdminSettingsPage() {
             <button
               type="button"
               onClick={() => handleDownloadCodes(downloadType)}
-              className="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+              className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
             >
               下载TXT
             </button>
@@ -223,7 +223,7 @@ export default function AdminSettingsPage() {
               <button
                 type="button"
                 onClick={() => downloadTxt(lastGeneratedCodes, `activation-codes-latest.txt`)}
-                className="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
               >
                 下载本次生成TXT
               </button>
@@ -248,7 +248,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={generating}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+              className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60 transition-colors"
             >
               {generating ? '生成中...' : '生成激活码'}
             </button>
@@ -276,7 +276,7 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     onClick={() => copyToClipboard(c.code)}
-                    className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                    className="dos-btn px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
                   >
                     复制
                   </button>

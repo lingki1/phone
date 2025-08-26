@@ -236,7 +236,7 @@ export default function UsersManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="dos min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -245,13 +245,13 @@ export default function UsersManagementPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/admin/settings"
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   激活码与注册设置 (Ctrl+S)
                 </Link>
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                  className="dos-btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
                 >
                   创建用户
                 </button>
@@ -396,13 +396,13 @@ export default function UsersManagementPage() {
                     <button
                       type="button"
                       onClick={() => setShowCreateForm(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
                       取消
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                      className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                     >
                       创建
                     </button>
@@ -467,13 +467,13 @@ export default function UsersManagementPage() {
                     <button
                       type="button"
                       onClick={() => setEditingUser(null)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
                       取消
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                      className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                     >
                       保存
                     </button>
