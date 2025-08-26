@@ -13,6 +13,7 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [activationCode, setActivationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -45,7 +46,8 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
         body: JSON.stringify({ 
           username, 
           password, 
-          email: email || undefined 
+          email: email || undefined,
+          activationCode: activationCode || undefined
         }),
       });
 
@@ -92,6 +94,21 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           onChange={(e) => setUsername(e.target.value)}
           minLength={3}
           maxLength={20}
+        />
+      </div>
+
+      <div className="auth-form-group">
+        <label htmlFor="activationCode" className="auth-label">
+          激活码
+        </label>
+        <input
+          id="activationCode"
+          name="activationCode"
+          type="text"
+          className="auth-input"
+          placeholder="请输入激活码（若管理员开启需要）"
+          value={activationCode}
+          onChange={(e) => setActivationCode(e.target.value)}
         />
       </div>
 

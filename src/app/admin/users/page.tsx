@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface User {
   uid: string;
@@ -214,12 +215,20 @@ export default function UsersManagementPage() {
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900">用户管理</h1>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                创建用户
-              </button>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/admin/settings"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  激活码与注册设置
+                </Link>
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                >
+                  创建用户
+                </button>
+              </div>
             </div>
 
             {/* 用户列表 */}

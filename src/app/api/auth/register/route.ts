@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     await databaseManager.init();
 
     const body = await request.json();
-    const { username, password, email, role } = body;
+    const { username, password, email, role, activationCode } = body;
 
-    const result = await authService.register({ username, password, email, role });
+    const result = await authService.register({ username, password, email, role, activationCode });
 
     if (result.success) {
       return NextResponse.json(result, {

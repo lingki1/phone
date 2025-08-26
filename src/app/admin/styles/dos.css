@@ -1,0 +1,74 @@
+/* DOS 风格：等宽字体、黑底绿字、像素化边框与高对比度 */
+
+:root {
+  --dos-bg: #000000;
+  --dos-fg: #00ff00;
+  --dos-dim: #00aa00;
+  --dos-border: #00bb00;
+  --dos-accent: #00ff7f;
+}
+
+.dos, .dos * {
+  font-family: Consolas, "Courier New", Courier, monospace !important;
+}
+
+.dos-body {
+  background-color: var(--dos-bg) !important;
+  color: var(--dos-fg) !important;
+}
+
+/* 容器：像素化边框与外边距 */
+.dos-panel {
+  background: #000000 !important;
+  border: 2px solid var(--dos-border) !important;
+  box-shadow: 0 0 0 2px #003300 inset !important;
+}
+
+/* 标题条 */
+.dos-title {
+  background: #001a00 !important;
+  color: var(--dos-accent) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 按钮与交互元素 */
+.dos-btn {
+  background: #001a00 !important;
+  color: var(--dos-fg) !important;
+  border: 2px solid var(--dos-border) !important;
+}
+.dos-btn:hover {
+  background: #002200 !important;
+  color: var(--dos-accent) !important;
+}
+.dos-input, .dos-select {
+  background: #000000 !important;
+  color: var(--dos-fg) !important;
+  border: 2px solid var(--dos-border) !important;
+}
+
+/* 表格样式 */
+.dos-table {
+  border: 2px solid var(--dos-border) !important;
+}
+.dos-th, .dos-td {
+  border-bottom: 1px dotted var(--dos-dim) !important;
+}
+
+/* 轻度文本 */
+.dos-dim { color: var(--dos-dim) !important; }
+
+/* 将现有 Tailwind 常用 class 对应覆盖为 DOS 风格（尽量非侵入） */
+.dos a { color: var(--dos-accent) !important; }
+.dos .text-gray-900, .dos .text-gray-700, .dos .text-gray-600, .dos .text-gray-500 { color: var(--dos-fg) !important; }
+.dos .bg-white, .dos .bg-gray-50, .dos .bg-gray-100 { background-color: #000000 !important; }
+.dos .border, .dos .divide-y > * { border-color: var(--dos-border) !important; }
+.dos .rounded, .dos .rounded-md, .dos .rounded-lg { border-radius: 0 !important; }
+.dos .shadow, .dos .shadow-lg { box-shadow: none !important; }
+
+/* 滚动条与选区 */
+.dos ::selection { background: var(--dos-accent); color: #001a00; }
+.dos ::-webkit-scrollbar-thumb { background: var(--dos-dim); }
+
+

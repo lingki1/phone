@@ -15,6 +15,7 @@ export interface RegisterRequest {
   password: string;
   email?: string;
   role?: 'super_admin' | 'admin' | 'user';
+  activationCode?: string;
 }
 
 export interface AuthResponse {
@@ -115,7 +116,7 @@ class AuthService {
    */
   async register(registerData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const { username, password, email, role = 'user' } = registerData;
+      const { username, password, email, role = 'user', activationCode } = registerData;
 
       // 验证输入
       if (!username || !password) {
@@ -148,6 +149,20 @@ class AuthService {
         };
       }
 
+      // 检查是否启用了激活码注册
+      const requireSetting = await databaseManager.getSetting('register_require_activation');
+      const requireActivation = requireSetting?.value === 'true';
+      if (requireActivation) {
+        if (!activationCode) {
+          return {
+            success: false,
+            message: '需要提供激活码'
+          };
+        }
+        // 预检查激活码是否可用（未被使用）
+        // 这里通过尝试消费时的受影响行数判断，避免并发重复使用
+      }
+
       // 加密密码
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -159,6 +174,19 @@ class AuthService {
         group: 'default',
         email
       });
+
+      // 如果需要激活码，则消费该激活码（原子性由UPDATE条件保证）
+      if (requireActivation) {
+        const consumed = await databaseManager.consumeActivationCode(activationCode as string, user.uid);
+        if (!consumed) {
+          // 回滚用户创建以避免产生无效用户（简单处理：删除刚创建的用户及其会话）
+          await databaseManager.deleteUser(user.uid);
+          return {
+            success: false,
+            message: '激活码无效或已被使用'
+          };
+        }
+      }
 
       // 生成JWT token
       const token = jwt.sign(

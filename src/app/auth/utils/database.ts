@@ -34,6 +34,20 @@ export interface UserSession {
   created_at: string;
 }
 
+export interface SystemSetting {
+  key: string;
+  value: string;
+  updated_at: string;
+}
+
+export interface ActivationCode {
+  code: string;
+  used_by?: string;
+  used_at?: string;
+  created_by: string;
+  created_at: string;
+}
+
 class DatabaseManager {
   private db: sqlite3.Database | null = null;
   private dbPath: string;
@@ -123,6 +137,28 @@ class DatabaseManager {
         )
       `);
 
+      // 系统设置表
+      await this.run(`
+        CREATE TABLE IF NOT EXISTS system_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
+
+      // 激活码表
+      await this.run(`
+        CREATE TABLE IF NOT EXISTS activation_codes (
+          code TEXT PRIMARY KEY,
+          used_by TEXT,
+          used_at TEXT,
+          created_by TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (used_by) REFERENCES users (uid),
+          FOREIGN KEY (created_by) REFERENCES users (uid)
+        )
+      `);
+
       // 创建索引
       await this.run('CREATE INDEX IF NOT EXISTS idx_users_username ON users (username)');
       await this.run('CREATE INDEX IF NOT EXISTS idx_users_role ON users (role)');
@@ -130,6 +166,8 @@ class DatabaseManager {
       await this.run('CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions (token)');
       await this.run('CREATE INDEX IF NOT EXISTS idx_sessions_uid ON user_sessions (uid)');
       await this.run('CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions (expires_at)');
+      await this.run('CREATE INDEX IF NOT EXISTS idx_activation_used_by ON activation_codes (used_by)');
+      await this.run('CREATE INDEX IF NOT EXISTS idx_activation_created_by ON activation_codes (created_by)');
 
       // 初始化默认分组
       await this.initDefaultGroups();
@@ -430,6 +468,55 @@ class DatabaseManager {
     if (!this.db) throw new Error('Database not initialized');
 
     await this.run('DELETE FROM user_sessions WHERE uid = ?', [uid]);
+  }
+
+  // 系统设置相关方法
+  async setSetting(key: string, value: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const now = new Date().toISOString();
+    await this.run(`
+      INSERT INTO system_settings (key, value, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+    `, [key, value, now]);
+  }
+
+  async getSetting(key: string): Promise<SystemSetting | null> {
+    if (!this.db) throw new Error('Database not initialized');
+    const result = await this.get('SELECT * FROM system_settings WHERE key = ?', [key]);
+    return result as SystemSetting || null;
+  }
+
+  // 激活码相关方法
+  async createActivationCodes(count: number, createdBy: string): Promise<ActivationCode[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const now = new Date().toISOString();
+    const codes: ActivationCode[] = [];
+    for (let i = 0; i < count; i++) {
+      const code = uuidv4().replace(/-/g, '').slice(0, 16).toUpperCase();
+      await this.run(`
+        INSERT INTO activation_codes (code, created_by, created_at)
+        VALUES (?, ?, ?)
+      `, [code, createdBy, now]);
+      codes.push({ code, created_by: createdBy, created_at: now });
+    }
+    return codes;
+  }
+
+  async listActivationCodes(includeUsed = false): Promise<ActivationCode[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const sql = includeUsed ? 'SELECT * FROM activation_codes ORDER BY created_at DESC' : 'SELECT * FROM activation_codes WHERE used_by IS NULL ORDER BY created_at DESC';
+    const rows = await this.all(sql);
+    return rows as ActivationCode[];
+  }
+
+  async consumeActivationCode(code: string, usedBy: string): Promise<boolean> {
+    if (!this.db) throw new Error('Database not initialized');
+    const now = new Date().toISOString();
+    const result = await this.run(`
+      UPDATE activation_codes SET used_by = ?, used_at = ? WHERE code = ? AND used_by IS NULL
+    `, [usedBy, now, code]);
+    return result.changes > 0;
   }
 
   // 关闭数据库连接

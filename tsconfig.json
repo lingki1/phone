@@ -22,7 +22,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@shopping/*": ["./src/app/components/shopping/*"],
-      "@chat/*": ["./src/app/components/qq/chat/*"]
+      "@chat/*": ["./src/app/components/qq/chat/*"],
+      "@admin/*": ["./src/app/admin/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
