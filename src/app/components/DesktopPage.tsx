@@ -27,6 +27,7 @@ interface DesktopPageProps {
   onOpenApp: (appName: string) => Promise<void>;
   userBalance: number;
   isLoadingBalance: boolean;
+  onLogout?: () => void;
 }
 
 interface AppTile {
@@ -40,7 +41,7 @@ interface AppTile {
   status?: 'coming-soon' | 'available' | 'insufficient-balance';
 }
 
-export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }: DesktopPageProps) {
+export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout }: DesktopPageProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentDate, setCurrentDate] = useState(new Date());
   const [batteryLevel, setBatteryLevel] = useState<number>(85);
@@ -553,6 +554,33 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
     }
   };
 
+  // 处理退出登录
+  const handleLogout = async () => {
+    if (!confirm('确定要退出登录吗？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // 清除本地存储的用户信息
+        localStorage.removeItem('userToken');
+        // 调用父组件的退出登录回调
+        if (onLogout) {
+          onLogout();
+        }
+      } else {
+        alert('退出登录失败，请稍后重试');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('退出登录失败，请稍后重试');
+    }
+  };
+
   // 保存公告数据 - 现在不需要了，因为使用API实时保存
   // const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
   //   try {
@@ -583,6 +611,13 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance }
           )}
         </div>
         <div className="status-right">
+          <button 
+            className="logout-button" 
+            onClick={handleLogout}
+            title="退出登录"
+          >
+            🚪
+          </button>
           <span className="battery-icon" title={`电池状态: ${batteryLevel}% ${isCharging ? '充电中' : '未充电'}`}>
             {getBatteryIcon()}
           </span>

@@ -1076,8 +1076,7 @@ class DataManager {
       request.onsuccess = () => {
         const result = request.result;
         if (result) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { chatId: _, ...status } = result;
+          const { chatId: _chatId, ...status } = result;
           resolve(status);
         } else {
           resolve(null);

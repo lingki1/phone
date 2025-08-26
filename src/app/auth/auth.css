@@ -1,0 +1,486 @@
+/* 认证页面样式 - 所有样式以auth开头 */
+
+/* 模态窗口样式 */
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: auth-fade-in 0.3s ease-out;
+}
+
+.auth-modal-container {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  animation: auth-slide-up 0.3s ease-out;
+  border: 1px solid #f0f0f0;
+}
+
+.auth-modal-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px 0;
+}
+
+.auth-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.auth-modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.auth-modal-content {
+  padding: 0 32px 32px;
+  overflow-y: auto;
+  max-height: calc(90vh - 60px);
+}
+
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 原有的全屏样式保留，以防需要 */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.auth-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.auth-subtitle {
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 4px;
+}
+
+.auth-input {
+  padding: 14px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  background: #fafbfc;
+  color: #2d3748;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08);
+}
+
+.auth-input::placeholder {
+  color: #a0aec0;
+}
+
+.auth-input.error {
+  border-color: #e53e3e;
+  background: #fff5f5;
+}
+
+.auth-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  width: 100%;
+  font-family: inherit;
+}
+
+.auth-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.auth-switch-text {
+  color: #718096;
+  font-size: 14px;
+}
+
+.auth-switch-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 6px;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.auth-switch-link:hover {
+  color: #764ba2;
+}
+
+.auth-error {
+  background: #fff5f5;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #fed7d7;
+  line-height: 1.4;
+}
+
+.auth-success {
+  background: #f0fff4;
+  color: #2f855a;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #c6f6d5;
+  line-height: 1.4;
+}
+
+.auth-loading {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: auth-spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.auth-divider::before {
+  margin-right: 16px;
+}
+
+.auth-divider::after {
+  margin-left: 16px;
+}
+
+.auth-social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #4a5568;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.auth-social-button:hover {
+  border-color: #667eea;
+  background: #fafbfc;
+}
+
+.auth-social-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
+
+.auth-password-toggle {
+  position: relative;
+  width: 100%;
+}
+
+.auth-password-toggle input {
+  padding-right: 50px;
+  width: 100%;
+}
+
+.auth-password-toggle-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+.auth-password-toggle-button:hover {
+  color: #4a5568;
+}
+
+.auth-remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.auth-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
+}
+
+.auth-forgot-password {
+  text-align: right;
+  margin-top: 12px;
+}
+
+.auth-forgot-password-link {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.auth-forgot-password-link:hover {
+  color: #764ba2;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .auth-modal-container {
+    width: 95%;
+    max-width: 380px;
+  }
+  
+  .auth-modal-content {
+    padding: 0 24px 24px;
+  }
+  
+  .auth-card {
+    padding: 30px 20px;
+    margin: 10px;
+  }
+  
+  .auth-title {
+    font-size: 24px;
+  }
+  
+  .auth-input {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  
+  .auth-button {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .auth-modal-container {
+    background: #1a202c;
+    border-color: #2d3748;
+  }
+  
+  .auth-card {
+    background: #1a202c;
+    border-color: #2d3748;
+    color: white;
+  }
+  
+  .auth-title {
+    color: #f7fafc;
+  }
+  
+  .auth-subtitle {
+    color: #a0aec0;
+  }
+  
+  .auth-input {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #f7fafc;
+  }
+  
+  .auth-input:focus {
+    background: #2d3748;
+    border-color: #667eea;
+  }
+  
+  .auth-input::placeholder {
+    color: #718096;
+  }
+  
+  .auth-label {
+    color: #e2e8f0;
+  }
+  
+  .auth-switch-text {
+    color: #a0aec0;
+  }
+  
+  .auth-switch {
+    border-top-color: #2d3748;
+  }
+  
+  .auth-social-button {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .auth-social-button:hover {
+    background: #4a5568;
+  }
+  
+  .auth-modal-close:hover {
+    background: #2d3748;
+    color: #f7fafc;
+  }
+}

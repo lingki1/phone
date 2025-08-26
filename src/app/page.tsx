@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ChatListPage from './components/qq/ChatListPage';
 import DesktopPage from './components/DesktopPage';
 import ShoppingPage from './components/shopping/ShoppingPage';
@@ -8,8 +9,10 @@ import DiscoverPage from './components/discover/DiscoverPage';
 import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 import MePage from './components/qq/me/MePage';
+import AuthModal from './components/auth/AuthModal';
 
 export default function Home() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping' | 'discover' | 'me'>('desktop');
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
@@ -18,9 +21,44 @@ export default function Home() {
   });
   const [userBalance, setUserBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // 检查用户认证状态
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        const data = await response.json();
+        
+        if (data.success) {
+          setIsAuthenticated(true);
+          setShowAuthModal(false);
+        } else {
+          // 未登录，显示登录模态窗口
+          setIsAuthenticated(false);
+          setShowAuthModal(true);
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // 认证检查失败，显示登录模态窗口
+        setIsAuthenticated(false);
+        setShowAuthModal(true);
+        return;
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   // 加载API配置和用户余额
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const loadData = async () => {
       try {
         await dataManager.initDB();
@@ -41,7 +79,7 @@ export default function Home() {
     };
     
     loadData();
-  }, []);
+  }, [isAuthenticated]);
 
   // 监听API配置变更
   useEffect(() => {
@@ -133,10 +171,52 @@ export default function Home() {
     refreshBalance();
   };
 
+  // 重新检查认证状态的函数
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsAuthenticated(true);
+        setShowAuthModal(false);
+      } else {
+        setIsAuthenticated(false);
+        setShowAuthModal(true);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setIsAuthenticated(false);
+      setShowAuthModal(true);
+    }
+  };
+
+  // 处理登录成功
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setShowAuthModal(false);
+    // 重新检查认证状态
+    checkAuth();
+  };
+
+  // 处理退出登录
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowAuthModal(true);
+    // 重置所有状态
+    setUserBalance(0);
+    setIsLoadingBalance(true);
+    setApiConfig({
+      proxyUrl: '',
+      apiKey: '',
+      model: ''
+    });
+  };
+
   const pages = [
     {
       id: 'desktop',
-      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} />,
+      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} onLogout={handleLogout} />,
       direction: 'fade' as const,
       duration: 400
     },
@@ -166,14 +246,56 @@ export default function Home() {
     }
   ];
 
+  // 如果正在检查认证状态，显示加载中
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-lg">检查登录状态...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="app-container">
-      <PageTransitionManager
-        pages={pages}
-        currentPageId={currentPage}
-        defaultDirection="left"
-        defaultDuration={350}
+    <>
+      {/* 只有认证通过才显示应用内容 */}
+      {isAuthenticated ? (
+        <div className="app-container">
+          <PageTransitionManager
+            pages={pages}
+            currentPageId={currentPage}
+            defaultDirection="left"
+            defaultDuration={350}
+          />
+        </div>
+      ) : (
+        /* 未认证时显示空白背景 */
+        <div className="app-container" style={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ color: 'white', textAlign: 'center' }}>
+            <h2>请先登录</h2>
+            <p>登录后即可使用所有功能</p>
+          </div>
+        </div>
+      )}
+      
+      {/* 认证模态窗口 */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          // 如果用户关闭登录窗口但未登录，保持显示
+          if (!isAuthenticated) {
+            setShowAuthModal(true);
+          } else {
+            setShowAuthModal(false);
+          }
+        }}
+        onLoginSuccess={handleLoginSuccess}
       />
-    </div>
+    </>
   );
 }

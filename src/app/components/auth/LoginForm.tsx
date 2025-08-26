@@ -1,0 +1,104 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
+  onLoginSuccess?: () => void;
+}
+
+export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onLoginSuccess }: LoginFormProps) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 登录成功
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        } else {
+          // 如果没有回调，则跳转到主页
+          router.push('/');
+          router.refresh();
+        }
+      } else {
+        setError(data.message || '登录失败');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('网络错误，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form className="auth-form" onSubmit={handleSubmit}>
+      {error && (
+        <div className="auth-error">{error}</div>
+      )}
+
+      <div className="auth-form-group">
+        <label htmlFor="username" className="auth-label">
+          用户名
+        </label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          required
+          className="auth-input"
+          placeholder="请输入用户名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+      </div>
+
+      <div className="auth-form-group">
+        <label htmlFor="password" className="auth-label">
+          密码
+        </label>
+        <div className="auth-password-toggle">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            className="auth-input"
+            placeholder="请输入密码"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="auth-button"
+      >
+        {loading && <span className="auth-loading"></span>}
+        {loading ? '登录中...' : '登录'}
+      </button>
+    </form>
+  );
+}

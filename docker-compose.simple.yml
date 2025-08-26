@@ -13,9 +13,9 @@ services:
     restart: unless-stopped
     volumes:
       # 持久化数据目录 - 包含聊天室JSON文件和SQLite数据库
-      - ./data:/app/data
+      - /home/ubuntu/data:/app/data
       # 可选：持久化日志文件
-      - ./logs:/app/logs
+      - /home/ubuntu/logs:/app/logs
     # 添加用户映射，确保权限正确
     user: "1000:1000"
     networks:
