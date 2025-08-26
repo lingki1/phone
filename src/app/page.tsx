@@ -33,7 +33,21 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        // 设置5秒超时
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch('/api/auth/me', {
+          signal: controller.signal,
+          cache: 'no-cache'
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
@@ -43,20 +57,32 @@ export default function Home() {
           // 未登录，显示登录模态窗口
           setIsAuthenticated(false);
           setShowAuthModal(true);
-          return;
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        // 认证检查失败，显示登录模态窗口
+        // 认证检查失败或超时，显示登录模态窗口
         setIsAuthenticated(false);
         setShowAuthModal(true);
-        return;
       } finally {
         setIsCheckingAuth(false);
       }
     };
     
-    checkAuth();
+    // 备用超时机制：10秒后强制结束检查状态
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('Auth check timeout, forcing to show login');
+      setIsCheckingAuth(false);
+      setIsAuthenticated(false);
+      setShowAuthModal(true);
+    }, 10000);
+    
+    checkAuth().finally(() => {
+      clearTimeout(fallbackTimeout);
+    });
+    
+    return () => {
+      clearTimeout(fallbackTimeout);
+    };
   }, [router]);
 
   // 当用户未认证时，确保认证模态窗口显示
@@ -304,8 +330,10 @@ export default function Home() {
   // 如果正在检查认证状态，显示加载中
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-lg">检查登录状态...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+        <div className="text-lg text-gray-700 mb-2">检查登录状态...</div>
+        <div className="text-sm text-gray-500">如果长时间无响应，请刷新页面</div>
       </div>
     );
   }

@@ -65,22 +65,31 @@ class DatabaseManager {
 
     // 确保data目录存在
     const dataDir = path.dirname(this.dbPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    try {
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+        console.log(`📁 创建数据目录: ${dataDir}`);
+      }
+    } catch (error) {
+      console.error(`❌ 创建数据目录失败: ${dataDir}`, error);
+      throw new Error(`无法创建数据目录: ${error}`);
     }
 
-    // 在开发环境中自动初始化
-    if (process.env.NODE_ENV === 'development') {
-      this.autoInit();
-    }
+    // 自动初始化数据库（开发和生产环境都需要）
+    this.autoInit();
   }
 
   private async autoInit(): Promise<void> {
     try {
       await this.init();
-      console.log('✅ 开发环境数据库自动初始化成功');
+      console.log(`✅ 数据库自动初始化成功 (${process.env.NODE_ENV || 'unknown'} 环境)`);
+      console.log(`📁 数据库路径: ${this.dbPath}`);
     } catch (error) {
-      console.warn('⚠️ 开发环境数据库自动初始化失败:', error);
+      console.error(`❌ 数据库自动初始化失败 (${process.env.NODE_ENV || 'unknown'} 环境):`, error);
+      // 在生产环境中，数据库初始化失败是严重问题
+      if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 生产环境数据库初始化失败，这将导致认证功能无法正常工作');
+      }
     }
   }
 
@@ -198,20 +207,33 @@ class DatabaseManager {
   private async initSuperAdmin(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    // 检查是否已存在超级管理员
-    const existingSuperAdmin = await this.get('SELECT uid FROM users WHERE role = ?', ['super_admin']);
-    if (existingSuperAdmin) {
-      return; // 已存在超级管理员，跳过初始化
+    try {
+      // 检查是否已存在超级管理员
+      const existingSuperAdmin = await this.get('SELECT uid FROM users WHERE role = ?', ['super_admin']);
+      if (existingSuperAdmin) {
+        console.log('✅ 超级管理员已存在，跳过初始化');
+        return; // 已存在超级管理员，跳过初始化
+      }
+      
+      const now = new Date().toISOString();
+      const hashedPassword = await bcrypt.hash('11111111', 10);
+      
+      // 超级管理员使用固定UID "1"
+      await this.run(`
+        INSERT INTO users (uid, username, password, role, group_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, ['1', 'lingki', hashedPassword, 'super_admin', 'default', now, now]);
+      
+      console.log('✅ 超级管理员账户创建成功 (用户名: lingki, 密码: 11111111)');
+    } catch (error) {
+      // 如果是唯一约束错误，说明用户已存在，这是正常的
+      if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
+        console.log('✅ 超级管理员已存在，跳过初始化');
+        return;
+      }
+      // 其他错误需要抛出
+      throw error;
     }
-    
-    const now = new Date().toISOString();
-    const hashedPassword = await bcrypt.hash('11111111', 10);
-    
-    // 超级管理员使用固定UID "1"
-    await this.run(`
-      INSERT INTO users (uid, username, password, role, group_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, ['1', 'lingki', hashedPassword, 'super_admin', 'default', now, now]);
   }
 
   // 辅助方法：执行SQL语句
