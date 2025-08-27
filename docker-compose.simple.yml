@@ -9,8 +9,11 @@ services:
       sh -c '
         echo "正在初始化目录权限..."
         mkdir -p /data /logs
+        mkdir -p /data/uploads/blackmarket
         chown -R 1000:1000 /data /logs
+        chown -R 1000:1000 /data/uploads
         chmod -R 755 /data /logs
+        chmod -R 755 /data/uploads
         echo "权限初始化完成！"
       '
     restart: "no"
@@ -35,6 +38,8 @@ services:
       - /home/ubuntu/data:/app/data
       # 可选：持久化日志文件
       - /home/ubuntu/logs:/app/logs
+      # 持久化上传目录（映射到 public/uploads）
+      - /home/ubuntu/data/uploads:/app/public/uploads
     # 移除用户映射，使用Dockerfile中的node用户
     # user: "1000:1000"
     networks:

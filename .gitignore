@@ -56,3 +56,5 @@ logs/
 backup/
 *.backup
 
+public/uploads/blackmarket/
+

@@ -1,0 +1,233 @@
+.bm-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.bm-detail-container {
+  width: min(100vw, 1000px);
+  height: min(100vh, 88vh);
+  background: var(--bg-primary, #fff);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.bm-detail-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #6b7280);
+  font-size: 1.6rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.bm-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  height: 100%;
+}
+
+.bm-detail-media { 
+  position: relative; 
+  background: #000; 
+}
+
+.bm-detail-image { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+}
+
+.bm-detail-worldbook-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.bm-detail-worldbook-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.bm-detail-worldbook-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  margin-bottom: 20px;
+  z-index: 1;
+  position: relative;
+  font-family: 'Georgia', serif;
+  letter-spacing: 1px;
+  line-height: 1.2;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.bm-detail-worldbook-icon {
+  font-size: 4rem;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  z-index: 1;
+  position: relative;
+}
+
+.bm-detail-info {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bm-detail-title { 
+  margin: 0; 
+  font-size: 1.4rem; 
+  color: var(--text-primary, #1f2937); 
+  margin-top: 8px;
+}
+
+.bm-detail-meta { 
+  display: flex; 
+  gap: 10px; 
+  flex-wrap: wrap; 
+  color: var(--text-tertiary, #9ca3af); 
+  font-size: 0.9rem; 
+}
+
+.bm-detail-desc { 
+  white-space: pre-wrap; 
+  line-height: 1.6; 
+  color: var(--text-secondary, #4b5563); 
+  height: 9.6em; /* 6行高度 (1.6 * 6) */
+  overflow-y: auto; 
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  padding: 12px;
+  background: var(--bg-secondary, #f9fafb);
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.bm-detail-tags { 
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+}
+
+.bm-detail-tag { 
+  background: var(--bg-secondary, #f3f4f6); 
+  color: var(--text-secondary, #6b7280); 
+  border-radius: 10px; 
+  padding: 4px 8px; 
+  font-size: 0.85rem; 
+}
+
+.bm-detail-actions { 
+  margin-top: auto; 
+  display: flex; 
+  gap: 10px; 
+}
+
+.import-button {
+  padding: 8px 16px;
+  background: var(--success-color, #10b981);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.import-button:hover {
+  background: var(--success-hover, #059669);
+  transform: translateY(-1px);
+}
+
+.download-button {
+  padding: 8px 16px;
+  background: var(--accent-color, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.download-button:hover {
+  background: var(--accent-hover, #7c3aed);
+  transform: translateY(-1px);
+}
+
+.bm-detail-secondary { 
+  padding: 8px 16px; 
+  background: none; 
+  border: 1px solid var(--border-color, #e5e7eb); 
+  color: var(--text-secondary, #6b7280); 
+  border-radius: 6px; 
+  cursor: pointer; 
+}
+
+@media (max-width: 900px) {
+  .bm-detail-grid { 
+    grid-template-columns: 1fr; 
+  }
+  .bm-detail-media { 
+    height: 45vh; 
+  }
+  .bm-detail-desc { 
+    height: 9.6em; /* 保持6行高度 */
+  }
+  .bm-detail-worldbook-title {
+    font-size: 2rem;
+  }
+  .bm-detail-worldbook-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bm-detail-container { 
+    width: 96vw; 
+    height: 92vh; 
+  }
+  .bm-detail-media { 
+    height: 40vh; 
+  }
+  .bm-detail-worldbook-title {
+    font-size: 1.5rem;
+    max-width: 90%;
+  }
+  .bm-detail-worldbook-icon {
+    font-size: 2.5rem;
+  }
+}

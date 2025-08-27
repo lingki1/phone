@@ -5,6 +5,9 @@ import './DesktopPage.css';
 import { AnnouncementDisplay, AnnouncementEditor, Announcement } from './announcement';
 import { fetchAnnouncements } from './announcement/announcementService';
 import { PublicChatRoom } from './chatroom';
+import { BlackMarket } from './blackmarket';
+import { ChatItem, WorldBook } from '../types/chat';
+import { dataManager } from '../utils/dataManager';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
 
@@ -72,6 +75,43 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   
   // 聊天室状态
   const [isChatRoomOpen, setIsChatRoomOpen] = useState(false);
+  
+  // 黑市状态
+  const [isBlackMarketOpen, setIsBlackMarketOpen] = useState(false);
+  
+  // 处理角色导入
+  const handleImportCharacter = async (character: ChatItem) => {
+    console.log('DesktopPage - 收到角色导入请求:', {
+      characterName: character.name,
+      characterId: character.id
+    });
+    
+    try {
+      await dataManager.saveChat(character);
+      console.log('DesktopPage - 角色导入成功，已保存到数据库');
+      alert('角色导入成功！');
+    } catch (error) {
+      console.error('DesktopPage - 保存导入角色失败:', error);
+      alert('导入失败，请稍后重试');
+    }
+  };
+
+  // 处理世界书导入
+  const handleImportWorldBook = async (worldBook: WorldBook) => {
+    console.log('DesktopPage - 收到世界书导入请求:', {
+      worldBookName: worldBook.name,
+      worldBookId: worldBook.id
+    });
+    
+    try {
+      await dataManager.saveWorldBook(worldBook);
+      console.log('DesktopPage - 世界书导入成功，已保存到数据库');
+      alert('世界书导入成功！');
+    } catch (error) {
+      console.error('DesktopPage - 保存导入世界书失败:', error);
+      alert('导入失败，请稍后重试');
+    }
+  };
   const [appTiles, setAppTiles] = useState<AppTile[]>([
     {
       id: 'qq',
@@ -85,13 +125,13 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     },
 
     {
-      id: 'story',
-      name: '故事模式',
-      icon: '📖',
+      id: 'blackmarket',
+      name: '黑市',
+      icon: '🏪',
       color: '#8B5CF6',
       gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
       size: 'medium',
-      status: 'coming-soon'
+      status: 'available'
     },
     {
       id: 'music',
@@ -531,6 +571,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       return;
     }
 
+    // 处理黑市应用
+    if (app.id === 'blackmarket') {
+      setClickedApp(app.id);
+      setTimeout(() => {
+        setIsBlackMarketOpen(true);
+        setClickedApp(null);
+      }, 300);
+      return;
+    }
+
     // 设置点击的应用，触发转场动画
     setClickedApp(app.id);
 
@@ -794,6 +844,14 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       <PublicChatRoom
         isOpen={isChatRoomOpen}
         onClose={() => setIsChatRoomOpen(false)}
+      />
+
+      {/* 黑市 */}
+      <BlackMarket
+        isOpen={isBlackMarketOpen}
+        onClose={() => setIsBlackMarketOpen(false)}
+        onImportCharacter={handleImportCharacter}
+        onImportWorldBook={handleImportWorldBook}
       />
     </div>
   );

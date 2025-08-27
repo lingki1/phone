@@ -10,11 +10,12 @@ import EditFriendModal from './EditFriendModal';
 import PersonalSettingsModal from './PersonalSettingsModal';
 import { WorldBookListPage, WorldBookAssociationModal } from './worldbook';
 import BottomNavigation from './BottomNavigation';
-import { ChatItem, ApiConfig } from '../../types/chat';
+import { ChatItem, ApiConfig, WorldBook } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
 import { presetManager } from '../../utils/presetManager';
 import PageTransitionManager from '../utils/PageTransitionManager';
 import CharacterImportModal from './characterimport/CharacterImportModal';
+import BlackMarket from '../blackmarket/BlackMarket';
 import './ChatListPage.css';
 
 interface PersonalSettings {
@@ -60,6 +61,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   const [friendModalMode, setFriendModalMode] = useState<'create' | 'edit'>('create');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showCharacterImport, setShowCharacterImport] = useState(false);
+  const [showBlackMarket, setShowBlackMarket] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatItem | null>(null);
   
   // 世界书相关状态
@@ -584,16 +586,42 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     setShowCharacterImport(true);
   };
 
+
+
   // 处理角色导入
   const handleImportCharacter = async (character: ChatItem) => {
+    console.log('ChatListPage - 收到角色导入请求:', {
+      characterName: character.name,
+      characterId: character.id,
+      currentChatsCount: chats.length
+    });
+    
     const updatedChats = [...chats, character];
     setChats(updatedChats);
     
     try {
       await dataManager.saveChat(character);
+      console.log('ChatListPage - 角色导入成功，已保存到数据库');
     } catch (error) {
-      console.error('Failed to save imported character:', error);
+      console.error('ChatListPage - 保存导入角色失败:', error);
       localStorage.setItem('chats', JSON.stringify(updatedChats));
+    }
+  };
+
+  // 处理世界书导入
+  const handleImportWorldBook = async (worldBook: WorldBook) => {
+    console.log('ChatListPage - 收到世界书导入请求:', {
+      worldBookName: worldBook.name,
+      worldBookId: worldBook.id
+    });
+    
+    try {
+      await dataManager.saveWorldBook(worldBook);
+      console.log('ChatListPage - 世界书导入成功，已保存到数据库');
+      alert('世界书导入成功！');
+    } catch (error) {
+      console.error('ChatListPage - 保存导入世界书失败:', error);
+      alert('导入失败，请稍后重试');
     }
   };
 
@@ -869,6 +897,14 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
         onImportCharacter={handleImportCharacter}
         apiConfig={apiConfig}
         personalSettings={personalSettings}
+      />
+
+      {/* 黑市模态框 */}
+      <BlackMarket
+        isOpen={showBlackMarket}
+        onClose={() => setShowBlackMarket(false)}
+        onImportCharacter={handleImportCharacter}
+        onImportWorldBook={handleImportWorldBook}
       />
     </>
   );
