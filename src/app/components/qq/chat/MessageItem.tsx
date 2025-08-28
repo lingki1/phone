@@ -25,6 +25,7 @@ interface MessageItemProps {
   onCancelEdit: () => void;
   onDeleteMessage: (messageId: string) => void;
   onRegenerateAI?: (messageId: string) => void;
+  onStartBatchDelete?: () => void;
   renderMessageContent: (msg: Message) => React.ReactNode;
   formatTime: (timestamp: number) => string;
   setEditingMessage: (editingMessage: { id: string; content: string } | null) => void;
@@ -44,6 +45,7 @@ const MessageItem = memo(({
   onCancelEdit,
   onDeleteMessage,
   onRegenerateAI,
+  onStartBatchDelete,
   renderMessageContent,
   formatTime,
   setEditingMessage
@@ -249,6 +251,7 @@ const MessageItem = memo(({
                   onEditMessage={onEditMessage}
                   onDeleteMessage={onDeleteMessage}
                   onRegenerateAI={onRegenerateAI}
+                  onStartBatchDelete={onStartBatchDelete}
                   isVisible={showActions}
                 />
               </div>
@@ -268,6 +271,7 @@ const MessageItem = memo(({
                   onEditMessage={onEditMessage}
                   onDeleteMessage={onDeleteMessage}
                   onRegenerateAI={onRegenerateAI}
+                  onStartBatchDelete={onStartBatchDelete}
                   isVisible={showActions}
                 />
               </div>

@@ -12,6 +12,7 @@ export interface MessageActionButtonsProps {
   onEditMessage: (messageId: string, currentContent: string) => void;
   onDeleteMessage: (messageId: string) => void;
   onRegenerateAI?: (messageId: string) => void;
+  onStartBatchDelete?: () => void;
   isVisible?: boolean;
 }
 
@@ -23,6 +24,7 @@ export default function MessageActionButtons({
   onEditMessage,
   onDeleteMessage,
   onRegenerateAI,
+  onStartBatchDelete,
   isVisible = false
 }: MessageActionButtonsProps) {
   const handleQuote = () => onQuoteMessage(message);
@@ -31,6 +33,7 @@ export default function MessageActionButtons({
     if (confirm('确定要删除这条消息吗？')) onDeleteMessage(message.id);
   };
   const handleRegenerate = () => onRegenerateAI?.(message.id);
+  const handleStartBatchDelete = () => onStartBatchDelete?.();
 
   return (
     <div 
@@ -70,6 +73,23 @@ export default function MessageActionButtons({
           <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
         </svg>
       </button>
+
+      {onStartBatchDelete && (
+        <button className="inline-action-btn batch" onClick={handleStartBatchDelete} title="多选删除" aria-label="多选删除">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            {/* 多选图标：多个复选框 */}
+            <rect x="3" y="3" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="9" y="3" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="15" y="3" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="3" y="9" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="9" y="9" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="15" y="9" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="3" y="15" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="9" y="15" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <rect x="15" y="15" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

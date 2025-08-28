@@ -60,6 +60,9 @@
 /* 危险操作强调 */
 .inline-action-btn.danger:hover { color: #ef4444; }
 
+/* 批量删除按钮强调 */
+.inline-action-btn.batch:hover { color: #f59e0b; }
+
 /* 群聊更紧凑 */
 .group-message .inline-action-bar { gap: 3px; }
 .group-message .inline-action-btn { width: 22px; height: 22px; }

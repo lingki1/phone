@@ -17,6 +17,7 @@ import { getPromptManager, PromptContext } from '../systemprompt';
 import { WorldBookAssociationSwitchModal } from './worldbook';
 import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
 import { StoryModeToggle, StoryModeDisplay } from './storymode';
+import { BatchDeleteSelector } from './messageactions';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -92,6 +93,7 @@ export default function ChatInterface({
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   const [showGiftHistory, setShowGiftHistory] = useState(false);
+  const [showBatchDelete, setShowBatchDelete] = useState(false);
   
   // 剧情模式相关状态
   const [isStoryMode, setIsStoryMode] = useState(false);
@@ -1487,6 +1489,21 @@ export default function ChatInterface({
     }
   }, [chat, onUpdateChat]);
 
+  // 批量删除消息
+  const handleBatchDelete = useCallback((messageIds: string[]) => {
+    const updatedChat = {
+      ...chat,
+      messages: chat.messages.filter(msg => !messageIds.includes(msg.id))
+    };
+    onUpdateChat(updatedChat);
+    setShowBatchDelete(false);
+  }, [chat, onUpdateChat]);
+
+  // 开始批量删除
+  const handleStartBatchDelete = useCallback(() => {
+    setShowBatchDelete(true);
+  }, []);
+
   // ==================== 剧情模式下的消息操作 ====================
   // 保存剧情模式编辑的消息
   const handleStorySaveEdit = useCallback(async () => {
@@ -2231,6 +2248,7 @@ export default function ChatInterface({
                     onCancelEdit={handleCancelEdit}
                     onDeleteMessage={handleDeleteMessage}
                     onRegenerateAI={handleRegenerateAI}
+                    onStartBatchDelete={handleStartBatchDelete}
                     renderMessageContent={renderMessageContent}
                     formatTime={formatTime}
                     setEditingMessage={setEditingMessage}
@@ -2585,6 +2603,16 @@ export default function ChatInterface({
           isOpen={showGiftHistory}
           onClose={() => setShowGiftHistory(false)}
           chat={chat}
+        />
+      )}
+
+      {/* 批量删除选择器 */}
+      {showBatchDelete && (
+        <BatchDeleteSelector
+          messages={chat.messages}
+          onBatchDelete={handleBatchDelete}
+          onCancel={() => setShowBatchDelete(false)}
+          isVisible={showBatchDelete}
         />
       )}
 
