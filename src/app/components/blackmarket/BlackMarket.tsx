@@ -205,6 +205,27 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     };
   }, []);
 
+  // 解决Chrome地址栏遮挡问题
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      // 设置CSS变量来动态计算可用高度
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    // 初始化
+    updateViewportHeight();
+
+    // 监听窗口大小变化和方向变化
+    window.addEventListener('resize', updateViewportHeight);
+    window.addEventListener('orientationchange', updateViewportHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+      window.removeEventListener('orientationchange', updateViewportHeight);
+    };
+  }, []);
+
   // 处理删除
   const handleDelete = async (item: BlackMarketItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
