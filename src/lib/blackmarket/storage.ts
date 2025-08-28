@@ -66,8 +66,35 @@ export function incrementDownload(id: string) {
   }
 }
 
+export function deleteItem(id: string): boolean {
+  const items = readAllItems();
+  const idx = items.findIndex(i => i.id === id);
+  if (idx === -1) {
+    return false;
+  }
+
+  const item = items[idx];
+  
+  // 删除实际文件
+  try {
+    const filePath = path.join(publicUploadDir, path.basename(item.fileUrl));
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    // 即使文件删除失败，也继续删除记录
+  }
+
+  // 从列表中删除
+  items.splice(idx, 1);
+  writeAllItems(items);
+  
+  return true;
+}
+
 export function toPublicUrl(filename: string) {
-  return `/uploads/blackmarket/${filename}`;
+  return `/api/blackmarket/files/${filename}`;
 }
 
 export function generateId(): string {

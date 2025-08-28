@@ -447,6 +447,24 @@
   transform: translateY(-1px);
 }
 
+.delete-button {
+  padding: 6px 10px;
+  background: var(--danger-color, #ef4444);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.delete-button:hover {
+  background: var(--danger-hover, #dc2626);
+  transform: translateY(-1px);
+}
+
 .blackmarket-empty-state {
   text-align: center;
   padding: 60px 20px;

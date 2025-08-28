@@ -157,7 +157,7 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'downloads' | 'name'>('date');
-  const [currentUser, setCurrentUser] = useState<{username?: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{username?: string; role?: string} | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<BlackMarketItem | null>(null);
 
@@ -178,6 +178,47 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
     };
     fetchUser();
   }, []);
+
+  // 处理删除
+  const handleDelete = async (item: BlackMarketItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    if (!currentUser) {
+      alert('请先登录');
+      return;
+    }
+
+    // 权限检查
+    const isAuthor = item.author === currentUser.username;
+    const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin';
+    
+    if (!isAuthor && !isAdmin) {
+      alert('您没有权限删除此内容');
+      return;
+    }
+
+    // 确认删除
+    const confirmMessage = isAdmin && !isAuthor 
+      ? `您确定要删除 "${item.name}" 吗？\n作者：${item.author}`
+      : `您确定要删除 "${item.name}" 吗？\n此操作不可撤销！`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const result = await blackMarketService.deleteItem(item.id);
+      if (result.success) {
+        alert('删除成功');
+        loadData(); // 重新加载数据
+      } else {
+        alert(`删除失败：${result.message}`);
+      }
+    } catch (error) {
+      console.error('删除失败:', error);
+      alert('删除失败，请稍后重试');
+    }
+  };
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -665,6 +706,17 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
                         >
                           下载
                         </button>
+                        {(currentUser?.username === item.author || 
+                          currentUser?.role === 'admin' || 
+                          currentUser?.role === 'super_admin') && (
+                          <button 
+                            className="delete-button" 
+                            onClick={(e) => handleDelete(item, e)}
+                            title={currentUser?.username === item.author ? "删除我的内容" : "管理员删除"}
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -703,6 +755,12 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
           onDownload={handleDownload}
           onImportCharacter={handleImportCharacter}
           onImportWorldBook={handleImportWorldBook}
+          onDelete={handleDelete}
+          canDelete={detailItem ? (
+            currentUser?.username === detailItem.author || 
+            currentUser?.role === 'admin' || 
+            currentUser?.role === 'super_admin'
+          ) : false}
         />
       </div>
     </div>

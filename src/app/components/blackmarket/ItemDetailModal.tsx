@@ -12,9 +12,20 @@ interface ItemDetailModalProps {
   onDownload: (item: BlackMarketItem) => void;
   onImportCharacter?: (item: BlackMarketItem) => void;
   onImportWorldBook?: (item: BlackMarketItem) => void;
+  onDelete?: (item: BlackMarketItem) => void;
+  canDelete?: boolean;
 }
 
-export default function ItemDetailModal({ open, item, onClose, onDownload, onImportCharacter, onImportWorldBook }: ItemDetailModalProps) {
+export default function ItemDetailModal({ 
+  open, 
+  item, 
+  onClose, 
+  onDownload, 
+  onImportCharacter, 
+  onImportWorldBook,
+  onDelete,
+  canDelete = false
+}: ItemDetailModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -86,6 +97,15 @@ export default function ItemDetailModal({ open, item, onClose, onDownload, onImp
                 </button>
               )}
               <button className="download-button" onClick={() => onDownload(item)}>下载</button>
+              {canDelete && onDelete && (
+                <button 
+                  className="delete-button" 
+                  onClick={() => onDelete(item)}
+                  title="删除此内容"
+                >
+                  删除
+                </button>
+              )}
               <button className="bm-detail-secondary" onClick={onClose}>关闭</button>
             </div>
           </div>

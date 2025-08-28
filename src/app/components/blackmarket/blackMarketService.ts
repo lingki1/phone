@@ -170,6 +170,30 @@ class BlackMarketService {
     }
   }
 
+  // 删除物品
+  async deleteItem(id: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/items/${id}`, {
+        method: 'DELETE',
+        credentials: 'include', // 包含认证cookie
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || '删除失败');
+      }
+
+      const data = await response.json();
+      return { success: true, message: data.message || '删除成功' };
+    } catch (error) {
+      console.error('删除物品失败:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : '删除失败' 
+      };
+    }
+  }
+
   // 解析角色卡PNG中的元数据
   async parseCharacterMetadata(file: File): Promise<Record<string, unknown>> {
     try {
