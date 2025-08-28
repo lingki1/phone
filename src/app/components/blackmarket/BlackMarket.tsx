@@ -155,7 +155,9 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+const [tagsExpanded, setTagsExpanded] = useState(false);
+const [maxVisibleTags, setMaxVisibleTags] = useState(8);
+const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'downloads' | 'name'>('date');
   const [currentUser, setCurrentUser] = useState<{username?: string; role?: string} | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -177,6 +179,30 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
       }
     };
     fetchUser();
+  }, []);
+
+  // 根据屏幕宽度设置最大可见标签数
+  useEffect(() => {
+    const updateMaxVisibleTags = () => {
+      const width = window.innerWidth;
+      if (width <= 480) {
+        setMaxVisibleTags(3); // 小屏幕显示3个
+      } else if (width <= 768) {
+        setMaxVisibleTags(5); // 中等屏幕显示5个
+      } else {
+        setMaxVisibleTags(8); // 大屏幕显示8个
+      }
+    };
+
+    // 初始化
+    updateMaxVisibleTags();
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', updateMaxVisibleTags);
+    
+    return () => {
+      window.removeEventListener('resize', updateMaxVisibleTags);
+    };
   }, []);
 
   // 处理删除
@@ -606,32 +632,48 @@ export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImpo
             />
           </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
-            className="blackmarket-sort-select"
-          >
-            <option value="date">按时间排序</option>
-            <option value="downloads">按下载量排序</option>
-            <option value="name">按名称排序</option>
-          </select>
+                      <div className="blackmarket-tags-sort-row">
+              <div className="blackmarket-tags-filter">
+                {getAllTags().slice(0, tagsExpanded ? undefined : maxVisibleTags).map(tag => (
+                  <button
+                    key={tag}
+                    className={`blackmarket-tag-filter ${selectedTags.includes(tag) ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedTags(prev =>
+                        prev.includes(tag)
+                          ? prev.filter(t => t !== tag)
+                          : [...prev, tag]
+                      );
+                    }}
+                  >
+                    {tag}
+                  </button>
+                ))}
+                {getAllTags().length > maxVisibleTags && (
+                  <button
+                    className="blackmarket-tags-toggle"
+                    onClick={() => setTagsExpanded(!tagsExpanded)}
+                  >
+                    {tagsExpanded ? '收起' : `展开 (+${getAllTags().length - maxVisibleTags})`}
+                  </button>
+                )}
+                {/* 开发模式调试信息 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <span className="blackmarket-debug-info" style={{ fontSize: '10px', color: '#999', marginLeft: '8px' }}>
+                    显示: {Math.min(getAllTags().length, tagsExpanded ? getAllTags().length : maxVisibleTags)}/{getAllTags().length}
+                  </span>
+                )}
+              </div>
 
-          <div className="blackmarket-tags-filter">
-            {getAllTags().slice(0, 5).map(tag => (
-              <button
-                key={tag}
-                className={`blackmarket-tag-filter ${selectedTags.includes(tag) ? 'active' : ''}`}
-                onClick={() => {
-                  setSelectedTags(prev =>
-                    prev.includes(tag)
-                      ? prev.filter(t => t !== tag)
-                      : [...prev, tag]
-                  );
-                }}
-              >
-                {tag}
-              </button>
-            ))}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
+              className="blackmarket-sort-select"
+            >
+              <option value="date">按时间</option>
+              <option value="downloads">按下载</option>
+              <option value="name">按名称</option>
+            </select>
           </div>
         </div>
 

@@ -26,7 +26,7 @@ interface PresetData {
 }
 
 // 预设转换工具函数
-const convertMarinaraToWorldBooks = (presetData: PresetData): WorldBook[] => {
+const convertSillytavernToWorldBooks = (presetData: PresetData): WorldBook[] => {
   const worldBooks: WorldBook[] = [];
   
   if (!presetData.prompts || !Array.isArray(presetData.prompts)) {
@@ -78,15 +78,15 @@ const convertMarinaraToWorldBooks = (presetData: PresetData): WorldBook[] => {
 };
 
 // 检测预设格式
-const detectPresetFormat = (data: unknown): 'marinara' | 'unknown' => {
+const detectPresetFormat = (data: unknown): 'sillytavern' | 'unknown' => {
   if (data && typeof data === 'object' && 'prompts' in data) {
     const presetData = data as PresetData;
     if (Array.isArray(presetData.prompts)) {
-      // 检查是否是Marinara格式
+      // 检查是否是Sillytavern格式
       const firstPrompt = presetData.prompts[0];
       if (firstPrompt && typeof firstPrompt === 'object' && 
           'name' in firstPrompt && 'role' in firstPrompt && 'content' in firstPrompt) {
-        return 'marinara';
+        return 'sillytavern';
       }
     }
   }
@@ -110,15 +110,15 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
       // 检测预设格式
       const format = detectPresetFormat(parsed);
       
-      if (format === 'marinara') {
-        // 转换Marinara预设
-        const worldBooks = convertMarinaraToWorldBooks(parsed as PresetData);
+      if (format === 'sillytavern') {
+        // 转换Sillytavern预设
+        const worldBooks = convertSillytavernToWorldBooks(parsed as PresetData);
         if (worldBooks.length === 0) {
           throw new Error('预设中没有找到有效的世界书数据');
         }
         return worldBooks;
       } else {
-        throw new Error('不支持的预设格式，请使用Marinara预设格式');
+        throw new Error('不支持的预设格式，请使用Sillytavern预设格式');
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -259,7 +259,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
 
         {/* 说明文字 */}
         <div className="import-description">
-          <p>导入预设文件（如Marinara预设），自动转换为世界书格式</p>
+          <p>导入预设文件（如Sillytavern预设），自动转换为世界书格式</p>
         </div>
 
         {/* 文件上传 */}

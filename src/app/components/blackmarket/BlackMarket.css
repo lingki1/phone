@@ -239,9 +239,225 @@
   border-color: var(--accent-color, #8b5cf6);
 }
 
-/* 移除旧的blackmarket-filters样式 */
+/* 黑市筛选器样式 */
 .blackmarket-filters {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--bg-secondary, #f8fafc);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.blackmarket-search-container {
+  position: relative;
+}
+
+.blackmarket-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1f2937);
+  transition: border-color 0.2s ease;
+}
+
+.blackmarket-search-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #8b5cf6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.blackmarket-sort-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  font-size: 12px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1f2937);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.blackmarket-sort-select:focus {
+  outline: none;
+  border-color: var(--accent-color, #8b5cf6);
+}
+
+.blackmarket-tags-filter {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  padding: 2px 0;
+  flex-wrap: wrap;
+  align-items: center;
+  max-height: none;
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+.blackmarket-tags-filter::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.blackmarket-tags-sort-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.blackmarket-tags-sort-row .blackmarket-tags-filter {
+  flex: 1;
+  margin: 0;
+}
+
+.blackmarket-tags-sort-row .blackmarket-sort-select {
+  margin: 0;
+}
+
+.blackmarket-tag-filter {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 20px;
+  font-size: 12px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.blackmarket-tag-filter:hover {
+  border-color: var(--accent-color, #8b5cf6);
+  color: var(--accent-color, #8b5cf6);
+}
+
+.blackmarket-tag-filter.active {
+  background: var(--accent-color, #8b5cf6);
+  border-color: var(--accent-color, #8b5cf6);
+  color: white;
+}
+
+.blackmarket-tags-toggle {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 20px;
+  font-size: 12px;
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-left: 8px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.blackmarket-tags-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+  transition: left 0.3s ease;
+}
+
+.blackmarket-tags-toggle:hover::before {
+  left: 100%;
+}
+
+.blackmarket-tags-toggle:hover {
+  border-color: var(--accent-color, #8b5cf6);
+  color: var(--accent-color, #8b5cf6);
+  background: var(--bg-primary, #ffffff);
+}
+
+.blackmarket-tags-toggle:active {
+  transform: translateY(1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .blackmarket-filters {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .blackmarket-search-input {
+    padding: 10px 14px;
+    font-size: 16px; /* 移动端更大的字体 */
+  }
+  
+  .blackmarket-tags-sort-row {
+    gap: 8px;
+  }
+  
+  .blackmarket-sort-select {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 70px;
+  }
+  
+  .blackmarket-tag-filter {
+    padding: 6px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  
+  .blackmarket-tags-toggle {
+    padding: 5px 10px;
+    font-size: 11px;
+    margin-left: 6px;
+  }
+  
+  /* 中等屏幕优化标签布局 */
+  .blackmarket-tags-filter {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .blackmarket-tags-sort-row {
+    gap: 6px;
+  }
+  
+  .blackmarket-sort-select {
+    min-width: 60px;
+    font-size: 11px;
+  }
+  
+  .blackmarket-tag-filter {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .blackmarket-tags-toggle {
+    padding: 4px 8px;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  
+  /* 小屏幕优化标签布局 */
+  .blackmarket-tags-filter {
+    gap: 4px;
+    padding: 1px 0;
+  }
+  
+  /* 小屏幕标签更紧凑 */
+  .blackmarket-tag-filter {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 16px;
+  }
 }
 
 .blackmarket-content {
