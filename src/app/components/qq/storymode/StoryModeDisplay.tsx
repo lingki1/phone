@@ -67,16 +67,55 @@ export default function StoryModeDisplay({
     });
   }, []);
 
+  // 解析装饰文本的函数
+  const parseDecoratedText = useCallback((text: string) => {
+    // 安全地解析HTML标签，只允许特定的标签
+    const parseHtml = (html: string) => {
+      // 移除所有危险的标签和属性
+      const cleanHtml = html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+        .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+        .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+        .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/javascript:/gi, '');
+      
+      return <span dangerouslySetInnerHTML={{ __html: cleanHtml }} />;
+    };
+
+    // 先处理时间标记：[时间]
+    text = text.replace(/\[(.*?)\]/g, '<span class="story-time-mark">$1</span>');
+    
+    // 处理括号格式：(文本)
+    text = text.replace(/\((.*?)\)/g, '<span class="story-mental-text">$1</span>');
+    
+    // 处理加粗：**文本**
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // 处理斜体：*文本* (需要更精确的匹配，避免与加粗冲突)
+    text = text.replace(/(?<!\*)\*(?!\*)([^*]+?)(?<!\*)\*(?!\*)/g, (match, content) => {
+      // 如果内容包含引号，说明是对话
+      if (content.includes('"') || content.includes('"') || content.includes('"')) {
+        return `<em>${content}</em>`;
+      }
+      // 否则作为声音效果处理
+      return `<span class="story-sound-effect">${content}</span>`;
+    });
+    
+    return parseHtml(text);
+  }, []);
+
   const renderStoryContent = useCallback((content: string) => {
     // 处理换行符，将\n转换为<br>标签
-    const contentWithBreaks = content.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < content.split('\n').length - 1 && <br />}
+    const lines = content.split('\n');
+    
+    return lines.map((line, lineIndex) => (
+      <React.Fragment key={lineIndex}>
+        {parseDecoratedText(line)}
+        {lineIndex < lines.length - 1 && <br />}
       </React.Fragment>
     ));
-    return <span>{contentWithBreaks}</span>;
-  }, []);
+  }, [parseDecoratedText]);
 
   // 长按检测逻辑
   const handleLongPress = useCallback((messageId: string) => {
@@ -102,6 +141,7 @@ export default function StoryModeDisplay({
     const isUser = msg.role === 'user';
     const isEditing = editingMessage?.id === msg.id;
     const isActionsVisible = visibleActions.has(msg.id);
+    const isError = msg.senderName === '系统' || msg.id.includes('_story_error_');
     
     // 长按检测逻辑
     const handleMouseDown = () => {
@@ -135,7 +175,7 @@ export default function StoryModeDisplay({
     return (
       <div 
         key={msg.id} 
-        className={`story-message ${isUser ? 'story-user-message' : 'story-ai-message'}`}
+        className={`story-message ${isUser ? 'story-user-message' : isError ? 'story-error-message' : 'story-ai-message'}`}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
       >

@@ -880,23 +880,50 @@ export default function ChatInterface({
     });
 
     if (!effectiveApiConfig.proxyUrl || !effectiveApiConfig.apiKey || !effectiveApiConfig.model) {
-      // 如果没有API配置，显示提示消息
-      const apiConfigMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。',
-        timestamp: Date.now(),
-        senderName: '系统',
-        senderAvatarId: undefined // 系统消息不需要头像
-      };
+      // 根据模式处理API配置缺失错误
+      const errorContent = '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。';
+      
+      if (isStoryModeCall) {
+        // 剧情模式：将错误消息添加到剧情模式消息列表
+        const errorMessage: Message = {
+          id: `${chat.id}_story_error_${Date.now()}`,
+          role: 'assistant',
+          content: errorContent,
+          timestamp: Date.now(),
+          type: 'text',
+          senderName: '系统',
+          isRead: true
+        };
+        
+        // 添加到剧情模式消息列表
+        setStoryModeMessages(prev => [...prev, errorMessage]);
+        
+        // 保存到IndexedDB
+        try {
+          await dataManager.addStoryModeMessage(chat.id, errorMessage);
+          console.log('Story mode API config error message saved to IndexedDB');
+        } catch (dbError) {
+          console.error('Failed to save story mode API config error message to IndexedDB:', dbError);
+        }
+      } else {
+        // 普通模式：将错误消息添加到聊天记录
+        const apiConfigMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: errorContent,
+          timestamp: Date.now(),
+          senderName: '系统',
+          senderAvatarId: undefined // 系统消息不需要头像
+        };
 
-      const chatWithMessage = {
-        ...updatedChat,
-        messages: [...updatedChat.messages, apiConfigMessage],
-        lastMessage: apiConfigMessage.content,
-        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      };
-      onUpdateChat(chatWithMessage);
+        const chatWithMessage = {
+          ...updatedChat,
+          messages: [...updatedChat.messages, apiConfigMessage],
+          lastMessage: apiConfigMessage.content,
+          timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        };
+        onUpdateChat(chatWithMessage);
+      }
       
       // 清理AI任务状态，避免页面锁死
       setIsLoading(false);
@@ -1086,23 +1113,48 @@ export default function ChatInterface({
         }
       }
       
-      // API请求失败时显示错误提示
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: errorContent,
-        timestamp: Date.now(),
-        senderName: '系统',
-        senderAvatarId: undefined // 系统消息不需要头像
-      };
+      // 根据模式处理错误
+      if (isStoryModeCall) {
+        // 剧情模式：将错误消息添加到剧情模式消息列表
+        const errorMessage: Message = {
+          id: `${chat.id}_story_error_${Date.now()}`,
+          role: 'assistant',
+          content: errorContent,
+          timestamp: Date.now(),
+          type: 'text',
+          senderName: '系统',
+          isRead: true
+        };
+        
+        // 添加到剧情模式消息列表
+        setStoryModeMessages(prev => [...prev, errorMessage]);
+        
+        // 保存到IndexedDB
+        try {
+          await dataManager.addStoryModeMessage(chat.id, errorMessage);
+          console.log('Story mode error message saved to IndexedDB');
+        } catch (dbError) {
+          console.error('Failed to save story mode error message to IndexedDB:', dbError);
+        }
+      } else {
+        // 普通模式：将错误消息添加到聊天记录
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: errorContent,
+          timestamp: Date.now(),
+          senderName: '系统',
+          senderAvatarId: undefined // 系统消息不需要头像
+        };
 
-      const chatWithMessage = {
-        ...updatedChat,
-        messages: [...updatedChat.messages, errorMessage],
-        lastMessage: errorMessage.content,
-        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      };
-      onUpdateChat(chatWithMessage);
+        const chatWithMessage = {
+          ...updatedChat,
+          messages: [...updatedChat.messages, errorMessage],
+          lastMessage: errorMessage.content,
+          timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        };
+        onUpdateChat(chatWithMessage);
+      }
     } finally {
       setIsLoading(false);
       setCurrentAiUser(null); // 清除当前AI用户信息

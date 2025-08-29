@@ -71,6 +71,64 @@
   margin-right: auto;
 }
 
+/* 剧情模式错误消息样式 */
+.story-error-message {
+  border-left-color: #f44336;
+  background: linear-gradient(135deg, #fff8f8 0%, #ffebee 100%);
+  align-self: flex-start;
+  margin-right: auto;
+}
+
+.story-error-message .story-message-sender {
+  color: #d32f2f;
+}
+
+.story-error-message .story-content-text {
+  color: #c62828;
+  font-style: italic;
+}
+
+/* 剧情模式文本装饰样式 */
+.story-content-text strong {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.story-content-text em {
+  font-style: italic;
+  color: #e74c3c;
+}
+
+.story-content-text .story-mental-text {
+  color: #7f8c8d;
+  font-style: italic;
+  background-color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border-left: 3px solid #95a5a6;
+  margin: 0 2px;
+}
+
+.story-content-text .story-time-mark {
+  color: #3498db;
+  font-weight: 600;
+  background-color: #ebf3fd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #bdc3c7;
+  margin: 0 2px;
+}
+
+.story-content-text .story-sound-effect {
+  color: #e67e22;
+  font-weight: 500;
+  background-color: #fef9e7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #f39c12;
+  margin: 0 2px;
+}
+
 .story-message-header {
   display: flex;
   align-items: center;
