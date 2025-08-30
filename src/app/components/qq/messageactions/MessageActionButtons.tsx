@@ -27,13 +27,26 @@ export default function MessageActionButtons({
   onStartBatchDelete,
   isVisible = false
 }: MessageActionButtonsProps) {
-  const handleQuote = () => onQuoteMessage(message);
-  const handleEdit = () => onEditMessage(message.id, message.content);
-  const handleDelete = () => {
+  const handleQuote = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止触发消息点击
+    onQuoteMessage(message);
+  };
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止触发消息点击
+    onEditMessage(message.id, message.content);
+  };
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止触发消息点击
     if (confirm('确定要删除这条消息吗？')) onDeleteMessage(message.id);
   };
-  const handleRegenerate = () => onRegenerateAI?.(message.id);
-  const handleStartBatchDelete = () => onStartBatchDelete?.();
+  const handleRegenerate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止触发消息点击
+    onRegenerateAI?.(message.id);
+  };
+  const handleStartBatchDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止触发消息点击
+    onStartBatchDelete?.();
+  };
 
   return (
     <div 
@@ -45,6 +58,7 @@ export default function MessageActionButtons({
         pointerEvents: isVisible ? 'auto' : 'none',
         transition: 'opacity 0.2s ease'
       }}
+      onClick={(e) => e.stopPropagation()} // 防止点击功能按键区域时触发消息点击
     >
       <button className="inline-action-btn" onClick={handleQuote} title="引用" aria-label="引用">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

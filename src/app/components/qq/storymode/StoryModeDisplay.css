@@ -161,8 +161,12 @@
   transition: opacity 0.3s ease;
 }
 
-.story-message:hover .story-message-actions {
+.story-message-actions.visible {
   opacity: 1;
+}
+
+.story-message-actions.hidden {
+  opacity: 0;
 }
 
 .story-action-btn {

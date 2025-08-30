@@ -109,14 +109,7 @@ export default function ChatInterface({
   const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
   
   // 跟踪是否有新的用户消息待AI回复
-  const [hasNewUserMessage, setHasNewUserMessage] = useState(() => {
-    // 初始化时检查最后一条消息是否为用户消息
-    if (chat.messages.length > 0) {
-      const lastMessage = chat.messages[chat.messages.length - 1];
-      return lastMessage.role === 'user';
-    }
-    return false;
-  });
+  const [hasNewUserMessage, setHasNewUserMessage] = useState(false);
   
   // 使用异步AI状态管理
   const { isPending, startAiTask, endAiTask } = useAiPendingState(chat.id);
@@ -284,6 +277,14 @@ export default function ChatInterface({
         const messages = await dataManager.getStoryModeMessages(chat.id);
         setStoryModeMessages(messages);
         console.log('Story mode messages loaded:', messages.length, 'messages');
+        
+        // 检查剧情模式消息中是否有未回复的用户消息
+        if (messages.length > 0) {
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage.role === 'user') {
+            setHasNewUserMessage(true);
+          }
+        }
       } catch (error) {
         console.error('Failed to load story mode messages:', error);
         setStoryModeMessages([]);
@@ -326,6 +327,26 @@ export default function ChatInterface({
 
     trySendFirstMsg();
   }, [isStoryMode, chat.id, chat.name, chat.settings.firstMsg, storyModeMessages.length, dbPersonalSettings?.userNickname, personalSettings?.userNickname]);
+
+  // 监听剧情模式消息变化，更新hasNewUserMessage状态
+  useEffect(() => {
+    if (isStoryMode && storyModeMessages.length > 0) {
+      const lastMessage = storyModeMessages[storyModeMessages.length - 1];
+      const hasUnrepliedUserMessage = lastMessage.role === 'user';
+      setHasNewUserMessage(hasUnrepliedUserMessage);
+      console.log('Story mode hasNewUserMessage updated:', hasUnrepliedUserMessage);
+    }
+  }, [isStoryMode, storyModeMessages]);
+
+  // 监听普通聊天模式消息变化，更新hasNewUserMessage状态
+  useEffect(() => {
+    if (!isStoryMode && chat.messages.length > 0) {
+      const lastMessage = chat.messages[chat.messages.length - 1];
+      const hasUnrepliedUserMessage = lastMessage.role === 'user';
+      setHasNewUserMessage(hasUnrepliedUserMessage);
+      console.log('Chat mode hasNewUserMessage updated:', hasUnrepliedUserMessage);
+    }
+  }, [isStoryMode, chat.messages]);
 
   // 当AI开始回复时，自动滚动到底部
   useEffect(() => {
@@ -1894,6 +1915,9 @@ export default function ChatInterface({
     setStoryModeInput('');
     setMessage('');
     
+    // 重置hasNewUserMessage状态，让useEffect重新计算
+    setHasNewUserMessage(false);
+    
     // 模式切换后自动滚动到最新消息
     setTimeout(() => {
       forceScrollToBottom();
@@ -1908,6 +1932,7 @@ export default function ChatInterface({
   }, [isStoryMode, chat.id, forceScrollToBottom]);
 
   const handleStoryModeSend = useCallback(async (content: string) => {
+    console.log('handleStoryModeSend called:', { content, isLoading, isPending, autoGenerateOnSend });
     if (!content.trim() || isLoading) return;
 
     // 确保聊天对象有avatarMap
@@ -1953,12 +1978,14 @@ export default function ChatInterface({
     
     // 标记有新的用户消息待AI回复
     setHasNewUserMessage(true);
+    console.log('Story mode message sent, hasNewUserMessage set to true');
     
     // 清空输入框
     setStoryModeInput('');
     
     // 如果开启“发送键生成回复”，则自动触发剧情模式AI
     if (autoGenerateOnSend && !isPending && !isLoading) {
+      console.log('Auto-generating AI response for story mode');
       startAiTask();
       setHasNewUserMessage(false);
       if (triggerAiResponseRef.current) {
@@ -1968,10 +1995,13 @@ export default function ChatInterface({
         };
         triggerAiResponseRef.current(storyModeChat, true);
       }
+    } else {
+      console.log('Not auto-generating:', { autoGenerateOnSend, isPending, isLoading });
     }
   }, [isLoading, chat, quotedMessage, autoGenerateOnSend, isPending, startAiTask, storyModeMessages]);
 
   const handleStoryModeGenerate = useCallback(async () => {
+    console.log('handleStoryModeGenerate called:', { isLoading, isPending, hasNewUserMessage });
     if (isLoading || isPending || !hasNewUserMessage) return;
 
     // 开始AI任务
@@ -2496,7 +2526,7 @@ export default function ChatInterface({
               <button 
                 className="generate-btn"
                 onClick={isStoryMode ? handleStoryModeGenerate : handleGenerateAI}
-                disabled={isLoading || isPending || !hasNewUserMessage || chat.messages.length === 0}
+                disabled={isLoading || isPending || !hasNewUserMessage || (isStoryMode ? storyModeMessages.length === 0 : chat.messages.length === 0)}
                 title={
                   isStoryMode 
                     ? (hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成")

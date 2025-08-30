@@ -117,11 +117,6 @@ export default function StoryModeDisplay({
     ));
   }, [parseDecoratedText]);
 
-  // 长按检测逻辑
-  const handleLongPress = useCallback((messageId: string) => {
-    setVisibleActions(prev => new Set([...prev, messageId]));
-  }, []);
-
   // 点击外部关闭操作按钮
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -143,41 +138,27 @@ export default function StoryModeDisplay({
     const isActionsVisible = visibleActions.has(msg.id);
     const isError = msg.senderName === '系统' || msg.id.includes('_story_error_');
     
-    // 长按检测逻辑
-    const handleMouseDown = () => {
-      const timer = setTimeout(() => {
-        handleLongPress(msg.id);
-      }, 500);
-      
-      const handleMouseUp = () => {
-        clearTimeout(timer);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('mouseleave', handleMouseUp);
-      };
-      
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('mouseleave', handleMouseUp);
-    };
-
-    const handleTouchStart = () => {
-      const timer = setTimeout(() => {
-        handleLongPress(msg.id);
-      }, 500);
-      
-      const handleTouchEnd = () => {
-        clearTimeout(timer);
-        document.removeEventListener('touchend', handleTouchEnd);
-      };
-      
-      document.addEventListener('touchend', handleTouchEnd);
-    };
+      // 点击切换功能按键显示
+  const handleMessageClick = () => {
+    if (isActionsVisible) {
+      // 如果已显示，则隐藏
+      setVisibleActions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(msg.id);
+        return newSet;
+      });
+    } else {
+      // 如果未显示，则显示
+      setVisibleActions(prev => new Set([...prev, msg.id]));
+    }
+  };
     
     return (
       <div 
         key={msg.id} 
         className={`story-message ${isUser ? 'story-user-message' : isError ? 'story-error-message' : 'story-ai-message'}`}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onClick={handleMessageClick}
+        style={{ cursor: 'pointer' }}
       >
         <div className="story-message-header">
           <div className="story-message-info">
@@ -195,6 +176,7 @@ export default function StoryModeDisplay({
               pointerEvents: isActionsVisible ? 'auto' : 'none',
               transition: 'opacity 0.2s ease'
             }}
+            onClick={(e) => e.stopPropagation()} // 防止点击功能按键时触发消息点击
           >
             <button 
               className="story-action-btn"
@@ -241,17 +223,24 @@ export default function StoryModeDisplay({
                 onChange={(e) => setEditingMessage({ ...editingMessage, content: e.target.value })}
                 className="story-edit-textarea"
                 autoFocus
+                onClick={(e) => e.stopPropagation()} // 防止点击编辑框时触发消息点击
               />
               <div className="story-edit-actions">
                 <button 
                   className="story-save-btn"
-                  onClick={onSaveEdit}
+                  onClick={(e) => {
+                    e.stopPropagation(); // 防止触发消息点击
+                    onSaveEdit();
+                  }}
                 >
                   保存
                 </button>
                 <button 
                   className="story-cancel-btn"
-                  onClick={onCancelEdit}
+                  onClick={(e) => {
+                    e.stopPropagation(); // 防止触发消息点击
+                    onCancelEdit();
+                  }}
                 >
                   取消
                 </button>
@@ -265,7 +254,7 @@ export default function StoryModeDisplay({
         </div>
       </div>
     );
-  }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage, visibleActions, handleLongPress]);
+  }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage, visibleActions]);
 
   return (
     <div className="story-display-container" ref={storyContainerRef}>

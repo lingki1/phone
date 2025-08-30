@@ -51,49 +51,16 @@ const MessageItem = memo(({
   setEditingMessage
 }: MessageItemProps) => {
   const [showActions, setShowActions] = useState(false);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
-  // 长按检测逻辑
-  const handleMouseDown = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-    }
-    
-    longPressTimerRef.current = setTimeout(() => {
+  // 点击切换功能按键显示
+  const handleMessageClick = () => {
+    if (showActions) {
+      // 如果已显示，则隐藏
+      setShowActions(false);
+    } else {
+      // 如果未显示，则显示
       setShowActions(true);
-    }, 500); // 500ms长按触发
-  };
-
-  const handleMouseUp = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
-  // 触摸设备支持
-  const handleTouchStart = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-    }
-    
-    longPressTimerRef.current = setTimeout(() => {
-      setShowActions(true);
-    }, 500);
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
     }
   };
 
@@ -110,15 +77,6 @@ const MessageItem = memo(({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showActions]);
-
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
 
   // 获取发送者信息
   const senderInfo = React.useMemo(() => {
@@ -147,15 +105,14 @@ const MessageItem = memo(({
       if (msg.senderAvatarId && chat.avatarMap?.[msg.senderAvatarId]) {
         avatar = chat.avatarMap[msg.senderAvatarId];
       } else {
-        // 回退到传统方式 - 从群成员中查找或使用最新的AI头像
-        if (chat.isGroup && chat.members && msg.senderName) {
+        // 回退到传统方式
+        if (chat.isGroup && chat.members) {
           const member = chat.members.find(m => m.originalName === msg.senderName);
-          if (member) {
+          if (member && member.avatar) {
             avatar = member.avatar;
             name = member.groupNickname;
           }
         } else {
-          // 单聊情况：使用最新的AI头像，确保头像更新后能立即显示
           avatar = chat.settings.aiAvatar || chat.avatar;
         }
       }
@@ -165,10 +122,10 @@ const MessageItem = memo(({
         avatar: avatar
       };
     }
-  }, [msg.role, msg.senderName, msg.senderAvatarId, chat.isGroup, chat.members, chat.name, chat.avatar, chat.avatarMap, chat.settings, dbPersonalSettings, personalSettings]);
+  }, [msg, chat, dbPersonalSettings, personalSettings]);
 
-  // 检查是否为连续消息
-  const isConsecutiveMessage = React.useMemo(() => {
+  // 检查是否为连续消息（暂时未使用）
+  const _isConsecutiveMessage = React.useMemo(() => {
     if (index === 0) return false;
     
     const prevIndex = _totalMessages - 51 + index - 1;
@@ -182,17 +139,13 @@ const MessageItem = memo(({
   return (
     <div 
       ref={messageRef}
-      className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''} ${isConsecutiveMessage ? 'consecutive' : ''}`}
-      onDoubleClick={() => onQuoteMessage(msg)}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      className={`message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${chat.isGroup ? 'group-message' : ''}`}
+      onClick={handleMessageClick}
+      style={{ cursor: 'pointer' }}
     >
       <div className="message-avatar">
         <Image 
-          src={senderInfo.avatar}
+          src={senderInfo.avatar} 
           alt={senderInfo.name}
           width={42}
           height={42}
@@ -222,10 +175,27 @@ const MessageItem = memo(({
               onChange={(e) => setEditingMessage({...editingMessage, content: e.target.value})}
               className="message-edit-input"
               autoFocus
+              onClick={(e) => e.stopPropagation()} // 防止点击编辑框时触发消息点击
             />
             <div className="message-edit-actions">
-              <button onClick={onSaveEdit} className="edit-save-btn">✅ 保存</button>
-              <button onClick={onCancelEdit} className="edit-cancel-btn">❌ 取消</button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation(); // 防止触发消息点击
+                  onSaveEdit();
+                }} 
+                className="edit-save-btn"
+              >
+                ✅ 保存
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation(); // 防止触发消息点击
+                  onCancelEdit();
+                }} 
+                className="edit-cancel-btn"
+              >
+                ❌ 取消
+              </button>
             </div>
           </div>
         ) : (
