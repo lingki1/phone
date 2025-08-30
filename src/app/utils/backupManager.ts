@@ -71,28 +71,59 @@ class BackupManager {
     return BackupManager.instance;
   }
 
-  // 初始化备份数据库
+  // 初始化备份数据库 - 增强版，支持手机端
   private async initBackupDB(): Promise<void> {
     if (this.backupDB) return;
 
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.BACKUP_DB_NAME, this.BACKUP_DB_VERSION);
       
-      request.onerror = () => reject(new Error('Failed to open backup database'));
+      const timeout = setTimeout(() => {
+        reject(new Error('Backup database open timed out'));
+      }, 10000); // 增加超时时间
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        try {
+          request.onerror = null;
+          request.onsuccess = null;
+          request.onupgradeneeded = null;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (request as any).onblocked = null;
+        } catch {}
+      };
+      
+      request.onerror = () => {
+        cleanup();
+        const error = request.error;
+        console.warn('Backup database open error:', error?.name, error?.message);
+        reject(new Error(`Failed to open backup database: ${error?.name || 'Unknown'}`));
+      };
       
       request.onsuccess = () => {
+        cleanup();
         this.backupDB = request.result;
+        console.log('Backup database initialized successfully');
         resolve();
       };
       
       request.onupgradeneeded = (event) => {
+        console.log('Backup database upgrade needed');
         const db = (event.target as IDBOpenDBRequest).result;
         
         if (!db.objectStoreNames.contains(this.BACKUP_STORE)) {
           const store = db.createObjectStore(this.BACKUP_STORE, { keyPath: 'id' });
           store.createIndex('timestamp', 'timestamp', { unique: false });
           store.createIndex('type', 'type', { unique: false });
+          console.log('Backup database object store created');
         }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (request as any).onblocked = () => {
+        cleanup();
+        console.warn('Backup database blocked by another tab');
+        reject(new Error('Backup database blocked by another tab'));
       };
     });
   }
