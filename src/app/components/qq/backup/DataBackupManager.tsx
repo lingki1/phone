@@ -1021,58 +1021,56 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                  </button>
                </div>
 
-              {showAutoBackupSettings && (
-                <div className="auto-backup-settings">
-                  <div className="setting-item">
-                    <label className="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={autoBackupEnabled}
-                        onChange={(e) => setAutoBackupEnabled(e.target.checked)}
-                        className="setting-checkbox"
-                      />
-                      启用自动备份
-                    </label>
-                  </div>
+                             {showAutoBackupSettings && (
+                 <div className="auto-backup-settings">
+                   <div className="setting-item">
+                     <label className="setting-label">
+                       <input
+                         type="checkbox"
+                         checked={autoBackupEnabled}
+                         onChange={(e) => setAutoBackupEnabled(e.target.checked)}
+                         className="setting-checkbox"
+                       />
+                       启用自动备份
+                     </label>
+                   </div>
 
-                  {autoBackupEnabled && (
-                    <>
-                      <div className="setting-item">
-                        <label className="setting-label">备份间隔：</label>
-                        <div className="interval-inputs">
-                                                     <input
-                             type="number"
-                             min="1"
-                             max={autoBackupUnit === 'minutes' ? 60 : autoBackupUnit === 'hours' ? 168 : 365}
-                             value={autoBackupInterval}
-                             onChange={(e) => setAutoBackupInterval(parseInt(e.target.value) || 1)}
-                             className="interval-input"
-                           />
-                           <select
-                             value={autoBackupUnit}
-                             onChange={(e) => setAutoBackupUnit(e.target.value as 'minutes' | 'hours' | 'days')}
-                             className="unit-select"
-                           >
-                             <option value="minutes">分钟</option>
-                             <option value="hours">小时</option>
-                             <option value="days">天</option>
-                           </select>
-                        </div>
-                      </div>
+                   {autoBackupEnabled && (
+                     <div className="setting-item">
+                       <label className="setting-label">备份间隔：</label>
+                       <div className="interval-inputs">
+                         <input
+                           type="number"
+                           min="1"
+                           max={autoBackupUnit === 'minutes' ? 60 : autoBackupUnit === 'hours' ? 168 : 365}
+                           value={autoBackupInterval}
+                           onChange={(e) => setAutoBackupInterval(parseInt(e.target.value) || 1)}
+                           className="interval-input"
+                         />
+                         <select
+                           value={autoBackupUnit}
+                           onChange={(e) => setAutoBackupUnit(e.target.value as 'minutes' | 'hours' | 'days')}
+                           className="unit-select"
+                         >
+                           <option value="minutes">分钟</option>
+                           <option value="hours">小时</option>
+                           <option value="days">天</option>
+                         </select>
+                       </div>
+                     </div>
+                   )}
 
-                      <div className="setting-item">
-                        <button 
-                          className="save-settings-btn"
-                          onClick={handleSaveAutoBackupSettings}
-                          disabled={isExporting || isImporting}
-                        >
-                          保存设置
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+                   <div className="setting-item">
+                     <button 
+                       className="save-settings-btn"
+                       onClick={handleSaveAutoBackupSettings}
+                       disabled={isExporting || isImporting}
+                     >
+                       保存设置
+                     </button>
+                   </div>
+                 </div>
+               )}
             </div>
 
             <div className="action-section">
