@@ -171,6 +171,14 @@
   transform: translateY(-1px);
 }
 
+.import-button:disabled {
+  background: var(--text-tertiary, #9ca3af);
+  color: var(--text-secondary, #6b7280);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
 .download-button {
   padding: 8px 16px;
   background: var(--accent-color, #8b5cf6);
@@ -186,6 +194,14 @@
 .download-button:hover {
   background: var(--accent-hover, #7c3aed);
   transform: translateY(-1px);
+}
+
+.download-button:disabled {
+  background: var(--text-tertiary, #9ca3af);
+  color: var(--text-secondary, #6b7280);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
 }
 
 .bm-detail-secondary { 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './BlackMarket.css';
 import { CharacterCard, WorldBook as BlackMarketWorldBook, BlackMarketItem } from './types';
 import { UploadModal } from './UploadModal';
@@ -10,6 +10,38 @@ import ItemDetailModal from './ItemDetailModal';
 import { CharacterCardParser } from '../qq/characterimport/CharacterCardParser';
 import { ChatItem, WorldBook } from '../../types/chat';
 
+// 防抖动状态hook
+const useDebounceState = <T extends unknown[]>(callback: (...args: T) => void, delay: number) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedCallback = useCallback((...args: T) => {
+    // 如果正在处理中，直接返回
+    if (isProcessing) {
+      console.log('操作正在进行中，请稍候...');
+      return;
+    }
+
+    // 清除之前的定时器
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // 设置新的定时器
+    timeoutRef.current = setTimeout(() => {
+      setIsProcessing(true);
+      console.log('开始执行操作...');
+      callback(...args);
+      // 操作完成后重置状态
+      setTimeout(() => {
+        setIsProcessing(false);
+        console.log('操作完成，可以继续操作');
+      }, 1000); // 额外1秒冷却时间
+    }, delay);
+  }, [callback, delay, isProcessing]);
+
+  return { debouncedCallback, isProcessing };
+};
 
 interface BlackMarketProps {
   isOpen: boolean;
@@ -397,6 +429,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     }
   };
 
+  // 防抖动的下载处理函数
+  const { debouncedCallback: debouncedHandleDownload, isProcessing: isDownloading } = useDebounceState(handleDownload, 300);
+
   // 处理角色导入
   const handleImportCharacter = async (item: BlackMarketItem) => {
     if (item.type !== 'character') {
@@ -504,6 +539,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     }
   };
 
+  // 防抖动的角色导入处理函数
+  const { debouncedCallback: debouncedHandleImportCharacter, isProcessing: isImportingCharacter } = useDebounceState(handleImportCharacter, 300);
+
   // 处理世界书导入
   const handleImportWorldBook = async (item: BlackMarketItem) => {
     if (item.type !== 'worldbook') {
@@ -595,6 +633,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       alert('导入世界书失败，请稍后重试');
     }
   };
+
+  // 防抖动的世界书导入处理函数
+  const { debouncedCallback: debouncedHandleImportWorldBook, isProcessing: isImportingWorldBook } = useDebounceState(handleImportWorldBook, 300);
 
   if (!isOpen) return null;
 
@@ -741,11 +782,12 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                             className="import-button" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleImportCharacter(item);
+                              debouncedHandleImportCharacter(item);
                             }}
                             title="导入到聊天列表"
+                            disabled={isImportingCharacter}
                           >
-                            导入
+                            {isImportingCharacter ? '导入中...' : '导入'}
                           </button>
                         )}
                         {item.type === 'worldbook' && onImportWorldBook && (
@@ -753,21 +795,23 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                             className="import-button" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleImportWorldBook(item);
+                              debouncedHandleImportWorldBook(item);
                             }}
                             title="导入到世界书"
+                            disabled={isImportingWorldBook}
                           >
-                            导入
+                            {isImportingWorldBook ? '导入中...' : '导入'}
                           </button>
                         )}
                         <button 
                           className="download-button" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDownload(item);
+                            debouncedHandleDownload(item);
                           }}
+                          disabled={isDownloading}
                         >
-                          下载
+                          {isDownloading ? '下载中...' : '下载'}
                         </button>
                         {(currentUser?.username === item.author || 
                           currentUser?.role === 'admin' || 
@@ -815,9 +859,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           open={detailOpen}
           item={detailItem}
           onClose={() => setDetailOpen(false)}
-          onDownload={handleDownload}
-          onImportCharacter={handleImportCharacter}
-          onImportWorldBook={handleImportWorldBook}
+          onDownload={debouncedHandleDownload}
+          onImportCharacter={debouncedHandleImportCharacter}
+          onImportWorldBook={debouncedHandleImportWorldBook}
           onDelete={handleDelete}
           canDelete={detailItem ? (
             currentUser?.username === detailItem.author || 
