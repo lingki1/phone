@@ -346,52 +346,8 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     };
   }, [onOpenApp]);
 
-  // 数据库版本冲突检测和恢复
-  useEffect(() => {
-    const checkAndRecoverDatabase = async () => {
-      try {
-        // 检查是否有数据库版本冲突需要恢复
-        const hasConflict = await databaseRecovery.detectVersionConflict();
-        if (hasConflict) {
-          console.log('检测到数据库版本冲突，开始自动恢复...');
-          
-          try {
-            const recovered = await databaseRecovery.performFullRecovery();
-            if (recovered) {
-              console.log('数据库自动恢复成功！');
-              // 显示成功提示
-              alert('检测到数据库版本冲突，已自动恢复所有数据！');
-            } else {
-              console.log('数据库无需恢复');
-            }
-          } catch (recoveryError) {
-            console.error('数据库自动恢复失败:', recoveryError);
-            // 如果自动恢复失败，尝试手动恢复
-            if (databaseRecovery.hasBackupData()) {
-              console.log('尝试从备份恢复数据...');
-              try {
-                const backupData = databaseRecovery.getBackupData();
-                if (backupData) {
-                  await databaseRecovery.restoreDataToNewDatabase(backupData);
-                  console.log('从备份恢复数据成功');
-                  alert('从备份数据恢复成功！');
-                }
-              } catch (backupError) {
-                console.error('从备份恢复数据失败:', backupError);
-                alert('数据库恢复失败，请联系管理员！');
-              }
-            } else {
-              alert('数据库版本冲突，但无法自动恢复。请手动备份数据后重新安装应用。');
-            }
-          }
-        }
-      } catch (error) {
-        console.error('数据库版本冲突检测失败:', error);
-      }
-    };
-
-    checkAndRecoverDatabase();
-  }, []);
+  // 移除自动数据库版本冲突检测
+  // 让IndexedDB自己处理所有升级，只在用户手动点击时才执行恢复
 
   // 获取当前用户信息
   useEffect(() => {
@@ -699,30 +655,43 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
 
   // 手动触发数据库恢复
   const handleManualDatabaseRecovery = async () => {
-    // 显示备份选项
-    const availableBackups = await backupManager.getAvailableBackups();
-    
-    if (availableBackups.length === 0) {
-      // 没有可用备份，创建新备份
-      if (!confirm('没有找到现有备份。\n\n确定要创建新备份并执行数据库恢复吗？\n\n注意：此操作可能需要几分钟时间。')) {
+    try {
+      // 首先检查是否有版本冲突
+      const hasConflict = await databaseRecovery.detectVersionConflict();
+      
+      if (!hasConflict) {
+        alert('数据库版本正常，无需恢复。\n\n此功能仅在数据库版本降级时使用。');
         return;
       }
       
-      await performFullRecovery();
-      return;
-    }
-    
-    // 有可用备份，让用户选择
-    const backupOptions = availableBackups.map(backup => 
-      `${backup.description} (${(backup.size / 1024 / 1024).toFixed(2)}MB)`
-    ).join('\n');
-    
-    const choice = confirm(`找到以下可用备份：\n\n${backupOptions}\n\n选择操作：\n• 确定：创建新备份并执行完整恢复\n• 取消：从现有备份恢复`);
-    
-    if (choice) {
-      await performFullRecovery();
-    } else {
-      await performBackupOnlyRecovery();
+      // 有版本冲突，显示恢复选项
+      const availableBackups = await backupManager.getAvailableBackups();
+      
+      if (availableBackups.length === 0) {
+        // 没有可用备份，创建新备份
+        if (!confirm('检测到数据库版本冲突，但没有找到现有备份。\n\n确定要创建新备份并执行数据库恢复吗？\n\n注意：此操作可能需要几分钟时间。')) {
+          return;
+        }
+        
+        await performFullRecovery();
+        return;
+      }
+      
+      // 有可用备份，让用户选择
+      const backupOptions = availableBackups.map(backup => 
+        `${backup.description} (${(backup.size / 1024 / 1024).toFixed(2)}MB)`
+      ).join('\n');
+      
+      const choice = confirm(`检测到数据库版本冲突！\n\n找到以下可用备份：\n\n${backupOptions}\n\n选择操作：\n• 确定：创建新备份并执行完整恢复\n• 取消：从现有备份恢复`);
+      
+      if (choice) {
+        await performFullRecovery();
+      } else {
+        await performBackupOnlyRecovery();
+      }
+    } catch (error) {
+      console.error('检查数据库版本冲突失败:', error);
+      alert('检查数据库状态失败，请稍后重试。');
     }
   };
 
@@ -891,6 +860,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
                   className="authuser-item authuser-recovery" 
                   onClick={handleManualDatabaseRecovery}
                   disabled={isRecovering}
+                  title="仅在数据库版本降级时使用"
                 >
                   {isRecovering ? '恢复中...' : '数据库恢复'}
                 </button>

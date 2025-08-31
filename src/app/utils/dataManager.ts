@@ -5,9 +5,10 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 12; // 升级数据库版本以支持剧情模式消息存储
+const DB_VERSION = 13; // 升级数据库版本以支持多组API配置存储
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
+const SAVED_API_CONFIGS_STORE = 'savedApiConfigs';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
 const THEME_SETTINGS_STORE = 'themeSettings';
 const BALANCE_STORE = 'balance';
@@ -117,9 +118,12 @@ class DataManager {
             }
 
             // 创建API配置存储
-            if (!db.objectStoreNames.contains(API_CONFIG_STORE)) {
-              db.createObjectStore(API_CONFIG_STORE, { keyPath: 'id' });
-            }
+                  if (!db.objectStoreNames.contains(API_CONFIG_STORE)) {
+        db.createObjectStore(API_CONFIG_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(SAVED_API_CONFIGS_STORE)) {
+        db.createObjectStore(SAVED_API_CONFIGS_STORE, { keyPath: 'id' });
+      }
 
             // 创建个人信息存储
             if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_STORE)) {
@@ -345,6 +349,66 @@ class DataManager {
           });
         }
       };
+    });
+  }
+
+  // 多组API配置管理方法
+  async saveApiConfigToCollection(config: {
+    name: string;
+    proxyUrl: string;
+    apiKey: string;
+    model: string;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([SAVED_API_CONFIGS_STORE], 'readwrite');
+      const store = transaction.objectStore(SAVED_API_CONFIGS_STORE);
+      const configWithId = {
+        ...config,
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        createdAt: Date.now()
+      };
+      const request = store.put(configWithId);
+
+      request.onerror = () => reject(new Error('Failed to save API config to collection'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async getAllSavedApiConfigs(): Promise<Array<{
+    id: string;
+    name: string;
+    proxyUrl: string;
+    apiKey: string;
+    model: string;
+    createdAt: number;
+  }>> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([SAVED_API_CONFIGS_STORE], 'readonly');
+      const store = transaction.objectStore(SAVED_API_CONFIGS_STORE);
+      const request = store.getAll();
+
+      request.onerror = () => reject(new Error('Failed to get saved API configs'));
+      request.onsuccess = () => {
+        const results = request.result || [];
+        resolve(results.sort((a, b) => b.createdAt - a.createdAt)); // 按创建时间倒序
+      };
+    });
+  }
+
+  async deleteSavedApiConfig(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([SAVED_API_CONFIGS_STORE], 'readwrite');
+      const store = transaction.objectStore(SAVED_API_CONFIGS_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete saved API config'));
+      request.onsuccess = () => resolve();
     });
   }
 

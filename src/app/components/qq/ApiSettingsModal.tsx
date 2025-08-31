@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import './ApiSettingsModal.css';
+import ApiConfigSelector from './apisaving/ApiConfigSelector';
+import SaveConfigDialog from './apisaving/SaveConfigDialog';
+import { SavedApiConfig } from './apisaving/types';
 
 interface ApiConfig {
   proxyUrl: string;
@@ -25,9 +28,8 @@ export default function ApiSettingsModal({
   const [config, setConfig] = useState<ApiConfig>(currentConfig);
   const [models, setModels] = useState<string[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [backgroundActivity, setBackgroundActivity] = useState(false);
-  const [backgroundInterval, setBackgroundInterval] = useState(60);
-  const [maxMemory, setMaxMemory] = useState(20);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // 用于强制刷新选择器
 
   // 从localStorage加载已保存的模型列表
   const loadSavedModels = () => {
@@ -62,14 +64,7 @@ export default function ApiSettingsModal({
       const savedModels = loadSavedModels();
       setModels(savedModels);
       
-      // 从localStorage加载其他设置
-      const savedSettings = localStorage.getItem('globalSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        setBackgroundActivity(settings.enableBackgroundActivity || false);
-        setBackgroundInterval(settings.backgroundActivityInterval || 60);
-        setMaxMemory(settings.maxMemory || 20);
-      }
+      // 移除全局设置加载，因为相关功能已被删除
     }
   }, [isVisible, currentConfig]);
 
@@ -141,29 +136,35 @@ export default function ApiSettingsModal({
     // 保存API配置
     onSave(config);
     
-    // 保存其他全局设置
-    const globalSettings = {
-      enableBackgroundActivity: backgroundActivity,
-      backgroundActivityInterval: backgroundInterval,
-      maxMemory: maxMemory
-    };
-    localStorage.setItem('globalSettings', JSON.stringify(globalSettings));
+    // 移除全局设置保存，因为相关功能已被删除
     
     onClose();
   };
 
-  const handleBackgroundActivityChange = (enabled: boolean) => {
-    if (enabled && !backgroundActivity) {
-      // 从关到开，显示警告
-      const confirmed = confirm(
-        '警告：启用后台角色活动会显著增加API调用次数和费用！\n\n' +
-        '该功能会让AI角色在后台定期活动，即使您不主动聊天也会产生API调用。\n\n' +
-        '确定要启用吗？'
-      );
-      if (!confirmed) return;
-    }
-    setBackgroundActivity(enabled);
+  const handleConfigSelect = (savedConfig: SavedApiConfig) => {
+    // 无论是否重复点击，都重新设置配置
+    // 这样可以确保重复点击同一个配置也能正常切换
+    setConfig({
+      proxyUrl: savedConfig.proxyUrl,
+      apiKey: savedConfig.apiKey,
+      model: savedConfig.model
+    });
+    
+    // 清空模型列表，因为切换了API配置
+    setModels([]);
+    localStorage.removeItem('savedModels');
   };
+
+  const handleSaveConfig = () => {
+    setShowSaveDialog(true);
+  };
+
+  const handleSaveConfigSuccess = () => {
+    // 配置保存成功后的回调，强制刷新选择器
+    setRefreshKey(prev => prev + 1);
+  };
+
+  // 移除智能角色活跃模式相关函数，因为功能已被删除
 
   // 检查当前选择的模型是否在可用模型列表中
   const isCurrentModelAvailable = config.model && models.includes(config.model);
@@ -179,11 +180,28 @@ export default function ApiSettingsModal({
         </div>
         
         <div className="modal-body">
-          <div className="tip-box">
-            <p><strong>提示</strong>: 视频功能正在测试中，推荐使用 
-              <code>gemini-2.5-live</code> 或 <code>gpt-4-vision-preview</code>。
-            </p>
+          {/* API配置选择器 */}
+          <ApiConfigSelector 
+            key={refreshKey} // 使用refreshKey强制重新渲染
+            onConfigSelect={handleConfigSelect}
+            currentConfig={config}
+          />
+          
+          {/* 保存配置按钮 */}
+          <div className="save-config-section">
+            <button 
+              className="save-config-btn" 
+              onClick={handleSaveConfig}
+              disabled={!config.proxyUrl || !config.apiKey || !config.model}
+            >
+              保存当前配置
+            </button>
+            <small className="save-config-hint">
+              保存后可以快速切换不同的API配置
+            </small>
           </div>
+
+
 
           <div className="form-group">
             <label htmlFor="proxy-url">服务器地址</label>
@@ -240,63 +258,7 @@ export default function ApiSettingsModal({
             {isLoadingModels ? '正在获取模型列表...' : '获取可用模型'}
           </button>
 
-          <hr className="divider" />
 
-          <div className="form-group toggle-group">
-            <div className="toggle-label">
-              <label htmlFor="background-activity-switch">
-                智能角色活跃模式
-                <p className="warning-text">
-                  注意：开启后AI会主动互动，可能增加使用费用
-                </p>
-              </label>
-            </div>
-            <input
-              type="checkbox"
-              id="background-activity-switch"
-              checked={backgroundActivity}
-              onChange={(e) => handleBackgroundActivityChange(e.target.checked)}
-            />
-          </div>
-
-          <div className="form-group toggle-group">
-            <div className="toggle-label">
-              <label htmlFor="background-interval-input">
-                活跃检测频率
-                <p className="info-text">
-                  推荐 60-300 秒，数值越大越省费用，但响应会稍慢
-                </p>
-              </label>
-            </div>
-            <input
-              type="number"
-              id="background-interval-input"
-              min="30"
-              value={backgroundInterval}
-              onChange={(e) => setBackgroundInterval(parseInt(e.target.value) || 60)}
-              className="number-input"
-            />
-          </div>
-
-          <div className="form-group toggle-group">
-            <div className="toggle-label">
-              <label htmlFor="max-memory-input">
-                最大聊天记录
-                <p className="info-text">
-                  每个聊天保留的最大消息数量，数值越大记忆越完整但性能稍慢
-                </p>
-              </label>
-            </div>
-            <input
-              type="number"
-              id="max-memory-input"
-              min="5"
-              max="100"
-              value={maxMemory}
-              onChange={(e) => setMaxMemory(parseInt(e.target.value) || 20)}
-              className="number-input"
-            />
-          </div>
         </div>
 
         <div className="modal-footer">
@@ -304,6 +266,14 @@ export default function ApiSettingsModal({
           <button className="save-btn" onClick={handleSave}>保存配置</button>
         </div>
       </div>
+      
+      {/* 保存配置对话框 */}
+      <SaveConfigDialog
+        isVisible={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onSave={handleSaveConfigSuccess}
+        currentConfig={config}
+      />
     </div>
   );
 } 

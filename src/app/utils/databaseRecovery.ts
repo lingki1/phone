@@ -1,6 +1,9 @@
 // 数据库版本冲突自动恢复工具
 import { dataManager } from './dataManager';
 import { backupManager } from './backupManager';
+
+// 从dataManager获取当前数据库版本
+const CURRENT_DB_VERSION = 13; // 与dataManager.ts中的DB_VERSION保持一致
 import type { ChatItem, ApiConfig, WorldBook } from '../types/chat';
 import type { TransactionRecord } from '../types/money';
 import type { PresetConfig } from '../types/preset';
@@ -61,6 +64,16 @@ class DatabaseRecovery {
   async detectVersionConflict(): Promise<boolean> {
     try {
       console.log('开始检测数据库版本冲突...');
+      
+      // 检查是否已经处理过版本冲突
+      const lastRecoveryTime = localStorage.getItem('lastDatabaseRecovery');
+      const now = Date.now();
+      
+      // 如果最近5分钟内已经进行过恢复，跳过检测
+      if (lastRecoveryTime && (now - parseInt(lastRecoveryTime)) < 5 * 60 * 1000) {
+        console.log('最近已进行过数据库恢复，跳过检测');
+        return false;
+      }
       
       // 方法1: 尝试打开数据库，检查版本冲突
       const hasConflict = await this.checkVersionConflict();
@@ -133,8 +146,8 @@ class DatabaseRecovery {
           db.close();
           
           // 如果数据库版本高于当前代码版本，说明存在版本冲突
-          if (currentVersion > 12) {
-            console.warn(`检测到版本冲突：数据库版本(${currentVersion}) > 代码版本(12)`);
+          if (currentVersion > CURRENT_DB_VERSION) {
+            console.warn(`检测到版本冲突：数据库版本(${currentVersion}) > 代码版本(${CURRENT_DB_VERSION})`);
             resolve(true);
           } else {
             console.log('数据库版本正常，无冲突');
@@ -692,6 +705,9 @@ class DatabaseRecovery {
       // 重新初始化数据库
       await dataManager.initDB();
       
+      // 等待一小段时间确保数据库完全初始化
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // 恢复聊天数据
       if (backupData.chats && backupData.chats.length > 0) {
         for (const chat of backupData.chats) {
@@ -847,6 +863,9 @@ class DatabaseRecovery {
       
       // 5. 清理备份标记
       localStorage.removeItem('databaseRecoveryBackup');
+      
+      // 6. 记录恢复完成时间，避免重复恢复
+      localStorage.setItem('lastDatabaseRecovery', Date.now().toString());
       
       console.log('数据库恢复流程完成！');
       return true;
