@@ -178,10 +178,10 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
             placeholder="请输入世界书内容，这些内容将作为AI聊天的背景设定..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            maxLength={10000}
+            maxLength={20000}
           />
           {errors.content && <span className="error-message">{errors.content}</span>}
-          <div className="char-count">{content.length}/10000</div>
+          <div className="char-count">{content.length}/20000</div>
         </div>
       </div>
 
