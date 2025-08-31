@@ -95,7 +95,7 @@ export default function SendRedPacket({
         {/* 头部 */}
         <div className="red-packet-header">
           <button 
-            className="close-btn" 
+            className="redpacket-close-btn" 
             onClick={handleClose}
             disabled={isLoading}
           >

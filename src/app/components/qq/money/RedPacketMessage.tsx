@@ -174,7 +174,7 @@ export default function RedPacketMessage({
         <div className="red-packet-modal-overlay" onClick={() => setShowReceiveModal(false)}>
           <div className="red-packet-modal-content" onClick={(e) => e.stopPropagation()}>
             <button
-              className="modal-close-btn"
+              className="redpacket-modal-close-btn"
               onClick={() => setShowReceiveModal(false)}
             >
               ×

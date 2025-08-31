@@ -45,7 +45,7 @@
   text-align: center;
 }
 
-.red-packet-header .close-btn {
+.red-packet-header .redpacket-close-btn {
   position: absolute;
   left: 16px;
   top: 50%;
@@ -64,11 +64,11 @@
   transition: background-color 0.2s;
 }
 
-.red-packet-header .close-btn:hover:not(:disabled) {
+.red-packet-header .redpacket-close-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.red-packet-header .close-btn:disabled {
+.red-packet-header .redpacket-close-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -287,7 +287,7 @@
   }
   
   /* 确保触摸目标大小适当 */
-  .red-packet-header .close-btn {
+  .red-packet-header .redpacket-close-btn {
     width: 44px;
     height: 44px;
     font-size: 20px;

@@ -26,7 +26,7 @@ export default function EditFriendModal({
   chat
 }: EditFriendModalProps) {
   const [friendName, setFriendName] = useState('');
-  const [friendPersona, setFriendPersona] = useState(mode === 'create' ? '你是谁呀。' : '');
+  const [friendPersona, setFriendPersona] = useState(mode === 'create' ? '请填写角色描述...' : '');
   const [avatarPreview, setAvatarPreview] = useState('');
   const [firstMsg, setFirstMsg] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -43,7 +43,7 @@ export default function EditFriendModal({
     } else if (mode === 'create' && isVisible) {
       // 重置为创建模式
       setFriendName('');
-      setFriendPersona('你是谁呀。');
+      setFriendPersona('请填写角色描述...');
       setAvatarPreview('');
       setFirstMsg('');
     }
@@ -140,7 +140,7 @@ export default function EditFriendModal({
       setAvatarPreview(chat.avatar || '');
     } else if (mode === 'create') {
       setFriendName('');
-      setFriendPersona('你是谁呀。');
+      setFriendPersona('请填写角色描述...');
       setAvatarPreview('');
     }
     onClose();
