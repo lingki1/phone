@@ -1,0 +1,255 @@
+/* Unicode表情选择器样式 */
+.unicode-emoji-picker {
+  position: absolute;
+  left: 0;
+  width: 320px;
+  height: 400px;
+  background: #ffffff;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: emojiPickerSlideUp 0.2s ease-out;
+}
+
+/* 默认向上弹窗 */
+.unicode-emoji-picker.picker-top {
+  bottom: 100%;
+  margin-bottom: 8px;
+}
+
+/* 当上方空间不足时向下弹窗 */
+.unicode-emoji-picker.picker-bottom {
+  top: 100%;
+  margin-top: 8px;
+}
+
+@keyframes emojiPickerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 表情选择器头部 */
+.emoji-picker-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e8ed;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.emoji-categories {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.emoji-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.category-btn:hover {
+  background: #e9ecef;
+}
+
+.category-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+.category-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 表情选择器内容区域 */
+.emoji-picker-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 12px;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+}
+
+.emoji-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.emoji-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.emoji-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.emoji-btn:hover {
+  background: #f0f2f5;
+  transform: scale(1.1);
+}
+
+.emoji-btn:active {
+  transform: scale(0.95);
+  background: #e4e6eb;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .unicode-emoji-picker {
+    width: 100vw;
+    height: 50vh;
+    left: 0;
+    right: 0;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+  }
+  
+  .emoji-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 16px;
+  }
+  
+  .emoji-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+  
+  .category-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .category-icon {
+    font-size: 20px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .unicode-emoji-picker {
+    background: #1a1a1a;
+    border-color: #333;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .emoji-picker-header {
+    background: #2d2d2d;
+    border-color: #333;
+  }
+  
+  .category-btn:hover {
+    background: #404040;
+  }
+  
+  .category-btn.active {
+    background: #007bff;
+  }
+  
+  .emoji-btn:hover {
+    background: #404040;
+  }
+  
+  .emoji-btn:active {
+    background: #505050;
+  }
+}
+
+/* 表情按钮容器样式 */
+.unicode-emoji-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  position: relative;
+}
+
+.unicode-emoji-btn:hover {
+  background: #f0f2f5;
+  color: #007bff;
+}
+
+.unicode-emoji-btn:active {
+  transform: scale(0.95);
+}
+
+.unicode-emoji-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .unicode-emoji-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .unicode-emoji-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}

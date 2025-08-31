@@ -18,6 +18,7 @@ import { WorldBookAssociationSwitchModal } from './worldbook';
 import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
 import { StoryModeToggle, StoryModeDisplay } from './storymode';
 import { BatchDeleteSelector } from './messageactions';
+import UnicodeEmojiPicker from '../Unicode/UnicodeEmojiPicker';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -94,6 +95,7 @@ export default function ChatInterface({
   const [showWorldBookAssociationSwitch, setShowWorldBookAssociationSwitch] = useState(false);
   const [showGiftHistory, setShowGiftHistory] = useState(false);
   const [showBatchDelete, setShowBatchDelete] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // 剧情模式相关状态
   const [isStoryMode, setIsStoryMode] = useState(false);
@@ -169,6 +171,7 @@ export default function ChatInterface({
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
   // 支持从聊天列表跳转定位到指定消息
   useEffect(() => {
     const handler = (e: Event) => {
@@ -1517,6 +1520,22 @@ export default function ChatInterface({
 
 
 
+  // 处理表情选择
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    if (isStoryMode) {
+      setStoryModeInput(prev => prev + emoji);
+    } else {
+      setMessage(prev => prev + emoji);
+    }
+    setShowEmojiPicker(false);
+    
+    // 延迟调整输入框高度
+    setTimeout(() => {
+      adjustTextareaHeight();
+      textareaRef.current?.focus();
+    }, 0);
+  }, [isStoryMode, adjustTextareaHeight]);
+
   // 处理键盘事件（优化：使用useCallback缓存）
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -2420,6 +2439,35 @@ export default function ChatInterface({
         {/* 功能按钮行 */}
         <div className="action-buttons-row">
           <div className="action-buttons-left">
+            {/* Unicode表情按钮 */}
+            <div style={{ position: 'relative' }}>
+              <button 
+                ref={emojiButtonRef}
+                className="action-btn unicode-emoji-btn"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                disabled={isLoading || isPending}
+                title="表情"
+              >
+                <span className="btn-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                  </svg>
+                </span>
+                <span className="btn-text">表情</span>
+              </button>
+              
+              {/* Unicode表情选择器 - 放在按钮容器内 */}
+              <UnicodeEmojiPicker
+                isOpen={showEmojiPicker}
+                onClose={() => setShowEmojiPicker(false)}
+                onEmojiSelect={handleEmojiSelect}
+                triggerRef={emojiButtonRef}
+              />
+            </div>
+            
             {!isStoryMode && (
               <button 
                 className="action-btn red-packet-btn"
