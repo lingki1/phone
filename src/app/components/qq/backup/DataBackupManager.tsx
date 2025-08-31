@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { dataManager } from '../../../utils/dataManager';
 import { ChatItem, ApiConfig, WorldBook } from '../../../types/chat';
 import { TransactionRecord } from '../../../types/money';
@@ -76,6 +76,419 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 自动备份相关状态
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
+  const [autoBackupInterval, setAutoBackupInterval] = useState(24); // 默认24小时
+  const [autoBackupUnit, setAutoBackupUnit] = useState<'minutes' | 'hours' | 'days'>('hours');
+  const [nextBackupTime, setNextBackupTime] = useState<string>('');
+  const [autoBackupTimer, setAutoBackupTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showAutoBackupSettings, setShowAutoBackupSettings] = useState(false);
+
+  // 加载自动备份设置
+  useEffect(() => {
+    loadAutoBackupSettings();
+    
+    // 将全局备份函数挂载到window对象
+    (window as Window & { performGlobalBackup?: typeof performGlobalBackup }).performGlobalBackup = performGlobalBackup;
+    console.log('全局备份函数已挂载到window对象');
+    
+    // 监听全局自动备份事件
+    const handleAutoBackupTriggered = () => {
+      console.log('收到全局自动备份事件，执行备份');
+      // 使用全局备份函数，不依赖组件状态
+      const globalBackup = (window as Window & { performGlobalBackup?: typeof performGlobalBackup }).performGlobalBackup;
+      if (globalBackup) {
+        console.log('调用全局备份函数');
+        globalBackup();
+      } else {
+        console.error('全局备份函数未找到');
+        alert('自动备份失败：备份函数未找到');
+      }
+    };
+    
+    window.addEventListener('autoBackupTriggered', handleAutoBackupTriggered);
+    console.log('全局自动备份事件监听器已添加');
+    
+    // 清理事件监听器
+    return () => {
+      window.removeEventListener('autoBackupTriggered', handleAutoBackupTriggered);
+      // 注意：不清理全局函数，让它继续工作
+      console.log('组件卸载，但保留全局备份函数');
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 保存自动备份设置到localStorage
+  const saveAutoBackupSettings = () => {
+    const settings = {
+      enabled: autoBackupEnabled,
+      interval: autoBackupInterval,
+      unit: autoBackupUnit,
+      nextBackupTime: nextBackupTime
+    };
+    localStorage.setItem('autoBackupSettings', JSON.stringify(settings));
+  };
+
+  // 加载自动备份设置
+  const loadAutoBackupSettings = () => {
+    try {
+      const settings = localStorage.getItem('autoBackupSettings');
+      if (settings) {
+        const parsed = JSON.parse(settings);
+        setAutoBackupEnabled(parsed.enabled || false);
+        setAutoBackupInterval(parsed.interval || 24);
+        setAutoBackupUnit(parsed.unit || 'hours');
+        setNextBackupTime(parsed.nextBackupTime || '');
+        
+        // 如果启用了自动备份，启动定时器
+        if (parsed.enabled) {
+          console.log('加载设置时发现自动备份已启用，启动定时器');
+          startAutoBackupTimer();
+        }
+      }
+    } catch (error) {
+      console.error('加载自动备份设置失败:', error);
+    }
+  };
+
+  // 启动自动备份定时器
+  const startAutoBackupTimer = () => {
+    console.log('启动自动备份定时器');
+    
+    // 清除现有定时器
+    if (autoBackupTimer) {
+      console.log('清除现有定时器:', autoBackupTimer);
+      clearTimeout(autoBackupTimer);
+    }
+    
+    // 清除全局定时器
+    const existingGlobalTimer = (window as Window & { globalAutoBackupTimer?: NodeJS.Timeout }).globalAutoBackupTimer;
+    if (existingGlobalTimer) {
+      console.log('清除全局定时器:', existingGlobalTimer);
+      clearTimeout(existingGlobalTimer);
+    }
+
+    if (!autoBackupEnabled) {
+      console.log('自动备份已禁用');
+      setNextBackupTime('');
+      return;
+    }
+
+    // 计算下次备份时间
+    const now = new Date();
+    const intervalMs = autoBackupUnit === 'minutes' 
+      ? autoBackupInterval * 60 * 1000 
+      : autoBackupUnit === 'hours' 
+        ? autoBackupInterval * 60 * 60 * 1000 
+        : autoBackupInterval * 24 * 60 * 60 * 1000;
+    
+    const nextBackup = new Date(now.getTime() + intervalMs);
+    setNextBackupTime(nextBackup.toLocaleString('zh-CN'));
+
+    console.log('自动备份设置:', {
+      enabled: autoBackupEnabled,
+      interval: autoBackupInterval,
+      unit: autoBackupUnit,
+      intervalMs,
+      nextBackup: nextBackup.toLocaleString('zh-CN')
+    });
+
+    // 设置全局定时器（不会因为组件卸载而清除）
+    const globalTimer = setTimeout(() => {
+      console.log('全局定时器触发，准备弹出确认对话框');
+      console.log('当前时间:', new Date().toLocaleString('zh-CN'));
+      
+      // 使用全局函数触发备份
+      if (confirm('自动备份时间到了！是否现在进行数据备份？')) {
+        console.log('用户确认备份');
+        // 直接调用全局备份函数，不通过事件
+        const globalBackup = (window as Window & { performGlobalBackup?: typeof performGlobalBackup }).performGlobalBackup;
+        if (globalBackup) {
+          console.log('直接调用全局备份函数');
+          globalBackup();
+        } else {
+          console.error('全局备份函数未找到，尝试触发事件');
+          window.dispatchEvent(new CustomEvent('autoBackupTriggered'));
+        }
+      } else {
+        console.log('用户取消备份');
+      }
+      
+      // 重新启动定时器
+      setTimeout(() => {
+        startAutoBackupTimer();
+      }, 1000);
+    }, intervalMs);
+
+    // 保存全局定时器ID
+    (window as Window & { globalAutoBackupTimer?: NodeJS.Timeout }).globalAutoBackupTimer = globalTimer;
+    
+    // 同时设置组件内的定时器（用于显示状态）
+    const timer = setTimeout(() => {
+      console.log('组件定时器触发（仅用于状态更新）');
+    }, intervalMs);
+
+    setAutoBackupTimer(timer);
+    saveAutoBackupSettings();
+    
+    console.log('全局定时器已设置，ID:', globalTimer);
+    console.log('组件定时器已设置，ID:', timer);
+  };
+
+  // 触发自动备份（已废弃，使用全局备份函数）
+  const _triggerAutoBackup = () => {
+    console.log('触发自动备份函数');
+    console.log('当前时间:', new Date().toLocaleString('zh-CN'));
+    
+    if (confirm('自动备份时间到了！是否现在进行数据备份？')) {
+      console.log('用户确认备份');
+      handleExportData();
+      // 备份完成后重新启动定时器
+      setTimeout(() => {
+        startAutoBackupTimer();
+      }, 1000);
+    } else {
+      console.log('用户取消备份');
+      // 用户取消，重新启动定时器
+      startAutoBackupTimer();
+    }
+  };
+
+  // 保存自动备份设置
+  const handleSaveAutoBackupSettings = () => {
+    console.log('保存自动备份设置');
+    console.log('设置状态:', {
+      autoBackupEnabled,
+      autoBackupInterval,
+      autoBackupUnit
+    });
+    
+    if (autoBackupEnabled) {
+      startAutoBackupTimer();
+    } else {
+      // 禁用自动备份
+      if (autoBackupTimer) {
+        clearTimeout(autoBackupTimer);
+        setAutoBackupTimer(null);
+      }
+      // 清理全局定时器
+      const existingGlobalTimer = (window as Window & { globalAutoBackupTimer?: NodeJS.Timeout }).globalAutoBackupTimer;
+      if (existingGlobalTimer) {
+        console.log('禁用自动备份，清理全局定时器:', existingGlobalTimer);
+        clearTimeout(existingGlobalTimer);
+        (window as Window & { globalAutoBackupTimer?: NodeJS.Timeout }).globalAutoBackupTimer = undefined;
+      }
+      setNextBackupTime('');
+    }
+    
+    saveAutoBackupSettings();
+    setShowAutoBackupSettings(false);
+    setSuccess('自动备份设置已保存！');
+    
+    setTimeout(() => {
+      setSuccess(null);
+    }, 2000);
+  };
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (autoBackupTimer) {
+        console.log('组件卸载，清理组件定时器:', autoBackupTimer);
+        clearTimeout(autoBackupTimer);
+      }
+      // 注意：不清理全局定时器，让它继续工作
+    };
+  }, [autoBackupTimer]);
+
+  // 测试定时器功能
+  const testTimer = () => {
+    console.log('测试定时器功能');
+    const testTimerId = setTimeout(() => {
+      console.log('测试定时器触发成功！');
+      alert('测试定时器工作正常！');
+    }, 5000); // 5秒后触发
+    console.log('测试定时器ID:', testTimerId);
+  };
+
+  // 全局备份函数（不依赖组件状态）
+  const performGlobalBackup = async () => {
+    console.log('开始执行全局备份');
+    
+    try {
+      // 初始化数据库
+      await dataManager.initDB();
+      console.log('数据库初始化完成');
+
+      // 收集所有数据
+      const chats = await dataManager.getAllChats();
+      console.log('聊天数据收集完成:', chats.length);
+
+      const apiConfig = await dataManager.getApiConfig();
+      const personalSettings = await dataManager.getPersonalSettings();
+      const themeSettings = await dataManager.getThemeSettings() || {
+        selectedTheme: 'default',
+        lastUpdated: Date.now()
+      };
+      const balance = await dataManager.getBalance();
+      const transactions = await dataManager.getTransactionHistory();
+      const worldBooks = await dataManager.getAllWorldBooks();
+      const presets = await dataManager.getAllPresets();
+      const discoverPosts = await dataManager.getAllDiscoverPosts();
+      const discoverSettings = await dataManager.getDiscoverSettings();
+      const discoverDrafts = await dataManager.getAllDiscoverDrafts();
+
+      // 收集送礼记录
+      const giftRecords: Array<{
+        id: string;
+        type: 'send' | 'receive';
+        amount: number;
+        chatId: string;
+        fromUser: string;
+        toUser: string;
+        message?: string;
+        timestamp: number;
+        status: 'pending' | 'completed' | 'failed';
+      }> = [];
+      
+      for (const chat of chats) {
+        try {
+          const chatTransactions = await dataManager.getTransactionsByChatId(chat.id);
+          const giftTransactions = chatTransactions.filter(tx => 
+            tx.message && typeof tx.message === 'string' && 
+            (tx.message.includes('gift_purchase') || tx.message.includes('gift'))
+          );
+          giftRecords.push(...giftTransactions);
+        } catch (error) {
+          console.warn(`Failed to get gift records for chat ${chat.id}:`, error);
+        }
+      }
+
+      // 收集剧情模式消息
+      const storyModeMessages: Array<{
+        chatId: string;
+        messages: import('../../../types/chat').Message[];
+        timestamp: number;
+      }> = [];
+      
+      for (const chat of chats) {
+        try {
+          const messages = await dataManager.getStoryModeMessages(chat.id);
+          if (messages && messages.length > 0) {
+            storyModeMessages.push({
+              chatId: chat.id,
+              messages,
+              timestamp: Date.now()
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to get story mode messages for chat ${chat.id}:`, error);
+        }
+      }
+
+      // 收集动态评论
+      const discoverComments: DiscoverComment[] = [];
+      for (const post of discoverPosts) {
+        try {
+          const comments = await dataManager.getDiscoverCommentsByPost(post.id);
+          discoverComments.push(...comments);
+        } catch (error) {
+          console.warn(`Failed to get comments for post ${post.id}:`, error);
+        }
+      }
+
+      // 收集动态通知
+      const discoverNotifications: DiscoverNotification[] = [];
+      for (const post of discoverPosts) {
+        try {
+          const notifications = await dataManager.getDiscoverNotifications(post.authorId);
+          discoverNotifications.push(...notifications);
+        } catch (error) {
+          console.warn(`Failed to get notifications for post ${post.id}:`, error);
+        }
+      }
+
+      // 优化聊天数据
+      const optimizedChats = chats.map(chat => {
+        if (!chat.avatarMap) {
+          chat.avatarMap = {};
+        }
+        
+        chat.messages.forEach(msg => {
+          const msgWithOldField = msg as typeof msg & { senderAvatar?: string };
+          
+          if (msgWithOldField.senderAvatar && !msg.senderAvatarId) {
+            const avatarData = msgWithOldField.senderAvatar;
+            const avatarId = msg.role === 'user' 
+              ? `user_${chat.id}` 
+              : `member_${msg.senderName || chat.name}`;
+            
+            chat.avatarMap![avatarId] = avatarData;
+            msg.senderAvatarId = avatarId;
+            delete msgWithOldField.senderAvatar;
+          }
+        });
+        
+        return chat;
+      });
+
+      // 构建导出数据
+      const exportData: BackupData = {
+        chats: optimizedChats,
+        apiConfig,
+        personalSettings,
+        themeSettings,
+        balance,
+        transactions,
+        giftRecords,
+        worldBooks,
+        presets,
+        chatStatuses: [],
+        chatBackgrounds: [],
+        discoverPosts,
+        discoverComments,
+        discoverSettings,
+        discoverNotifications,
+        discoverDrafts,
+        storyModeMessages,
+        exportTime: new Date().toISOString(),
+        version: '1.8'
+      };
+
+      console.log('导出数据构建完成，准备下载文件');
+      console.log('导出数据大小:', JSON.stringify(exportData).length, '字符');
+
+      // 创建并下载文件
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonString], {
+        type: 'application/json'
+      });
+      
+      console.log('Blob创建完成，大小:', blob.size, '字节');
+      
+      const url = URL.createObjectURL(blob);
+      console.log('URL创建完成:', url);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chat-app-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.style.display = 'none';
+      
+      console.log('准备触发下载，文件名:', a.download);
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('全局备份完成，文件已下载');
+      alert('自动备份完成！文件已下载到您的设备。');
+
+    } catch (error) {
+      console.error('全局备份失败:', error);
+      alert(`自动备份失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    }
+  };
 
   // 导出所有数据
   const handleExportData = async () => {
@@ -557,6 +970,107 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                   </div>
                   <div className="progress-text">{currentOperation}</div>
                   <div className="progress-percentage">{Math.round(exportProgress)}%</div>
+                </div>
+              )}
+            </div>
+
+            <div className="action-section">
+              <h3>自动备份设置</h3>
+              <p>设置定时自动备份，到达指定时间后会自动提醒您进行数据备份</p>
+              
+              <div className="auto-backup-status">
+                <div className="status-info">
+                  <span className="status-label">自动备份状态：</span>
+                  <span className={`status-value ${autoBackupEnabled ? 'enabled' : 'disabled'}`}>
+                    {autoBackupEnabled ? '已启用' : '已禁用'}
+                  </span>
+                </div>
+                
+                {autoBackupEnabled && nextBackupTime && (
+                  <div className="next-backup-info">
+                    <span className="next-backup-label">下次备份时间：</span>
+                    <span className="next-backup-time">{nextBackupTime}</span>
+                  </div>
+                )}
+              </div>
+
+                             <div className="auto-backup-actions">
+                 <button 
+                   className="settings-btn"
+                   onClick={() => setShowAutoBackupSettings(!showAutoBackupSettings)}
+                   disabled={isExporting || isImporting}
+                 >
+                   {showAutoBackupSettings ? '隐藏设置' : '设置自动备份'}
+                 </button>
+                 
+                 <button 
+                   className="test-btn"
+                   onClick={testTimer}
+                   style={{ 
+                     marginLeft: '10px',
+                     background: '#ff6b6b',
+                     color: 'white',
+                     border: 'none',
+                     padding: '8px 16px',
+                     borderRadius: '6px',
+                     cursor: 'pointer',
+                     fontSize: '0.9rem'
+                   }}
+                 >
+                   测试定时器(5秒)
+                 </button>
+               </div>
+
+              {showAutoBackupSettings && (
+                <div className="auto-backup-settings">
+                  <div className="setting-item">
+                    <label className="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={autoBackupEnabled}
+                        onChange={(e) => setAutoBackupEnabled(e.target.checked)}
+                        className="setting-checkbox"
+                      />
+                      启用自动备份
+                    </label>
+                  </div>
+
+                  {autoBackupEnabled && (
+                    <>
+                      <div className="setting-item">
+                        <label className="setting-label">备份间隔：</label>
+                        <div className="interval-inputs">
+                                                     <input
+                             type="number"
+                             min="1"
+                             max={autoBackupUnit === 'minutes' ? 60 : autoBackupUnit === 'hours' ? 168 : 365}
+                             value={autoBackupInterval}
+                             onChange={(e) => setAutoBackupInterval(parseInt(e.target.value) || 1)}
+                             className="interval-input"
+                           />
+                           <select
+                             value={autoBackupUnit}
+                             onChange={(e) => setAutoBackupUnit(e.target.value as 'minutes' | 'hours' | 'days')}
+                             className="unit-select"
+                           >
+                             <option value="minutes">分钟</option>
+                             <option value="hours">小时</option>
+                             <option value="days">天</option>
+                           </select>
+                        </div>
+                      </div>
+
+                      <div className="setting-item">
+                        <button 
+                          className="save-settings-btn"
+                          onClick={handleSaveAutoBackupSettings}
+                          disabled={isExporting || isImporting}
+                        >
+                          保存设置
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
