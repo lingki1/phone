@@ -13,11 +13,6 @@ interface UnicodeEmojiPickerProps {
 // Unicode表情分类
 const emojiCategories = [
   {
-    name: '最近',
-    icon: '🕒',
-    emojis: [  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',]
-  },
-  {
     name: '表情',
     icon: '😀',
     emojis: [
@@ -183,7 +178,6 @@ export default function UnicodeEmojiPicker({
   triggerRef 
 }: UnicodeEmojiPickerProps) {
   const [selectedCategory, setSelectedCategory] = useState(0);
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
   const [pickerPosition, setPickerPosition] = useState<'bottom' | 'top'>('top');
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -195,23 +189,8 @@ export default function UnicodeEmojiPicker({
   // 获取当前分类的表情（去重后）
   const getCurrentEmojis = () => {
     const currentCategory = emojiCategories[selectedCategory];
-    if (currentCategory.name === '最近') {
-      return removeDuplicates(recentEmojis.length > 0 ? recentEmojis : currentCategory.emojis);
-    }
     return removeDuplicates(currentCategory.emojis);
   };
-
-  // 加载最近使用的表情
-  useEffect(() => {
-    const saved = localStorage.getItem('recentEmojis');
-    if (saved) {
-      try {
-        setRecentEmojis(JSON.parse(saved));
-      } catch (error) {
-        console.error('Failed to parse recent emojis:', error);
-      }
-    }
-  }, []);
 
   // 智能定位和点击外部关闭
   useEffect(() => {
@@ -252,14 +231,6 @@ export default function UnicodeEmojiPicker({
   // 处理表情选择
   const handleEmojiClick = (emoji: string) => {
     onEmojiSelect(emoji);
-    
-    // 更新最近使用的表情
-    const newRecent = [emoji, ...recentEmojis.filter(e => e !== emoji)].slice(0, 10);
-    setRecentEmojis(newRecent);
-    localStorage.setItem('recentEmojis', JSON.stringify(newRecent));
-    
-    // 更新分类中的最近表情
-    emojiCategories[0].emojis = newRecent;
   };
 
   if (!isOpen) return null;
