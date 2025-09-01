@@ -68,12 +68,12 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
 
 
 
-      {/* 分类选择器 */}
-      <div className="category-selector">
+      {/* 主题分类选择器 */}
+      <div className="theme-category-selector">
         {categories.map(category => (
           <button
             key={category.id}
-            className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
+            className={`theme-category-btn ${selectedCategory === category.id ? 'active' : ''}`}
             onClick={() => setSelectedCategory(category.id)}
           >
             {category.name}
