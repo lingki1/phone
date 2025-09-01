@@ -351,7 +351,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           downloadCount: char.downloadCount,
           fileUrl: char.fileUrl,
           thumbnailUrl: char.thumbnailUrl,
-          tags: char.tags
+          tags: char.tags || []
         }));
         break;
       case 'worldbooks':
@@ -364,7 +364,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           uploadDate: wb.uploadDate,
           downloadCount: wb.downloadCount,
           fileUrl: wb.fileUrl,
-          tags: wb.tags
+          tags: wb.tags || []
         }));
         break;
       default:
@@ -389,18 +389,18 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       );
     }
 
-    // 排序
-    filteredItems.sort((a, b) => {
-      switch (sortBy) {
-        case 'downloads':
-          return b.downloadCount - a.downloadCount;
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'date':
-        default:
-          return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
-      }
-    });
+         // 排序
+     filteredItems.sort((a, b) => {
+       switch (sortBy) {
+         case 'downloads':
+           return b.downloadCount - a.downloadCount; // 按热度排序
+         case 'name':
+           return a.name.localeCompare(b.name);
+         case 'date':
+         default:
+           return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+       }
+     });
 
     return filteredItems;
   };
@@ -727,15 +727,15 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                 )}
               </div>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
-              className="blackmarket-sort-select"
-            >
-              <option value="date">按时间</option>
-              <option value="downloads">按下载</option>
-              <option value="name">按名称</option>
-            </select>
+                         <select
+               value={sortBy}
+               onChange={(e) => setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
+               className="blackmarket-sort-select"
+             >
+               <option value="date">按时间</option>
+               <option value="downloads">按热度</option>
+               <option value="name">按名称</option>
+             </select>
           </div>
         </div>
 
@@ -764,67 +764,80 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                           <div className="item-worldbook-title">{item.name}</div>
                         </div>
                       ) : null}
+                      
+                      {/* 左上角：类型徽章 */}
                       <div className="media-top-badge">
                         <div className="item-type-badge">
                           {item.type === 'character' ? '👤' : '📚'} 
                           {item.type === 'character' ? '角色卡' : '世界书'}
                         </div>
                       </div>
-                      <div className="media-bottom-bar">
-                        <div className="meta">
-                          <span>{new Date(item.uploadDate).toLocaleDateString()}</span>
-                          <span>📥 {item.downloadCount}</span>
-                        </div>
+                      
+                      {/* 右上角：日期和热度 */}
+                      <div className="item-meta-info">
+                        <span className="item-date">{new Date(item.uploadDate).toLocaleDateString()}</span>
+                        <span className="item-heat">🔥 {item.downloadCount}</span>
                       </div>
-                      <div className="media-download">
-                        {item.type === 'character' && onImportCharacter && (
-                          <button 
-                            className="import-button" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              debouncedHandleImportCharacter(item);
-                            }}
-                            title="导入到聊天列表"
-                            disabled={isImportingCharacter}
-                          >
-                            {isImportingCharacter ? '导入中...' : '导入'}
-                          </button>
-                        )}
-                        {item.type === 'worldbook' && onImportWorldBook && (
-                          <button 
-                            className="import-button" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              debouncedHandleImportWorldBook(item);
-                            }}
-                            title="导入到世界书"
-                            disabled={isImportingWorldBook}
-                          >
-                            {isImportingWorldBook ? '导入中...' : '导入'}
-                          </button>
-                        )}
-                        <button 
-                          className="download-button" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            debouncedHandleDownload(item);
-                          }}
-                          disabled={isDownloading}
-                        >
-                          {isDownloading ? '下载中...' : '下载'}
-                        </button>
-                        {(currentUser?.username === item.author || 
-                          currentUser?.role === 'admin' || 
-                          currentUser?.role === 'super_admin') && (
-                          <button 
-                            className="delete-button" 
-                            onClick={(e) => handleDelete(item, e)}
-                            title={currentUser?.username === item.author ? "删除我的内容" : "管理员删除"}
-                          >
-                            🗑️
-                          </button>
-                        )}
-                      </div>
+                      
+                                             {/* 操作按钮 - 放在底部中央 */}
+                       <div className="media-download">
+                         {item.type === 'character' && onImportCharacter && (
+                           <button 
+                             className="import-button" 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               debouncedHandleImportCharacter(item);
+                             }}
+                             title="导入到聊天列表"
+                             disabled={isImportingCharacter}
+                           >
+                             {isImportingCharacter ? '导入中...' : '导入'}
+                           </button>
+                         )}
+                         {item.type === 'worldbook' && onImportWorldBook && (
+                           <button 
+                             className="import-button" 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               debouncedHandleImportWorldBook(item);
+                             }}
+                             title="导入到世界书"
+                             disabled={isImportingWorldBook}
+                           >
+                             {isImportingWorldBook ? '导入中...' : '导入'}
+                           </button>
+                         )}
+                         <button 
+                           className="download-button" 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             debouncedHandleDownload(item);
+                           }}
+                           disabled={isDownloading}
+                         >
+                           {isDownloading ? '下载中...' : '下载'}
+                         </button>
+                         {(currentUser?.username === item.author || 
+                           currentUser?.role === 'admin' || 
+                           currentUser?.role === 'super_admin') && (
+                           <button 
+                             className="delete-button" 
+                             onClick={(e) => handleDelete(item, e)}
+                             title={currentUser?.username === item.author ? "删除我的内容" : "管理员删除"}
+                           >
+                             🗑️
+                           </button>
+                         )}
+                       </div>
+                       
+                       {/* 角色卡名称 - 放在操作按钮上方 */}
+                       <div className="item-name-overlay">
+                         <div className="item-name-text">{item.name}</div>
+                       </div>
+                       
+                       <div className="media-bottom-bar">
+                         {/* 移除原来的meta信息，因为已经移到右上角 */}
+                       </div>
                     </div>
                   </div>
                   

@@ -835,3 +835,107 @@
     justify-content: center;
   }
 }
+
+/* 右上角：日期和热度 */
+.item-meta-info {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 10;
+}
+
+.item-date {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.item-heat {
+  background: rgba(255, 69, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+/* 角色卡名称覆盖层 - 放在操作按钮上方，无背景 */
+.item-name-overlay {
+  position: absolute;
+  bottom: 60px; /* 为操作按钮留出空间 */
+  left: 0;
+  right: 0;
+  padding: 20px 12px 12px;
+  z-index: 5;
+}
+
+.item-name-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 左上角：类型徽章 */
+.media-top-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+}
+
+/* 操作按钮 - 与图片底部平齐 */
+.media-download {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  z-index: 10;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .item-name-text {
+    font-size: 12px;
+    padding: 16px 8px 8px;
+  }
+  
+  .item-meta-info {
+    top: 4px;
+    right: 4px;
+  }
+  
+  .item-date,
+  .item-heat {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .item-name-overlay {
+    bottom: 50px; /* 移动端稍微减少间距 */
+  }
+  
+  .media-download {
+    padding: 6px;
+  }
+}

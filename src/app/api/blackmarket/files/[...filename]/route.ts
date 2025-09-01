@@ -4,18 +4,21 @@ import fs from 'fs';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
+  { params }: { params: Promise<{ filename: string[] }> }
 ) {
   try {
     const { filename } = await params;
     
+    // 将路径数组重新组合为完整路径
+    const fullPath = filename.join('/');
+    
     // 安全检查：防止路径遍历攻击
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    if (fullPath.includes('..') || fullPath.includes('\\')) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
     }
 
     // 构建文件路径
-    const filePath = path.join(process.cwd(), 'public', 'uploads', 'blackmarket', filename);
+    const filePath = path.join(process.cwd(), 'public', 'uploads', 'blackmarket', fullPath);
     
     // 检查文件是否存在
     if (!fs.existsSync(filePath)) {
@@ -26,7 +29,7 @@ export async function GET(
     const fileBuffer = fs.readFileSync(filePath);
     
     // 根据文件扩展名设置正确的Content-Type
-    const ext = path.extname(filename).toLowerCase();
+    const ext = path.extname(fullPath).toLowerCase();
     let contentType = 'application/octet-stream';
     
     switch (ext) {
@@ -52,10 +55,10 @@ export async function GET(
     return new NextResponse(fileBuffer, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': filename.includes('_thumb') 
+        'Cache-Control': fullPath.includes('_thumb') 
           ? 'public, max-age=31536000' // 缩略图缓存1年
           : 'public, max-age=86400',   // 原图缓存1天
-        'Content-Disposition': `inline; filename="${filename}"`,
+        'Content-Disposition': `inline; filename="${path.basename(fullPath)}"`,
       },
     });
 

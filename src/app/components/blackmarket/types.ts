@@ -34,7 +34,14 @@ export interface BlackMarketItem {
   downloadCount: number;
   fileUrl: string;
   thumbnailUrl?: string;
-  tags?: string[];
+  tags: string[];
+  // 新增缩略图字段
+  thumbnails?: {
+    small: string;
+    medium: string;
+    large: string;
+  };
+  metadata?: Record<string, unknown>;
 }
 
 export interface UploadProgress {
