@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback, useRef, useEffect, useState, memo } from 'react';
 import { Message, ChatItem } from '../../../types/chat';
 import './StoryModeDisplay.css';
 
@@ -17,7 +17,7 @@ interface StoryModeDisplayProps {
   setEditingMessage: (editing: { id: string, content: string } | null) => void;
 }
 
-export default function StoryModeDisplay({
+function StoryModeDisplay({
   messages,
   chat,
   onQuoteMessage,
@@ -410,3 +410,5 @@ export default function StoryModeDisplay({
     </div>
   );
 }
+
+export default memo(StoryModeDisplay);

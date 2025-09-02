@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem, GroupMember, QuoteMessage } from '../../types/chat';
 import { dataManager } from '../../utils/dataManager';
@@ -86,6 +86,8 @@ export default function ChatInterface({
   const [quotedMessage, setQuotedMessage] = useState<QuoteMessage | undefined>(undefined);
   const [mentionCursorPos, setMentionCursorPos] = useState(0);
   const [editingMessage, setEditingMessage] = useState<{id: string, content: string} | null>(null);
+  // 存储光标位置，供延迟的@匹配使用
+  const [cursorPosition, setCursorPosition] = useState(0);
   const [dbPersonalSettings, setDbPersonalSettings] = useState<PersonalSettings | null>(null);
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
@@ -152,14 +154,20 @@ export default function ChatInterface({
       // 注意：不调用endAiTask()，保持AI pending状态持久化
       
       // 清理防抖定时器
-      if (heightAdjustTimerRef.current) {
-        clearTimeout(heightAdjustTimerRef.current);
+      const heightTimer = heightAdjustTimerRef.current;
+      if (heightTimer) {
+        clearTimeout(heightTimer);
+        heightAdjustTimerRef.current = null;
       }
-      if (mentionCheckTimerRef.current) {
-        clearTimeout(mentionCheckTimerRef.current);
+      const mentionTimer = mentionCheckTimerRef.current;
+      if (mentionTimer) {
+        clearTimeout(mentionTimer);
+        mentionCheckTimerRef.current = null;
       }
-      if (scrollUpdateTimerRef.current) {
-        clearTimeout(scrollUpdateTimerRef.current);
+      const scrollTimer = scrollUpdateTimerRef.current;
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+        scrollUpdateTimerRef.current = null;
       }
     };
   }, [chat.id]);
@@ -207,19 +215,17 @@ export default function ChatInterface({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // 使用transform来避免重排，提高性能
-    const currentHeight = textarea.style.height;
-    textarea.style.height = 'auto';
-    
-    // 计算新高度，最小高度为一行，最大高度为5行
-    const minHeight = 40; // 一行的高度
-    const maxHeight = 120; // 5行的高度
-    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
-    
-    // 只有当高度真正改变时才更新，避免不必要的DOM操作
-    if (currentHeight !== `${newHeight}px`) {
-      textarea.style.height = `${newHeight}px`;
-    }
+    // 将量测与写入放入rAF，避免同步强制布局
+    requestAnimationFrame(() => {
+      const currentHeight = textarea.style.height;
+      textarea.style.height = 'auto';
+      const minHeight = 40;
+      const maxHeight = 120;
+      const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+      if (currentHeight !== `${newHeight}px`) {
+        textarea.style.height = `${newHeight}px`;
+      }
+    });
   }, []);
 
   // 检测用户是否在查看历史消息（添加防抖优化）
@@ -551,6 +557,7 @@ export default function ChatInterface({
     
     // 立即更新消息内容，保证输入响应性
     setMessage(value);
+    setCursorPosition(cursorPos);
     
     // 防抖处理高度调整，避免频繁DOM操作
     if (heightAdjustTimerRef.current) {
@@ -558,34 +565,37 @@ export default function ChatInterface({
     }
     heightAdjustTimerRef.current = setTimeout(() => {
       adjustTextareaHeight();
-    }, 100); // 增加到100ms防抖
-    
-    // 防抖处理@提及检查，避免频繁计算
-    if (mentionCheckTimerRef.current) {
-      clearTimeout(mentionCheckTimerRef.current);
+    }, 160); // 更长的防抖，降低频率
+  }, [adjustTextareaHeight]);
+
+  // 使用延迟值降低@提及匹配的优先级
+  const deferredMessage = useDeferredValue(message);
+
+  // 延迟的@提及检查，仅在@后有内容时触发
+  useEffect(() => {
+    if (!chat.isGroup || !chat.members) return;
+    const value = deferredMessage;
+    const cursorPos = cursorPosition;
+    const beforeCursor = value.substring(0, cursorPos);
+    const lastAtIndex = beforeCursor.lastIndexOf('@');
+    if (lastAtIndex === -1) {
+      setShowMentionList(false);
+      return;
     }
-    
-    mentionCheckTimerRef.current = setTimeout(() => {
-      if (chat.isGroup && chat.members) {
-        // 检查是否在输入@符号
-        const beforeCursor = value.substring(0, cursorPos);
-        const lastAtIndex = beforeCursor.lastIndexOf('@');
-        
-        if (lastAtIndex !== -1) {
-          const afterAt = beforeCursor.substring(lastAtIndex + 1);
-          if (!afterAt.includes(' ') && !afterAt.includes('\n')) {
-            setMentionFilter(afterAt);
-            setMentionCursorPos(lastAtIndex);
-            setShowMentionList(true);
-          } else {
-            setShowMentionList(false);
-          }
-        } else {
-          setShowMentionList(false);
-        }
-      }
-    }, 150); // 增加到150ms防抖，@提及检查可以稍微慢一点
-  }, [chat.isGroup, chat.members, adjustTextareaHeight]);
+    const afterAt = beforeCursor.substring(lastAtIndex + 1);
+    // 仅当@后有至少1个字符，且不包含空白/换行时才匹配
+    if (
+      afterAt.length >= 1 &&
+      !afterAt.includes(' ') &&
+      !afterAt.includes('\n')
+    ) {
+      setMentionFilter(afterAt);
+      setMentionCursorPos(lastAtIndex);
+      setShowMentionList(true);
+    } else {
+      setShowMentionList(false);
+    }
+  }, [chat.isGroup, chat.members, deferredMessage, cursorPosition]);
 
   // 选择@提及的成员（优化：使用useCallback缓存）
   const selectMention = useCallback((member: GroupMember) => {
