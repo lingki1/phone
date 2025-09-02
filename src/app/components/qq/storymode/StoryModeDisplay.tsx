@@ -31,6 +31,11 @@ export default function StoryModeDisplay({
 }: StoryModeDisplayProps) {
   const storyContainerRef = useRef<HTMLDivElement>(null);
   const [visibleActions, setVisibleActions] = useState<Set<string>>(new Set());
+  // 分页与滚动状态
+  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   // 滚动到底部函数
   const scrollToBottom = useCallback((smooth = true) => {
@@ -42,22 +47,76 @@ export default function StoryModeDisplay({
     }
   }, []);
 
-  // 当消息更新时自动滚动到底部
+  // 初始化与更新显示的消息（仅展示最新的20条）
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom(true);
+    const INITIAL_MESSAGE_COUNT = 20;
+    if (messages.length <= INITIAL_MESSAGE_COUNT) {
+      setDisplayedMessages(messages);
+      setHasMoreMessages(false);
+    } else {
+      const latestMessages = messages.slice(-INITIAL_MESSAGE_COUNT);
+      setDisplayedMessages(latestMessages);
+      setHasMoreMessages(true);
     }
-  }, [messages, messages.length, scrollToBottom]);
+    // 如果用户在底部，则确保滚动到底部（不使用动画，避免进入页面时的跳动）
+    if (shouldAutoScroll && messages.length > 0) {
+      requestAnimationFrame(() => scrollToBottom(false));
+    }
+  }, [messages, shouldAutoScroll, scrollToBottom]);
 
   // 组件挂载时直接设置滚动位置到最新消息（不使用滚动动画）
   useEffect(() => {
-    // 使用requestAnimationFrame确保DOM渲染完成后再设置滚动位置
     requestAnimationFrame(() => {
       if (storyContainerRef.current) {
         storyContainerRef.current.scrollTop = storyContainerRef.current.scrollHeight;
       }
     });
-  }, []); // 只在组件挂载时触发一次
+  }, []);
+
+  // 监听滚动，判断是否在底部，决定是否自动滚动
+  const handleScroll = useCallback(() => {
+    if (!storyContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = storyContainerRef.current;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px 容差
+    setShouldAutoScroll(prev => (prev !== isAtBottom ? isAtBottom : prev));
+  }, []);
+
+  // 加载更多历史消息（将更早的消息插入到显示列表开头）
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMoreMessages) return;
+    const container = storyContainerRef.current;
+    if (!container) return;
+
+    const BATCH_SIZE = 20;
+    const alreadyDisplayed = displayedMessages.length;
+    const remaining = messages.length - alreadyDisplayed;
+    if (remaining <= 0) {
+      setHasMoreMessages(false);
+      return;
+    }
+
+    setIsLoadingMoreMessages(true);
+
+    const oldHeight = container.scrollHeight;
+    const loadCount = Math.min(BATCH_SIZE, remaining);
+    const startIndex = Math.max(0, messages.length - alreadyDisplayed - loadCount);
+    const endIndex = messages.length - alreadyDisplayed;
+    const olderMessages = messages.slice(startIndex, endIndex);
+
+    setDisplayedMessages(prev => {
+      const newDisplayed = [...olderMessages, ...prev];
+      setHasMoreMessages(newDisplayed.length < messages.length);
+      return newDisplayed;
+    });
+
+    // 使用微小延迟等待渲染完成后，保持滚动位置
+    requestAnimationFrame(() => {
+      const newHeight = container.scrollHeight;
+      const heightDiff = newHeight - oldHeight;
+      container.scrollTop = container.scrollTop + heightDiff;
+      setIsLoadingMoreMessages(false);
+    });
+  }, [displayedMessages.length, isLoadingMoreMessages, messages]);
   
   const formatTime = useCallback((timestamp: number) => {
     const date = new Date(timestamp);
@@ -320,7 +379,7 @@ export default function StoryModeDisplay({
   }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage, visibleActions]);
 
   return (
-    <div className="story-display-container" ref={storyContainerRef}>
+    <div className="story-display-container" ref={storyContainerRef} onScroll={handleScroll}>
       {messages.length === 0 ? (
         <div className="story-empty-state">
           <div className="story-empty-icon">📖</div>
@@ -333,7 +392,19 @@ export default function StoryModeDisplay({
         </div>
       ) : (
         <div className="story-messages-list">
-          {messages.map((msg) => renderMessage(msg))}
+          {hasMoreMessages && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+              <button 
+                className="story-action-btn"
+                onClick={handleLoadMore}
+                disabled={isLoadingMoreMessages}
+                title="加载更多历史剧情"
+              >
+                {isLoadingMoreMessages ? '加载中...' : '加载更多'}
+              </button>
+            </div>
+          )}
+          {displayedMessages.map((msg) => renderMessage(msg))}
         </div>
       )}
     </div>
