@@ -105,17 +105,80 @@ export default function StoryModeDisplay({
     return parseHtml(text);
   }, []);
 
+  // 解析并渲染HTML模块的函数
+  const parseHtmlModule = useCallback((text: string) => {
+    // 检测HTML模块标记：{{html: ... }}
+    const htmlModuleRegex = /\{\{html:(.*?)\}\}/g;
+    
+    if (!htmlModuleRegex.test(text)) {
+      // 如果没有HTML模块，直接返回解析后的文本
+      return parseDecoratedText(text);
+    }
+    
+    // 分割文本，分离普通文本和HTML模块
+    const parts: (string | React.ReactElement)[] = [];
+    let lastIndex = 0;
+    let match;
+    
+    htmlModuleRegex.lastIndex = 0; // 重置正则表达式索引
+    
+    while ((match = htmlModuleRegex.exec(text)) !== null) {
+      // 添加HTML模块之前的普通文本
+      if (match.index > lastIndex) {
+        const beforeText = text.substring(lastIndex, match.index);
+        if (beforeText.trim()) {
+          parts.push(parseDecoratedText(beforeText));
+        }
+      }
+      
+      // 解析并添加HTML模块
+      const htmlContent = match[1].trim();
+      try {
+        // 安全地渲染HTML内容
+        const cleanHtml = htmlContent
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+          .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+          .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+          .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+          .replace(/javascript:/gi, '');
+        
+        parts.push(
+          <span 
+            key={`html-${match.index}`}
+            dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          />
+        );
+      } catch (error) {
+        console.error('Failed to parse HTML module:', error);
+        parts.push(<span key={`html-${match.index}`} className="story-html-error">HTML渲染失败</span>);
+      }
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // 添加剩余的普通文本
+    if (lastIndex < text.length) {
+      const remainingText = text.substring(lastIndex);
+      if (remainingText.trim()) {
+        parts.push(parseDecoratedText(remainingText));
+      }
+    }
+    
+    return parts.length > 0 ? parts : parseDecoratedText(text);
+  }, [parseDecoratedText]);
+
   const renderStoryContent = useCallback((content: string) => {
     // 处理换行符，将\n转换为<br>标签
     const lines = content.split('\n');
     
     return lines.map((line, lineIndex) => (
       <React.Fragment key={lineIndex}>
-        {parseDecoratedText(line)}
+        {parseHtmlModule(line)}
         {lineIndex < lines.length - 1 && <br />}
       </React.Fragment>
     ));
-  }, [parseDecoratedText]);
+  }, [parseHtmlModule]);
 
   // 点击外部关闭操作按钮
   useEffect(() => {

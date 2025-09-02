@@ -15,6 +15,11 @@ export interface PromptContext {
   allChats?: ChatItem[];
   availableContacts: ChatItem[];
   chatStatus?: ChatStatus;
+  extraInfoConfig?: {
+    enabled: boolean;
+    description: string;
+    lastUpdate: number;
+  };
   currentPreset?: PresetConfig;
   dbPersonalSettings?: PersonalSettings;
   personalSettings?: PersonalSettings;

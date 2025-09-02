@@ -594,6 +594,26 @@
   padding: 0 !important;
 }
 
+/* 额外信息特殊样式 - 移除消息气泡背景，与红包消息保持一致 */
+.message-bubble:has(.extra-info-inline) {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* 兼容性备选方案 - 如果浏览器不支持:has选择器 */
+.user-message .message-bubble .extra-info-inline,
+.ai-message .message-bubble .extra-info-inline {
+  margin: 0 !important; /* 重置margin，让额外信息正常显示 */
+}
+
+.user-message:has(.extra-info-inline) .message-bubble,
+.ai-message:has(.extra-info-inline) .message-bubble {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
 
 
 /* 移动端消息气泡调整 */
@@ -2164,5 +2184,35 @@
   
   .group-message .message-footer .message-time {
     font-size: 10px;
+  }
+}
+
+/* 额外信息内联显示样式 - 不被气泡包裹，参考红包消息样式 */
+.extra-info-inline {
+  margin: 8px 0 !important;
+  /* 移除所有气泡相关的样式 */
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  /* 确保HTML内容直接显示 */
+  display: block !important;
+  width: 100% !important;
+  /* 重置所有继承的样式 */
+  position: relative !important;
+  max-width: none !important;
+}
+
+.extra-info-inline * {
+  /* 重置所有子元素的样式，让HTML内容完全按照设计显示 */
+  box-sizing: border-box;
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .extra-info-inline {
+    /* 暗色主题下保持透明背景 */
+    background: none !important;
   }
 }

@@ -9,6 +9,7 @@ import { StoryModeTemplate } from '../templates/StoryModeTemplate';
 import { WorldBookInjector } from '../injectors/WorldBookInjector';
 import { MemoryInjector } from '../injectors/MemoryInjector';
 import { StatusInjector } from '../injectors/StatusInjector';
+import { ExtraInfoInjector } from '../injectors/ExtraInfoInjector';
 import { PresetInjector } from '../injectors/PresetInjector';
 import { StoryModeInjector } from '../injectors/StoryModeInjector';
 import { NarrativeStyleInjector } from '../injectors/NarrativeStyleInjector';
@@ -27,6 +28,7 @@ export class PromptManager {
       new WorldBookInjector(),
       new MemoryInjector(),
       new StatusInjector(),
+      new ExtraInfoInjector(),
       new ItemInjector(),
       // 剧情模式专用注入器
       new StoryModeInjector(),

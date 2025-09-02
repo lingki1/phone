@@ -191,6 +191,30 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     };
   }, []);
 
+  // 键盘快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 只有在聊天室打开且用户已登录时才响应快捷键
+      if (!isOpen || !state.currentUser) return;
+      
+      // Ctrl/Cmd + ↓ 一键到底
+      if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowDown') {
+        e.preventDefault();
+        scrollToBottomInstant();
+      }
+      // Ctrl/Cmd + ↑ 平滑回到底部
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowUp') {
+        e.preventDefault();
+        scrollToBottom();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, state.currentUser]);
+
   const initializeChatRoom = async () => {
     setIsLoading(true);
     
@@ -243,6 +267,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     const behavior: ScrollBehavior = 'smooth';
     
     el.scrollTo({ top: el.scrollHeight, behavior });
+  };
+
+  const scrollToBottomInstant = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    // 一键到底，直接滚动到底部，不考虑用户位置
+    el.scrollTo({ top: el.scrollHeight, behavior: 'instant' });
   };
 
   const handleNicknameSubmit = async () => {
@@ -672,9 +703,16 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
         <button 
           className={`chatroom-scroll-bottom ${showScrollToBottom ? 'show' : ''}`} 
           onClick={scrollToBottom} 
-          title="回到底部"
+          title="回到底部 (Ctrl/Cmd + ↑)"
         >
           ↓
+        </button>
+        <button 
+          className={`chatroom-scroll-to-bottom ${showScrollToBottom ? 'show' : ''}`} 
+          onClick={scrollToBottomInstant} 
+          title="一键到底 (Ctrl/Cmd + ↓)"
+        >
+          ⚡
         </button>
       </div>
 

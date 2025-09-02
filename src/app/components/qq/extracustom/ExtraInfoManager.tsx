@@ -1,0 +1,131 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { dataManager } from '../../../utils/dataManager';
+import { ExtraInfoConfig } from './types';
+import { WorldBook } from '../../../types/chat';
+
+export function useExtraInfoManager(chatId: string, chatName: string, onConfigUpdate: (config: ExtraInfoConfig) => void) {
+  const [config, setConfig] = useState<ExtraInfoConfig>({
+    enabled: false,
+    description: '',
+    lastUpdate: Date.now()
+  });
+
+  // 从世界书加载配置
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        await dataManager.initDB();
+        // 查找分类为 'extrainfo' 的世界书
+        const worldBooks = await dataManager.getAllWorldBooks();
+        const extraInfoWorldBook = worldBooks.find(wb => 
+          wb.category === 'extrainfo' && 
+          wb.name === `${chatName} 的额外信息`
+        );
+
+        if (extraInfoWorldBook) {
+          const loadedConfig = {
+            enabled: true,
+            description: extraInfoWorldBook.content,
+            lastUpdate: extraInfoWorldBook.updatedAt
+          };
+          setConfig(loadedConfig);
+          onConfigUpdate(loadedConfig);
+        } else {
+          const defaultConfig = {
+            enabled: false,
+            description: '',
+            lastUpdate: Date.now()
+          };
+          setConfig(defaultConfig);
+          onConfigUpdate(defaultConfig);
+        }
+      } catch (error) {
+        console.error('Failed to load extra info config from world book:', error);
+      }
+    };
+    
+    if (chatName) {
+      loadConfig();
+    }
+  }, [chatId, chatName, onConfigUpdate]);
+
+  // 保存配置到世界书
+  const updateConfig = async (newConfig: Partial<ExtraInfoConfig>) => {
+    const updatedConfig = {
+      ...config,
+      ...newConfig,
+      lastUpdate: Date.now()
+    };
+    
+    setConfig(updatedConfig);
+    onConfigUpdate(updatedConfig);
+    
+    try {
+      await dataManager.initDB();
+      
+      if (updatedConfig.enabled && updatedConfig.description) {
+        // 创建或更新世界书
+        const worldBook: WorldBook = {
+          id: `extrainfo_${chatId}_${Date.now()}`,
+          name: `${chatName} 的额外信息`,
+          content: updatedConfig.description,
+          category: 'extrainfo',
+          description: `额外信息功能配置 - ${chatName}`,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+
+        await dataManager.saveWorldBook(worldBook);
+      }
+    } catch (error) {
+      console.error('Failed to save extra info config to world book:', error);
+    }
+  };
+
+  // 启用额外信息功能
+  const enableExtraInfo = (description: string) => {
+    updateConfig({ enabled: true, description });
+  };
+
+  // 禁用额外信息功能
+  const disableExtraInfo = async () => {
+    try {
+      await dataManager.initDB();
+      
+              // 删除对应的世界书
+      const worldBooks = await dataManager.getAllWorldBooks();
+      const extraInfoWorldBook = worldBooks.find(wb => 
+        wb.category === 'extrainfo' && 
+        wb.name === `${chatName} 的额外信息`
+      );
+
+      if (extraInfoWorldBook) {
+        await dataManager.deleteWorldBook(extraInfoWorldBook.id);
+      }
+
+      const disabledConfig = {
+        enabled: false,
+        description: '',
+        lastUpdate: Date.now()
+      };
+      setConfig(disabledConfig);
+      onConfigUpdate(disabledConfig);
+    } catch (error) {
+      console.error('Failed to disable extra info:', error);
+    }
+  };
+
+  // 更新描述
+  const updateDescription = (description: string) => {
+    updateConfig({ description });
+  };
+
+  return {
+    config,
+    enableExtraInfo,
+    disableExtraInfo,
+    updateDescription
+  };
+}

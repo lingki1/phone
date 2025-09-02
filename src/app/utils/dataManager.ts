@@ -5,7 +5,7 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 13; // 升级数据库版本以支持多组API配置存储
+const DB_VERSION = 14; // 升级数据库版本以支持额外信息功能
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const SAVED_API_CONFIGS_STORE = 'savedApiConfigs';
@@ -17,6 +17,7 @@ const WORLD_BOOK_STORE = 'worldBooks';
 const PRESET_STORE = 'presets';
 const CHAT_STATUS_STORE = 'chatStatus';
 const CHAT_BACKGROUND_STORE = 'chatBackgrounds';
+const EXTRA_INFO_STORE = 'extraInfo';
 const DISCOVER_POSTS_STORE = 'discoverPosts';
 const DISCOVER_COMMENTS_STORE = 'discoverComments';
 const DISCOVER_SETTINGS_STORE = 'discoverSettings';
@@ -172,6 +173,11 @@ class DataManager {
             // 创建聊天背景存储
             if (!db.objectStoreNames.contains(CHAT_BACKGROUND_STORE)) {
               db.createObjectStore(CHAT_BACKGROUND_STORE, { keyPath: 'chatId' });
+            }
+
+            // 创建额外信息存储
+            if (!db.objectStoreNames.contains(EXTRA_INFO_STORE)) {
+              db.createObjectStore(EXTRA_INFO_STORE, { keyPath: 'chatId' });
             }
 
             // 创建动态存储
@@ -2035,6 +2041,69 @@ class DataManager {
         lastMode: 'unknown'
       };
     }
+  }
+
+  // ==================== 额外信息相关方法 ====================
+
+  // 保存额外信息配置
+  async saveExtraInfoConfig(chatId: string, config: {
+    enabled: boolean;
+    description: string;
+    lastUpdate: number;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([EXTRA_INFO_STORE], 'readwrite');
+      const store = transaction.objectStore(EXTRA_INFO_STORE);
+      const request = store.put({
+        chatId,
+        ...config
+      });
+
+      request.onerror = () => reject(new Error('Failed to save extra info config'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  // 获取额外信息配置
+  async getExtraInfoConfig(chatId: string): Promise<{
+    enabled: boolean;
+    description: string;
+    lastUpdate: number;
+  } | null> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([EXTRA_INFO_STORE], 'readonly');
+      const store = transaction.objectStore(EXTRA_INFO_STORE);
+      const request = store.get(chatId);
+
+      request.onerror = () => reject(new Error('Failed to get extra info config'));
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          const { chatId: _chatId, ...config } = result;
+          resolve(config);
+        } else {
+          resolve(null);
+        }
+      };
+    });
+  }
+
+  // 删除额外信息配置
+  async deleteExtraInfoConfig(chatId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([EXTRA_INFO_STORE], 'readwrite');
+      const store = transaction.objectStore(EXTRA_INFO_STORE);
+      const request = store.delete(chatId);
+
+      request.onerror = () => reject(new Error('Failed to delete extra info config'));
+      request.onsuccess = () => resolve();
+    });
   }
 
   // 保存模式切换记录

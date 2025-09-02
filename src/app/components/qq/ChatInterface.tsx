@@ -11,6 +11,7 @@ import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
 import { ChatStatusManager, ChatStatusDisplay, ChatStatus } from './chatstatus';
+import { useExtraInfoManager, ExtraInfoSettings, ExtraInfoConfig } from './extracustom';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
@@ -128,6 +129,14 @@ export default function ChatInterface({
     outfit: '穿着休闲装',
     lastUpdate: Date.now()
   });
+
+  // 额外信息相关状态
+  const [extraInfoConfig, setExtraInfoConfig] = useState<ExtraInfoConfig>({
+    enabled: false,
+    description: '',
+    lastUpdate: Date.now()
+  });
+  const [showExtraInfoSettings, setShowExtraInfoSettings] = useState(false);
 
   // 设置当前活跃的聊天页面，用于通知抑制
   useEffect(() => {
@@ -471,6 +480,11 @@ export default function ChatInterface({
     
     loadBackground();
   }, [chat.id]);
+
+  // 额外信息管理器
+  const extraInfoManager = useExtraInfoManager(chat.id, chat.name, setExtraInfoConfig);
+
+
 
   // 检查并恢复AI pending状态
   useEffect(() => {
@@ -986,6 +1000,7 @@ export default function ChatInterface({
         allChats,
         availableContacts,
         chatStatus,
+        extraInfoConfig,
         currentPreset,
         dbPersonalSettings: dbPersonalSettings || undefined,
         personalSettings,
@@ -1184,7 +1199,7 @@ export default function ChatInterface({
       setCurrentAiUser(null); // 清除当前AI用户信息
       endAiTask(); // 结束AI任务
     }
-  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask, handleStoryModeAiResponse]);
+  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask, handleStoryModeAiResponse, extraInfoConfig]);
 
   // 将triggerAiResponse赋值给useRef，避免循环依赖
   useEffect(() => {
@@ -1480,6 +1495,30 @@ export default function ChatInterface({
         
         // 不创建消息，只更新状态
         return null;
+
+      case 'extra_info':
+        // AI额外信息命令
+        const htmlContent = String(msgData.htmlContent || '');
+        const description = String(msgData.description || extraInfoConfig.description);
+        
+        // 创建额外信息消息
+        const extraInfoMessage: Message = {
+          id: timestamp.toString(),
+          type: 'extra_info',
+          timestamp,
+          role: 'assistant',
+          content: `额外信息: ${description}`,
+          senderName: chat.name,
+          senderAvatarId: chat.settings.aiAvatar ? `ai_${chat.id}` : undefined,
+          isRead: false,
+          extraInfoData: {
+            htmlContent,
+            description
+          }
+        };
+        
+        // 返回额外信息消息，让系统处理
+        return extraInfoMessage;
       default:
         // 默认情况下也处理可能的JSON内容
         const defaultContent = msgData.content || msgData.message || '';
@@ -1511,7 +1550,7 @@ export default function ChatInterface({
     };
 
     return aiMessage;
-  }, [dbPersonalSettings, personalSettings, chatStatus]);
+  }, [dbPersonalSettings, personalSettings, chatStatus, extraInfoConfig]);
 
   // 将createAiMessage赋值给useRef，避免循环依赖
   useEffect(() => {
@@ -2117,6 +2156,32 @@ export default function ChatInterface({
           console.error('Failed to parse AI red packet response:', error);
           return <span>AI红包响应解析失败</span>;
         }
+
+      case 'extra_info':
+        if (msg.extraInfoData) {
+          // 直接渲染HTML内容，不被气泡包裹
+          try {
+            // 安全地渲染HTML内容
+            const cleanHtml = msg.extraInfoData.htmlContent
+              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+              .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+              .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+              .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+              .replace(/javascript:/gi, '');
+            
+            return (
+              <div 
+                className="extra-info-inline"
+                dangerouslySetInnerHTML={{ __html: cleanHtml }}
+              />
+            );
+          } catch (error) {
+            console.error('Failed to render extra info HTML:', error);
+            return <span>额外信息渲染失败</span>;
+          }
+        }
+        return <span>额外信息加载失败</span>;
       case 'image':
           return (
             <div className="image-message">
@@ -2210,7 +2275,17 @@ export default function ChatInterface({
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 1 3-3h7z"/>
+            </svg>
+          </button>
+          
+          <button 
+            className="action-btn"
+            onClick={() => setShowExtraInfoSettings(true)}
+            title="设置额外信息"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </button>
           <button 
@@ -2743,6 +2818,25 @@ export default function ChatInterface({
           onBatchDelete={handleBatchDelete}
           onCancel={() => setShowBatchDelete(false)}
           isVisible={showBatchDelete}
+        />
+      )}
+
+      {/* 额外信息设置 */}
+      {showExtraInfoSettings && (
+        <ExtraInfoSettings
+          isOpen={showExtraInfoSettings}
+          onClose={() => setShowExtraInfoSettings(false)}
+          config={extraInfoConfig}
+          chatName={chat.name}
+          onUpdateConfig={(newConfig) => {
+            setExtraInfoConfig(newConfig);
+            // 使用extraInfoManager的方法来保存到世界书
+            if (newConfig.enabled && newConfig.description) {
+              extraInfoManager.enableExtraInfo(newConfig.description);
+            } else if (!newConfig.enabled) {
+              extraInfoManager.disableExtraInfo();
+            }
+          }}
         />
       )}
 

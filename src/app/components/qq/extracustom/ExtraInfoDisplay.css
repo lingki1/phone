@@ -1,0 +1,230 @@
+.extra-info-display {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.extra-info-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.extra-info-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.extra-info-label::before {
+  content: "✨";
+  font-size: 16px;
+}
+
+.extra-info-description {
+  font-size: 12px;
+  opacity: 0.9;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.extra-info-content {
+  padding: 16px;
+  background: white;
+  min-height: 60px;
+  line-height: 1.6;
+}
+
+.extra-info-content h1,
+.extra-info-content h2,
+.extra-info-content h3,
+.extra-info-content h4,
+.extra-info-content h5,
+.extra-info-content h6 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.extra-info-content p {
+  margin: 0 0 8px 0;
+  color: #555;
+}
+
+.extra-info-content ul,
+.extra-info-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.extra-info-content li {
+  margin: 4px 0;
+  color: #555;
+}
+
+.extra-info-content blockquote {
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-left: 4px solid #007bff;
+  background: #f8f9fa;
+  color: #666;
+  font-style: italic;
+}
+
+.extra-info-content code {
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  color: #d73a49;
+}
+
+.extra-info-content pre {
+  background: #f6f8fa;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid #e1e4e8;
+}
+
+.extra-info-content pre code {
+  background: none;
+  padding: 0;
+  color: #24292e;
+}
+
+.extra-info-footer {
+  background: #f8f9fa;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6c757d;
+  border-top: 1px solid #dee2e6;
+}
+
+.extra-info-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.extra-info-timestamp::before {
+  content: "🕐";
+  font-size: 12px;
+}
+
+.extra-info-source {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.extra-info-source::before {
+  content: "🤖";
+  font-size: 12px;
+}
+
+.extra-info-error {
+  color: #dc3545;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .extra-info-display {
+    margin: 12px 0;
+    border-radius: 8px;
+  }
+  
+  .extra-info-header {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .extra-info-description {
+    max-width: 150px;
+    font-size: 11px;
+  }
+  
+  .extra-info-content {
+    padding: 12px;
+  }
+  
+  .extra-info-footer {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .extra-info-display {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border-color: #4a5568;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .extra-info-header {
+    background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+  }
+  
+  .extra-info-content {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  .extra-info-content h1,
+  .extra-info-content h2,
+  .extra-info-content h3,
+  .extra-info-content h4,
+  .extra-info-content h5,
+  .extra-info-content h6 {
+    color: #f7fafc;
+  }
+  
+  .extra-info-content p,
+  .extra-info-content li {
+    color: #e2e8f0;
+  }
+  
+  .extra-info-content blockquote {
+    background: #4a5568;
+    color: #cbd5e0;
+    border-left-color: #3182ce;
+  }
+  
+  .extra-info-content code {
+    background: #4a5568;
+    color: #fbb6ce;
+  }
+  
+  .extra-info-content pre {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .extra-info-content pre code {
+    color: #e2e8f0;
+  }
+  
+  .extra-info-footer {
+    background: #4a5568;
+    color: #a0aec0;
+    border-top-color: #718096;
+  }
+}
