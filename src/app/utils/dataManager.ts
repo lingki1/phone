@@ -105,6 +105,8 @@ class DataManager {
               try { this.db?.close(); } catch {}
             };
           } catch {}
+          // 数据库初始化完成后，自动清理已存在的 null 内容
+          this.autoCleanupNullContent();
           resolve();
         };
 
@@ -2174,6 +2176,63 @@ class DataManager {
         lastStoryInteraction: 0,
         memoryBalance: 'balanced'
       };
+    }
+  }
+
+  // 自动清理已存在的 null 内容（一次性修复）
+  private async autoCleanupNullContent(): Promise<void> {
+    try {
+      // 检查是否已经执行过清理（避免重复执行）
+      const cleanupFlag = await this.getGlobalData('null_content_cleanup_completed');
+      if (cleanupFlag) {
+        console.log('Null content cleanup already completed, skipping...');
+        return;
+      }
+
+      console.log('Starting automatic cleanup of null content in story mode messages...');
+      
+      // 获取所有聊天
+      const chats = await this.getAllChats();
+      let totalFixed = 0;
+      
+      for (const chat of chats) {
+        try {
+          // 获取剧情模式消息
+          const storyMessages = await this.getStoryModeMessages(chat.id);
+          let hasChanges = false;
+          
+          // 检查是否有需要修复的消息
+          const fixedMessages = storyMessages.map(msg => {
+            if (msg.content === null || msg.content === undefined) {
+              hasChanges = true;
+              totalFixed++;
+              return { ...msg, content: '' };
+            }
+            return msg;
+          });
+          
+          // 如果有修复，保存回数据库
+          if (hasChanges) {
+            await this.saveStoryModeMessages(chat.id, fixedMessages);
+            console.log(`Fixed ${fixedMessages.length - storyMessages.length} null content messages in chat ${chat.id}`);
+          }
+        } catch (error) {
+          console.warn(`Failed to cleanup null content for chat ${chat.id}:`, error);
+        }
+      }
+      
+      if (totalFixed > 0) {
+        console.log(`Auto-cleanup completed: fixed ${totalFixed} messages with null content`);
+      } else {
+        console.log('No null content found, cleanup not needed');
+      }
+      
+      // 标记清理已完成
+      await this.saveGlobalData('null_content_cleanup_completed', true);
+      
+    } catch (error) {
+      console.error('Auto-cleanup of null content failed:', error);
+      // 静默失败，不影响主要功能
     }
   }
 }

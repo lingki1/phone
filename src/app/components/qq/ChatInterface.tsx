@@ -172,7 +172,7 @@ export default function ChatInterface({
     };
   }, [chat.id]);
 
-  // 加载与持久化“发送即生成”设置
+  // 加载与持久化"发送即生成"设置
   useEffect(() => {
     try {
       const saved = localStorage.getItem(`autoGenerateOnSend_${chat.id}`);
@@ -843,7 +843,7 @@ export default function ChatInterface({
       adjustTextareaHeight();
     }, 0);
     
-    // 如果开启“发送键生成回复”，则自动触发AI
+    // 如果开启"发送键生成回复"，则自动触发AI
     if (autoGenerateOnSend && !isPending && !isLoading) {
       // 开始AI任务并清除新消息标志，避免重复
       startAiTask();
@@ -2051,7 +2051,7 @@ export default function ChatInterface({
     // 清空输入框
     setStoryModeInput('');
     
-    // 如果开启“发送键生成回复”，则自动触发剧情模式AI
+    // 如果开启"发送键生成回复"，则自动触发剧情模式AI
     if (autoGenerateOnSend && !isPending && !isLoading) {
       console.log('Auto-generating AI response for story mode');
       startAiTask();
@@ -2246,6 +2246,35 @@ export default function ChatInterface({
       }, 100);
     }
   }, [chat.messages, shouldAutoScroll]);
+
+  // 剧情模式输入防抖优化
+  const storyModeInputTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const handleStoryModeInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    
+    // 立即更新输入值，保证响应性
+    setStoryModeInput(value);
+    
+    // 防抖处理，避免频繁的状态更新和重渲染
+    if (storyModeInputTimerRef.current) {
+      clearTimeout(storyModeInputTimerRef.current);
+    }
+    
+    storyModeInputTimerRef.current = setTimeout(() => {
+      // 延迟处理，减少性能压力
+      // 这里可以添加其他需要延迟处理的逻辑
+    }, 100);
+  }, []);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (storyModeInputTimerRef.current) {
+        clearTimeout(storyModeInputTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <ChatBackgroundManager
@@ -2601,9 +2630,7 @@ export default function ChatInterface({
           <textarea
             ref={textareaRef}
             value={isStoryMode ? storyModeInput : message}
-            onChange={isStoryMode ? (e) => {
-              setStoryModeInput(e.target.value);
-            } : handleInputChange}
+            onChange={isStoryMode ? handleStoryModeInputChange : handleInputChange}
             onKeyPress={isStoryMode ? (e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

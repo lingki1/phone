@@ -228,8 +228,10 @@ function StoryModeDisplay({
   }, [parseDecoratedText]);
 
   const renderStoryContent = useCallback((content: string) => {
+    // 兜底保护：避免 content 为 null/undefined 时调用 split 报错
+    const safeContent = typeof content === 'string' ? content : '';
     // 处理换行符，将\n转换为<br>标签
-    const lines = content.split('\n');
+    const lines = safeContent.split('\n');
     
     return lines.map((line, lineIndex) => (
       <React.Fragment key={lineIndex}>
@@ -311,7 +313,7 @@ function StoryModeDisplay({
               <>
                 <button 
                   className="story-action-btn"
-                  onClick={() => onEditMessage(msg.id, msg.content)}
+                  onClick={() => onEditMessage(msg.id, String(msg.content || ''))}
                   title="编辑"
                 >
                   ✏️
@@ -370,7 +372,7 @@ function StoryModeDisplay({
             </div>
           ) : (
             <div className="story-content-text">
-              {renderStoryContent(msg.content)}
+              {renderStoryContent(String(msg.content || ''))}
             </div>
           )}
         </div>
