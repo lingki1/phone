@@ -20,12 +20,13 @@ interface ChatListProps {
   onDeleteChat?: (chatId: string) => void;
   onEditChat?: (chatId: string) => void;
   onAssociateWorldBook?: (chatId: string) => void;
+  onResetChat?: (chatId: string) => void;
   // 可选：搜索高亮摘要
   searchQuery?: string;
   searchHitMap?: Record<string, { messageId: string; content: string } | null>;
 }
 
-export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook, searchQuery, searchHitMap }: ChatListProps) {
+export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook, onResetChat, searchQuery, searchHitMap }: ChatListProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -77,6 +78,15 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
   const handleAssociateWorldBookClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     onAssociateWorldBook?.(chatId);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const handleResetChatClick = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    if (confirm('确定要清空这个角色的所有聊天记录吗？此操作不可撤销！')) {
+      onResetChat?.(chatId);
+    }
     setActiveMenuId(null);
     setMenuPosition(null);
   };
@@ -185,6 +195,12 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
               onClick={(e) => handleAssociateWorldBookClick(e, activeMenuId)}
             >
               关联世界书
+            </button>
+            <button 
+              className="menu-item"
+              onClick={(e) => handleResetChatClick(e, activeMenuId)}
+            >
+              重置聊天
             </button>
             <button 
               className="menu-item delete"

@@ -563,6 +563,57 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
     }
   };
 
+  // 重置聊天（清空所有消息记录）
+  const handleResetChat = async (chatId: string) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (!chat) return;
+
+    try {
+      // 创建新的聊天对象，保留基本信息但清空消息
+      const resetChat: ChatItem = {
+        ...chat,
+        messages: [],
+        lastMessage: '开始聊天吧！',
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        unreadCount: 0,
+        lastReadTimestamp: Date.now()
+      };
+
+      // 更新本地状态
+      const updatedChats = chats.map(c => 
+        c.id === chatId ? resetChat : c
+      );
+      setChats(updatedChats);
+
+      // 保存到数据库
+      await dataManager.saveChat(resetChat);
+
+      // 清空剧情模式消息
+      try {
+        await dataManager.deleteStoryModeMessages(chatId);
+        console.log(`剧情模式消息已清空`);
+      } catch (error) {
+        console.error('Failed to clear story mode messages:', error);
+      }
+
+      // 如果当前正在查看这个聊天，需要更新界面
+      if (selectedChatId === chatId) {
+        setSelectedChatId(null);
+        setCurrentScreen('list');
+      }
+
+      console.log(`聊天 ${chat.name} 的消息记录已清空`);
+    } catch (error) {
+      console.error('Failed to reset chat:', error);
+      // 回退到localStorage
+      const updatedChats = chats.map(c => 
+        c.id === chatId ? { ...c, messages: [], lastMessage: '开始聊天吧！', timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }), unreadCount: 0, lastReadTimestamp: Date.now() } : c
+      );
+      setChats(updatedChats);
+      localStorage.setItem('chats', JSON.stringify(updatedChats));
+    }
+  };
+
   // 更新好友信息
   const handleUpdateFriend = (updatedChat: ChatItem) => {
     handleUpdateChat(updatedChat);
@@ -784,6 +835,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onDeleteChat={handleDeleteChat}
             onEditChat={handleEditChat}
             onAssociateWorldBook={handleAssociateWorldBook}
+            onResetChat={handleResetChat}
             searchQuery={searchQuery}
             searchHitMap={searchMessageMatches}
           />
