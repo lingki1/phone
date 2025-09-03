@@ -94,6 +94,10 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   // 搜索匹配缓存（包含线上+剧情消息），保存首条命中消息用于跳转
   const [searchMessageMatches, setSearchMessageMatches] = useState<Record<string, { messageId: string; content: string } | null>>({});
   const [_isSearching, setIsSearching] = useState(false);
+  
+  // 上下文注入消息上限（仅本地存储，不入库）
+  const [maxMemory, setMaxMemory] = useState<number>(20);
+  const [showContextSettings, setShowContextSettings] = useState(false);
 
   // 新内容计数状态
   const [newContentCount, setNewContentCount] = useState<{
@@ -116,6 +120,50 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
 
     loadNewContentCount();
   }, []);
+
+  // 读取本地 globalSettings.maxMemory（不入库）
+  useEffect(() => {
+    try {
+      const gsStr = localStorage.getItem('globalSettings');
+      const gs = gsStr ? JSON.parse(gsStr) : {};
+      const value = typeof gs.maxMemory === 'number' ? gs.maxMemory : 20;
+      setMaxMemory(value);
+    } catch {
+      setMaxMemory(20);
+    }
+  }, []);
+
+  // 更新本地 globalSettings.maxMemory（不入库）
+  const handleMaxMemoryChange = (value: number) => {
+    const bounded = Math.max(1, Math.min(500, Math.round(Number.isFinite(value) ? value : 20)));
+    setMaxMemory(bounded);
+    try {
+      const gsStr = localStorage.getItem('globalSettings');
+      const gs = gsStr ? JSON.parse(gsStr) : {};
+      gs.maxMemory = bounded;
+      localStorage.setItem('globalSettings', JSON.stringify(gs));
+    } catch (e) {
+      console.error('Failed to update globalSettings.maxMemory:', e);
+    }
+  };
+
+  // 点击外部区域关闭设置面板
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showContextSettings && !target.closest('.context-settings-container')) {
+        setShowContextSettings(false);
+      }
+    };
+
+    if (showContextSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showContextSettings]);
 
   // 监听新内容更新事件
   useEffect(() => {
@@ -815,7 +863,11 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             onOpenMePage={() => handleViewChange('me')}
             onOpenCharacterImport={handleOpenCharacterImport}
             personalSettings={personalSettings}
-                    />
+            maxMemory={maxMemory}
+            onMaxMemoryChange={handleMaxMemoryChange}
+            showContextSettings={showContextSettings}
+            onToggleContextSettings={() => setShowContextSettings(!showContextSettings)}
+          />
           
           {/* 搜索框 */}
           <div className="search-bar">
