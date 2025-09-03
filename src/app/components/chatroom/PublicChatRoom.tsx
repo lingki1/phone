@@ -624,76 +624,67 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
             const isSelf = state.currentUser && message.nickname === state.currentUser.nickname;
             const matchedUser = state.users.find(u => u.nickname === message.nickname);
             const isAdmin = !!matchedUser?.isAdmin;
-            const avatarText = message.nickname?.slice(0, 1) || '客';
             return (
               <div key={message.id} className={`chatroom-message-item ${isSelf ? 'self' : 'other'} ${message.isMarked ? 'marked' : ''}`}>
-                <div className="chatroom-message-row">
-                  {!isSelf && (
-                    <div className="chatroom-message-avatar" aria-hidden>{avatarText}</div>
-                  )}
-                  <div className="chatroom-message-bubble">
-                    <div className="chatroom-message-header">
-                      <span className="chatroom-message-nickname">
-                        {message.nickname}
-                        {isAdmin && <span className="chatroom-admin-badge" title="管理员">🛡️ 管理员</span>}
-                      </span>
-                      <span className="chatroom-message-time">
-                        {formatTimestamp(message.timestamp)}
-                      </span>
-                      {state.currentUser?.isAdmin && (
-                        <>
+                <div className="chatroom-message-bubble">
+                  <div className="chatroom-message-header">
+                    <span className="chatroom-message-nickname">
+                      {message.nickname}
+                      {isAdmin && <span className="chatroom-admin-badge" title="管理员">🛡️ 管理员</span>}
+                    </span>
+                    <span className="chatroom-message-time">
+                      {formatTimestamp(message.timestamp)}
+                    </span>
+                    {state.currentUser?.isAdmin && (
+                      <>
+                        <button
+                          className="chatroom-message-delete"
+                          title="删除该消息（管理员）"
+                          onClick={async () => {
+                            if (!state.currentUser) return;
+                            if (!confirm('确定要删除这条消息吗？')) return;
+                            try {
+                              await deleteMessage(message.id, state.currentUser.id);
+                              await refreshMessages();
+                            } catch (e) {
+                              alert(e instanceof Error ? e.message : '删除失败');
+                            }
+                          }}
+                        >
+                          删除
+                        </button>
+                        {message.isMarked ? (
                           <button
-                            className="chatroom-message-delete"
-                            title="删除该消息（管理员）"
-                            onClick={async () => {
-                              if (!state.currentUser) return;
-                              if (!confirm('确定要删除这条消息吗？')) return;
-                              try {
-                                await deleteMessage(message.id, state.currentUser.id);
-                                await refreshMessages();
-                              } catch (e) {
-                                alert(e instanceof Error ? e.message : '删除失败');
-                              }
-                            }}
+                            className="chatroom-message-unmark"
+                            title="取消标记为待办事项"
+                            onClick={() => handleUnmarkAsTodo(message.id)}
                           >
-                            删除
+                            取消标记
                           </button>
-                          {message.isMarked ? (
-                            <button
-                              className="chatroom-message-unmark"
-                              title="取消标记为待办事项"
-                              onClick={() => handleUnmarkAsTodo(message.id)}
-                            >
-                              取消标记
-                            </button>
-                          ) : (
-                            <button
-                              className="chatroom-message-mark"
-                              title="标记为待办事项"
-                              onClick={() => handleMarkAsTodo(message.id)}
-                            >
-                              标记待办
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    <div className="chatroom-message-content" onClick={() => setQuotePreview({ timestamp: message.timestamp, senderName: message.nickname, content: message.content })}>
-                      {message.quote && (
-                        <div className="chatroom-quote-block">
-                          <div className="quote-header">
-                            <span className="quote-nickname">{message.quote.senderName}</span>
-                            <span className="quote-time">{formatTimestamp(message.quote.timestamp)}</span>
-                          </div>
-                          <div className="quote-content">{message.quote.content}</div>
-                        </div>
-                      )}
-                      {message.content}
-                    </div>
+                        ) : (
+                          <button
+                            className="chatroom-message-mark"
+                            title="标记为待办事项"
+                            onClick={() => handleMarkAsTodo(message.id)}
+                          >
+                            标记待办
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
-                  {isSelf && (
-                    <div className="chatroom-message-avatar self" aria-hidden>{avatarText}</div>
-                  )}
+                  <div className="chatroom-message-content" onClick={() => setQuotePreview({ timestamp: message.timestamp, senderName: message.nickname, content: message.content })}>
+                    {message.quote && (
+                      <div className="chatroom-quote-block">
+                        <div className="quote-header">
+                          <span className="quote-nickname">{message.quote.senderName}</span>
+                          <span className="quote-time">{formatTimestamp(message.quote.timestamp)}</span>
+                        </div>
+                        <div className="quote-content">{message.quote.content}</div>
+                      </div>
+                    )}
+                    {message.content}
+                  </div>
                 </div>
               </div>
             );
