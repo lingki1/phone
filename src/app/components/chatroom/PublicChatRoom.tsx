@@ -718,7 +718,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           
           <div className="chatroom-input-container">
             {quotePreview && (
-              <div className="chatroom-quote-preview" style={{ width: '100%' }}>
+              <div className="chatroom-quote-preview">
                 <div className="quote-header">
                   <span className="quote-nickname">{quotePreview.senderName}</span>
                   <button className="quote-cancel" onClick={() => setQuotePreview(null)} title="取消引用">×</button>
@@ -726,31 +726,33 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
                 <div className="quote-content">{quotePreview.content}</div>
               </div>
             )}
-            <textarea
-              ref={inputRef}
-              className="chatroom-message-input"
-              placeholder="输入消息..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleInputKeyPress}
-              onFocus={() => {
-                // 输入框聚焦时，尽量不打断用户手动浏览，上面 scrollToBottom 内部已做“是否在底部”判断
-                setTimeout(() => {
-                  scrollToBottom();
-                  inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }, 50);
-              }}
-              rows={1}
-              maxLength={500}
-            />
-            <button
-              className="chatroom-send-button"
-              onClick={handleSendMessage}
-              disabled={!canSend}
-              title={canSend ? '发送消息' : '请等待冷却时间'}
-            >
-              ➤
-            </button>
+            <div className="chatroom-input-row">
+              <textarea
+                ref={inputRef}
+                className="chatroom-message-input"
+                placeholder="输入消息..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleInputKeyPress}
+                onFocus={() => {
+                  // 输入框聚焦时，尽量不打断用户手动浏览，上面 scrollToBottom 内部已做"是否在底部"判断
+                  setTimeout(() => {
+                    scrollToBottom();
+                    inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                  }, 50);
+                }}
+                rows={1}
+                maxLength={500}
+              />
+              <button
+                className="chatroom-send-button"
+                onClick={handleSendMessage}
+                disabled={!canSend}
+                title={canSend ? '发送消息' : '请等待冷却时间'}
+              >
+                ➤
+              </button>
+            </div>
           </div>
         </div>
       )}

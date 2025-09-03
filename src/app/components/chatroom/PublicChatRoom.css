@@ -597,18 +597,21 @@
 .chatroom-scroll-to-bottom {
   position: fixed;
   right: 20px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border: none;
   border-radius: 50%;
   width: 50px;
   height: 50px;
   font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.3s;
   opacity: 0;
   transform: translateY(20px);
   z-index: 100;
+  /* 确保按钮在移动端也能正确显示 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .chatroom-scroll-bottom.show,
@@ -653,12 +656,14 @@
 
 .chatroom-input-container {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   background: white;
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 确保输入容器有足够的空间 */
+  min-height: 60px;
 }
 
 .chatroom-quote-preview {
@@ -668,6 +673,29 @@
   padding: 8px 12px;
   margin-bottom: 8px;
   font-size: 12px;
+  /* 确保引用预览不会遮挡输入框 */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 引用预览的取消按钮 */
+.quote-cancel {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  float: right;
+}
+
+.quote-cancel:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
 }
 
 .chatroom-message-input {
@@ -679,6 +707,18 @@
   line-height: 1.4;
   max-height: 120px;
   font-family: inherit;
+  /* 确保输入框有合适的尺寸 */
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+/* 输入行容器 */
+.chatroom-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .chatroom-send-button {
@@ -691,6 +731,8 @@
   cursor: pointer;
   transition: all 0.2s;
   min-width: 50px;
+  /* 确保按钮在移动端有合适的触摸区域 */
+  min-height: 44px;
 }
 
 .chatroom-send-button:hover:not(:disabled) {
@@ -756,6 +798,26 @@
   .chatroom-chat-input-area {
     padding: 15px;
   }
+  
+  /* 移动端滚动按钮调整 */
+  .chatroom-scroll-bottom,
+  .chatroom-scroll-to-bottom {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    right: 16px;
+    /* 移动端增强可见性 */
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+  
+  .chatroom-scroll-bottom {
+    bottom: 80px;
+  }
+  
+  .chatroom-scroll-to-bottom {
+    bottom: 130px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -771,5 +833,25 @@
   
   .chatroom-message-content {
     font-size: 13px;
+  }
+  
+  /* 小屏幕滚动按钮进一步调整 */
+  .chatroom-scroll-bottom,
+  .chatroom-scroll-to-bottom {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+    right: 12px;
+    /* 小屏幕增强可见性 */
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .chatroom-scroll-bottom {
+    bottom: 70px;
+  }
+  
+  .chatroom-scroll-to-bottom {
+    bottom: 115px;
   }
 }
