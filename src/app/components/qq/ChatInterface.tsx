@@ -92,6 +92,9 @@ export default function ChatInterface({
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [chatBackground, setChatBackground] = useState<string>('');
+  const [personaList, setPersonaList] = useState<Array<{ id: string; userAvatar: string; userNickname: string; userBio: string; isActive?: boolean }>>([]);
+  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
+  const personaMenuRef = useRef<HTMLDivElement>(null);
 
   const [chatOpacity, setChatOpacity] = useState<number>(80);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
@@ -383,6 +386,11 @@ export default function ChatInterface({
         await dataManager.initDB();
         const settings = await dataManager.getPersonalSettings();
         setDbPersonalSettings(settings);
+        // 预加载人设列表
+        try {
+          const all = await dataManager.getAllPersonalSettingsFromCollection();
+          setPersonaList(all);
+        } catch {}
       } catch (error) {
         console.error('Failed to load personal settings from database:', error);
         // 如果数据库加载失败，使用传入的personalSettings作为后备
@@ -396,6 +404,62 @@ export default function ChatInterface({
     
     loadPersonalSettings();
   }, [personalSettings]);
+
+  // 监听个人设置更新事件以刷新人设列表
+  useEffect(() => {
+    const refreshPersonaList = async () => {
+      try {
+        await dataManager.initDB();
+        const all = await dataManager.getAllPersonalSettingsFromCollection();
+        setPersonaList(all);
+      } catch {}
+    };
+    window.addEventListener('personalSettingsUpdated', refreshPersonaList as EventListener);
+    return () => window.removeEventListener('personalSettingsUpdated', refreshPersonaList as EventListener);
+  }, []);
+
+  // 点击外部或按下ESC关闭人设菜单
+  useEffect(() => {
+    if (!showPersonaMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (personaMenuRef.current && !personaMenuRef.current.contains(target)) {
+        setShowPersonaMenu(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowPersonaMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showPersonaMenu]);
+
+  const handleQuickSelectPersona = useCallback(async (id: string) => {
+    try {
+      await dataManager.initDB();
+      await dataManager.setActivePersonalSettings(id);
+      const all = await dataManager.getAllPersonalSettingsFromCollection();
+      setPersonaList(all);
+      const picked = all.find(p => p.id === id);
+      if (picked) {
+        const newSettings = { userAvatar: picked.userAvatar, userNickname: picked.userNickname, userBio: picked.userBio };
+        try {
+          await dataManager.savePersonalSettings(newSettings);
+        } catch {}
+        setDbPersonalSettings(newSettings);
+        // 通知全局
+        window.dispatchEvent(new CustomEvent('personalSettingsUpdated', { detail: { settings: newSettings } }));
+      }
+      setShowPersonaMenu(false);
+    } catch (e) {
+      console.error('快速切换人设失败:', e);
+      alert('切换人设失败，请重试');
+    }
+  }, []);
 
   // 加载用户余额
   useEffect(() => {
@@ -2288,7 +2352,7 @@ export default function ChatInterface({
       {/* 顶部导航栏 */}
       <div className="chat-header">
         <button className="back-btn" onClick={onBack}>‹</button>
-        <div className="chat-info">
+        <div className="chat-info" style={{ position: 'relative' }}>
           <Image 
             src={chat.avatar} 
             alt={chat.name}
@@ -2306,7 +2370,7 @@ export default function ChatInterface({
             )}
           </div>
         </div>
-                  <div className="chat-actions">
+                  <div className="chat-actions" style={{ position: 'relative' }}>
           <button 
             className="action-btn"
             onClick={() => setShowWorldBookAssociationSwitch(true)}
@@ -2351,6 +2415,45 @@ export default function ChatInterface({
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
             </svg>
           </button>
+
+          {/* 快速切换人设 */}
+          <div style={{ position: 'relative' }} ref={personaMenuRef}>
+            <button
+              className="action-btn"
+              onClick={() => setShowPersonaMenu(prev => !prev)}
+              title="切换人设"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="7" r="4"/>
+                <path d="M5.5 22a6.5 6.5 0 0 1 13 0"/>
+              </svg>
+            </button>
+            {showPersonaMenu && (
+              <div className="mask-persona-dropdown">
+                {personaList.length === 0 ? (
+                  <div className="empty-list">暂无保存的人设</div>
+                ) : (
+                  <div className="persona-list mask-persona-list">
+                    {personaList.map(p => (
+                      <div key={p.id} className={`persona-item mask-persona-item ${p.isActive ? 'active' : ''}`} onClick={() => handleQuickSelectPersona(p.id)}>
+                        <div className="persona-main mask-persona-main">
+                          <div className="persona-avatar mask-persona-avatar">
+                            <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || '未命名'} width={48} height={48} unoptimized={p.userAvatar?.startsWith?.('data:')} />
+                          </div>
+                          <div className="persona-info mask-persona-info">
+                            <div className="persona-title mask-persona-title">
+                              <span className="persona-name mask-persona-name">{p.userNickname || '未命名'}</span>
+                            </div>
+                            <div className="persona-bio mask-persona-bio">{(p.userBio || '').slice(0, 60)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {chat.isGroup ? (
             <>

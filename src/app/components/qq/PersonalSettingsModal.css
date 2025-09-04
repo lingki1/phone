@@ -47,7 +47,7 @@
 
 .personal-settings-modal .modal-body {
   padding: 20px;
-  max-height: calc(90vh - 140px);
+  max-height: calc(90vh - 160px);
   overflow-y: auto;
 }
 
@@ -103,22 +103,28 @@
 
 .personal-settings-modal .modal-footer {
   display: flex;
-  gap: 10px;
-  padding: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 20px;
   border-top: 1px solid #e0e0e0;
   background-color: #f8f9fa;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .personal-settings-modal .cancel-btn,
 .personal-settings-modal .save-btn {
   flex: 1;
-  padding: 12px 20px;
+  min-width: 100px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  text-align: center;
 }
 
 .personal-settings-modal .cancel-btn {
@@ -232,6 +238,297 @@
 
 .avatar-tips p {
   margin: 0;
+}
+
+/* 顶部工具栏（保存到列表按钮） */
+.mask-persona-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 0 8px 0;
+}
+
+.mask-persona-toolbar-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.mask-persona-toolbar-btn:hover {
+  background: linear-gradient(135deg, #5855eb, #7c3aed);
+}
+
+/* mask- 开头的新功能样式（人设列表）*/
+.mask-persona-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.mask-persona-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mask-persona-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.mask-persona-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.mask-persona-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.mask-persona-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  padding-right: 130px; /* 为右侧操作区预留空间（与按钮组宽度贴合） */
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-height: 72px; /* 更紧凑的最小高度 */
+}
+
+.mask-persona-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mask-persona-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+.mask-persona-item:hover::before {
+  opacity: 1;
+}
+
+.mask-persona-item.active {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, #fafaff 0%, #f8faff 100%);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.mask-persona-item.active::before {
+  opacity: 0; /* 取消当前卡片顶部紫色横线高亮 */
+}
+
+.mask-persona-item.selected {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 0px;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.mask-persona-main {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.mask-persona-avatar {
+  width: 52px;
+  height: 50px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #f3f4f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.mask-persona-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(45deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mask-persona-avatar:hover {
+  border-color: #6366f1;
+  transform: scale(1.05);
+}
+
+.mask-persona-avatar:hover::after {
+  opacity: 1;
+}
+
+.mask-persona-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mask-persona-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mask-persona-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.3;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mask-persona-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(99, 102, 241, 0.2);
+}
+
+.mask-persona-bio {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.mask-persona-actions {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  width: 118px; /* 3 个 32px 图标 + 两个 6px 间距 -> 118px */
+  flex-wrap: wrap;
+}
+
+.mask-persona-action {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  min-width: 70px;
+}
+
+.mask-persona-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.3s ease;
+}
+
+.mask-persona-action:hover::before {
+  left: 100%;
+}
+
+.mask-persona-action:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.mask-persona-action-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.mask-persona-action-primary:hover {
+  background: linear-gradient(135deg, #5855eb, #7c3aed);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}
+
+.mask-persona-action-secondary {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.mask-persona-action-secondary:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.mask-persona-action-danger {
+  background: linear-gradient(135deg, #fef2f2, #fce7e7);
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.mask-persona-action-danger:hover {
+  background: linear-gradient(135deg, #fee2e2, #fca5a5);
+  border-color: #f87171;
+  color: #b91c1c;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
+}
+
+/* 图标按钮尺寸与对齐 */
+.mask-persona-action-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.empty-list {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  border-radius: 12px;
+  border: 2px dashed #e5e7eb;
 }
 
 /* 响应式设计 */

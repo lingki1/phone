@@ -16,6 +16,15 @@ interface BackupData {
     userNickname: string;
     userBio: string;
   };
+  personalSettingsCollection?: Array<{
+    id: string;
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    isActive?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }>;
   themeSettings: {
     selectedTheme: string;
     lastUpdated: number;
@@ -326,6 +335,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
 
       const apiConfig = await dataManager.getApiConfig();
       const personalSettings = await dataManager.getPersonalSettings();
+      const personalSettingsCollection = await dataManager.getAllPersonalSettingsFromCollection();
       const themeSettings = await dataManager.getThemeSettings() || {
         selectedTheme: 'default',
         lastUpdated: Date.now()
@@ -437,6 +447,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         chats: optimizedChats,
         apiConfig,
         personalSettings,
+        personalSettingsCollection,
         themeSettings,
         balance,
         transactions,
@@ -665,11 +676,15 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         return chat;
       });
 
+      // 收集多人设列表
+      const personalSettingsCollection = await dataManager.getAllPersonalSettingsFromCollection();
+
       // 构建导出数据
       const exportData: BackupData = {
         chats: optimizedChats,
         apiConfig,
         personalSettings,
+        personalSettingsCollection,
         themeSettings,
         balance,
         transactions,
@@ -775,6 +790,12 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         await dataManager.savePersonalSettings(importData.personalSettings);
       }
       setImportProgress(55);
+
+      // 导入多人设列表
+      if (importData.personalSettingsCollection && Array.isArray(importData.personalSettingsCollection)) {
+        setCurrentOperation('正在导入人设列表...');
+        await dataManager.importPersonalSettingsCollection(importData.personalSettingsCollection);
+      }
 
       // 导入主题设置
       if (importData.themeSettings) {

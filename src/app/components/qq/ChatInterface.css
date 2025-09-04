@@ -1,3 +1,17 @@
+.mask-persona-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 260px;
+  max-width: 320px;
+  z-index: 30;
+  padding: 8px;
+}
+
 /* 聊天界面样式 - 使用flex布局自适应 */
 .chat-interface {
   width: 100%;

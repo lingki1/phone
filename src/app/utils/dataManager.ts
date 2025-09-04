@@ -10,6 +10,7 @@ const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const SAVED_API_CONFIGS_STORE = 'savedApiConfigs';
 const PERSONAL_SETTINGS_STORE = 'personalSettings';
+const PERSONAL_SETTINGS_COLLECTION_STORE = 'personalSettingsCollection';
 const THEME_SETTINGS_STORE = 'themeSettings';
 const BALANCE_STORE = 'balance';
 const TRANSACTION_STORE = 'transactions';
@@ -131,6 +132,14 @@ class DataManager {
             // 创建个人信息存储
             if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_STORE)) {
               db.createObjectStore(PERSONAL_SETTINGS_STORE, { keyPath: 'id' });
+            }
+
+            // 创建个人信息集合存储（支持多套人设）
+            if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_COLLECTION_STORE)) {
+              const coll = db.createObjectStore(PERSONAL_SETTINGS_COLLECTION_STORE, { keyPath: 'id' });
+              coll.createIndex('createdAt', 'createdAt', { unique: false });
+              coll.createIndex('isActive', 'isActive', { unique: false });
+              coll.createIndex('userNickname', 'userNickname', { unique: false });
             }
 
             // 创建主题设置存储
@@ -471,6 +480,203 @@ class DataManager {
     });
   }
 
+  // ==================== 多套人设集合方法 ====================
+  async addPersonalSettingsToCollection(settings: {
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    // 可选：是否设为当前
+    setActive?: boolean;
+  }): Promise<{ id: string }> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PERSONAL_SETTINGS_COLLECTION_STORE, PERSONAL_SETTINGS_STORE], 'readwrite');
+      const store = transaction.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const record = {
+        id,
+        ...settings,
+        isActive: Boolean(settings.setActive) || false,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      } as const;
+
+      const request = store.add(record as unknown as Record<string, unknown>);
+      request.onerror = () => reject(new Error('Failed to add personal settings to collection'));
+      request.onsuccess = async () => {
+        try {
+          if (settings.setActive) {
+            // 同步设置到默认个人信息
+            const defaultTx = this.db!.transaction([PERSONAL_SETTINGS_STORE], 'readwrite');
+            const defaultStore = defaultTx.objectStore(PERSONAL_SETTINGS_STORE);
+            await new Promise<void>((res, rej) => {
+              const putReq = defaultStore.put({ id: 'default', userAvatar: settings.userAvatar, userNickname: settings.userNickname, userBio: settings.userBio });
+              putReq.onerror = () => rej(new Error('Failed to set active personal settings'));
+              putReq.onsuccess = () => res();
+            });
+            // 将其他记录 isActive 置为 false
+            await this.setActivePersonalSettings(id);
+          }
+          resolve({ id });
+        } catch (e) {
+          reject(e as Error);
+        }
+      };
+    });
+  }
+
+  async getAllPersonalSettingsFromCollection(): Promise<Array<{
+    id: string;
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    isActive?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }>> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PERSONAL_SETTINGS_COLLECTION_STORE], 'readonly');
+      const store = transaction.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+      const request = store.getAll();
+
+      request.onerror = () => reject(new Error('Failed to get personal settings collection'));
+      request.onsuccess = () => {
+        type DBPersonalSettings = {
+          id: string;
+          userAvatar?: string;
+          userNickname?: string;
+          userBio?: string;
+          isActive?: boolean;
+          createdAt?: number;
+          updatedAt?: number;
+        };
+        const results = (request.result || []) as DBPersonalSettings[];
+        const mapped = results.map(r => ({
+          id: String(r.id),
+          userAvatar: String(r.userAvatar || ''),
+          userNickname: String(r.userNickname || ''),
+          userBio: String(r.userBio || ''),
+          isActive: Boolean(r.isActive),
+          createdAt: Number(r.createdAt || 0),
+          updatedAt: Number(r.updatedAt || 0)
+        }));
+        // 按创建时间倒序
+        resolve(mapped.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+      };
+    });
+  }
+
+  async updatePersonalSettingsInCollection(id: string, updates: {
+    userAvatar?: string;
+    userNickname?: string;
+    userBio?: string;
+    setActive?: boolean;
+  }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const tx = this.db!.transaction([PERSONAL_SETTINGS_COLLECTION_STORE, PERSONAL_SETTINGS_STORE], 'readwrite');
+      const store = tx.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+
+      const getReq = store.get(id);
+      getReq.onerror = () => reject(new Error('Failed to get personal settings item'));
+      getReq.onsuccess = async () => {
+        const item = getReq.result;
+        if (!item) {
+          reject(new Error('Personal settings item not found'));
+          return;
+        }
+        type DBPersonalSettings = {
+          id: string;
+          userAvatar?: string;
+          userNickname?: string;
+          userBio?: string;
+          isActive?: boolean;
+          createdAt?: number;
+          updatedAt?: number;
+        };
+        const updated: DBPersonalSettings = {
+          ...item,
+          ...('userAvatar' in updates ? { userAvatar: updates.userAvatar } : {}),
+          ...('userNickname' in updates ? { userNickname: updates.userNickname } : {}),
+          ...('userBio' in updates ? { userBio: updates.userBio } : {}),
+          ...('setActive' in updates ? { isActive: Boolean(updates.setActive) } : {}),
+          updatedAt: Date.now()
+        };
+
+        const putReq = store.put(updated);
+        putReq.onerror = () => reject(new Error('Failed to update personal settings item'));
+        putReq.onsuccess = async () => {
+          try {
+            if (updates.setActive) {
+              // 同步默认人设
+              const defaultTx = this.db!.transaction([PERSONAL_SETTINGS_STORE], 'readwrite');
+              const defaultStore = defaultTx.objectStore(PERSONAL_SETTINGS_STORE);
+              await new Promise<void>((res, rej) => {
+                const put = defaultStore.put({ id: 'default', userAvatar: updated.userAvatar || '', userNickname: updated.userNickname || '', userBio: updated.userBio || '' });
+                put.onerror = () => rej(new Error('Failed to update default personal settings'));
+                put.onsuccess = () => res();
+              });
+              await this.setActivePersonalSettings(id);
+            }
+            resolve();
+          } catch (e) {
+            reject(e as Error);
+          }
+        };
+      };
+    });
+  }
+
+  async deletePersonalSettingsFromCollection(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PERSONAL_SETTINGS_COLLECTION_STORE], 'readwrite');
+      const store = transaction.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(new Error('Failed to delete personal settings item'));
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async setActivePersonalSettings(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const tx = this.db!.transaction([PERSONAL_SETTINGS_COLLECTION_STORE], 'readwrite');
+      const store = tx.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+      const getAllReq = store.getAll();
+
+      getAllReq.onerror = () => reject(new Error('Failed to enumerate personal settings'));
+      getAllReq.onsuccess = () => {
+        type DBPersonalSettings = {
+          id: string;
+          userAvatar?: string;
+          userNickname?: string;
+          userBio?: string;
+          isActive?: boolean;
+          createdAt?: number;
+          updatedAt?: number;
+        };
+        const items = (getAllReq.result || []) as DBPersonalSettings[];
+        const updates = items.map((it) => ({ ...it, isActive: it.id === id }));
+
+        let pending = updates.length;
+        if (pending === 0) { resolve(); return; }
+        updates.forEach(u => {
+          const put = store.put({ ...u, updatedAt: Date.now() });
+          put.onerror = () => reject(new Error('Failed to mark active personal settings'));
+          put.onsuccess = () => { pending--; if (pending === 0) resolve(); };
+        });
+      };
+    });
+  }
+
   // 创建默认群聊数据
   createDefaultGroupChat(members: GroupMember[]): ChatItem {
     const groupId = Date.now().toString();
@@ -522,6 +728,7 @@ class DataManager {
       const chats = await this.getAllChats();
       const apiConfig = await this.getApiConfig();
       const personalSettings = await this.getPersonalSettings();
+      const personalSettingsCollection = await this.getAllPersonalSettingsFromCollection();
       const themeSettings = await this.getThemeSettings();
       const balance = await this.getBalance();
       const transactions = await this.getTransactionHistory();
@@ -575,6 +782,7 @@ class DataManager {
         chats,
         apiConfig,
         personalSettings,
+        personalSettingsCollection,
         themeSettings,
         balance,
         transactions,
@@ -624,6 +832,11 @@ class DataManager {
       // 导入个人信息
       if (data.personalSettings) {
         await this.savePersonalSettings(data.personalSettings);
+      }
+
+      // 导入多套人设集合
+      if (data.personalSettingsCollection && Array.isArray(data.personalSettingsCollection)) {
+        await this.importPersonalSettingsCollection(data.personalSettingsCollection);
       }
 
       // 导入主题设置
@@ -720,13 +933,41 @@ class DataManager {
     return this.importAllData(jsonData);
   }
 
+  // 批量导入多人设集合（供外部/备份调用）
+  async importPersonalSettingsCollection(items: Array<{
+    id: string;
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    isActive?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }>): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const tx = this.db.transaction([PERSONAL_SETTINGS_COLLECTION_STORE], 'readwrite');
+    const store = tx.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
+    await Promise.all(items.map(item => new Promise<void>((resolve, reject) => {
+      const req = store.put({
+        id: item.id,
+        userAvatar: item.userAvatar,
+        userNickname: item.userNickname,
+        userBio: item.userBio,
+        isActive: Boolean(item.isActive),
+        createdAt: item.createdAt || Date.now(),
+        updatedAt: item.updatedAt || Date.now()
+      });
+      req.onerror = () => reject(new Error('Failed to import personal settings item'));
+      req.onsuccess = () => resolve();
+    })));
+  }
+
   // 清空所有数据
   async clearAllData(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([
-        CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, THEME_SETTINGS_STORE, 
+        CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, PERSONAL_SETTINGS_COLLECTION_STORE, THEME_SETTINGS_STORE, 
         BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE, PRESET_STORE, 
         CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, STORY_MODE_MESSAGES_STORE, DISCOVER_POSTS_STORE, 
         DISCOVER_COMMENTS_STORE, DISCOVER_SETTINGS_STORE, DISCOVER_NOTIFICATIONS_STORE, 
@@ -736,6 +977,7 @@ class DataManager {
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
       const personalStore = transaction.objectStore(PERSONAL_SETTINGS_STORE);
+      const personalCollectionStore = transaction.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
       const themeStore = transaction.objectStore(THEME_SETTINGS_STORE);
       const balanceStore = transaction.objectStore(BALANCE_STORE);
       const transactionStore = transaction.objectStore(TRANSACTION_STORE);
@@ -753,6 +995,7 @@ class DataManager {
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
       const clearPersonal = personalStore.clear();
+      const clearPersonalCollection = personalCollectionStore.clear();
       const clearTheme = themeStore.clear();
       const clearBalance = balanceStore.clear();
       const clearTransactions = transactionStore.clear();
@@ -770,7 +1013,7 @@ class DataManager {
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 16) resolve();
+        if (completed === 17) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -781,6 +1024,9 @@ class DataManager {
 
       clearPersonal.onerror = () => reject(new Error('Failed to clear personal settings'));
       clearPersonal.onsuccess = checkComplete;
+
+      clearPersonalCollection.onerror = () => reject(new Error('Failed to clear personal settings collection'));
+      clearPersonalCollection.onsuccess = checkComplete;
 
       clearTheme.onerror = () => reject(new Error('Failed to clear theme settings'));
       clearTheme.onsuccess = checkComplete;
