@@ -3,7 +3,7 @@ import { dataManager } from './dataManager';
 import { backupManager } from './backupManager';
 
 // 从dataManager获取当前数据库版本
-const CURRENT_DB_VERSION = 14; // 与dataManager.ts中的DB_VERSION保持一致
+const CURRENT_DB_VERSION = 15; // 与dataManager.ts中的DB_VERSION保持一致
 import type { ChatItem, ApiConfig, WorldBook } from '../types/chat';
 import type { TransactionRecord } from '../types/money';
 import type { PresetConfig } from '../types/preset';

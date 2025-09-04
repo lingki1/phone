@@ -5,7 +5,7 @@ import { PresetConfig } from '../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft, DiscoverStats } from '../types/discover';
 
 const DB_NAME = 'ChatAppDB';
-const DB_VERSION = 14; // 升级数据库版本以支持额外信息功能
+const DB_VERSION = 15; // 升级数据库版本以支持多面具
 const CHAT_STORE = 'chats';
 const API_CONFIG_STORE = 'apiConfig';
 const SAVED_API_CONFIGS_STORE = 'savedApiConfigs';
