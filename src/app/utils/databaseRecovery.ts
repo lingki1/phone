@@ -3,7 +3,7 @@ import { dataManager } from './dataManager';
 import { backupManager } from './backupManager';
 
 // 从dataManager获取当前数据库版本
-const CURRENT_DB_VERSION = 13; // 与dataManager.ts中的DB_VERSION保持一致
+const CURRENT_DB_VERSION = 14; // 与dataManager.ts中的DB_VERSION保持一致
 import type { ChatItem, ApiConfig, WorldBook } from '../types/chat';
 import type { TransactionRecord } from '../types/money';
 import type { PresetConfig } from '../types/preset';
@@ -17,6 +17,15 @@ interface RecoveryData {
     userNickname: string;
     userBio: string;
   };
+  personalSettingsCollection: Array<{
+    id: string;
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    isActive?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }>;
   themeSettings: {
     selectedTheme: string;
     lastUpdated: number;
@@ -224,6 +233,7 @@ class DatabaseRecovery {
         userNickname: '用户',
         userBio: ''
       },
+      personalSettingsCollection: [],
       themeSettings: {
         selectedTheme: 'default',
         lastUpdated: Date.now()
@@ -411,12 +421,26 @@ class DatabaseRecovery {
       if (db.objectStoreNames.contains('personalSettings')) {
         const transaction = db.transaction(['personalSettings'], 'readonly');
         const store = transaction.objectStore('personalSettings');
-        const request = store.get('settings');
+        const request = store.get('default');
         
         request.onsuccess = () => {
           if (request.result) {
             backupData.personalSettings = request.result;
             console.log('提取到个人设置');
+          }
+        };
+      }
+
+      // 提取多人设集合
+      if (db.objectStoreNames.contains('personalSettingsCollection')) {
+        const transaction = db.transaction(['personalSettingsCollection'], 'readonly');
+        const store = transaction.objectStore('personalSettingsCollection');
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+          if (request.result) {
+            backupData.personalSettingsCollection = request.result;
+            console.log('提取到多人设数据:', request.result.length, '个');
           }
         };
       }
@@ -434,6 +458,7 @@ class DatabaseRecovery {
     return data.chats.length > 0 || 
            data.apiConfig.apiKey !== '' || 
            data.personalSettings.userNickname !== '用户' ||
+           data.personalSettingsCollection.length > 0 ||
            data.worldBooks.length > 0 ||
            data.presets.length > 0;
   }
@@ -450,6 +475,7 @@ class DatabaseRecovery {
         userNickname: '用户',
         userBio: ''
       },
+      personalSettingsCollection: [],
       themeSettings: {
         selectedTheme: 'default',
         lastUpdated: Date.now()
@@ -726,6 +752,12 @@ class DatabaseRecovery {
       if (backupData.personalSettings) {
         await dataManager.savePersonalSettings(backupData.personalSettings);
         console.log('已恢复个人设置');
+      }
+      
+      // 恢复多人设集合
+      if (backupData.personalSettingsCollection && backupData.personalSettingsCollection.length > 0) {
+        await dataManager.importPersonalSettingsCollection(backupData.personalSettingsCollection);
+        console.log('已恢复多人设数据:', backupData.personalSettingsCollection.length, '个');
       }
       
       // 恢复主题设置

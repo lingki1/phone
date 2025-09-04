@@ -12,6 +12,15 @@ interface BackupData {
     userNickname: string;
     userBio: string;
   };
+  personalSettingsCollection: Array<{
+    id: string;
+    userAvatar: string;
+    userNickname: string;
+    userBio: string;
+    isActive?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }>;
   themeSettings: {
     selectedTheme: string;
     lastUpdated: number;
@@ -140,6 +149,7 @@ class BackupManager {
         userNickname: '用户',
         userBio: ''
       },
+      personalSettingsCollection: [],
       themeSettings: {
         selectedTheme: 'default',
         lastUpdated: Date.now()
@@ -176,6 +186,7 @@ class BackupManager {
       backupData.chats = await dataManager.getAllChats();
       backupData.apiConfig = await dataManager.getApiConfig();
       backupData.personalSettings = await dataManager.getPersonalSettings();
+      backupData.personalSettingsCollection = await dataManager.getAllPersonalSettingsFromCollection();
       backupData.themeSettings = await dataManager.getThemeSettings() || backupData.themeSettings;
       backupData.balance = await dataManager.getBalance();
       backupData.transactions = await dataManager.getTransactionHistory();

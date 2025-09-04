@@ -957,15 +957,16 @@ class DataManager {
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([
-        CHAT_STORE, API_CONFIG_STORE, PERSONAL_SETTINGS_STORE, PERSONAL_SETTINGS_COLLECTION_STORE, THEME_SETTINGS_STORE, 
+        CHAT_STORE, API_CONFIG_STORE, SAVED_API_CONFIGS_STORE, PERSONAL_SETTINGS_STORE, PERSONAL_SETTINGS_COLLECTION_STORE, THEME_SETTINGS_STORE, 
         BALANCE_STORE, TRANSACTION_STORE, WORLD_BOOK_STORE, PRESET_STORE, 
-        CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, STORY_MODE_MESSAGES_STORE, DISCOVER_POSTS_STORE, 
+        CHAT_STATUS_STORE, CHAT_BACKGROUND_STORE, EXTRA_INFO_STORE, STORY_MODE_MESSAGES_STORE, DISCOVER_POSTS_STORE, 
         DISCOVER_COMMENTS_STORE, DISCOVER_SETTINGS_STORE, DISCOVER_NOTIFICATIONS_STORE, 
-        DISCOVER_DRAFTS_STORE
+        DISCOVER_DRAFTS_STORE, DISCOVER_VIEW_STATE_STORE, GLOBAL_DATA_STORE
       ], 'readwrite');
       
       const chatStore = transaction.objectStore(CHAT_STORE);
       const apiStore = transaction.objectStore(API_CONFIG_STORE);
+      const savedApiConfigsStore = transaction.objectStore(SAVED_API_CONFIGS_STORE);
       const personalStore = transaction.objectStore(PERSONAL_SETTINGS_STORE);
       const personalCollectionStore = transaction.objectStore(PERSONAL_SETTINGS_COLLECTION_STORE);
       const themeStore = transaction.objectStore(THEME_SETTINGS_STORE);
@@ -975,15 +976,19 @@ class DataManager {
       const presetStore = transaction.objectStore(PRESET_STORE);
       const chatStatusStore = transaction.objectStore(CHAT_STATUS_STORE);
       const chatBackgroundStore = transaction.objectStore(CHAT_BACKGROUND_STORE);
+      const extraInfoStore = transaction.objectStore(EXTRA_INFO_STORE);
       const discoverPostsStore = transaction.objectStore(DISCOVER_POSTS_STORE);
       const discoverCommentsStore = transaction.objectStore(DISCOVER_COMMENTS_STORE);
       const discoverSettingsStore = transaction.objectStore(DISCOVER_SETTINGS_STORE);
       const discoverNotificationsStore = transaction.objectStore(DISCOVER_NOTIFICATIONS_STORE);
       const discoverDraftsStore = transaction.objectStore(DISCOVER_DRAFTS_STORE);
+      const discoverViewStateStore = transaction.objectStore(DISCOVER_VIEW_STATE_STORE);
+      const globalDataStore = transaction.objectStore(GLOBAL_DATA_STORE);
       const storyModeMessagesStore = transaction.objectStore(STORY_MODE_MESSAGES_STORE);
       
       const clearChats = chatStore.clear();
       const clearApi = apiStore.clear();
+      const clearSavedApiConfigs = savedApiConfigsStore.clear();
       const clearPersonal = personalStore.clear();
       const clearPersonalCollection = personalCollectionStore.clear();
       const clearTheme = themeStore.clear();
@@ -993,17 +998,20 @@ class DataManager {
       const clearPresets = presetStore.clear();
       const clearChatStatus = chatStatusStore.clear();
       const clearChatBackground = chatBackgroundStore.clear();
+      const clearExtraInfo = extraInfoStore.clear();
       const clearDiscoverPosts = discoverPostsStore.clear();
       const clearDiscoverComments = discoverCommentsStore.clear();
       const clearDiscoverSettings = discoverSettingsStore.clear();
       const clearDiscoverNotifications = discoverNotificationsStore.clear();
       const clearDiscoverDrafts = discoverDraftsStore.clear();
+      const clearDiscoverViewState = discoverViewStateStore.clear();
+      const clearGlobalData = globalDataStore.clear();
       const clearStoryModeMessages = storyModeMessagesStore.clear();
 
       let completed = 0;
       const checkComplete = () => {
         completed++;
-        if (completed === 17) resolve();
+        if (completed === 21) resolve();
       };
 
       clearChats.onerror = () => reject(new Error('Failed to clear chat data'));
@@ -1011,6 +1019,9 @@ class DataManager {
 
       clearApi.onerror = () => reject(new Error('Failed to clear API config'));
       clearApi.onsuccess = checkComplete;
+
+      clearSavedApiConfigs.onerror = () => reject(new Error('Failed to clear saved API configs'));
+      clearSavedApiConfigs.onsuccess = checkComplete;
 
       clearPersonal.onerror = () => reject(new Error('Failed to clear personal settings'));
       clearPersonal.onsuccess = checkComplete;
@@ -1039,6 +1050,9 @@ class DataManager {
       clearChatBackground.onerror = () => reject(new Error('Failed to clear chat background data'));
       clearChatBackground.onsuccess = checkComplete;
 
+      clearExtraInfo.onerror = () => reject(new Error('Failed to clear extra info data'));
+      clearExtraInfo.onsuccess = checkComplete;
+
       clearDiscoverPosts.onerror = () => reject(new Error('Failed to clear discover posts data'));
       clearDiscoverPosts.onsuccess = checkComplete;
 
@@ -1053,6 +1067,12 @@ class DataManager {
 
       clearDiscoverDrafts.onerror = () => reject(new Error('Failed to clear discover drafts data'));
       clearDiscoverDrafts.onsuccess = checkComplete;
+
+      clearDiscoverViewState.onerror = () => reject(new Error('Failed to clear discover view state data'));
+      clearDiscoverViewState.onsuccess = checkComplete;
+
+      clearGlobalData.onerror = () => reject(new Error('Failed to clear global data'));
+      clearGlobalData.onsuccess = checkComplete;
 
       clearStoryModeMessages.onerror = () => reject(new Error('Failed to clear story mode messages data'));
       clearStoryModeMessages.onsuccess = checkComplete;
