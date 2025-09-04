@@ -37,7 +37,6 @@ class DataManager {
     if (this.db) return Promise.resolve();
 
     return new Promise((resolve, reject) => {
-      let attemptedFallback = false;
 
       const openWith = (version?: number) => {
         const request = version ? indexedDB.open(DB_NAME, version) : indexedDB.open(DB_NAME);
@@ -45,16 +44,6 @@ class DataManager {
         // 设定超时，避免因blocked导致Promise悬挂
         const timeoutMs = 7000;
         const timer = setTimeout(() => {
-          try {
-            // 超时后如果还没完成，尝试一次无升级打开以保护已有数据
-            if (!attemptedFallback) {
-              console.warn('IndexedDB open timed out, retrying without upgrade...');
-              attemptedFallback = true;
-              clearAllHandlers();
-              openWith(undefined);
-              return;
-            }
-          } catch {}
           clearAllHandlers();
           reject(new Error('IndexedDB open timed out. Possibly blocked by another tab.'));
         }, timeoutMs);
@@ -74,32 +63,33 @@ class DataManager {
         request.onerror = () => {
           clearAllHandlers();
           const err = (request.error && request.error.name) || 'UnknownError';
-          // 如果是版本错误，尝试无升级打开
-          if (!attemptedFallback && (err === 'VersionError' || err === 'InvalidStateError')) {
-            console.warn('IndexedDB version error, retrying open without upgrade...');
-            attemptedFallback = true;
-            openWith(undefined);
-            return;
-          }
-          reject(new Error('Failed to open database'));
+          reject(new Error(`Failed to open database: ${err}`));
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (request as any).onblocked = () => {
-          // 升级被旧连接阻塞；尝试无升级打开，保护用户数据
-          console.warn('IndexedDB upgrade blocked by another tab. Retrying without upgrade...');
+          // 升级被旧连接阻塞；提示用户关闭其他标签页
+          console.warn('IndexedDB upgrade blocked by another tab. Please close other tabs and retry.');
           clearAllHandlers();
-          if (!attemptedFallback) {
-            attemptedFallback = true;
-            openWith(undefined);
-            return;
-          }
-          reject(new Error('Database upgrade blocked'));
+          reject(new Error('Database upgrade blocked by another tab. Please close other tabs and retry.'));
         };
 
         request.onsuccess = () => {
           clearAllHandlers();
           this.db = request.result;
+          
+          // 版本复检：如果当前版本低于目标版本，强制重开以触发升级
+          try {
+            const currentVersion = (this.db as IDBDatabase).version;
+            if (typeof currentVersion === 'number' && currentVersion < DB_VERSION) {
+              console.log(`Current DB version ${currentVersion} < target ${DB_VERSION}, forcing upgrade...`);
+              try { this.db.close(); } catch {}
+              // 以目标版本重开，确保 onupgradeneeded 触发
+              openWith(DB_VERSION);
+              return; // 等待下一次打开流程完成
+            }
+          } catch {}
+          
           // 监听版本变更，及时关闭以避免future blocked
           try {
             this.db.onversionchange = () => {
