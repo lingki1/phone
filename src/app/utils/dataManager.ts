@@ -33,215 +33,154 @@ class DataManager {
 
   // 初始化数据库
   async initDB(): Promise<void> {
-    // 如果已经初始化，直接返回
     if (this.db) return Promise.resolve();
 
     return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      const openWith = (version?: number) => {
-        const request = version ? indexedDB.open(DB_NAME, version) : indexedDB.open(DB_NAME);
-
-        // 设定超时，避免因blocked导致Promise悬挂
-        const timeoutMs = 7000;
-        const timer = setTimeout(() => {
-          clearAllHandlers();
-          reject(new Error('IndexedDB open timed out. Possibly blocked by another tab.'));
-        }, timeoutMs);
-
-        const clearAllHandlers = () => {
-          clearTimeout(timer);
-          try {
-            // 清理事件处理器，防止重复回调
-            request.onerror = null;
-            request.onsuccess = null;
-            request.onupgradeneeded = null;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (request as any).onblocked = null;
-          } catch {}
-        };
-
-        request.onerror = () => {
-          clearAllHandlers();
-          const err = (request.error && request.error.name) || 'UnknownError';
-          reject(new Error(`Failed to open database: ${err}`));
-        };
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (request as any).onblocked = () => {
-          // 升级被旧连接阻塞；提示用户关闭其他标签页
-          console.warn('IndexedDB upgrade blocked by another tab. Please close other tabs and retry.');
-          clearAllHandlers();
-          reject(new Error('Database upgrade blocked by another tab. Please close other tabs and retry.'));
-        };
-
-        request.onsuccess = () => {
-          clearAllHandlers();
-          this.db = request.result;
-          
-          // 版本复检：如果当前版本低于目标版本，强制重开以触发升级
-          try {
-            const currentVersion = (this.db as IDBDatabase).version;
-            if (typeof currentVersion === 'number' && currentVersion < DB_VERSION) {
-              console.log(`Current DB version ${currentVersion} < target ${DB_VERSION}, forcing upgrade...`);
-              try { this.db.close(); } catch {}
-              // 以目标版本重开，确保 onupgradeneeded 触发
-              openWith(DB_VERSION);
-              return; // 等待下一次打开流程完成
-            }
-          } catch {}
-          
-          // 监听版本变更，及时关闭以避免future blocked
-          try {
-            this.db.onversionchange = () => {
-              try { this.db?.close(); } catch {}
-            };
-          } catch {}
-          // 数据库初始化完成后，自动清理已存在的 null 内容
-          this.autoCleanupNullContent();
-          resolve();
-        };
-
-        request.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result;
-          try {
-            // 创建聊天存储
-            if (!db.objectStoreNames.contains(CHAT_STORE)) {
-              const chatStore = db.createObjectStore(CHAT_STORE, { keyPath: 'id' });
-              chatStore.createIndex('isGroup', 'isGroup', { unique: false });
-              chatStore.createIndex('timestamp', 'timestamp', { unique: false });
-            }
-
-            // 创建API配置存储
-                  if (!db.objectStoreNames.contains(API_CONFIG_STORE)) {
-        db.createObjectStore(API_CONFIG_STORE, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(SAVED_API_CONFIGS_STORE)) {
-        db.createObjectStore(SAVED_API_CONFIGS_STORE, { keyPath: 'id' });
-      }
-
-            // 创建个人信息存储
-            if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_STORE)) {
-              db.createObjectStore(PERSONAL_SETTINGS_STORE, { keyPath: 'id' });
-            }
-
-            // 创建个人信息集合存储（支持多套人设）
-            if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_COLLECTION_STORE)) {
-              const coll = db.createObjectStore(PERSONAL_SETTINGS_COLLECTION_STORE, { keyPath: 'id' });
-              coll.createIndex('createdAt', 'createdAt', { unique: false });
-              coll.createIndex('isActive', 'isActive', { unique: false });
-              coll.createIndex('userNickname', 'userNickname', { unique: false });
-            }
-
-            // 创建主题设置存储
-            if (!db.objectStoreNames.contains(THEME_SETTINGS_STORE)) {
-              db.createObjectStore(THEME_SETTINGS_STORE, { keyPath: 'id' });
-            }
-
-            // 创建余额存储
-            if (!db.objectStoreNames.contains(BALANCE_STORE)) {
-              db.createObjectStore(BALANCE_STORE, { keyPath: 'id' });
-            }
-
-            // 创建交易记录存储
-            if (!db.objectStoreNames.contains(TRANSACTION_STORE)) {
-              const transactionStore = db.createObjectStore(TRANSACTION_STORE, { keyPath: 'id' });
-              transactionStore.createIndex('chatId', 'chatId', { unique: false });
-              transactionStore.createIndex('timestamp', 'timestamp', { unique: false });
-              transactionStore.createIndex('type', 'type', { unique: false });
-            }
-
-            // 创建世界书存储
-            if (!db.objectStoreNames.contains(WORLD_BOOK_STORE)) {
-              const worldBookStore = db.createObjectStore(WORLD_BOOK_STORE, { keyPath: 'id' });
-              worldBookStore.createIndex('name', 'name', { unique: false });
-              worldBookStore.createIndex('createdAt', 'createdAt', { unique: false });
-            }
-
-            // 创建预设存储
-            if (!db.objectStoreNames.contains(PRESET_STORE)) {
-              const presetStore = db.createObjectStore(PRESET_STORE, { keyPath: 'id' });
-              presetStore.createIndex('name', 'name', { unique: false });
-              presetStore.createIndex('isDefault', 'isDefault', { unique: false });
-              presetStore.createIndex('createdAt', 'createdAt', { unique: false });
-            }
-
-            // 创建聊天状态存储
-            if (!db.objectStoreNames.contains(CHAT_STATUS_STORE)) {
-              const statusStore = db.createObjectStore(CHAT_STATUS_STORE, { keyPath: 'chatId' });
-              statusStore.createIndex('lastUpdate', 'lastUpdate', { unique: false });
-            }
-
-            // 创建聊天背景存储
-            if (!db.objectStoreNames.contains(CHAT_BACKGROUND_STORE)) {
-              db.createObjectStore(CHAT_BACKGROUND_STORE, { keyPath: 'chatId' });
-            }
-
-            // 创建额外信息存储
-            if (!db.objectStoreNames.contains(EXTRA_INFO_STORE)) {
-              db.createObjectStore(EXTRA_INFO_STORE, { keyPath: 'chatId' });
-            }
-
-            // 创建动态存储
-            if (!db.objectStoreNames.contains(DISCOVER_POSTS_STORE)) {
-              const postsStore = db.createObjectStore(DISCOVER_POSTS_STORE, { keyPath: 'id' });
-              postsStore.createIndex('authorId', 'authorId', { unique: false });
-              postsStore.createIndex('timestamp', 'timestamp', { unique: false });
-              postsStore.createIndex('type', 'type', { unique: false });
-              postsStore.createIndex('aiGenerated', 'aiGenerated', { unique: false });
-            }
-
-            // 创建评论存储
-            if (!db.objectStoreNames.contains(DISCOVER_COMMENTS_STORE)) {
-              const commentsStore = db.createObjectStore(DISCOVER_COMMENTS_STORE, { keyPath: 'id' });
-              commentsStore.createIndex('postId', 'postId', { unique: false });
-              commentsStore.createIndex('authorId', 'authorId', { unique: false });
-              commentsStore.createIndex('timestamp', 'timestamp', { unique: false });
-              commentsStore.createIndex('parentCommentId', 'parentCommentId', { unique: false });
-            }
-
-            // 创建动态设置存储
-            if (!db.objectStoreNames.contains(DISCOVER_SETTINGS_STORE)) {
-              db.createObjectStore(DISCOVER_SETTINGS_STORE, { keyPath: 'id' });
-            }
-
-            // 创建动态通知存储
-            if (!db.objectStoreNames.contains(DISCOVER_NOTIFICATIONS_STORE)) {
-              const notificationsStore = db.createObjectStore(DISCOVER_NOTIFICATIONS_STORE, { keyPath: 'id' });
-              notificationsStore.createIndex('authorId', 'authorId', { unique: false });
-              notificationsStore.createIndex('timestamp', 'timestamp', { unique: false });
-              notificationsStore.createIndex('isRead', 'isRead', { unique: false });
-            }
-
-            // 创建动态草稿存储
-            if (!db.objectStoreNames.contains(DISCOVER_DRAFTS_STORE)) {
-              const draftsStore = db.createObjectStore(DISCOVER_DRAFTS_STORE, { keyPath: 'id' });
-              draftsStore.createIndex('lastSaved', 'lastSaved', { unique: false });
-            }
-
-            // 创建动态查看状态存储
-            if (!db.objectStoreNames.contains(DISCOVER_VIEW_STATE_STORE)) {
-              const viewStateStore = db.createObjectStore(DISCOVER_VIEW_STATE_STORE, { keyPath: 'userId' });
-              viewStateStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
-            }
-
-            // 创建全局数据存储（用于头像映射表等）
-            if (!db.objectStoreNames.contains(GLOBAL_DATA_STORE)) {
-              db.createObjectStore(GLOBAL_DATA_STORE, { keyPath: 'key' });
-            }
-
-            // 创建剧情模式消息存储
-            if (!db.objectStoreNames.contains(STORY_MODE_MESSAGES_STORE)) {
-              const storyModeMessagesStore = db.createObjectStore(STORY_MODE_MESSAGES_STORE, { keyPath: 'chatId' });
-              storyModeMessagesStore.createIndex('timestamp', 'timestamp', { unique: false });
-            }
-          } catch (e) {
-            console.error('IndexedDB upgrade error:', e);
-          }
-        };
+      request.onerror = () => {
+        reject(new Error(`Failed to open database: ${request.error?.name || 'UnknownError'}`));
       };
 
-      // 首次尝试：使用当前版本（可能触发升级）
-      openWith(DB_VERSION);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        // 创建聊天存储
+        if (!db.objectStoreNames.contains(CHAT_STORE)) {
+          const chatStore = db.createObjectStore(CHAT_STORE, { keyPath: 'id' });
+          chatStore.createIndex('isGroup', 'isGroup', { unique: false });
+          chatStore.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+
+        // 创建API配置存储
+        if (!db.objectStoreNames.contains(API_CONFIG_STORE)) {
+          db.createObjectStore(API_CONFIG_STORE, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(SAVED_API_CONFIGS_STORE)) {
+          db.createObjectStore(SAVED_API_CONFIGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建个人信息存储
+        if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_STORE)) {
+          db.createObjectStore(PERSONAL_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建个人信息集合存储（支持多套人设）
+        if (!db.objectStoreNames.contains(PERSONAL_SETTINGS_COLLECTION_STORE)) {
+          const coll = db.createObjectStore(PERSONAL_SETTINGS_COLLECTION_STORE, { keyPath: 'id' });
+          coll.createIndex('createdAt', 'createdAt', { unique: false });
+          coll.createIndex('isActive', 'isActive', { unique: false });
+          coll.createIndex('userNickname', 'userNickname', { unique: false });
+        }
+
+        // 创建主题设置存储
+        if (!db.objectStoreNames.contains(THEME_SETTINGS_STORE)) {
+          db.createObjectStore(THEME_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建余额存储
+        if (!db.objectStoreNames.contains(BALANCE_STORE)) {
+          db.createObjectStore(BALANCE_STORE, { keyPath: 'id' });
+        }
+
+        // 创建交易记录存储
+        if (!db.objectStoreNames.contains(TRANSACTION_STORE)) {
+          const transactionStore = db.createObjectStore(TRANSACTION_STORE, { keyPath: 'id' });
+          transactionStore.createIndex('chatId', 'chatId', { unique: false });
+          transactionStore.createIndex('timestamp', 'timestamp', { unique: false });
+          transactionStore.createIndex('type', 'type', { unique: false });
+        }
+
+        // 创建世界书存储
+        if (!db.objectStoreNames.contains(WORLD_BOOK_STORE)) {
+          const worldBookStore = db.createObjectStore(WORLD_BOOK_STORE, { keyPath: 'id' });
+          worldBookStore.createIndex('name', 'name', { unique: false });
+          worldBookStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 创建预设存储
+        if (!db.objectStoreNames.contains(PRESET_STORE)) {
+          const presetStore = db.createObjectStore(PRESET_STORE, { keyPath: 'id' });
+          presetStore.createIndex('name', 'name', { unique: false });
+          presetStore.createIndex('isDefault', 'isDefault', { unique: false });
+          presetStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 创建聊天状态存储
+        if (!db.objectStoreNames.contains(CHAT_STATUS_STORE)) {
+          const statusStore = db.createObjectStore(CHAT_STATUS_STORE, { keyPath: 'chatId' });
+          statusStore.createIndex('lastUpdate', 'lastUpdate', { unique: false });
+        }
+
+        // 创建聊天背景存储
+        if (!db.objectStoreNames.contains(CHAT_BACKGROUND_STORE)) {
+          db.createObjectStore(CHAT_BACKGROUND_STORE, { keyPath: 'chatId' });
+        }
+
+        // 创建额外信息存储
+        if (!db.objectStoreNames.contains(EXTRA_INFO_STORE)) {
+          db.createObjectStore(EXTRA_INFO_STORE, { keyPath: 'chatId' });
+        }
+
+        // 创建动态存储
+        if (!db.objectStoreNames.contains(DISCOVER_POSTS_STORE)) {
+          const postsStore = db.createObjectStore(DISCOVER_POSTS_STORE, { keyPath: 'id' });
+          postsStore.createIndex('authorId', 'authorId', { unique: false });
+          postsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          postsStore.createIndex('type', 'type', { unique: false });
+          postsStore.createIndex('aiGenerated', 'aiGenerated', { unique: false });
+        }
+
+        // 创建评论存储
+        if (!db.objectStoreNames.contains(DISCOVER_COMMENTS_STORE)) {
+          const commentsStore = db.createObjectStore(DISCOVER_COMMENTS_STORE, { keyPath: 'id' });
+          commentsStore.createIndex('postId', 'postId', { unique: false });
+          commentsStore.createIndex('authorId', 'authorId', { unique: false });
+          commentsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          commentsStore.createIndex('parentCommentId', 'parentCommentId', { unique: false });
+        }
+
+        // 创建动态设置存储
+        if (!db.objectStoreNames.contains(DISCOVER_SETTINGS_STORE)) {
+          db.createObjectStore(DISCOVER_SETTINGS_STORE, { keyPath: 'id' });
+        }
+
+        // 创建动态通知存储
+        if (!db.objectStoreNames.contains(DISCOVER_NOTIFICATIONS_STORE)) {
+          const notificationsStore = db.createObjectStore(DISCOVER_NOTIFICATIONS_STORE, { keyPath: 'id' });
+          notificationsStore.createIndex('authorId', 'authorId', { unique: false });
+          notificationsStore.createIndex('timestamp', 'timestamp', { unique: false });
+          notificationsStore.createIndex('isRead', 'isRead', { unique: false });
+        }
+
+        // 创建动态草稿存储
+        if (!db.objectStoreNames.contains(DISCOVER_DRAFTS_STORE)) {
+          const draftsStore = db.createObjectStore(DISCOVER_DRAFTS_STORE, { keyPath: 'id' });
+          draftsStore.createIndex('lastSaved', 'lastSaved', { unique: false });
+        }
+
+        // 创建动态查看状态存储
+        if (!db.objectStoreNames.contains(DISCOVER_VIEW_STATE_STORE)) {
+          const viewStateStore = db.createObjectStore(DISCOVER_VIEW_STATE_STORE, { keyPath: 'userId' });
+          viewStateStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+        }
+
+        // 创建全局数据存储（用于头像映射表等）
+        if (!db.objectStoreNames.contains(GLOBAL_DATA_STORE)) {
+          db.createObjectStore(GLOBAL_DATA_STORE, { keyPath: 'key' });
+        }
+
+        // 创建剧情模式消息存储
+        if (!db.objectStoreNames.contains(STORY_MODE_MESSAGES_STORE)) {
+          const storyModeMessagesStore = db.createObjectStore(STORY_MODE_MESSAGES_STORE, { keyPath: 'chatId' });
+          storyModeMessagesStore.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+      };
     });
   }
 
@@ -2435,62 +2374,6 @@ class DataManager {
     }
   }
 
-  // 自动清理已存在的 null 内容（一次性修复）
-  private async autoCleanupNullContent(): Promise<void> {
-    try {
-      // 检查是否已经执行过清理（避免重复执行）
-      const cleanupFlag = await this.getGlobalData('null_content_cleanup_completed');
-      if (cleanupFlag) {
-        console.log('Null content cleanup already completed, skipping...');
-        return;
-      }
-
-      console.log('Starting automatic cleanup of null content in story mode messages...');
-      
-      // 获取所有聊天
-      const chats = await this.getAllChats();
-      let totalFixed = 0;
-      
-      for (const chat of chats) {
-        try {
-          // 获取剧情模式消息
-          const storyMessages = await this.getStoryModeMessages(chat.id);
-          let hasChanges = false;
-          
-          // 检查是否有需要修复的消息
-          const fixedMessages = storyMessages.map(msg => {
-            if (msg.content === null || msg.content === undefined) {
-              hasChanges = true;
-              totalFixed++;
-              return { ...msg, content: '' };
-            }
-            return msg;
-          });
-          
-          // 如果有修复，保存回数据库
-          if (hasChanges) {
-            await this.saveStoryModeMessages(chat.id, fixedMessages);
-            console.log(`Fixed ${fixedMessages.length - storyMessages.length} null content messages in chat ${chat.id}`);
-          }
-        } catch (error) {
-          console.warn(`Failed to cleanup null content for chat ${chat.id}:`, error);
-        }
-      }
-      
-      if (totalFixed > 0) {
-        console.log(`Auto-cleanup completed: fixed ${totalFixed} messages with null content`);
-      } else {
-        console.log('No null content found, cleanup not needed');
-      }
-      
-      // 标记清理已完成
-      await this.saveGlobalData('null_content_cleanup_completed', true);
-      
-    } catch (error) {
-      console.error('Auto-cleanup of null content failed:', error);
-      // 静默失败，不影响主要功能
-    }
-  }
 }
 
 // 创建单例实例

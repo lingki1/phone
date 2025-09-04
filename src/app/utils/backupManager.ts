@@ -80,59 +80,30 @@ class BackupManager {
     return BackupManager.instance;
   }
 
-  // 初始化备份数据库 - 增强版，支持手机端
+  // 初始化备份数据库
   private async initBackupDB(): Promise<void> {
     if (this.backupDB) return;
 
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.BACKUP_DB_NAME, this.BACKUP_DB_VERSION);
       
-      const timeout = setTimeout(() => {
-        reject(new Error('Backup database open timed out'));
-      }, 10000); // 增加超时时间
-
-      const cleanup = () => {
-        clearTimeout(timeout);
-        try {
-          request.onerror = null;
-          request.onsuccess = null;
-          request.onupgradeneeded = null;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (request as any).onblocked = null;
-        } catch {}
-      };
-      
       request.onerror = () => {
-        cleanup();
-        const error = request.error;
-        console.warn('Backup database open error:', error?.name, error?.message);
-        reject(new Error(`Failed to open backup database: ${error?.name || 'Unknown'}`));
+        reject(new Error(`Failed to open backup database: ${request.error?.name || 'Unknown'}`));
       };
       
       request.onsuccess = () => {
-        cleanup();
         this.backupDB = request.result;
-        console.log('Backup database initialized successfully');
         resolve();
       };
       
       request.onupgradeneeded = (event) => {
-        console.log('Backup database upgrade needed');
         const db = (event.target as IDBOpenDBRequest).result;
         
         if (!db.objectStoreNames.contains(this.BACKUP_STORE)) {
           const store = db.createObjectStore(this.BACKUP_STORE, { keyPath: 'id' });
           store.createIndex('timestamp', 'timestamp', { unique: false });
           store.createIndex('type', 'type', { unique: false });
-          console.log('Backup database object store created');
         }
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (request as any).onblocked = () => {
-        cleanup();
-        console.warn('Backup database blocked by another tab');
-        reject(new Error('Backup database blocked by another tab'));
       };
     });
   }
@@ -180,7 +151,6 @@ class BackupManager {
     };
 
     try {
-      // 尝试从IndexedDB获取数据
       await dataManager.initDB();
       
       backupData.chats = await dataManager.getAllChats();
@@ -192,96 +162,12 @@ class BackupManager {
       backupData.transactions = await dataManager.getTransactionHistory();
       backupData.worldBooks = await dataManager.getAllWorldBooks();
       backupData.presets = await dataManager.getAllPresets();
-      
-      // 备份聊天相关数据
-      for (const chat of backupData.chats) {
-        try {
-          const status = await dataManager.getChatStatus(chat.id);
-          if (status) {
-            backupData.chatStatuses.push({ chatId: chat.id, ...status });
-          }
-        } catch (error) {
-          console.warn(`Failed to backup chat status for ${chat.id}:`, error);
-        }
-        
-        try {
-          const background = await dataManager.getChatBackground(chat.id);
-          if (background) {
-            backupData.chatBackgrounds.push({ chatId: chat.id, background });
-          }
-        } catch (error) {
-          console.warn(`Failed to backup chat background for ${chat.id}:`, error);
-        }
-        
-        try {
-          const messages = await dataManager.getStoryModeMessages(chat.id);
-          if (messages && messages.length > 0) {
-            backupData.storyModeMessages.push({ chatId: chat.id, messages });
-          }
-        } catch (error) {
-          console.warn(`Failed to backup story mode messages for ${chat.id}:`, error);
-        }
-      }
-      
-      // 备份动态数据
       backupData.discoverPosts = await dataManager.getAllDiscoverPosts();
       backupData.discoverSettings = await dataManager.getDiscoverSettings();
       backupData.discoverDrafts = await dataManager.getAllDiscoverDrafts();
       
-      for (const post of backupData.discoverPosts) {
-        try {
-          const comments = await dataManager.getDiscoverCommentsByPost(post.id);
-          backupData.discoverComments.push(...comments);
-        } catch (error) {
-          console.warn(`Failed to backup comments for post ${post.id}:`, error);
-        }
-        
-        try {
-          const notifications = await dataManager.getDiscoverNotifications(post.authorId);
-          backupData.discoverNotifications.push(...notifications);
-        } catch (error) {
-          console.warn(`Failed to backup notifications for post ${post.id}:`, error);
-        }
-      }
-      
     } catch (error) {
-      console.warn('Failed to get data from IndexedDB, using localStorage fallback:', error);
-      
-      // 回退到localStorage
-      const savedChats = localStorage.getItem('chats');
-      if (savedChats) {
-        backupData.chats = JSON.parse(savedChats);
-      }
-      
-      const savedApiConfig = localStorage.getItem('apiConfig');
-      if (savedApiConfig) {
-        backupData.apiConfig = JSON.parse(savedApiConfig);
-      }
-      
-      const savedPersonalSettings = localStorage.getItem('personalSettings');
-      if (savedPersonalSettings) {
-        backupData.personalSettings = JSON.parse(savedPersonalSettings);
-      }
-      
-      const savedBalance = localStorage.getItem('balance');
-      if (savedBalance) {
-        backupData.balance = parseFloat(savedBalance);
-      }
-      
-      const savedTransactions = localStorage.getItem('transactions');
-      if (savedTransactions) {
-        backupData.transactions = JSON.parse(savedTransactions);
-      }
-      
-      const savedWorldBooks = localStorage.getItem('worldBooks');
-      if (savedWorldBooks) {
-        backupData.worldBooks = JSON.parse(savedWorldBooks);
-      }
-      
-      const savedPresets = localStorage.getItem('presets');
-      if (savedPresets) {
-        backupData.presets = JSON.parse(savedPresets);
-      }
+      console.warn('Failed to get data from IndexedDB:', error);
     }
 
     return backupData;
@@ -347,17 +233,13 @@ class BackupManager {
     console.log(`Backup saved to localStorage in ${chunks} chunks, total size: ${(dataSize / 1024 / 1024).toFixed(2)}MB`);
   }
 
-  // 创建完整备份（多种方式）
+  // 创建完整备份
   async createBackup(description?: string): Promise<BackupMetadata> {
-    console.log('开始创建备份...');
-    
     const backupData = await this.createBackupData();
     const dataSize = JSON.stringify(backupData).length;
     
     try {
-      // 优先使用IndexedDB备份
       await this.saveToIndexedDB(backupData);
-      console.log('备份已保存到IndexedDB');
       
       return {
         id: 'latest',
@@ -371,7 +253,6 @@ class BackupManager {
     } catch (error) {
       console.warn('IndexedDB备份失败，使用localStorage分块备份:', error);
       
-      // 回退到localStorage分块备份
       await this.saveToLocalStorage(backupData);
       
       return {

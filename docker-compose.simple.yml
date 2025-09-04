@@ -29,6 +29,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - DEPLOY_VERSION=${DEPLOY_VERSION:-$(date +%s)}
     restart: unless-stopped
     depends_on:
       init-permissions:

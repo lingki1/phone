@@ -8,8 +8,6 @@ import { PublicChatRoom } from './chatroom';
 import { BlackMarket } from './blackmarket';
 import { ChatItem, WorldBook } from '../types/chat';
 import { dataManager } from '../utils/dataManager';
-import { databaseRecovery } from '../utils/databaseRecovery';
-import { backupManager } from '../utils/backupManager';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
 
@@ -81,8 +79,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 黑市状态
   const [isBlackMarketOpen, setIsBlackMarketOpen] = useState(false);
   
-  // 数据库恢复状态
-  const [isRecovering, setIsRecovering] = useState(false);
   
   // 处理角色导入
   const handleImportCharacter = async (character: ChatItem) => {
@@ -653,123 +649,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     }
   };
 
-  // 手动触发数据库恢复
-  const handleManualDatabaseRecovery = async () => {
-    try {
-      // 首先检查是否有版本冲突
-      const hasConflict = await databaseRecovery.detectVersionConflict();
-      
-      if (!hasConflict) {
-        alert('数据库版本正常，无需恢复。\n\n此功能仅在数据库版本降级时使用。');
-        return;
-      }
-      
-      // 有版本冲突，显示恢复选项
-      const availableBackups = await backupManager.getAvailableBackups();
-      
-      if (availableBackups.length === 0) {
-        // 没有可用备份，创建新备份
-        if (!confirm('检测到数据库版本冲突，但没有找到现有备份。\n\n确定要创建新备份并执行数据库恢复吗？\n\n注意：此操作可能需要几分钟时间。')) {
-          return;
-        }
-        
-        await performFullRecovery();
-        return;
-      }
-      
-      // 有可用备份，让用户选择
-      const backupOptions = availableBackups.map(backup => 
-        `${backup.description} (${(backup.size / 1024 / 1024).toFixed(2)}MB)`
-      ).join('\n');
-      
-      const choice = confirm(`检测到数据库版本冲突！\n\n找到以下可用备份：\n\n${backupOptions}\n\n选择操作：\n• 确定：创建新备份并执行完整恢复\n• 取消：从现有备份恢复`);
-      
-      if (choice) {
-        await performFullRecovery();
-      } else {
-        await performBackupOnlyRecovery();
-      }
-    } catch (error) {
-      console.error('检查数据库版本冲突失败:', error);
-      alert('检查数据库状态失败，请稍后重试。');
-    }
-  };
-
-  // 执行完整恢复流程
-  const performFullRecovery = async () => {
-    setIsRecovering(true);
-    try {
-      console.log('开始完整数据库恢复...');
-      
-      // 1. 创建新备份
-      const backupMetadata = await backupManager.createBackup('手动恢复备份');
-      console.log('新备份创建成功:', backupMetadata);
-      
-      // 2. 清理并重建数据库
-      await databaseRecovery.clearAndRebuildDatabase();
-      console.log('数据库重建完成');
-      
-      // 3. 恢复数据到新数据库
-      const backupData = await backupManager.restoreBackup(backupMetadata.id);
-      if (!backupData) {
-        throw new Error('无法获取备份数据');
-      }
-      
-      await databaseRecovery.restoreDataToNewDatabase(backupData);
-      console.log('数据恢复完成');
-      
-      alert(`数据库恢复成功！\n\n已恢复：\n• ${backupData.chats.length} 个聊天\n• ${backupData.worldBooks.length} 本世界书\n• ${backupData.presets.length} 个预设\n• ${backupData.transactions.length} 条交易记录\n\n请刷新页面以应用更改。`);
-      
-      // 刷新页面
-      window.location.reload();
-      
-    } catch (error) {
-      console.error('完整数据库恢复失败:', error);
-      alert(`数据库恢复失败：${error instanceof Error ? error.message : '未知错误'}\n\n请检查控制台获取详细信息。`);
-    } finally {
-      setIsRecovering(false);
-    }
-  };
-
-  // 从现有备份恢复
-  const performBackupOnlyRecovery = async () => {
-    setIsRecovering(true);
-    try {
-      console.log('开始从现有备份恢复...');
-      
-      // 获取可用备份
-      const availableBackups = await backupManager.getAvailableBackups();
-      if (availableBackups.length === 0) {
-        throw new Error('没有找到可用备份');
-      }
-      
-      // 使用最新的备份
-      const latestBackup = availableBackups[0];
-      const backupData = await backupManager.restoreBackup(latestBackup.id);
-      if (!backupData) {
-        throw new Error('无法获取备份数据');
-      }
-      
-      // 清理并重建数据库
-      await databaseRecovery.clearAndRebuildDatabase();
-      console.log('数据库重建完成');
-      
-      // 恢复数据到新数据库
-      await databaseRecovery.restoreDataToNewDatabase(backupData);
-      console.log('数据恢复完成');
-      
-      alert(`从备份恢复成功！\n\n已恢复：\n• ${backupData.chats.length} 个聊天\n• ${backupData.worldBooks.length} 本世界书\n• ${backupData.presets.length} 个预设\n• ${backupData.transactions.length} 条交易记录\n\n请刷新页面以应用更改。`);
-      
-      // 刷新页面
-      window.location.reload();
-      
-    } catch (error) {
-      console.error('从备份恢复失败:', error);
-      alert(`从备份恢复失败：${error instanceof Error ? error.message : '未知错误'}\n\n请检查控制台获取详细信息。`);
-    } finally {
-      setIsRecovering(false);
-    }
-  };
 
   // 处理退出登录
   const handleLogout = async () => {
@@ -856,14 +735,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
                   <div className="authuser-meta">角色：{currentUser?.role || 'user'}</div>
                   <div className="authuser-meta">分组：{getUserGroupName()}</div>
                 </div>
-                <button 
-                  className="authuser-item authuser-recovery" 
-                  onClick={handleManualDatabaseRecovery}
-                  disabled={isRecovering}
-                  title="仅在数据库版本降级时使用"
-                >
-                  {isRecovering ? '恢复中...' : '数据库恢复'}
-                </button>
                 <button className="authuser-item authuser-logout" onClick={handleLogout}>退出登录</button>
               </div>
             )}

@@ -4,6 +4,7 @@ import databaseManager, { User } from './database';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '7d'; // Token有效期7天
+const DEPLOY_VERSION = process.env.DEPLOY_VERSION || Date.now().toString(); // 部署版本标识
 
 export interface LoginRequest {
   username: string;
@@ -72,7 +73,8 @@ class AuthService {
           uid: user.uid, 
           username: user.username, 
           role: user.role,
-          group: user.group
+          group: user.group,
+          deployVersion: DEPLOY_VERSION // 添加部署版本
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -194,7 +196,8 @@ class AuthService {
           uid: user.uid, 
           username: user.username, 
           role: user.role,
-          group: user.group
+          group: user.group,
+          deployVersion: DEPLOY_VERSION // 添加部署版本
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
@@ -234,7 +237,13 @@ class AuthService {
   async verifyToken(token: string): Promise<AuthUser | null> {
     try {
       // 验证JWT token
-      const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
+      const decoded = jwt.verify(token, JWT_SECRET) as AuthUser & { deployVersion?: string };
+      
+      // 检查部署版本是否匹配（如果不匹配，说明是旧部署的token）
+      if (decoded.deployVersion && decoded.deployVersion !== DEPLOY_VERSION) {
+        console.log('Token deploy version mismatch, invalidating token');
+        return null;
+      }
       
       // 检查会话是否存在且未过期
       const session = await databaseManager.getSessionByToken(token);
