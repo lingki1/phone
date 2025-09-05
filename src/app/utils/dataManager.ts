@@ -1645,6 +1645,7 @@ class DataManager {
             maxPostsPerDay: 10,
             allowAiComments: true,
             allowAiLikes: true,
+            preventAiCrossComments: false, // 默认关闭角色隔离
             privacyLevel: 'public',
             notifyOnNewPosts: true,
             theme: 'default'

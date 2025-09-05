@@ -46,6 +46,7 @@ export interface DiscoverSettings {
   maxPostsPerDay: number; // 每日最大动态数
   allowAiComments: boolean; // 是否允许AI评论
   allowAiLikes: boolean; // 是否允许AI点赞
+  preventAiCrossComments: boolean; // 是否禁止AI角色互相评论
   privacyLevel: 'public' | 'friends' | 'private'; // 隐私级别
   notifyOnNewPosts: boolean; // 新动态通知
   theme: string; // 动态主题

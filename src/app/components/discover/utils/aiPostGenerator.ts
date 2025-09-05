@@ -333,8 +333,11 @@ export class AiPostGenerator {
     try {
       console.log('🚀 开始生成单个动态和评论');
       
-      // 1. 获取API配置（使用带缓存的方法）
-      const apiConfig = await this.getApiConfig();
+      // 1. 获取API配置和设置（使用带缓存的方法）
+      const [apiConfig, settings] = await Promise.all([
+        this.getApiConfig(),
+        dataManager.getDiscoverSettings()
+      ]);
 
       // 2. 构建单动态请求数据
       const requestData = await this.buildSinglePostRequest(characters);
@@ -379,11 +382,17 @@ export class AiPostGenerator {
       
       await dataManager.saveDiscoverPost(post);
 
-      // 6. 处理API返回的评论
+      // 6. 处理API返回的评论（检查角色隔离设置）
       const comments: DiscoverComment[] = [];
       for (const commentData of responseData.comments) {
         const commentCharacter = characters.find(c => c.id === commentData.characterId);
         if (commentCharacter) {
+          // 角色隔离检查：如果开启隔离模式，AI角色不能评论其他AI角色的动态
+          if (settings?.preventAiCrossComments && post.authorId !== 'user' && commentCharacter.id !== post.authorId) {
+            console.log(`🚫 角色隔离：AI角色 ${commentCharacter.name} 不能评论其他AI角色的动态`);
+            continue;
+          }
+          
           const comment: DiscoverComment = {
             id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             postId: post.id,

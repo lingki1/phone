@@ -164,6 +164,24 @@ export default function DiscoverSettingsPanel({
             </div>
           </div>
 
+          <div className="form-group">
+            <label htmlFor="prevent-ai-cross-comments">禁止AI角色互相评论</label>
+            <div className="toggle-group">
+              <div className="toggle-label">
+                <span>开启后，AI角色只能评论用户动态，不能互相评论</span>
+              </div>
+              <input
+                type="checkbox"
+                id="prevent-ai-cross-comments"
+                checked={localSettings.preventAiCrossComments}
+                onChange={(e) => updateSetting('preventAiCrossComments', e.target.checked)}
+              />
+            </div>
+            <small className="field-hint">
+              开启此选项后，AI角色将只对用户发布的动态进行评论，不会对其他AI角色的动态进行评论
+            </small>
+          </div>
+
           <hr className="divider" />
 
           {/* 隐私设置 */}

@@ -88,10 +88,19 @@ export class AiCommentService {
       // 1. 获取API配置（使用带缓存的方法）
       const apiConfig = await this.getApiConfig();
 
-      // 2. 获取用户信息
-      const userInfo = await dataManager.getPersonalSettings();
+      // 2. 获取用户信息和设置
+      const [userInfo, settings] = await Promise.all([
+        dataManager.getPersonalSettings(),
+        dataManager.getDiscoverSettings()
+      ]);
 
-      // 3. 获取AI角色列表
+      // 3. 检查角色隔离设置
+      if (settings?.preventAiCrossComments && post.authorId !== 'user') {
+        console.log('🚫 角色隔离模式：AI角色不能评论其他AI角色的动态');
+        return { success: true, comments: [], error: '角色隔离模式，跳过AI评论' };
+      }
+
+      // 4. 获取AI角色列表
       const allChats = await dataManager.getAllChats();
       const aiCharacters = allChats.filter(chat => !chat.isGroup);
 
@@ -99,16 +108,16 @@ export class AiCommentService {
         throw new Error('没有可用的AI角色');
       }
 
-      // 4. 智能选择AI角色（基于角色人设和动态内容的相关性）
+      // 5. 智能选择AI角色（基于角色人设和动态内容的相关性）
       // 确保总是生成AI评论，提高用户体验
       const maxCharacters = Math.min(aiCharacters.length, 3); // 最多3个角色
-      const selectedCharacters = this.selectRelevantCharacters(aiCharacters, post, maxCharacters);
+      const selectedCharacters = this.selectRelevantCharacters(aiCharacters, post, maxCharacters, settings);
 
       // 5. 构建API请求
       const requestData = await this.buildApiRequest(post, userInfo, selectedCharacters);
 
       // 6. 调用API
-      const response = await this.callApi(apiConfig, requestData);
+      const response = await this.callApi(apiConfig, requestData, settings?.preventAiCrossComments);
 
       // 7. 解析响应并保存评论
       const comments = await this.processApiResponse(response, post, selectedCharacters);
@@ -140,7 +149,8 @@ export class AiCommentService {
   private selectRelevantCharacters(
     characters: ChatItem[], 
     post: DiscoverPost, 
-    maxCount: number
+    maxCount: number,
+    settings?: { preventAiCrossComments?: boolean }
   ): ChatItem[] {
     const postContent = post.content.toLowerCase();
     const postTags = post.tags || [];
@@ -150,6 +160,12 @@ export class AiCommentService {
     const scoredCharacters = characters.map(character => {
       let score = 0;
       const persona = character.persona.toLowerCase();
+
+      // 角色隔离检查：如果开启隔离模式且动态不是用户发布的，排除发布者
+      if (settings?.preventAiCrossComments && post.authorId !== 'user' && character.id === post.authorId) {
+        console.log(`🚫 角色隔离：排除动态发布者 ${character.name}`);
+        return { character, score: -1000 }; // 大幅降分，确保被排除
+      }
 
       // 基础分数：确保每个角色都有机会参与
       score += 5;
@@ -391,7 +407,7 @@ export class AiCommentService {
   }
 
   // 调用API
-  private async callApi(apiConfig: ApiConfig, requestData: unknown): Promise<string> {
+  private async callApi(apiConfig: ApiConfig, requestData: unknown, isolationMode: boolean = false): Promise<string> {
     console.log('🔍 AI评论服务 - 开始API调用');
     
     // 检查API配置
@@ -446,7 +462,7 @@ export class AiCommentService {
       messages: [
         {
           role: 'system',
-          content: this.buildSystemPrompt()
+          content: this.buildSystemPrompt(isolationMode)
         },
         {
           role: 'user',
@@ -644,10 +660,19 @@ export class AiCommentService {
   }
 
   // 构建系统提示词
-  private buildSystemPrompt(): string {
+  private buildSystemPrompt(isolationMode: boolean = false): string {
+    const isolationNote = isolationMode ? `
+## 🚫 角色隔离模式说明：
+- 当前处于角色隔离模式
+- AI角色只能评论用户发布的动态
+- 不能对其他AI角色的动态进行评论
+- 只能与用户进行互动，不能与AI角色互动
+- 评论内容应专注于与用户的关系和互动` : '';
+
     return `你是智能社交评论生成器。根据用户最新评论、动态主题、AI角色人设和历史互动，生成自然、有趣的评论。
 
 ⚠️ 必须返回有效JSON格式，不能包含其他文本。
+${isolationNote}
 
 ## 核心任务：
 针对用户最新评论生成回应，围绕动态主题，体现AI角色与用户的历史互动关系。
@@ -665,6 +690,7 @@ export class AiCommentService {
 - 基于角色人设给出个性化回应
 - 围绕动态主题展开讨论
 - 体现角色与用户的关系发展
+${isolationMode ? '- 专注于与用户的互动，避免提及其他AI角色' : ''}
 
 ## 返回格式：
 {
@@ -686,6 +712,7 @@ export class AiCommentService {
 - 评论要真实自然，符合角色人设
 - 支持@功能，格式为@用户名或@角色名
 - 评论长度控制在20-50字之间
+${isolationMode ? '- 角色隔离模式下，只与用户互动，不与其他AI角色互动' : ''}
 - 如果无法生成评论，返回空的comments数组：{"comments": []}`;
   }
 

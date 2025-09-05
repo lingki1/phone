@@ -140,6 +140,7 @@ class BackupManager {
         maxPostsPerDay: 10,
         allowAiComments: true,
         allowAiLikes: true,
+        preventAiCrossComments: false,
         privacyLevel: 'public',
         notifyOnNewPosts: true,
         theme: 'default'
