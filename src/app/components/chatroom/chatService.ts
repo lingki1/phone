@@ -213,10 +213,10 @@ export function validateNickname(nickname: string): { valid: boolean; error?: st
   return { valid: true };
 }
 
-// 清理过期的用户数据（7天未活动）- 服务器端自动处理
+// 清理过期的用户数据（已禁用自动清理）
 export function cleanupOldUsers(): void {
-  // 服务器端API会自动清理过期用户数据
-  console.log('用户数据清理由服务器端自动处理');
+  // 自动清理功能已禁用，保留所有用户数据
+  console.log('用户数据自动清理功能已禁用');
 }
 
 // 授予管理员（通过昵称 + 授权码）

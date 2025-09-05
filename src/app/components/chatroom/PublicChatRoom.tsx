@@ -13,7 +13,6 @@ import {
   canUserSendMessage,
   getRemainingWaitTime,
   formatTimestamp,
-  cleanupOldUsers,
   updateUserNickname,
   grantAdminByNickname,
   deleteMessage,
@@ -218,8 +217,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const initializeChatRoom = async () => {
     setIsLoading(true);
     
-    // 清理过期用户（服务器端自动处理）
-    cleanupOldUsers();
+    // 不再自动清理用户数据
     
     // 检查是否有保存的昵称
     const savedNickname = localStorage.getItem('chatroom-nickname');

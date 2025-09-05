@@ -144,15 +144,8 @@ export async function GET() {
       readTodos()
     ]);
     
-    // 清理7天前的用户数据
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const activeUsers = users.filter((user: ChatUser) => 
-      user.lastMessageTime > sevenDaysAgo
-    );
-    
-    if (activeUsers.length !== users.length) {
-      await writeUsers(activeUsers);
-    }
+    // 不再自动清理用户数据，保留所有用户记录
+    const activeUsers = users;
     
     // 确保消息包含标记信息
     const messagesWithMarking = messages.map((message: ChatMessage) => {
@@ -265,10 +258,7 @@ export async function POST(request: NextRequest) {
     // 添加消息
     messages.push(message);
     
-    // 限制消息数量，只保留最近1000条
-    if (messages.length > 1000) {
-      messages.splice(0, messages.length - 1000);
-    }
+    // 不再限制消息数量，保留所有消息记录
     
     // 保存数据
     await writeMessages(messages);

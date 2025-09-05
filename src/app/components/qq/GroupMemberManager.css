@@ -1,4 +1,11 @@
-.group-member-manager-overlay {
+/* ========================================
+   群成员管理组件样式 - 统一使用 groupmember 前缀
+   ======================================== */
+
+/* ========================================
+   1. 模态框容器样式
+   ======================================== */
+.groupmember-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -9,9 +16,10 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: groupmember-fadeIn 0.2s ease-out;
 }
 
-.group-member-manager {
+.groupmember-container {
   background: white;
   border-radius: 12px;
   width: 90%;
@@ -20,25 +28,39 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: groupmember-slideIn 0.3s ease-out;
 }
 
-.member-manager-header {
+/* ========================================
+   2. 头部区域样式
+   ======================================== */
+.groupmember-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px 12px 0 0;
 }
 
-.member-manager-header h3 {
+.groupmember-header-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.close-btn {
+.groupmember-header-title::before {
+  content: "👥";
+  font-size: 20px;
+}
+
+.groupmember-close-btn {
   background: none;
   border: none;
   font-size: 24px;
@@ -50,436 +72,855 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.close-btn:hover {
+.groupmember-close-btn:hover {
   background-color: #f0f0f0;
+  color: #333;
+  transform: scale(1.1);
 }
 
-.member-manager-content {
+/* ========================================
+   3. 内容区域样式
+   ======================================== */
+.groupmember-content {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  background: #fafafa;
 }
 
-/* 成员列表样式 */
-.member-list-header {
+/* ========================================
+   4. 成员列表样式
+   ======================================== */
+.groupmember-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
-.member-list-header h4 {
+.groupmember-list-title {
   margin: 0;
   font-size: 16px;
   color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.add-member-btn {
-  background-color: #007bff;
+.groupmember-list-title::before {
+  content: "📋";
+  font-size: 16px;
+}
+
+.groupmember-add-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.add-member-btn:hover {
-  background-color: #0056b3;
+.groupmember-add-btn::before {
+  content: "➕";
+  font-size: 12px;
 }
 
-.member-items {
+.groupmember-add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.groupmember-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.member-item {
+.groupmember-item {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 16px;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.member-avatar {
+.groupmember-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.groupmember-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+.groupmember-item:hover::before {
+  opacity: 1;
+}
+
+.groupmember-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 12px;
+  margin-right: 16px;
+  border: 3px solid #f0f0f0;
+  transition: border-color 0.2s ease;
 }
 
-.member-info {
+.groupmember-item:hover .groupmember-avatar {
+  border-color: #007bff;
+}
+
+.groupmember-info {
   flex: 1;
+  min-width: 0;
 }
 
-.member-name {
+.groupmember-name {
   font-weight: 600;
   font-size: 16px;
   color: #333;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.member-original-name {
+.groupmember-original-name {
   font-size: 12px;
   color: #666;
   margin-bottom: 4px;
+  font-style: italic;
 }
 
-.member-persona {
+.groupmember-persona {
   font-size: 13px;
   color: #888;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.member-actions {
+.groupmember-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
-.edit-btn, .remove-btn, .admin-btn, .mute-btn {
+.groupmember-action-btn {
   padding: 6px 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
+  font-weight: 500;
   transition: all 0.2s ease;
-  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.edit-btn {
-  background-color: #17a2b8;
+.groupmember-edit-btn {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
   color: white;
 }
 
-.edit-btn:hover {
-  background-color: #138496;
+.groupmember-edit-btn::before {
+  content: "✏️";
+  font-size: 10px;
 }
 
-.admin-btn {
-  background-color: #ffc107;
-  color: #212529;
-  font-size: 14px;
-  padding: 6px 8px;
+.groupmember-edit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
 }
 
-.admin-btn:hover {
-  background-color: #e0a800;
-}
 
-.mute-btn {
-  background-color: #6c757d;
-  color: white;
-  font-size: 14px;
-  padding: 6px 8px;
-}
-
-.mute-btn:hover {
-  background-color: #5a6268;
-}
-
-.remove-btn {
-  background-color: #dc3545;
+.groupmember-remove-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
 }
 
-.remove-btn:hover {
-  background-color: #c82333;
+.groupmember-remove-btn::before {
+  content: "🗑️";
+  font-size: 10px;
 }
 
-.empty-members {
+.groupmember-remove-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.groupmember-empty {
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   color: #666;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #e0e0e0;
 }
 
-/* 添加成员样式 */
-.add-member-header {
+.groupmember-empty::before {
+  content: "👥";
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.groupmember-empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.groupmember-empty-hint {
+  font-size: 14px;
+  color: #999;
+}
+
+/* ========================================
+   5. 添加成员页面样式
+   ======================================== */
+.groupmember-add-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
-.add-member-header h4 {
+.groupmember-add-title {
   margin: 0;
   font-size: 16px;
   color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.back-btn {
-  background-color: #6c757d;
+.groupmember-add-title::before {
+  content: "➕";
+  font-size: 16px;
+}
+
+.groupmember-back-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
   color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.back-btn:hover {
-  background-color: #545b62;
+.groupmember-back-btn::before {
+  content: "←";
+  font-size: 12px;
 }
 
-.add-member-tabs {
+.groupmember-back-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.groupmember-tabs {
   display: flex;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 20px;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
 }
 
-.tab-btn {
+.groupmember-tab {
   background: none;
   border: none;
-  padding: 12px 16px;
+  padding: 12px 20px;
   cursor: pointer;
   font-size: 14px;
   color: #666;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+  font-weight: 500;
 }
 
-.tab-btn.active {
+.groupmember-tab.active {
   color: #007bff;
   border-bottom-color: #007bff;
+  background: #f8f9ff;
 }
 
-.tab-btn:hover {
+.groupmember-tab:hover {
   color: #007bff;
+  background: #f8f9ff;
 }
 
-.existing-contacts h5 {
+.groupmember-tab::before {
+  content: "📋";
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+.groupmember-tab:nth-child(2)::before {
+  content: "✨";
+}
+
+/* ========================================
+   6. 联系人选择样式
+   ======================================== */
+.groupmember-contacts-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.groupmember-contacts-title {
   font-size: 14px;
   color: #333;
   margin-bottom: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.contact-list {
+.groupmember-contacts-title::before {
+  content: "👤";
+  font-size: 14px;
+}
+
+.groupmember-contacts-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.contact-item {
+.groupmember-contact-item {
   display: flex;
   align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 }
 
-.contact-item input[type="checkbox"] {
+.groupmember-contact-item:hover {
+  background-color: #f8f9ff;
+}
+
+.groupmember-contact-checkbox {
   margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
 }
 
-.contact-label {
+.groupmember-contact-label {
   display: flex;
   align-items: center;
   cursor: pointer;
   flex: 1;
-  padding: 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
-.contact-label:hover {
-  background-color: #f0f0f0;
-}
-
-.contact-avatar {
+.groupmember-contact-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
+  border: 2px solid #f0f0f0;
 }
 
-.contact-name {
+.groupmember-contact-name {
   font-size: 14px;
   color: #333;
+  font-weight: 500;
 }
 
-.confirm-add-btn {
-  background-color: #28a745;
+.groupmember-confirm-btn {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
   width: 100%;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.confirm-add-btn:hover {
-  background-color: #218838;
+.groupmember-confirm-btn::before {
+  content: "✅";
+  font-size: 12px;
 }
 
-/* 创建新成员样式 */
-.create-new-member h5 {
+.groupmember-confirm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* ========================================
+   7. 创建新成员样式
+   ======================================== */
+.groupmember-create-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.groupmember-create-title {
   font-size: 14px;
   color: #333;
   margin-bottom: 16px;
   padding-top: 16px;
   border-top: 1px solid #e0e0e0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.form-group {
+.groupmember-create-title::before {
+  content: "✨";
+  font-size: 14px;
+}
+
+.groupmember-form-group {
   margin-bottom: 16px;
 }
 
-.form-group label {
+.groupmember-form-label {
   display: block;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.form-group input,
-.form-group textarea {
+.groupmember-form-input,
+.groupmember-form-textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  background: #fafafa;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
+.groupmember-form-input:focus,
+.groupmember-form-textarea:focus {
   outline: none;
   border-color: #007bff;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.form-group textarea {
+.groupmember-form-textarea {
   resize: vertical;
   min-height: 80px;
+  font-family: inherit;
 }
 
-.avatar-upload {
+.groupmember-avatar-upload {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
 }
 
-.avatar-preview {
+.groupmember-avatar-preview {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e0e0e0;
+  border: 3px solid #e0e0e0;
+  transition: border-color 0.2s ease;
 }
 
-.avatar-upload button {
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  padding: 8px 16px;
+.groupmember-avatar-upload:hover .groupmember-avatar-preview {
+  border-color: #007bff;
+}
+
+.groupmember-avatar-upload-btn {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.avatar-upload button:hover {
-  background-color: #e9ecef;
+.groupmember-avatar-upload-btn::before {
+  content: "📷";
+  font-size: 12px;
 }
 
-.create-member-btn {
-  background-color: #007bff;
+.groupmember-avatar-upload-btn:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  border-color: #007bff;
+  transform: translateY(-1px);
+}
+
+.groupmember-create-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
+  padding: 14px 24px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
   width: 100%;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.create-member-btn:hover {
-  background-color: #0056b3;
+.groupmember-create-btn::before {
+  content: "✨";
+  font-size: 12px;
 }
 
-/* 编辑成员样式 */
-.edit-member-header {
+.groupmember-create-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* ========================================
+   8. 编辑成员样式
+   ======================================== */
+.groupmember-edit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
-.edit-member-header h4 {
+.groupmember-edit-title {
   margin: 0;
   font-size: 16px;
   color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.edit-actions {
+.groupmember-edit-title::before {
+  content: "✏️";
+  font-size: 16px;
+}
+
+.groupmember-edit-actions {
   display: flex;
   gap: 12px;
   margin-top: 20px;
 }
 
-.save-btn {
-  background-color: #28a745;
+.groupmember-save-btn {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
   flex: 1;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.save-btn:hover {
-  background-color: #218838;
+.groupmember-save-btn::before {
+  content: "💾";
+  font-size: 12px;
 }
 
-.cancel-btn {
-  background-color: #6c757d;
+.groupmember-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.groupmember-cancel-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
   flex: 1;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.cancel-btn:hover {
-  background-color: #545b62;
+.groupmember-cancel-btn::before {
+  content: "❌";
+  font-size: 12px;
 }
 
-/* 响应式设计 */
+.groupmember-cancel-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* ========================================
+   9. 动画效果
+   ======================================== */
+@keyframes groupmember-fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes groupmember-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   10. 响应式设计
+   ======================================== */
 @media (max-width: 768px) {
-  .group-member-manager {
+  .groupmember-container {
     width: 95%;
     max-height: 90vh;
+    margin: 10px;
   }
   
-  .member-manager-content {
+  .groupmember-content {
     padding: 16px;
   }
   
-  .member-item {
+  .groupmember-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
+    padding: 12px;
   }
   
-  .member-actions {
+  .groupmember-actions {
     align-self: flex-end;
+    flex-wrap: wrap;
   }
   
-  .edit-actions {
+  .groupmember-edit-actions {
     flex-direction: column;
   }
-} 
+  
+  .groupmember-tabs {
+    flex-direction: column;
+  }
+  
+  .groupmember-tab {
+    border-bottom: none;
+    border-right: 3px solid transparent;
+  }
+  
+  .groupmember-tab.active {
+    border-bottom-color: transparent;
+    border-right-color: #007bff;
+  }
+  
+  .groupmember-avatar-upload {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .groupmember-header {
+    padding: 12px 16px;
+  }
+  
+  .groupmember-header-title {
+    font-size: 16px;
+  }
+  
+  .groupmember-content {
+    padding: 12px;
+  }
+  
+  .groupmember-item {
+    padding: 10px;
+  }
+  
+  .groupmember-avatar {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+  
+  .groupmember-name {
+    font-size: 14px;
+  }
+  
+  .groupmember-action-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* ========================================
+   11. 滚动条样式
+   ======================================== */
+.groupmember-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.groupmember-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.groupmember-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.groupmember-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ========================================
+   12. 加载状态样式
+   ======================================== */
+.groupmember-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #666;
+}
+
+.groupmember-loading::before {
+  content: "⏳";
+  font-size: 24px;
+  margin-right: 12px;
+  animation: groupmember-spin 1s linear infinite;
+}
+
+@keyframes groupmember-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   13. 错误状态样式
+   ======================================== */
+.groupmember-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #dc3545;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+.groupmember-error::before {
+  content: "⚠️";
+  font-size: 24px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.groupmember-error-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.groupmember-error-hint {
+  font-size: 14px;
+  color: #999;
+}
