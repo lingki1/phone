@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { ChatItem, Message } from '../../../types/chat';
+import { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { MemorySyncService } from '../storymode/MemorySyncService';
 import './SingleChatMemoryManager.css';
 
 interface SingleChatMemoryManagerProps {
@@ -19,9 +20,14 @@ interface GroupMemoryStatus {
   groupChatName: string;
   groupChatAvatar: string;
   memoryCount: number;
+  storyMemoryCount: number;
+  totalMemoryCount: number;
   lastUpdated: number | null;
+  lastStoryUpdated: number | null;
   isLinked: boolean;
   linkedGroupChatId?: string;
+  normalMessageLimit?: number;
+  storyMessageLimit?: number;
 }
 
 export default function SingleChatMemoryManager({
@@ -31,11 +37,23 @@ export default function SingleChatMemoryManager({
   onUpdateChat,
   availableContacts
 }: SingleChatMemoryManagerProps) {
+  // 辅助类型与读取函数，避免显式 any
+  interface MemoryLimitConfig {
+    normalMessageLimit: number;
+    storyMessageLimit: number;
+  }
+  type MemoryLimitsMap = Record<string, MemoryLimitConfig>;
+
+  const getMemoryLimits = useCallback((settings: unknown): MemoryLimitsMap => {
+    const s = settings as { memoryLimits?: MemoryLimitsMap };
+    return s.memoryLimits || {};
+  }, []);
   const [groupMemoryStatus, setGroupMemoryStatus] = useState<GroupMemoryStatus[]>([]);
-  const [selectedGroupChat, setSelectedGroupChat] = useState<ChatItem | null>(null);
-  const [showMemoryPreview, setShowMemoryPreview] = useState(false);
-  const [memoryPreview, setMemoryPreview] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [_memorySyncService] = useState(() => MemorySyncService.getInstance());
+  const [showLimitSettings, setShowLimitSettings] = useState<string | null>(null);
+  const [tempNormalLimit, setTempNormalLimit] = useState<number>(20);
+  const [tempStoryLimit, setTempStoryLimit] = useState<number>(20);
 
   const initializeGroupMemoryStatus = useCallback(async () => {
     // 获取所有群聊
@@ -52,7 +70,12 @@ export default function SingleChatMemoryManager({
       // 检查当前单聊是否已经链接了这个群聊的记忆
       const isLinked = chat.settings.linkedGroupChatIds?.includes(groupChat.id) || false;
       
-      // 获取群聊中所有人的消息数量（不仅仅是当前AI角色的消息）
+      // 获取消息数量限制设置
+      const memoryLimits = getMemoryLimits(chat.settings)[groupChat.id] || { normalMessageLimit: 20, storyMessageLimit: 20 };
+      const normalMessageLimit = memoryLimits.normalMessageLimit || 20;
+      const storyMessageLimit = memoryLimits.storyMessageLimit || 20;
+      
+      // 获取群聊中所有人的消息数量（普通聊天模式）
       let memoryCount = 0;
       let lastUpdated = null;
       
@@ -64,21 +87,42 @@ export default function SingleChatMemoryManager({
         }
       }
       
+      // 获取剧情模式消息统计
+      let storyMemoryCount = 0;
+      let lastStoryUpdated = null;
+      
+      try {
+        const storyMessages = await dataManager.getStoryModeMessages(groupChat.id);
+        storyMemoryCount = storyMessages.length;
+        if (storyMessages.length > 0) {
+          lastStoryUpdated = storyMessages[storyMessages.length - 1].timestamp;
+        }
+      } catch (error) {
+        console.warn('获取群聊剧情模式消息失败:', error);
+      }
+      
+      const totalMemoryCount = memoryCount + storyMemoryCount;
+      
       // 无论是否找到AI成员，都显示群聊（但标记为无记忆）
       status.push({
         groupChatId: groupChat.id,
         groupChatName: groupChat.name,
         groupChatAvatar: groupChat.avatar,
         memoryCount,
+        storyMemoryCount,
+        totalMemoryCount,
         lastUpdated,
+        lastStoryUpdated,
         isLinked,
-        linkedGroupChatId: isLinked ? groupChat.id : undefined
+        linkedGroupChatId: isLinked ? groupChat.id : undefined,
+        normalMessageLimit,
+        storyMessageLimit
       });
     }
     
     console.log('最终状态:', status);
     setGroupMemoryStatus(status);
-  }, [chat, availableContacts]);
+  }, [chat, availableContacts, getMemoryLimits]);
 
   // 初始化群聊记忆状态
   useEffect(() => {
@@ -88,7 +132,7 @@ export default function SingleChatMemoryManager({
   }, [isOpen, initializeGroupMemoryStatus]);
 
   // 链接群聊记忆
-  const linkGroupChatMemory = async (groupChatId: string) => {
+  const linkGroupChatMemory = async (groupChatId: string, normalLimit?: number, storyLimit?: number) => {
     setIsLoading(true);
     try {
       // 获取群聊数据
@@ -103,11 +147,21 @@ export default function SingleChatMemoryManager({
         groupChatId
       ];
 
+      // 更新消息数量限制设置
+      const updatedMemoryLimits: MemoryLimitsMap = {
+        ...getMemoryLimits(chat.settings),
+        [groupChatId]: {
+          normalMessageLimit: normalLimit || 20,
+          storyMessageLimit: storyLimit || 20
+        }
+      };
+
       const updatedChat = {
         ...chat,
         settings: {
           ...chat.settings,
-          linkedGroupChatIds: updatedLinkedGroupChatIds
+          linkedGroupChatIds: updatedLinkedGroupChatIds,
+          memoryLimits: updatedMemoryLimits
         }
       };
 
@@ -133,11 +187,16 @@ export default function SingleChatMemoryManager({
       const updatedLinkedGroupChatIds = (chat.settings.linkedGroupChatIds || [])
         .filter(id => id !== groupChatId);
 
+      // 移除消息数量限制设置
+      const updatedMemoryLimits: MemoryLimitsMap = { ...getMemoryLimits(chat.settings) };
+      delete updatedMemoryLimits[groupChatId];
+
       const updatedChat = {
         ...chat,
         settings: {
           ...chat.settings,
-          linkedGroupChatIds: updatedLinkedGroupChatIds
+          linkedGroupChatIds: updatedLinkedGroupChatIds,
+          memoryLimits: updatedMemoryLimits
         }
       };
 
@@ -155,19 +214,51 @@ export default function SingleChatMemoryManager({
     }
   };
 
-  // 预览群聊记忆
-  const previewGroupChatMemory = async (groupChatId: string) => {
-    const groupChat = availableContacts.find(chat => chat.id === groupChatId);
-    if (!groupChat) return;
+  // 更新消息数量限制
+  const updateMemoryLimits = async (groupChatId: string, normalLimit: number, storyLimit: number) => {
+    setIsLoading(true);
+    try {
+      const updatedMemoryLimits: MemoryLimitsMap = {
+        ...getMemoryLimits(chat.settings),
+        [groupChatId]: {
+          normalMessageLimit: normalLimit,
+          storyMessageLimit: storyLimit
+        }
+      };
 
-    setSelectedGroupChat(groupChat);
-    
-    if (groupChat.messages) {
-      // 显示群聊中所有人的消息
-      setMemoryPreview(groupChat.messages);
-      setShowMemoryPreview(true);
+      const updatedChat = {
+        ...chat,
+        settings: {
+          ...chat.settings,
+          memoryLimits: updatedMemoryLimits
+        }
+      };
+
+      onUpdateChat(updatedChat);
+      
+      // 重新初始化记忆状态
+      await initializeGroupMemoryStatus();
+      
+      setShowLimitSettings(null);
+      console.log('已更新消息数量限制');
+    } catch (error) {
+      console.error('更新消息数量限制失败:', error);
+      alert('更新失败，请重试');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // 显示设置界面
+  const showLimitSettingsModal = (groupChatId: string) => {
+    const status = groupMemoryStatus.find(s => s.groupChatId === groupChatId);
+    if (status) {
+      setTempNormalLimit(status.normalMessageLimit || 20);
+      setTempStoryLimit(status.storyMessageLimit || 20);
+      setShowLimitSettings(groupChatId);
+    }
+  };
+
 
   // 刷新群聊记忆
   const refreshGroupChatMemory = async (groupChatId: string) => {
@@ -232,13 +323,32 @@ export default function SingleChatMemoryManager({
                   />
                   <div className="group-details">
                     <div className="group-name">{status.groupChatName}</div>
-                                         <div className="group-memory-info">
-                       {status.memoryCount > 0 ? (
-                         <span className="memory-count">{status.memoryCount} 条群聊消息</span>
-                       ) : (
-                         <span className="no-memory">群聊中暂无消息</span>
-                       )}
-                     </div>
+                    <div className="group-memory-info">
+                      {status.totalMemoryCount > 0 ? (
+                        <div className="memory-stats">
+                          <span className="memory-count">
+                            总计 {status.totalMemoryCount} 条消息
+                          </span>
+                          <div className="memory-breakdown">
+                            {status.memoryCount > 0 && (
+                              <span className="normal-memory">💬 {status.memoryCount} 条聊天</span>
+                            )}
+                            {status.storyMemoryCount > 0 && (
+                              <span className="story-memory">📖 {status.storyMemoryCount} 条剧情</span>
+                            )}
+                          </div>
+                          {status.isLinked && (
+                            <div className="memory-limits">
+                              <span className="limit-info">
+                                限制: 聊天{status.normalMessageLimit}条, 剧情{status.storyMessageLimit}条
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="no-memory">群聊中暂无消息</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -264,11 +374,12 @@ export default function SingleChatMemoryManager({
                   {status.isLinked ? (
                     <>
                       <button 
-                        className="action-btn preview-btn"
-                        onClick={() => previewGroupChatMemory(status.groupChatId)}
-                        title="预览群聊记忆"
+                        className="action-btn settings-btn"
+                        onClick={() => showLimitSettingsModal(status.groupChatId)}
+                        disabled={isLoading}
+                        title="设置消息数量限制"
                       >
-                        👁️ 预览
+                        ⚙️ 设置
                       </button>
                       <button 
                         className="action-btn refresh-btn"
@@ -288,14 +399,14 @@ export default function SingleChatMemoryManager({
                       </button>
                     </>
                   ) : (
-                                         <button 
-                       className="action-btn link-btn"
-                       onClick={() => linkGroupChatMemory(status.groupChatId)}
-                       disabled={isLoading}
-                       title="链接群聊记忆"
-                     >
-                       🔗 链接记忆
-                     </button>
+                    <button 
+                      className="action-btn link-btn"
+                      onClick={() => showLimitSettingsModal(status.groupChatId)}
+                      disabled={isLoading}
+                      title="链接群聊记忆并设置数量限制"
+                    >
+                      🔗 链接记忆
+                    </button>
                   )}
                 </div>
               </div>
@@ -308,41 +419,70 @@ export default function SingleChatMemoryManager({
             </div>
           )}
         </div>
+      </div>
 
-        {/* 群聊记忆预览模态框 */}
-        {showMemoryPreview && selectedGroupChat && (
-          <div className="memory-preview-modal">
-            <div className="preview-header">
-              <h3>{selectedGroupChat.name} 中的群聊记忆</h3>
-              <button className="close-btn" onClick={() => setShowMemoryPreview(false)}>×</button>
+      {/* 消息数量限制设置模态框 - 独立弹窗 */}
+      {showLimitSettings && (
+        <div className="limit-settings-overlay" onClick={() => setShowLimitSettings(null)}>
+          <div className="limit-settings-modal" onClick={e => e.stopPropagation()}>
+            <div className="settings-header">
+              <h3>设置消息数量限制</h3>
+              <button className="close-btn" onClick={() => setShowLimitSettings(null)}>×</button>
             </div>
-            <div className="preview-content">
-                             {memoryPreview.length === 0 ? (
-                 <div className="no-memory">群聊中暂无消息</div>
-               ) : (
-                <div className="memory-messages">
-                                     {memoryPreview.slice(-20).map((msg, index) => (
-                     <div key={index} className={`memory-message ${msg.role}`}>
-                       <div className="message-sender">
-                         {msg.role === 'user' ? '我' : msg.senderName || chat.name}
-                       </div>
-                      <div className="message-content">
-                        {msg.content.length > 100 
-                          ? msg.content.substring(0, 100) + '...' 
-                          : msg.content
-                        }
-                      </div>
-                      <div className="message-time">
-                        {formatTime(msg.timestamp)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="settings-content">
+              <div className="limit-input-group">
+                <label htmlFor="normalLimit">普通聊天消息数量:</label>
+                <input
+                  id="normalLimit"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={tempNormalLimit}
+                  onChange={(e) => setTempNormalLimit(parseInt(e.target.value) || 20)}
+                  className="limit-input"
+                />
+                <span className="limit-hint">条 (最多100条)</span>
+              </div>
+              <div className="limit-input-group">
+                <label htmlFor="storyLimit">剧情模式消息数量:</label>
+                <input
+                  id="storyLimit"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={tempStoryLimit}
+                  onChange={(e) => setTempStoryLimit(parseInt(e.target.value) || 20)}
+                  className="limit-input"
+                />
+                <span className="limit-hint">条 (最多100条)</span>
+              </div>
+              <div className="settings-actions">
+                <button 
+                  className="save-btn"
+                  onClick={() => {
+                    if (groupMemoryStatus.find(s => s.groupChatId === showLimitSettings)?.isLinked) {
+                      // 已链接，更新设置
+                      updateMemoryLimits(showLimitSettings, tempNormalLimit, tempStoryLimit);
+                    } else {
+                      // 未链接，链接并设置
+                      linkGroupChatMemory(showLimitSettings, tempNormalLimit, tempStoryLimit);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  保存设置
+                </button>
+                <button 
+                  className="cancel-btn"
+                  onClick={() => setShowLimitSettings(null)}
+                >
+                  取消
+                </button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 } 

@@ -89,7 +89,13 @@ const MessageItem = memo(({
         avatar = chat.avatarMap[msg.senderAvatarId];
       } else {
         // 回退到传统方式
-        avatar = dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || avatar;
+        if (chat.isGroup) {
+          // 群聊中优先使用数据库/个人设置中的用户头像，最后才回退到群聊设置
+          avatar = dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || avatar;
+        } else {
+          // 单聊中使用个人设置中的头像
+          avatar = dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar || avatar;
+        }
       }
       
       return {
@@ -107,7 +113,7 @@ const MessageItem = memo(({
       } else {
         // 回退到传统方式
         if (chat.isGroup && chat.members) {
-          const member = chat.members.find(m => m.originalName === msg.senderName);
+          const member = chat.members.find(m => m.originalName === msg.senderName || m.groupNickname === msg.senderName);
           if (member && member.avatar) {
             avatar = member.avatar;
             name = member.groupNickname;

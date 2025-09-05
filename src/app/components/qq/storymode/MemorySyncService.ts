@@ -14,7 +14,7 @@ export class MemorySyncService {
   }
 
   // 获取完整的聊天记忆（包括两种模式）
-  async getCompleteChatMemory(chatId: string): Promise<{
+  async getCompleteChatMemory(chatId: string, normalLimit?: number, storyLimit?: number): Promise<{
     normalMessages: Message[];
     storyMessages: Message[];
     allMessages: Message[];
@@ -29,10 +29,19 @@ export class MemorySyncService {
     try {
       // 获取普通聊天消息
       const chat = await dataManager.getChat(chatId);
-      const normalMessages = chat ? chat.messages : [];
+      let normalMessages = chat ? chat.messages : [];
       
       // 获取剧情模式消息
-      const storyMessages = await dataManager.getStoryModeMessages(chatId);
+      let storyMessages = await dataManager.getStoryModeMessages(chatId);
+      
+      // 应用消息数量限制
+      if (normalLimit && normalLimit > 0) {
+        normalMessages = normalMessages.slice(-normalLimit);
+      }
+      
+      if (storyLimit && storyLimit > 0) {
+        storyMessages = storyMessages.slice(-storyLimit);
+      }
       
       // 合并所有消息并按时间排序
       const allMessages = [...normalMessages, ...storyMessages]
@@ -276,14 +285,14 @@ export class MemorySyncService {
   }
 
   // 同步记忆到AI上下文
-  async syncMemoryToContext(chatId: string, targetMode: 'normal' | 'story'): Promise<{
+  async syncMemoryToContext(chatId: string, targetMode: 'normal' | 'story', normalLimit?: number, storyLimit?: number): Promise<{
     memoryContext: string;
     relationshipInfo: string;
     emotionalContext: string;
     recentHistory: string;
   }> {
     try {
-      const { allMessages } = await this.getCompleteChatMemory(chatId);
+      const { allMessages } = await this.getCompleteChatMemory(chatId, normalLimit, storyLimit);
       
       if (allMessages.length === 0) {
         return {

@@ -869,11 +869,12 @@ export default function ChatInterface({
     
     // 处理用户头像引用
     let userAvatarId: string | undefined;
-    if (chat.isGroup && chat.settings.myAvatar) {
+    if (chat.isGroup) {
       userAvatarId = `user_${chat.id}`;
-      // 将用户头像数据存储到映射表中（如果还没有的话）
-      if (!chat.avatarMap[userAvatarId]) {
-        chat.avatarMap[userAvatarId] = chat.settings.myAvatar;
+      const selectedUserAvatar = (dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar);
+      if (selectedUserAvatar) {
+        // 始终以数据库/个人设置优先，覆盖映射，避免旧缓存
+        chat.avatarMap[userAvatarId] = selectedUserAvatar;
       }
     }
 
@@ -916,7 +917,7 @@ export default function ChatInterface({
         triggerAiResponseRef.current(updatedChat);
       }
     }
-  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight, autoGenerateOnSend, isPending, startAiTask]);
+  }, [message, isLoading, chat, quotedMessage, onUpdateChat, adjustTextareaHeight, autoGenerateOnSend, isPending, startAiTask, dbPersonalSettings?.userAvatar, personalSettings?.userAvatar]);
 
   // 生成AI回复（点击生成按钮时调用API）
   const handleGenerateAI = useCallback(async () => {
@@ -1046,9 +1047,10 @@ export default function ChatInterface({
 
     setIsLoading(true);
 
-    // 在群聊中，随机选择一个AI用户来回复
+    // 在群聊中，随机选择一个AI用户来回复（排除我自己：用 groupNickname 与我的昵称比较）
     if (chat.isGroup && chat.members) {
-      const aiMembers = chat.members.filter(m => m.originalName !== (chat.settings.myNickname || '我'));
+      const myName = dbPersonalSettings?.userNickname || personalSettings?.userNickname || chat.settings.myNickname || '我';
+      const aiMembers = chat.members.filter(m => m.groupNickname !== myName);
       if (aiMembers.length > 0) {
         const randomMember = aiMembers[Math.floor(Math.random() * aiMembers.length)];
         setCurrentAiUser({
@@ -1363,7 +1365,7 @@ export default function ChatInterface({
     }
     
     if (chat.isGroup && chat.members) {
-      const member = chat.members.find(m => m.originalName === senderName);
+      const member = chat.members.find(m => m.originalName === senderName || m.groupNickname === senderName);
       if (member && member.avatar) {
         senderAvatarId = `member_${member.originalName}`;
         // 将头像数据存储到映射表中（如果还没有的话）
@@ -2074,10 +2076,12 @@ export default function ChatInterface({
     
     // 处理用户头像引用
     let userAvatarId: string | undefined;
-    if (chat.isGroup && chat.settings.myAvatar) {
+    if (chat.isGroup) {
       userAvatarId = `user_${chat.id}`;
-      if (!chat.avatarMap[userAvatarId]) {
-        chat.avatarMap[userAvatarId] = chat.settings.myAvatar;
+      const selectedUserAvatar = (dbPersonalSettings?.userAvatar || personalSettings?.userAvatar || chat.settings.myAvatar);
+      if (selectedUserAvatar) {
+        // 始终以数据库/个人设置优先，覆盖映射，避免旧缓存
+        chat.avatarMap[userAvatarId] = selectedUserAvatar;
       }
     }
 
@@ -2130,7 +2134,7 @@ export default function ChatInterface({
     } else {
       console.log('Not auto-generating:', { autoGenerateOnSend, isPending, isLoading });
     }
-  }, [isLoading, chat, quotedMessage, autoGenerateOnSend, isPending, startAiTask, storyModeMessages]);
+  }, [isLoading, chat, quotedMessage, autoGenerateOnSend, isPending, startAiTask, storyModeMessages, dbPersonalSettings?.userAvatar, personalSettings?.userAvatar]);
 
   const handleStoryModeGenerate = useCallback(async () => {
     console.log('handleStoryModeGenerate called:', { isLoading, isPending, hasNewUserMessage });
@@ -2826,6 +2830,7 @@ export default function ChatInterface({
               await dataManager.initDB();
               await dataManager.savePersonalSettings(settings);
               setDbPersonalSettings(settings);
+
               console.log('个人设置已更新到数据库:', settings);
             } catch (error) {
               console.error('Failed to save personal settings to database:', error);

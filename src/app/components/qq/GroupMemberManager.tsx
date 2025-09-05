@@ -192,36 +192,45 @@ export default function GroupMemberManager({
                 </div>
                 
                 <div className="groupmember-list">
-                  {chat.members?.map((member, index) => (
+                  {chat.members?.map((member, index) => {
+                    const isMe = member.id === 'me' || index === 0;
+                    const displayAvatar = isMe ? (personalSettings?.userAvatar || member.avatar) : member.avatar;
+                    const displayNickname = isMe ? (personalSettings?.userNickname || member.groupNickname) : member.groupNickname;
+                    const displayPersona = isMe ? (personalSettings?.userBio || member.persona) : member.persona;
+                    return (
                     <div key={member.id} className="groupmember-item">
                       <Image 
-                        src={member.avatar} 
-                        alt={member.groupNickname}
+                        src={displayAvatar} 
+                        alt={displayNickname}
                         className="groupmember-avatar"
                         width={40}
                         height={40}
                       />
                       <div className="groupmember-info">
-                        <div className="groupmember-name">{member.groupNickname}</div>
+                        <div className="groupmember-name">{displayNickname}</div>
                         <div className="groupmember-original-name">原名: {member.originalName}</div>
-                        <div className="groupmember-persona">{member.persona.substring(0, 50)}...</div>
+                        <div className="groupmember-persona">{(displayPersona || '').substring(0, 50)}...</div>
                       </div>
                       <div className="groupmember-actions">
-                        <button 
-                          className="groupmember-action-btn groupmember-edit-btn"
-                          onClick={() => handleEditMember(member, index)}
-                        >
-                          {index === 0 ? '个人设置' : '编辑'}
-                        </button>
-                        <button 
-                          className="groupmember-action-btn groupmember-remove-btn"
-                          onClick={() => handleRemoveMember(member.id)}
-                        >
-                          移除
-                        </button>
+                        {member.id !== 'me' && (
+                          <button 
+                            className="groupmember-action-btn groupmember-edit-btn"
+                            onClick={() => handleEditMember(member, index)}
+                          >
+                            编辑
+                          </button>
+                        )}
+                        {member.id !== 'me' && (
+                          <button 
+                            className="groupmember-action-btn groupmember-remove-btn"
+                            onClick={() => handleRemoveMember(member.id)}
+                          >
+                            移除
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))}
+                  )})}
                   
                   {(!chat.members || chat.members.length === 0) && (
                     <div className="groupmember-empty">

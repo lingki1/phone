@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { ChatItem, GroupMember, Message } from '../../../types/chat';
+import { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { MemorySyncService } from '../storymode/MemorySyncService';
 import './MemoryManager.css';
 
 interface MemoryManagerProps {
@@ -20,8 +21,13 @@ interface MemoryStatus {
   singleChatId: string | null;
   singleChatName: string | null;
   memoryCount: number;
+  storyMemoryCount: number;
+  totalMemoryCount: number;
   lastUpdated: number | null;
+  lastStoryUpdated: number | null;
   isLinked: boolean;
+  normalMessageLimit?: number;
+  storyMessageLimit?: number;
 }
 
 export default function MemoryManager({
@@ -31,11 +37,23 @@ export default function MemoryManager({
   onUpdateChat,
   availableContacts
 }: MemoryManagerProps) {
+  // 辅助类型与读取函数，避免显式 any
+  interface MemoryLimitConfig {
+    normalMessageLimit: number;
+    storyMessageLimit: number;
+  }
+  type MemoryLimitsMap = Record<string, MemoryLimitConfig>;
+
+  const getMemoryLimits = useCallback((settings: unknown): MemoryLimitsMap => {
+    const s = settings as { memoryLimits?: MemoryLimitsMap };
+    return s.memoryLimits || {};
+  }, []);
   const [memoryStatus, setMemoryStatus] = useState<MemoryStatus[]>([]);
-  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
-  const [showMemoryPreview, setShowMemoryPreview] = useState(false);
-  const [memoryPreview, setMemoryPreview] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [_memorySyncService] = useState(() => MemorySyncService.getInstance());
+  const [showLimitSettings, setShowLimitSettings] = useState<string | null>(null);
+  const [tempNormalLimit, setTempNormalLimit] = useState<number>(20);
+  const [tempStoryLimit, setTempStoryLimit] = useState<number>(20);
 
   const initializeMemoryStatus = useCallback(async () => {
     if (!chat.members) return;
@@ -55,7 +73,12 @@ export default function MemoryManager({
       const singleChatId = member.singleChatId || singleChat?.id || null;
       const singleChatName = singleChat?.name || null;
       
-      // 获取单聊记忆数量
+      // 获取消息数量限制设置（兼容旧类型）
+      const memoryLimits = getMemoryLimits(chat.settings)[singleChatId || ''] || { normalMessageLimit: 20, storyMessageLimit: 20 };
+      const normalMessageLimit = memoryLimits.normalMessageLimit || 20;
+      const storyMessageLimit = memoryLimits.storyMessageLimit || 20;
+      
+      // 获取单聊记忆数量（普通聊天模式）
       let memoryCount = 0;
       let lastUpdated = null;
       
@@ -80,19 +103,42 @@ export default function MemoryManager({
         }
       }
       
+      // 获取剧情模式消息统计
+      let storyMemoryCount = 0;
+      let lastStoryUpdated = null;
+      
+      if (singleChatId) {
+        try {
+          const storyMessages = await dataManager.getStoryModeMessages(singleChatId);
+          storyMemoryCount = storyMessages.length;
+          if (storyMessages.length > 0) {
+            lastStoryUpdated = storyMessages[storyMessages.length - 1].timestamp;
+          }
+        } catch (error) {
+          console.warn('获取单聊剧情模式消息失败:', error);
+        }
+      }
+      
+      const totalMemoryCount = memoryCount + storyMemoryCount;
+      
       status.push({
         memberId: member.id,
         memberName: member.groupNickname,
         singleChatId,
         singleChatName,
         memoryCount,
+        storyMemoryCount,
+        totalMemoryCount,
         lastUpdated,
-        isLinked
+        lastStoryUpdated,
+        isLinked,
+        normalMessageLimit,
+        storyMessageLimit
       });
     }
     
     setMemoryStatus(status);
-  }, [chat.members, availableContacts]);
+  }, [chat.members, availableContacts, chat.settings, getMemoryLimits]);
 
   // 初始化记忆状态
   useEffect(() => {
@@ -102,7 +148,7 @@ export default function MemoryManager({
   }, [isOpen, initializeMemoryStatus, chat.members]);
 
   // 链接单聊记忆
-  const linkSingleChatMemory = async (memberId: string, singleChatId: string) => {
+  const _linkSingleChatMemory = async (memberId: string, singleChatId: string, normalLimit?: number, storyLimit?: number) => {
     if (!chat.members) return;
 
     setIsLoading(true);
@@ -125,10 +171,20 @@ export default function MemoryManager({
         return member;
       });
 
+      // 更新消息数量限制设置
+      const updatedMemoryLimits: MemoryLimitsMap = {
+        ...getMemoryLimits(chat.settings),
+        [singleChatId]: {
+          normalMessageLimit: normalLimit || 20,
+          storyMessageLimit: storyLimit || 20
+        }
+      };
+
       // 更新群聊
       const updatedChat = {
         ...chat,
-        members: updatedMembers
+        members: updatedMembers,
+        settings: ({ ...chat.settings, memoryLimits: updatedMemoryLimits } as typeof chat.settings)
       };
 
       onUpdateChat(updatedChat);
@@ -151,6 +207,10 @@ export default function MemoryManager({
 
     setIsLoading(true);
     try {
+      // 获取要取消链接的成员信息
+      const member = chat.members.find(m => m.id === memberId);
+      const singleChatId = member?.singleChatId;
+
       // 更新群成员信息
       const updatedMembers = chat.members.map(member => {
         if (member.id === memberId) {
@@ -163,10 +223,17 @@ export default function MemoryManager({
         return member;
       });
 
+      // 移除消息数量限制设置
+      const updatedMemoryLimits: MemoryLimitsMap = { ...getMemoryLimits(chat.settings) };
+      if (singleChatId) {
+        delete updatedMemoryLimits[singleChatId];
+      }
+
       // 更新群聊
       const updatedChat = {
         ...chat,
-        members: updatedMembers
+        members: updatedMembers,
+        settings: ({ ...chat.settings, memoryLimits: updatedMemoryLimits } as typeof chat.settings)
       };
 
       onUpdateChat(updatedChat);
@@ -183,30 +250,6 @@ export default function MemoryManager({
     }
   };
 
-  // 预览单聊记忆
-  const previewSingleChatMemory = async (memberId: string) => {
-    const member = chat.members?.find(m => m.id === memberId);
-    if (!member) return;
-
-    setSelectedMember(member);
-    
-    if (member.singleChatMemory) {
-      setMemoryPreview(member.singleChatMemory);
-      setShowMemoryPreview(true);
-    } else if (member.singleChatId) {
-      // 从数据库重新获取
-      try {
-        const singleChat = await dataManager.getChat(member.singleChatId);
-        if (singleChat) {
-          setMemoryPreview(singleChat.messages);
-          setShowMemoryPreview(true);
-        }
-      } catch (error) {
-        console.error('获取单聊记忆失败:', error);
-        alert('获取记忆失败');
-      }
-    }
-  };
 
   // 刷新单聊记忆
   const refreshSingleChatMemory = async (memberId: string) => {
@@ -252,6 +295,51 @@ export default function MemoryManager({
     }
   };
 
+  // 更新消息数量限制
+  const updateMemoryLimits = async (memberId: string, normalLimit: number, storyLimit: number) => {
+    const member = chat.members?.find(m => m.id === memberId);
+    if (!member || !member.singleChatId) return;
+
+    setIsLoading(true);
+    try {
+      const updatedMemoryLimits: MemoryLimitsMap = {
+        ...getMemoryLimits(chat.settings),
+        [member.singleChatId]: {
+          normalMessageLimit: normalLimit,
+          storyMessageLimit: storyLimit
+        }
+      };
+
+      const updatedChat = {
+        ...chat,
+        settings: ({ ...chat.settings, memoryLimits: updatedMemoryLimits } as typeof chat.settings)
+      };
+
+      onUpdateChat(updatedChat);
+      
+      // 重新初始化记忆状态
+      await initializeMemoryStatus();
+      
+      setShowLimitSettings(null);
+      console.log('已更新消息数量限制');
+    } catch (error) {
+      console.error('更新消息数量限制失败:', error);
+      alert('更新失败，请重试');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 显示设置界面
+  const showLimitSettingsModal = (memberId: string) => {
+    const status = memoryStatus.find(s => s.memberId === memberId);
+    if (status) {
+      setTempNormalLimit(status.normalMessageLimit || 20);
+      setTempStoryLimit(status.storyMessageLimit || 20);
+      setShowLimitSettings(memberId);
+    }
+  };
+
   // 格式化时间
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -263,8 +351,8 @@ export default function MemoryManager({
     });
   };
 
-  // 获取可用的单聊列表
-  const getAvailableSingleChats = () => {
+  // 获取可用的单聊列表（暂未使用，保留示例时前缀下划线抑制告警）
+  const _getAvailableSingleChats = () => {
     return availableContacts.filter(contact => !contact.isGroup);
   };
 
@@ -308,7 +396,22 @@ export default function MemoryManager({
                     {status.isLinked ? (
                       <div className="linked-status">
                         <span className="status-badge linked">已链接</span>
-                        <span className="memory-count">{status.memoryCount} 条记忆</span>
+                        <div className="memory-stats">
+                          <span className="memory-count">总计 {status.totalMemoryCount} 条记忆</span>
+                          <div className="memory-breakdown">
+                            {status.memoryCount > 0 && (
+                              <span className="normal-memory">💬 {status.memoryCount} 条聊天</span>
+                            )}
+                            {status.storyMemoryCount > 0 && (
+                              <span className="story-memory">📖 {status.storyMemoryCount} 条剧情</span>
+                            )}
+                          </div>
+                          <div className="memory-limits">
+                            <span className="limit-info">
+                              限制: 聊天{status.normalMessageLimit}条, 剧情{status.storyMessageLimit}条
+                            </span>
+                          </div>
+                        </div>
                         {status.lastUpdated && (
                           <span className="last-updated">
                             最后更新: {formatTime(status.lastUpdated)}
@@ -318,7 +421,21 @@ export default function MemoryManager({
                     ) : (
                       <div className="unlinked-status">
                         <span className="status-badge unlinked">未链接</span>
-                        <span className="no-memory">无单聊记忆</span>
+                        {status.singleChatName ? (
+                          <div className="memory-stats">
+                            <span className="memory-count">总计 {status.totalMemoryCount} 条记忆</span>
+                            <div className="memory-breakdown">
+                              {status.memoryCount > 0 && (
+                                <span className="normal-memory">💬 {status.memoryCount} 条聊天</span>
+                              )}
+                              {status.storyMemoryCount > 0 && (
+                                <span className="story-memory">📖 {status.storyMemoryCount} 条剧情</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="no-memory">无单聊记忆</span>
+                        )}
                       </div>
                     )}
                   </div>
@@ -327,11 +444,12 @@ export default function MemoryManager({
                     {status.isLinked ? (
                       <>
                         <button 
-                          className="action-btn preview-btn"
-                          onClick={() => previewSingleChatMemory(status.memberId)}
-                          title="预览记忆"
+                          className="action-btn settings-btn"
+                          onClick={() => showLimitSettingsModal(status.memberId)}
+                          disabled={isLoading}
+                          title="设置消息数量限制"
                         >
-                          👁️ 预览
+                          ⚙️ 设置
                         </button>
                         <button 
                           className="action-btn refresh-btn"
@@ -351,22 +469,14 @@ export default function MemoryManager({
                         </button>
                       </>
                     ) : (
-                      <select 
-                        className="link-select"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            linkSingleChatMemory(status.memberId, e.target.value);
-                          }
-                        }}
+                      <button 
+                        className="action-btn link-btn"
+                        onClick={() => showLimitSettingsModal(status.memberId)}
                         disabled={isLoading}
+                        title="链接记忆并设置数量限制"
                       >
-                        <option value="">选择单聊...</option>
-                        {getAvailableSingleChats().map(singleChat => (
-                          <option key={singleChat.id} value={singleChat.id}>
-                            {singleChat.name} ({singleChat.messages.length} 条消息)
-                          </option>
-                        ))}
-                      </select>
+                        🔗 链接记忆
+                      </button>
                     )}
                   </div>
                 </div>
@@ -374,41 +484,71 @@ export default function MemoryManager({
             })}
           </div>
         </div>
+      </div>
 
-        {/* 记忆预览模态框 */}
-        {showMemoryPreview && selectedMember && (
-          <div className="memory-preview-modal">
-            <div className="preview-header">
-              <h3>{selectedMember.groupNickname} 的单聊记忆</h3>
-              <button className="close-btn" onClick={() => setShowMemoryPreview(false)}>×</button>
+      {/* 消息数量限制设置模态框 - 独立弹窗 */}
+      {showLimitSettings && (
+        <div className="limit-settings-overlay" onClick={() => setShowLimitSettings(null)}>
+          <div className="limit-settings-modal" onClick={e => e.stopPropagation()}>
+            <div className="settings-header">
+              <h3>设置消息数量限制</h3>
+              <button className="close-btn" onClick={() => setShowLimitSettings(null)}>×</button>
             </div>
-            <div className="preview-content">
-              {memoryPreview.length === 0 ? (
-                <div className="no-memory">暂无聊天记录</div>
-              ) : (
-                <div className="memory-messages">
-                  {memoryPreview.slice(-20).map((msg, index) => (
-                    <div key={index} className={`memory-message ${msg.role}`}>
-                      <div className="message-sender">
-                        {msg.role === 'user' ? '我' : selectedMember.groupNickname}
-                      </div>
-                      <div className="message-content">
-                        {msg.content.length > 100 
-                          ? msg.content.substring(0, 100) + '...' 
-                          : msg.content
-                        }
-                      </div>
-                      <div className="message-time">
-                        {formatTime(msg.timestamp)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="settings-content">
+              <div className="limit-input-group">
+                <label htmlFor="normalLimit">普通聊天消息数量:</label>
+                <input
+                  id="normalLimit"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={tempNormalLimit}
+                  onChange={(e) => setTempNormalLimit(parseInt(e.target.value) || 20)}
+                  className="limit-input"
+                />
+                <span className="limit-hint">条 (最多100条)</span>
+              </div>
+              <div className="limit-input-group">
+                <label htmlFor="storyLimit">剧情模式消息数量:</label>
+                <input
+                  id="storyLimit"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={tempStoryLimit}
+                  onChange={(e) => setTempStoryLimit(parseInt(e.target.value) || 20)}
+                  className="limit-input"
+                />
+                <span className="limit-hint">条 (最多100条)</span>
+              </div>
+              <div className="settings-actions">
+                <button 
+                  className="save-btn"
+                  onClick={() => {
+                    const status = memoryStatus.find(s => s.memberId === showLimitSettings);
+                    if (status?.isLinked) {
+                      // 已链接，更新设置
+                      updateMemoryLimits(showLimitSettings, tempNormalLimit, tempStoryLimit);
+                    } else {
+                      // 未链接，需要先选择单聊
+                      alert('请先选择要链接的单聊');
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  保存设置
+                </button>
+                <button 
+                  className="cancel-btn"
+                  onClick={() => setShowLimitSettings(null)}
+                >
+                  取消
+                </button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 } 

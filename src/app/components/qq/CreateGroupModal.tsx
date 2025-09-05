@@ -31,7 +31,7 @@ export default function CreateGroupModal({
   const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState('');
   const [groupAvatar, setGroupAvatar] = useState('/avatars/default-avatar.svg');
-  const [myNickname, setMyNickname] = useState('');
+  // 移除“我在群里的昵称”输入逻辑
   const [groupRules, setGroupRules] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +40,7 @@ export default function CreateGroupModal({
     setStep(1);
     setGroupName('');
     setGroupAvatar('/avatars/default-avatar.svg');
-    setMyNickname('');
+    
     setGroupRules('');
     setSelectedContacts([]);
     setSearchTerm('');
@@ -52,7 +52,7 @@ export default function CreateGroupModal({
       // 编辑模式：加载现有群聊数据
       setGroupName(editingGroup.name);
       setGroupAvatar(editingGroup.avatar);
-      setMyNickname(editingGroup.settings.myPersona || '');
+      // 不再编辑“我在群里的昵称”，保持原值
       setGroupRules(editingGroup.settings.groupRules || '');
       // 设置已选择的成员
       const existingMemberIds = editingGroup.members?.map(m => m.id).filter(id => id !== 'me') || [];
@@ -97,17 +97,18 @@ export default function CreateGroupModal({
         avatar: groupAvatar,
         settings: {
           ...editingGroup.settings,
-          myPersona: myNickname || '用户',
+          // 不覆盖 myPersona，保留原值
           groupRules: groupRules
         },
         members: [
-          {
+          // 保留已有的“我”成员信息（如存在），否则使用默认
+          (editingGroup.members?.find(m => m.id === 'me') ?? {
             id: 'me',
             originalName: '用户',
-            groupNickname: myNickname || '用户',
+            groupNickname: '用户',
             avatar: '/avatars/user-avatar.svg',
             persona: '我是群主'
-          },
+          }),
           ...selectedContactObjects.map(contact => ({
             id: contact.id,
             originalName: contact.name,
@@ -140,7 +141,8 @@ export default function CreateGroupModal({
         persona: '',
         settings: {
           aiPersona: '',
-          myPersona: myNickname || '用户',
+          // 创建时不再填写群内昵称，使用默认
+          myPersona: '用户',
           maxMemory: maxMemory,
           aiAvatar: '/avatars/default-avatar.svg',
           myAvatar: '/avatars/user-avatar.svg',
@@ -162,7 +164,7 @@ export default function CreateGroupModal({
           {
             id: 'me',
             originalName: '用户',
-            groupNickname: myNickname || '用户',
+            groupNickname: '用户',
             avatar: '/avatars/user-avatar.svg',
             persona: '我是群主'
           },
@@ -240,7 +242,7 @@ export default function CreateGroupModal({
             <div className="step-content">
               <div className="step-title">
                 <h4>群聊基本信息</h4>
-                <p>设置群聊的名称、头像和你的昵称</p>
+                <p>设置群聊的名称和头像</p>
               </div>
 
               <div className="form-group">
@@ -287,18 +289,7 @@ export default function CreateGroupModal({
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>我在群里的昵称</label>
-                <input
-                  type="text"
-                  value={myNickname}
-                  onChange={(e) => setMyNickname(e.target.value)}
-                  placeholder="输入你的群昵称（可选）"
-                  maxLength={15}
-                  className="form-input"
-                />
-                <div className="char-count">{myNickname.length}/15</div>
-              </div>
+              {/* 移除“我在群里的昵称”输入 */}
 
               <div className="step-actions">
                 <button 
