@@ -1055,6 +1055,51 @@ class DataManager {
   async saveThemeSettings(settings: {
     selectedTheme: string;
     lastUpdated: number;
+    customThemes?: {
+      id: string;
+      name: string;
+      description: string;
+      className: string;
+      category: 'basic' | 'gender' | 'style' | 'nature' | 'custom';
+      preview: {
+        primary: string;
+        secondary: string;
+        accent: string;
+        gradient?: string;
+      };
+      isCustom?: boolean;
+      customColors?: {
+        bgPrimary: string;
+        bgSecondary: string;
+        bgTertiary: string;
+        textPrimary: string;
+        textSecondary: string;
+        textTertiary: string;
+        accentColor: string;
+        accentHover: string;
+        borderColor: string;
+        borderLight: string;
+        shadowLight: string;
+        shadowMedium: string;
+        shadowHeavy: string;
+        bubbleStyle: {
+          userBubble: {
+            bg: string;
+            text: string;
+            borderRadius: string;
+          };
+          aiBubble: {
+            bg: string;
+            text: string;
+            borderRadius: string;
+          };
+        };
+        successColor: string;
+        warningColor: string;
+        errorColor: string;
+        infoColor: string;
+      };
+    }[];
   }): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -1072,6 +1117,51 @@ class DataManager {
   async getThemeSettings(): Promise<{
     selectedTheme: string;
     lastUpdated: number;
+    customThemes?: {
+      id: string;
+      name: string;
+      description: string;
+      className: string;
+      category: 'basic' | 'gender' | 'style' | 'nature' | 'custom';
+      preview: {
+        primary: string;
+        secondary: string;
+        accent: string;
+        gradient?: string;
+      };
+      isCustom?: boolean;
+      customColors?: {
+        bgPrimary: string;
+        bgSecondary: string;
+        bgTertiary: string;
+        textPrimary: string;
+        textSecondary: string;
+        textTertiary: string;
+        accentColor: string;
+        accentHover: string;
+        borderColor: string;
+        borderLight: string;
+        shadowLight: string;
+        shadowMedium: string;
+        shadowHeavy: string;
+        bubbleStyle: {
+          userBubble: {
+            bg: string;
+            text: string;
+            borderRadius: string;
+          };
+          aiBubble: {
+            bg: string;
+            text: string;
+            borderRadius: string;
+          };
+        };
+        successColor: string;
+        warningColor: string;
+        errorColor: string;
+        infoColor: string;
+      };
+    }[];
   } | null> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -1086,7 +1176,8 @@ class DataManager {
         if (result) {
           resolve({
             selectedTheme: result.selectedTheme || 'default',
-            lastUpdated: result.lastUpdated || Date.now()
+            lastUpdated: result.lastUpdated || Date.now(),
+            customThemes: result.customThemes || []
           });
         } else {
           resolve(null);

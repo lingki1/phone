@@ -10,19 +10,68 @@ export interface Theme {
   name: string;
   description: string;
   className: string;
-  category: 'basic' | 'gender' | 'style' | 'nature';
+  category: 'basic' | 'gender' | 'style' | 'nature' | 'custom';
   preview: {
     primary: string;
     secondary: string;
     accent: string;
     gradient?: string;
   };
+  isCustom?: boolean;
+  customColors?: CustomThemeColors;
+}
+
+// 自定义主题颜色配置
+export interface CustomThemeColors {
+  // 背景色
+  bgPrimary: string;
+  bgSecondary: string;
+  bgTertiary: string;
+  
+  // 文本色
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  
+  // 强调色
+  accentColor: string;
+  accentHover: string;
+  
+  // 边框色
+  borderColor: string;
+  borderLight: string;
+  
+  // 阴影
+  shadowLight: string;
+  shadowMedium: string;
+  shadowHeavy: string;
+  
+  // 气泡样式
+  bubbleStyle: {
+    userBubble: {
+      bg: string;
+      text: string;
+      borderRadius: string;
+    };
+    aiBubble: {
+      bg: string;
+      text: string;
+      borderRadius: string;
+    };
+  };
+  
+  // 特殊元素
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
+  infoColor: string;
 }
 
 // 用户主题设置接口
 export interface UserThemeSettings {
   selectedTheme: string;
   lastUpdated: number;
+  customThemes?: Theme[];
 }
 
 // 可用主题列表
@@ -181,8 +230,20 @@ export class ThemeManager {
   /**
    * 根据ID获取主题对象
    */
-  public getThemeById(id: string): Theme | undefined {
-    return AVAILABLE_THEMES.find(theme => theme.id === id);
+  public async getThemeById(id: string): Promise<Theme | undefined> {
+    // 首先在预设主题中查找
+    const presetTheme = AVAILABLE_THEMES.find(theme => theme.id === id);
+    if (presetTheme) return presetTheme;
+
+    // 然后在自定义主题中查找
+    try {
+      const settings = await this.loadThemeFromDataManager();
+      const customTheme = settings?.customThemes?.find(theme => theme.id === id);
+      return customTheme;
+    } catch (error) {
+      console.warn('Failed to load custom theme:', error);
+      return undefined;
+    }
   }
 
   /**
@@ -196,7 +257,7 @@ export class ThemeManager {
       themeStateManager.startThemeChange(themeId);
       showThemeLoading();
       
-      const theme = this.getThemeById(themeId);
+      const theme = await this.getThemeById(themeId);
       if (!theme) {
         console.warn(`Theme with id "${themeId}" not found, falling back to default`);
         themeId = 'default';
@@ -206,7 +267,11 @@ export class ThemeManager {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // 应用主题到DOM
-      this.applyThemeToDOM(theme?.className || '');
+      if (theme?.isCustom && theme.customColors) {
+        this.applyCustomTheme(theme);
+      } else {
+        this.applyThemeToDOM(theme?.className || '');
+      }
       
       // 更新当前主题
       this.currentTheme = themeId;
@@ -283,14 +348,18 @@ export class ThemeManager {
    */
   private async setThemeInternal(themeId: string): Promise<void> {
     try {
-      const theme = this.getThemeById(themeId);
+      const theme = await this.getThemeById(themeId);
       if (!theme) {
         console.warn(`Theme with id "${themeId}" not found, falling back to default`);
         themeId = 'default';
       }
 
       // 直接应用主题到DOM，不显示加载状态
-      this.applyThemeToDOM(theme?.className || '');
+      if (theme?.isCustom && theme.customColors) {
+        this.applyCustomTheme(theme);
+      } else {
+        this.applyThemeToDOM(theme?.className || '');
+      }
       
       // 更新当前主题
       this.currentTheme = themeId;
@@ -431,22 +500,30 @@ export class ThemeManager {
   /**
    * 预览主题（临时应用，不保存）
    */
-  public previewTheme(themeId: string): void {
-    const theme = this.getThemeById(themeId);
+  public async previewTheme(themeId: string): Promise<void> {
+    const theme = await this.getThemeById(themeId);
     if (theme) {
       themeStateManager.startPreview(themeId);
-      this.applyThemeToDOM(theme.className);
+      if (theme.isCustom && theme.customColors) {
+        this.applyCustomTheme(theme);
+      } else {
+        this.applyThemeToDOM(theme.className);
+      }
     }
   }
 
   /**
    * 取消预览，恢复当前主题
    */
-  public cancelPreview(): void {
+  public async cancelPreview(): Promise<void> {
     themeStateManager.endPreview();
-    const currentTheme = this.getThemeById(this.currentTheme);
+    const currentTheme = await this.getThemeById(this.currentTheme);
     if (currentTheme) {
-      this.applyThemeToDOM(currentTheme.className);
+      if (currentTheme.isCustom && currentTheme.customColors) {
+        this.applyCustomTheme(currentTheme);
+      } else {
+        this.applyThemeToDOM(currentTheme.className);
+      }
     }
   }
 
@@ -465,8 +542,143 @@ export class ThemeManager {
       { id: 'basic', name: '基础主题' },
       { id: 'gender', name: '性别风格' },
       { id: 'style', name: '个性风格' },
-      { id: 'nature', name: '自然主题' }
+      { id: 'nature', name: '自然主题' },
+      { id: 'custom', name: '自定义主题' }
     ];
+  }
+
+  /**
+   * 获取所有主题（包括自定义主题）
+   */
+  public async getAllThemes(): Promise<Theme[]> {
+    try {
+      const settings = await this.loadThemeFromDataManager();
+      const customThemes = settings?.customThemes || [];
+      return [...AVAILABLE_THEMES, ...customThemes];
+    } catch (error) {
+      console.warn('Failed to load custom themes:', error);
+      return AVAILABLE_THEMES;
+    }
+  }
+
+  /**
+   * 保存自定义主题
+   */
+  public async saveCustomTheme(theme: Theme): Promise<void> {
+    try {
+      const settings = await this.loadThemeFromDataManager() || {
+        selectedTheme: this.currentTheme,
+        lastUpdated: Date.now(),
+        customThemes: []
+      };
+
+      // 检查是否已存在同名主题
+      const existingIndex = settings.customThemes?.findIndex(t => t.id === theme.id) ?? -1;
+      
+      if (existingIndex >= 0) {
+        // 更新现有主题
+        settings.customThemes![existingIndex] = theme;
+      } else {
+        // 添加新主题
+        settings.customThemes = [...(settings.customThemes || []), theme];
+      }
+
+      settings.lastUpdated = Date.now();
+      await this.saveThemeToDataManager(settings);
+      
+      console.log(`Custom theme "${theme.name}" saved successfully`);
+    } catch (error) {
+      console.error('Failed to save custom theme:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 删除自定义主题
+   */
+  public async deleteCustomTheme(themeId: string): Promise<void> {
+    try {
+      const settings = await this.loadThemeFromDataManager();
+      if (!settings?.customThemes) return;
+
+      settings.customThemes = settings.customThemes.filter(t => t.id !== themeId);
+      settings.lastUpdated = Date.now();
+      
+      await this.saveThemeToDataManager(settings);
+      
+      // 如果删除的是当前主题，切换到默认主题
+      if (this.currentTheme === themeId) {
+        await this.setTheme('default');
+      }
+      
+      console.log(`Custom theme "${themeId}" deleted successfully`);
+    } catch (error) {
+      console.error('Failed to delete custom theme:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 生成自定义主题的CSS变量
+   */
+  public generateCustomThemeCSS(colors: CustomThemeColors): string {
+    return `
+      :root {
+        --theme-bg-primary: ${colors.bgPrimary};
+        --theme-bg-secondary: ${colors.bgSecondary};
+        --theme-bg-tertiary: ${colors.bgTertiary};
+        --theme-text-primary: ${colors.textPrimary};
+        --theme-text-secondary: ${colors.textSecondary};
+        --theme-text-tertiary: ${colors.textTertiary};
+        --theme-accent-color: ${colors.accentColor};
+        --theme-accent-hover: ${colors.accentHover};
+        --theme-border-color: ${colors.borderColor};
+        --theme-border-light: ${colors.borderLight};
+        --theme-shadow-light: ${colors.shadowLight};
+        --theme-shadow-medium: ${colors.shadowMedium};
+        --theme-shadow-heavy: ${colors.shadowHeavy};
+        --theme-success-color: ${colors.successColor};
+        --theme-warning-color: ${colors.warningColor};
+        --theme-error-color: ${colors.errorColor};
+        --theme-info-color: ${colors.infoColor};
+        
+        /* 气泡样式 */
+        --theme-user-bubble-bg: ${colors.bubbleStyle.userBubble.bg};
+        --theme-user-bubble-text: ${colors.bubbleStyle.userBubble.text};
+        --theme-user-bubble-radius: ${colors.bubbleStyle.userBubble.borderRadius};
+        --theme-ai-bubble-bg: ${colors.bubbleStyle.aiBubble.bg};
+        --theme-ai-bubble-text: ${colors.bubbleStyle.aiBubble.text};
+        --theme-ai-bubble-radius: ${colors.bubbleStyle.aiBubble.borderRadius};
+      }
+    `;
+  }
+
+  /**
+   * 应用自定义主题到DOM
+   */
+  public applyCustomTheme(theme: Theme): void {
+    if (!theme.isCustom || !theme.customColors) {
+      console.warn('Theme is not a custom theme or missing custom colors');
+      return;
+    }
+
+    // 生成并注入CSS
+    const css = this.generateCustomThemeCSS(theme.customColors);
+    
+    // 移除现有的自定义主题样式
+    const existingStyle = document.getElementById('custom-theme-styles');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+
+    // 创建新的样式元素
+    const styleElement = document.createElement('style');
+    styleElement.id = 'custom-theme-styles';
+    styleElement.textContent = css;
+    document.head.appendChild(styleElement);
+
+    // 应用主题类名
+    this.applyThemeToDOM(theme.className);
   }
 }
 

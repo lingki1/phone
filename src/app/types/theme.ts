@@ -5,18 +5,67 @@ export interface Theme {
   name: string;
   description: string;
   className: string;
-  category: 'basic' | 'gender' | 'style' | 'nature';
+  category: 'basic' | 'gender' | 'style' | 'nature' | 'custom';
   preview: {
     primary: string;
     secondary: string;
     accent: string;
     gradient?: string;
   };
+  isCustom?: boolean;
+  customColors?: CustomThemeColors;
+}
+
+// 自定义主题颜色配置
+export interface CustomThemeColors {
+  // 背景色
+  bgPrimary: string;
+  bgSecondary: string;
+  bgTertiary: string;
+  
+  // 文本色
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  
+  // 强调色
+  accentColor: string;
+  accentHover: string;
+  
+  // 边框色
+  borderColor: string;
+  borderLight: string;
+  
+  // 阴影
+  shadowLight: string;
+  shadowMedium: string;
+  shadowHeavy: string;
+  
+  // 气泡样式
+  bubbleStyle: {
+    userBubble: {
+      bg: string;
+      text: string;
+      borderRadius: string;
+    };
+    aiBubble: {
+      bg: string;
+      text: string;
+      borderRadius: string;
+    };
+  };
+  
+  // 特殊元素
+  successColor: string;
+  warningColor: string;
+  errorColor: string;
+  infoColor: string;
 }
 
 export interface UserThemeSettings {
   selectedTheme: string;
   lastUpdated: number;
+  customThemes?: Theme[];
 }
 
 export interface ThemeCategory {
