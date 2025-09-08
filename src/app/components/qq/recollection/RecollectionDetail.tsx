@@ -57,10 +57,6 @@ export default function RecollectionDetail({ recollection, onBack }: Recollectio
             {recollection.name || '回忆详情'}
           </h1>
           <div className="recollection-detail-meta">
-            <span className="recollection-chat-name">
-              {recollection.name || '未知'}
-            </span>
-            <span className="recollection-separator">•</span>
             <span className="recollection-date">
               {formatDate(recollection.createdAt || Date.now())}
             </span>
@@ -96,19 +92,7 @@ export default function RecollectionDetail({ recollection, onBack }: Recollectio
         </div>
       </div>
 
-      {/* 标签区域 */}
-      {(recollection as WorldBook & { tags?: string[] }).tags && (recollection as WorldBook & { tags?: string[] }).tags!.length > 0 && (
-        <div className="recollection-detail-tags">
-          <h4>标签</h4>
-          <div className="recollection-tags-list">
-            {(recollection as WorldBook & { tags?: string[] }).tags!.map((tag, index) => (
-              <span key={index} className="recollection-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* 底部标签区域已移除 */}
     </div>
   );
 }
