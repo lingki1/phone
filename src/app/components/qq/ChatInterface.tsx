@@ -223,8 +223,8 @@ export default function ChatInterface({
     requestAnimationFrame(() => {
       const currentHeight = textarea.style.height;
       textarea.style.height = 'auto';
-      const minHeight = 40;
-      const maxHeight = 120;
+      const minHeight = 32;
+      const maxHeight = 96;
       const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
       if (currentHeight !== `${newHeight}px`) {
         textarea.style.height = `${newHeight}px`;
@@ -2774,8 +2774,8 @@ export default function ChatInterface({
             style={{
               resize: 'none',
               overflow: 'hidden',
-              minHeight: '40px',
-              maxHeight: '120px'
+              minHeight: '32px',
+              maxHeight: '96px'
             }}
           />
           <div className="send-buttons">

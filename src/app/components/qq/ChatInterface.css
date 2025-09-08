@@ -1182,8 +1182,8 @@
   outline: none;
   font-size: 14px;
   line-height: 1.4;
-  max-height: 100px;
-  min-height: 20px;
+  max-height: 96px;
+  min-height: 32px;
   font-family: inherit;
   color: var(--theme-text-primary, #1f1f1f);
 }

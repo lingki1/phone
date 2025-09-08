@@ -43,7 +43,8 @@
   z-index: 15;
   flex-shrink: 0;
   padding: 15px 20px;
-  background-color: var(--theme-header-bg, rgba(247, 247, 247, 0.95)) !important;
+  /* 支持主题梯度：优先使用 --theme-header-gradient，其次退回到主题头部背景色 */
+  background: var(--theme-header-gradient, var(--theme-header-bg, rgba(247, 247, 247, 0.95))) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--theme-border-color, #e8eaed) !important;

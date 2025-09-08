@@ -21,6 +21,8 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  // 标签展开/折叠
+  const [tagsExpanded, setTagsExpanded] = useState<boolean>(false);
   // 分页
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 20;
@@ -300,14 +302,14 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
         <div className="wb-header-actions">
           {!isSelectionMode ? (
             <>
-              <button className="selection-mode-btn" onClick={toggleSelectionMode}>
+              <button className="selection-mode-btn groupmember-header-action-btn" onClick={toggleSelectionMode}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 批量操作
               </button>
-              <button className="import-btn" onClick={() => setShowImportModal(true)}>
+              <button className="import-btn groupmember-header-action-btn" onClick={() => setShowImportModal(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -315,7 +317,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 </svg>
                 导入
               </button>
-              <button className="create-btn" onClick={handleCreateNew}>
+              <button className="create-btn groupmember-header-action-btn" onClick={handleCreateNew}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -396,7 +398,8 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           </div>
           {/* 分类筛选标签 */}
           {categoryOptions.length > 0 && (
-            <div className="groupmember-category-filter-tags">
+            <>
+            <div className={`groupmember-category-filter-tags ${tagsExpanded ? 'expanded' : 'collapsed'}`}>
               <button
                 type="button"
                 className={`groupmember-tag-btn ${!categoryFilter ? 'active' : ''}`}
@@ -411,6 +414,15 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 >{cat}</button>
               ))}
             </div>
+            {/* 展开/收起按钮（移动端显示为主） */}
+            <div className="groupmember-tag-expand-wrap">
+              <button
+                type="button"
+                className="groupmember-tag-expand-btn"
+                onClick={() => setTagsExpanded(v => !v)}
+              >{tagsExpanded ? '收起' : '展开'}</button>
+            </div>
+            </>
           )}
         </div>
 

@@ -44,6 +44,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .groupmember-tag-btn {
@@ -94,9 +95,73 @@
   .groupmember-batch-category-select,
   .groupmember-batch-category-input,
   .groupmember-apply-new-category-btn { height: 36px; font-size: 16px; }
-  .groupmember-tag-btn { font-size: 14px; padding: 8px 12px; }
+  /* 缩小标签尺寸 */
+  .groupmember-tag-btn { font-size: 12px; padding: 6px 10px; }
   .groupmember-wb-page-btn { font-size: 16px; padding: 8px 14px; }
   .groupmember-wb-page-info { font-size: 16px; }
+  /* 折叠为单行，超出隐藏（collapsed 状态）*/
+  .groupmember-category-filter-tags.collapsed {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    padding-right: 22px; /* 为省略标记预留空间 */
+    position: relative;
+  }
+  .groupmember-category-filter-tags.collapsed .groupmember-tag-btn {
+    display: inline-flex;
+    margin-right: 8px;
+    margin-bottom: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .groupmember-category-filter-tags.collapsed::after {
+    content: '...';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 70%;
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--theme-bg-primary, #ffffff) 60%);
+    color: var(--theme-text-tertiary, #9aa0a6);
+    pointer-events: none;
+  }
+  .groupmember-tag-expand-wrap { margin-top: 6px; }
+  .groupmember-tag-expand-btn {
+    padding: 4px 8px;
+    border-radius: 9999px;
+    border: 1px solid var(--theme-border-color, #e0e0e0);
+    background: var(--theme-bg-primary, #ffffff);
+    color: var(--theme-text-secondary, #6c757d);
+    font-size: 12px;
+  }
+}
+
+/* >=769px：标签区域不折叠、无省略标记、隐藏展开按钮 */
+@media (min-width: 769px) {
+  .groupmember-category-filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow: visible;
+    white-space: normal;
+    padding-right: 0;
+    position: static;
+  }
+  .groupmember-category-filter-tags.collapsed {
+    display: flex;
+    overflow: visible;
+    white-space: normal;
+    padding-right: 0;
+  }
+  .groupmember-category-filter-tags.collapsed::after { display: none; content: none; }
+  .groupmember-tag-expand-wrap { display: none; }
 }
 
 /* 分类弹窗 */
@@ -138,6 +203,66 @@
     font-size: 16px;
   }
   .groupmember-batch-row-3 .cancel-selection-btn { grid-column: span 2; }
+}
+
+/* 覆盖：768px 以下将“全选 删除 更换分类 取消”强制放在同一行且按比例缩放 */
+@media (max-width: 768px) {
+  .groupmember-batch-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important; /* 四等分等宽 */
+    align-items: center !important;
+    gap: 6px !important;
+    justify-content: stretch !important;
+    grid-auto-flow: row !important; /* 固定一行四列 */
+  }
+  /* 第一行：选择计数独占一行 */
+  .groupmember-batch-row-1 {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+  }
+  /* 第二、三行：把四个按钮“扁平化”为父级的直接子元素，以便同排布局 */
+  .groupmember-batch-row-2,
+  .groupmember-batch-row-3 {
+    display: contents !important;
+  }
+  /* 取消先前在小屏下让取消按钮跨列的规则 */
+  .groupmember-batch-row-3 .cancel-selection-btn { grid-column: auto !important; }
+  /* 四个按钮：均分一行，允许内容缩小，防止换行 */
+  .select-all-btn,
+  .batch-delete-btn,
+  .groupmember-apply-new-category-btn,
+  .cancel-selection-btn {
+    min-width: 0 !important;
+    width: 100% !important; /* 等宽填满各自格子 */
+    padding: 6px 10px !important;
+    height: 36px !important; /* 统一高度 */
+    font-size: 13px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+}
+
+/* 更小屏幕下进一步缩小按钮字号和内边距，保持同一行 */
+@media (max-width: 420px) {
+  .select-all-btn,
+  .batch-delete-btn,
+  .groupmember-apply-new-category-btn,
+  .cancel-selection-btn {
+    padding: 5px 6px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .select-all-btn,
+  .batch-delete-btn,
+  .groupmember-apply-new-category-btn,
+  .cancel-selection-btn {
+    padding: 4px 5px !important;
+    font-size: 11px !important;
+  }
 }
 
 /* >=768px：批量工具条展示为单行 */
@@ -282,7 +407,8 @@
   z-index: 15;
   flex-shrink: 0;
   padding: 15px 20px;
-  background-color: var(--theme-header-bg, rgba(247, 247, 247, 0.95)) !important;
+  /* 支持主题梯度：优先使用 --theme-header-gradient，其次退回到主题头部背景色 */
+  background: var(--theme-header-gradient, var(--theme-header-bg, rgba(247, 247, 247, 0.95))) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--theme-border-color, #e8eaed) !important;
@@ -300,6 +426,36 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* 头部三个动作按钮：统一尺寸，等宽等高，随分辨率缩放 */
+.groupmember-header-action-btn {
+  min-width: 120px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+@media (max-width: 1024px) {
+  .groupmember-header-action-btn { min-width: 110px; height: 36px; }
+}
+
+@media (max-width: 768px) {
+  .groupmember-header-action-btn { min-width: 100px; height: 34px; }
+}
+
+@media (max-width: 600px) {
+  .groupmember-header-action-btn { min-width: 92px; height: 32px; padding: 0 10px; }
+}
+
+@media (max-width: 480px) {
+  .groupmember-header-action-btn { min-width: 88px; height: 30px; padding: 0 8px; }
+}
+
+@media (max-width: 360px) {
+  .groupmember-header-action-btn { min-width: 80px; height: 28px; padding: 0 6px; }
 }
 
 /* 批量操作按钮样式 */
