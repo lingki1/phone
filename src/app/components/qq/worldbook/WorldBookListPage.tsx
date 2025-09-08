@@ -19,6 +19,15 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const [editingWorldBook, setEditingWorldBook] = useState<WorldBook | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  // 分页
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 20;
+  // 分类更换弹窗
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [modalExistingCategory, setModalExistingCategory] = useState<string>('');
+  const [modalNewCategory, setModalNewCategory] = useState<string>('');
   
   // 批量删除相关状态
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -33,6 +42,9 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
       // 按更新时间倒序排列
       books.sort((a, b) => b.updatedAt - a.updatedAt);
       setWorldBooks(books);
+      // 提取分类选项
+      const cats = Array.from(new Set(books.map(b => b.category).filter(Boolean))).sort();
+      setCategoryOptions(cats);
     } catch (error) {
       console.error('Failed to load world books:', error);
       alert('加载世界书失败，请刷新重试');
@@ -212,6 +224,43 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
     }
   };
 
+  // 批量更换分类
+  const handleBatchChangeCategory = async (newCategory: string) => {
+    if (!newCategory) return;
+    if (selectedIds.size === 0) {
+      alert('请先选择要更换分类的世界书');
+      return;
+    }
+    try {
+      setIsDeleting(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      const updated = await Promise.all(worldBooks.map(async wb => {
+        if (!selectedIds.has(wb.id)) return wb;
+        const next: WorldBook = { ...wb, category: newCategory, updatedAt: Date.now() };
+        try {
+          await dataManager.updateWorldBook(next);
+          successCount++;
+          return next;
+        } catch (e) {
+          console.error('Failed to update category:', wb.id, e);
+          errorCount++;
+          return wb;
+        }
+      }));
+
+      setWorldBooks(updated);
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      const cats = Array.from(new Set(updated.map(b => b.category).filter(Boolean))).sort();
+      setCategoryOptions(cats);
+      alert(errorCount === 0 ? `成功更新 ${successCount} 个世界书的分类` : `更新完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // 过滤世界书
   const filteredWorldBooks = worldBooks.filter(wb => {
     if (!searchQuery.trim()) return true;
@@ -221,6 +270,12 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
            wb.category.toLowerCase().includes(query) ||
            (wb.description && wb.description.toLowerCase().includes(query));
   });
+
+  const finallyFilteredWorldBooks = filteredWorldBooks.filter(wb => !categoryFilter || wb.category === categoryFilter);
+  const totalPages = Math.max(1, Math.ceil(finallyFilteredWorldBooks.length / pageSize));
+  const currentPageSafe = Math.min(Math.max(1, currentPage), totalPages);
+  const pageStartIndex = (currentPageSafe - 1) * pageSize;
+  const pageItems = finallyFilteredWorldBooks.slice(pageStartIndex, pageStartIndex + pageSize);
 
   // 如果正在显示编辑器
   if (showEditor) {
@@ -242,30 +297,8 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           </svg>
         </button>
         <h1 className="page-title">世界书管理</h1>
-                    <div className="wb-header-actions">
-          {isSelectionMode ? (
-            <>
-              <button 
-                className="select-all-btn"
-                onClick={toggleSelectAll}
-              >
-                {selectedIds.size === filteredWorldBooks.length ? '取消全选' : '全选'}
-              </button>
-              <button 
-                className="batch-delete-btn"
-                onClick={handleBatchDelete}
-                disabled={selectedIds.size === 0 || isDeleting}
-              >
-                {isDeleting ? '删除中...' : `删除 (${selectedIds.size})`}
-              </button>
-              <button 
-                className="cancel-selection-btn"
-                onClick={toggleSelectionMode}
-              >
-                取消
-              </button>
-            </>
-          ) : (
+        <div className="wb-header-actions">
+          {!isSelectionMode ? (
             <>
               <button className="selection-mode-btn" onClick={toggleSelectionMode}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -290,9 +323,52 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 创建
               </button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
+
+      {/* 批量工具条（单独一行） */}
+      {isSelectionMode && (
+        <div className="groupmember-batch-toolbar">
+          {/* 第一行：已选择 x 个 */}
+          <div className="groupmember-batch-row groupmember-batch-row-1">
+            <span className="groupmember-selected-count">已选择 {selectedIds.size} 个</span>
+          </div>
+          {/* 第二行：全选 删除 */}
+          <div className="groupmember-batch-row groupmember-batch-row-2">
+            <button 
+              className="select-all-btn"
+              onClick={toggleSelectAll}
+            >
+              {selectedIds.size === filteredWorldBooks.length ? '取消全选' : '全选'}
+            </button>
+            <button 
+              className="batch-delete-btn"
+              onClick={handleBatchDelete}
+              disabled={selectedIds.size === 0 || isDeleting}
+            >
+              {isDeleting ? '删除中...' : `删除 (${selectedIds.size})`}
+            </button>
+          </div>
+          {/* 第三行：更换分类 取消 */}
+          <div className="groupmember-batch-row groupmember-batch-row-3">
+            <button
+              className="groupmember-apply-new-category-btn"
+              onClick={() => {
+                setModalExistingCategory('');
+                setModalNewCategory('');
+                setShowCategoryModal(true);
+              }}
+            >更换分类</button>
+            <button 
+              className="cancel-selection-btn"
+              onClick={toggleSelectionMode}
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="world-book-content">
         {/* 搜索框 */}
@@ -318,6 +394,24 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
               </button>
             )}
           </div>
+          {/* 分类筛选标签 */}
+          {categoryOptions.length > 0 && (
+            <div className="groupmember-category-filter-tags">
+              <button
+                type="button"
+                className={`groupmember-tag-btn ${!categoryFilter ? 'active' : ''}`}
+                onClick={() => setCategoryFilter('')}
+              >全部</button>
+              {categoryOptions.map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`groupmember-tag-btn ${categoryFilter === cat ? 'active' : ''}`}
+                  onClick={() => setCategoryFilter(cat)}
+                >{cat}</button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 世界书列表 */}
@@ -327,7 +421,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
               <div className="loading-spinner"></div>
               <p>加载中...</p>
             </div>
-          ) : filteredWorldBooks.length === 0 ? (
+          ) : finallyFilteredWorldBooks.length === 0 ? (
             <div className="empty-state">
               {searchQuery ? (
                 <>
@@ -356,7 +450,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
             <>
               <div className="list-header">
                 <span className="result-count">
-                  {searchQuery ? `找到 ${filteredWorldBooks.length} 个结果` : `共 ${worldBooks.length} 个世界书`}
+                  {searchQuery || categoryFilter ? `找到 ${finallyFilteredWorldBooks.length} 个结果` : `共 ${worldBooks.length} 个世界书`}
                 </span>
                 {isSelectionMode && (
                   <span className="selection-count">
@@ -364,7 +458,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   </span>
                 )}
               </div>
-              {filteredWorldBooks.map(worldBook => (
+              {pageItems.map(worldBook => (
                 <WorldBookCard
                   key={worldBook.id}
                   worldBook={worldBook}
@@ -375,6 +469,20 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   onToggleSelection={() => toggleSelection(worldBook.id)}
                 />
               ))}
+              {/* 分页器 */}
+              <div className="groupmember-wb-pagination">
+                <button
+                  className="groupmember-wb-page-btn"
+                  disabled={currentPageSafe <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                >上一页</button>
+                <span className="groupmember-wb-page-info">{currentPageSafe} / {totalPages}</span>
+                <button
+                  className="groupmember-wb-page-btn"
+                  disabled={currentPageSafe >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                >下一页</button>
+              </div>
             </>
           )}
         </div>
@@ -387,6 +495,57 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           onClose={() => setShowImportModal(false)}
           onImport={handleImport}
         />
+      )}
+
+      {/* 批量更换分类弹窗 */}
+      {showCategoryModal && (
+        <div className="groupmember-category-modal-overlay" onClick={() => setShowCategoryModal(false)}>
+          <div className="groupmember-category-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="groupmember-category-modal-header">
+              <h3>批量更换分类</h3>
+              <button className="groupmember-category-modal-close" onClick={() => setShowCategoryModal(false)}>×</button>
+            </div>
+            <div className="groupmember-category-modal-body">
+              <div className="groupmember-category-row">
+                <label>选择已有分类</label>
+                <select
+                  className="groupmember-batch-category-select"
+                  value={modalExistingCategory}
+                  onChange={(e) => setModalExistingCategory(e.target.value)}
+                >
+                  <option value="">不选择</option>
+                  {categoryOptions.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="groupmember-category-row">
+                <label>或输入新分类</label>
+                <input
+                  type="text"
+                  className="groupmember-batch-category-input"
+                  value={modalNewCategory}
+                  onChange={(e) => setModalNewCategory(e.target.value)}
+                  placeholder="例如：extrainfo / notes / tags…"
+                />
+              </div>
+              <div className="groupmember-category-tip">提示：优先使用新分类；若未填写新分类则使用下拉选择的分类。</div>
+            </div>
+            <div className="groupmember-category-modal-footer">
+              <button className="groupmember-category-cancel" onClick={() => setShowCategoryModal(false)}>取消</button>
+              <button
+                className="groupmember-category-apply"
+                onClick={() => {
+                  const value = (modalNewCategory.trim() || modalExistingCategory).trim();
+                  if (!value) return;
+                  handleBatchChangeCategory(value);
+                  setShowCategoryModal(false);
+                }}
+                disabled={selectedIds.size === 0 || (!modalNewCategory.trim() && !modalExistingCategory)}
+              >应用</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

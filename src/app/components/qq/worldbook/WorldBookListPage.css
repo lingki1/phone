@@ -1,3 +1,242 @@
+/* ====== WorldBookList custom styles (prefixed by groupmember-) ====== */
+
+.groupmember-batch-category-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.groupmember-batch-category-select,
+.groupmember-batch-category-input,
+.groupmember-apply-new-category-btn {
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  background: var(--theme-bg-primary, #ffffff);
+  color: var(--theme-text-primary, #1f1f1f);
+  font-size: 14px;
+}
+
+.groupmember-batch-category-select {
+  padding: 0 10px;
+}
+
+.groupmember-batch-category-input {
+  padding: 0 10px;
+  min-width: 140px;
+}
+
+.groupmember-apply-new-category-btn {
+  padding: 0 12px;
+  background: var(--theme-accent-color, #007bff);
+  color: #fff;
+  cursor: pointer;
+}
+
+.groupmember-apply-new-category-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.groupmember-category-filter-tags {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.groupmember-tag-btn {
+  padding: 6px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  background: var(--theme-bg-primary, #ffffff);
+  color: var(--theme-text-secondary, #6c757d);
+  font-size: 12px;
+}
+
+.groupmember-tag-btn.active {
+  background: var(--theme-accent-color, #007bff);
+  color: #fff;
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+.groupmember-wb-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.groupmember-wb-page-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  background: var(--theme-bg-primary, #ffffff);
+  color: var(--theme-text-primary, #1f1f1f);
+  font-size: 14px;
+}
+
+.groupmember-wb-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.groupmember-wb-page-info {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6c757d);
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .groupmember-batch-category-input { min-width: 120px; }
+  .groupmember-batch-category-select,
+  .groupmember-batch-category-input,
+  .groupmember-apply-new-category-btn { height: 36px; font-size: 16px; }
+  .groupmember-tag-btn { font-size: 14px; padding: 8px 12px; }
+  .groupmember-wb-page-btn { font-size: 16px; padding: 8px 14px; }
+  .groupmember-wb-page-info { font-size: 16px; }
+}
+
+/* 分类弹窗 */
+.groupmember-category-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+/* 批量工具条（单独一行显示） */
+.groupmember-batch-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--theme-bg-secondary, #f8f9fa);
+  border-bottom: 1px solid var(--theme-border-color, #e0e0e0);
+}
+
+.groupmember-batch-row { display: flex; gap: 10px; align-items: center; }
+.groupmember-batch-row-1 { justify-content: flex-start; }
+.groupmember-batch-row-2 { justify-content: flex-start; }
+.groupmember-batch-row-3 { justify-content: flex-start; }
+
+.groupmember-selected-count {
+  color: var(--theme-text-secondary, #6c757d);
+}
+
+@media (max-width: 768px) {
+  .groupmember-batch-row { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .groupmember-batch-row-1 { grid-template-columns: 1fr; }
+  .groupmember-batch-row button {
+    width: 100%;
+    height: 40px;
+    font-size: 16px;
+  }
+  .groupmember-batch-row-3 .cancel-selection-btn { grid-column: span 2; }
+}
+
+/* >=768px：批量工具条展示为单行 */
+@media (min-width: 768px) {
+  .groupmember-batch-toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+  }
+  .groupmember-batch-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+}
+
+.groupmember-category-modal {
+  background: var(--theme-bg-primary, #ffffff);
+  border-radius: 12px;
+  width: 92%;
+  max-width: 480px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.groupmember-category-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--theme-border-color, #e0e0e0);
+}
+
+.groupmember-category-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.groupmember-category-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.groupmember-category-modal-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupmember-category-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.groupmember-category-row label {
+  width: 96px;
+  color: var(--theme-text-secondary, #6c757d);
+  font-size: 13px;
+}
+
+.groupmember-category-tip {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6c757d);
+}
+
+.groupmember-category-modal-footer {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--theme-border-color, #e0e0e0);
+}
+
+.groupmember-category-cancel,
+.groupmember-category-apply {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  background: var(--theme-bg-primary, #ffffff);
+  cursor: pointer;
+}
+
+.groupmember-category-apply {
+  background: var(--theme-accent-color, #007bff);
+  color: #fff;
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+@media (max-width: 768px) {
+  .groupmember-category-modal { width: 96%; }
+  .groupmember-category-row { flex-wrap: wrap; }
+  .groupmember-category-row label { width: auto; }
+}
 /* 世界书列表页面样式 - 使用flex布局自适应浏览器可视范围 */
 .world-book-list-page {
   width: 100% !important;

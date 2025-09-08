@@ -66,18 +66,30 @@ export function useExtraInfoManager(chatId: string, chatName: string, onConfigUp
       await dataManager.initDB();
       
       if (updatedConfig.enabled && updatedConfig.description) {
-        // 创建或更新世界书
-        const worldBook: WorldBook = {
-          id: `extrainfo_${chatId}_${Date.now()}`,
-          name: `${chatName} 的额外信息`,
-          content: updatedConfig.description,
-          category: 'extrainfo',
-          description: `额外信息功能配置 - ${chatName}`,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        };
+        // 幂等保存：若已存在相同 chat 的 extrainfo，则更新，否则创建
+        const all = await dataManager.getAllWorldBooks();
+        const existing = all.find(wb => wb.category === 'extrainfo' && wb.name === `${chatName} 的额外信息`);
 
-        await dataManager.saveWorldBook(worldBook);
+        if (existing) {
+          const worldBook: WorldBook = {
+            ...existing,
+            content: updatedConfig.description,
+            description: `额外信息功能配置 - ${chatName}`,
+            updatedAt: Date.now()
+          };
+          await dataManager.updateWorldBook(worldBook);
+        } else {
+          const worldBook: WorldBook = {
+            id: `extrainfo_${chatId}_${Date.now()}`,
+            name: `${chatName} 的额外信息`,
+            content: updatedConfig.description,
+            category: 'extrainfo',
+            description: `额外信息功能配置 - ${chatName}`,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          await dataManager.saveWorldBook(worldBook);
+        }
       }
     } catch (error) {
       console.error('Failed to save extra info config to world book:', error);

@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh; /* 动态视口高度，适配移动端地址栏 */
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -17,10 +17,11 @@
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 90dvh; /* 增大可用高度，防止底部溢出 */
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   animation: extraInfoSlideIn 0.2s ease;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 }
 
 .extra-info-modal-header {
