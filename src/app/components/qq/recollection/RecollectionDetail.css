@@ -6,7 +6,8 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  /* 使用动态视口高度，避免移动端地址栏导致视口变小 */
+  height: 100dvh;
   z-index: 10000;
   background: var(--theme-bg-primary, #ffffff);
   transition: all 0.3s ease;
@@ -108,8 +109,8 @@
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  /* 为移动端浏览器地址栏/底部工具条预留空间 */
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px) + 32px);
+  /* 为移动端浏览器地址栏/底部工具条预留更多空间 */
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px) + 80px);
 }
 
 .recollection-content-wrapper {
