@@ -122,10 +122,37 @@ export function useExtraInfoManager(chatId: string, chatName: string, onConfigUp
     updateConfig({ description });
   };
 
+  // 删除世界书条目
+  const deleteWorldBookEntry = async (worldBookId: string) => {
+    try {
+      await dataManager.initDB();
+      await dataManager.deleteWorldBook(worldBookId);
+      console.log('World book entry deleted successfully:', worldBookId);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete world book entry:', error);
+      return false;
+    }
+  };
+
+  // 获取所有额外信息的世界书条目
+  const getAllExtraInfoEntries = async () => {
+    try {
+      await dataManager.initDB();
+      const worldBooks = await dataManager.getAllWorldBooks();
+      return worldBooks.filter(wb => wb.category === 'extrainfo');
+    } catch (error) {
+      console.error('Failed to get extra info entries:', error);
+      return [];
+    }
+  };
+
   return {
     config,
     enableExtraInfo,
     disableExtraInfo,
-    updateDescription
+    updateDescription,
+    deleteWorldBookEntry,
+    getAllExtraInfoEntries
   };
 }

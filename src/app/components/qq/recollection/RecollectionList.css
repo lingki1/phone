@@ -1,0 +1,531 @@
+/* 回忆列表样式 */
+.recollection-list {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+
+.recollection-list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 回忆条目样式 */
+.recollection-item {
+  background: var(--theme-bg-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.recollection-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-medium, 0 4px 12px rgba(0, 0, 0, 0.1));
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+.recollection-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.recollection-chat-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.recollection-chat-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.recollection-chat-name {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recollection-chat-date {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6c757d);
+}
+
+.recollection-item-arrow {
+  color: var(--theme-text-tertiary, #adb5bd);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.recollection-item:hover .recollection-item-arrow {
+  color: var(--theme-accent-color, #007bff);
+  transform: translateX(4px);
+}
+
+.recollection-item-content {
+  margin-bottom: 16px;
+}
+
+.recollection-preview {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--theme-text-secondary, #6c757d);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recollection-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recollection-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recollection-tag {
+  background: var(--theme-bg-tertiary, #e9ecef);
+  color: var(--theme-text-secondary, #6c757d);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.recollection-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.recollection-meta-item {
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #adb5bd);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 删除按钮样式 */
+.recollection-delete-btn {
+  background: none;
+  border: none;
+  color: var(--theme-text-tertiary, #adb5bd);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.recollection-delete-btn:hover {
+  background: var(--theme-error-color, #dc3545);
+  color: white;
+}
+
+.recollection-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recollection-delete-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--theme-border-light, #e9ecef);
+  border-top: 2px solid var(--theme-error-color, #dc3545);
+  border-radius: 50%;
+  animation: recollection-list-spin 1s linear infinite;
+}
+
+/* 加载状态 */
+.recollection-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.recollection-list-loading .recollection-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-border-light, #e9ecef);
+  border-top: 3px solid var(--theme-accent-color, #007bff);
+  border-radius: 50%;
+  animation: recollection-list-spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes recollection-list-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.recollection-list-loading p {
+  margin: 0;
+  color: var(--theme-text-secondary, #6c757d);
+  font-size: 16px;
+}
+
+/* 错误状态 */
+.recollection-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.recollection-list-error p {
+  margin: 0 0 20px 0;
+  color: var(--theme-error-color, #dc3545);
+  font-size: 16px;
+}
+
+.recollection-retry-btn {
+  padding: 10px 20px;
+  background: var(--theme-accent-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recollection-retry-btn:hover {
+  background: var(--theme-accent-hover, #0056b3);
+  transform: translateY(-1px);
+}
+
+/* 空状态 */
+.recollection-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.recollection-empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.6;
+}
+
+.recollection-list-empty h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-list-empty p {
+  margin: 0;
+  color: var(--theme-text-secondary, #6c757d);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 400px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .recollection-list {
+    padding: 16px;
+  }
+  
+  
+  .recollection-item {
+    padding: 16px;
+  }
+  
+  
+  .recollection-chat-name {
+    font-size: 16px;
+  }
+  
+  .recollection-item-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .recollection-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .recollection-delete-modal {
+    padding: 10px;
+  }
+  
+  .recollection-modal-content {
+    max-height: 90vh;
+  }
+  
+  .recollection-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .recollection-modal-body {
+    padding: 20px;
+  }
+  
+  .recollection-modal-actions {
+    flex-direction: column;
+  }
+  
+  .recollection-cancel-btn,
+  .recollection-confirm-delete-btn {
+    width: 100%;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .recollection-item {
+  background: var(--theme-bg-secondary, #2d2d2d);
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .recollection-item:hover {
+  border-color: var(--theme-accent-color, #007bff);
+}
+
+.theme-dark .recollection-tag {
+  background: var(--theme-bg-tertiary, #404040);
+  color: var(--theme-text-secondary, #b0b0b0);
+}
+
+.theme-dark .recollection-modal-content {
+  background: var(--theme-bg-primary, #1a1a1a);
+}
+
+.theme-dark .recollection-modal-header {
+  background: var(--theme-bg-secondary, #2d2d2d);
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .recollection-delete-info {
+  background: var(--theme-bg-secondary, #2d2d2d);
+  border-color: var(--theme-border-color, #404040);
+}
+
+.theme-dark .recollection-cancel-btn {
+  background: var(--theme-bg-tertiary, #404040);
+  border-color: var(--theme-border-color, #404040);
+  color: var(--theme-text-secondary, #b0b0b0);
+}
+
+/* 删除确认模态框 */
+.recollection-delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.recollection-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.recollection-modal-content {
+  position: relative;
+  background: var(--theme-bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: var(--theme-shadow-heavy, 0 4px 16px rgba(0, 0, 0, 0.2));
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: recollection-modal-slide-in 0.3s ease;
+}
+
+@keyframes recollection-modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.recollection-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--theme-border-color, #e0e0e0);
+  background: var(--theme-bg-secondary, #f8f9fa);
+}
+
+.recollection-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--theme-text-secondary, #6c757d);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.recollection-modal-close:hover {
+  background: var(--theme-bg-tertiary, #e9ecef);
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-modal-body {
+  padding: 24px;
+}
+
+.recollection-delete-warning {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.recollection-warning-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.recollection-delete-warning h4 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-delete-warning p {
+  margin: 0 0 20px 0;
+  color: var(--theme-text-secondary, #6c757d);
+  line-height: 1.6;
+}
+
+.recollection-delete-info {
+  background: var(--theme-bg-secondary, #f8f9fa);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+}
+
+.recollection-delete-info p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-delete-info p:last-child {
+  margin-bottom: 0;
+}
+
+.recollection-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.recollection-cancel-btn,
+.recollection-confirm-delete-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.recollection-cancel-btn {
+  background: var(--theme-bg-tertiary, #e9ecef);
+  color: var(--theme-text-secondary, #6c757d);
+  border: 1px solid var(--theme-border-color, #e0e0e0);
+}
+
+.recollection-cancel-btn:hover:not(:disabled) {
+  background: var(--theme-border-light, #e9ecef);
+  color: var(--theme-text-primary, #1f1f1f);
+}
+
+.recollection-confirm-delete-btn {
+  background: var(--theme-error-color, #dc3545);
+  color: white;
+}
+
+.recollection-confirm-delete-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.recollection-cancel-btn:disabled,
+.recollection-confirm-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 主题过渡动画 */
+.recollection-item,
+.recollection-tag,
+.recollection-modal-content,
+.recollection-modal-header,
+.recollection-delete-info {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

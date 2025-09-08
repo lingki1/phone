@@ -51,9 +51,25 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
     const button = e.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
     
-    // 计算菜单位置
-    const x = rect.left + rect.width - 100; // 菜单宽度100px
-    const y = rect.bottom + 4; // 4px间距
+    // 计算菜单位置（根据可视区域自动上/下弹）
+    const menuWidth = 140; // 与 .floating-menu 宽度保持一致的估算
+    const menuHeight = 192; // 约4个菜单项 * 48px 行高
+    const gap = 6; // 与按钮的间距
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+
+    // 默认向下弹
+    let x = rect.left + rect.width - menuWidth;
+    let y = rect.bottom + gap;
+
+    // 如果向下空间不足，则向上弹
+    if (y + menuHeight > viewportH - 8) {
+      y = Math.max(8, rect.top - menuHeight - gap);
+    }
+
+    // 水平方向防溢出
+    if (x + menuWidth > viewportW - 8) x = viewportW - menuWidth - 8;
+    if (x < 8) x = 8;
     
     setMenuPosition({ x, y });
     setActiveMenuId(activeMenuId === chatId ? null : chatId);

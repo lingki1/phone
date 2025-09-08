@@ -568,6 +568,10 @@ export default function DiscoverPage() {
       // 跳转到个人页面
       console.log('DiscoverPage - 触发navigateToMe事件');
       window.dispatchEvent(new CustomEvent('navigateToMe'));
+    } else if (view === 'recollection') {
+      // 跳转到回忆页面
+      console.log('DiscoverPage - 触发navigateToRecollection事件');
+      window.dispatchEvent(new CustomEvent('navigateToRecollection'));
     }
     // 'moments' 已经在当前页面，不需要处理
     

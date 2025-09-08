@@ -414,6 +414,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     } else if (view === 'moments') {
       // 跳转到动态页面
       window.dispatchEvent(new CustomEvent('navigateToDiscover'));
+    } else if (view === 'recollection') {
+      // 跳转到回忆页面
+      window.dispatchEvent(new CustomEvent('navigateToRecollection'));
     }
     // 'me' 已经在当前页面，不需要处理
   };

@@ -46,6 +46,17 @@ const defaultNavItems: NavItem[] = [
     )
   },
   {
+    key: 'recollection',
+    label: '回忆',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" fill="none"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" fill="none"/>
+        <path d="M8 7h8M8 11h8M8 15h4" stroke="currentColor" strokeWidth="2" fill="none"/>
+      </svg>
+    )
+  },
+  {
     key: 'me',
     label: '我',
     icon: (
@@ -83,25 +94,29 @@ export default function BottomNavigation({
         const mePageElement = document.querySelector('.me-page');
         const mePageContainerElement = document.querySelector('.me-page-container');
         const discoverPageElement = document.querySelector('.discover-page');
+        const recollectionPageElement = document.querySelector('.recollection-page');
         
         if (chatListElement) return 'ChatListPage';
         if (mePageElement || mePageContainerElement) return 'MePage';
         if (discoverPageElement) return 'DiscoverPage';
+        if (recollectionPageElement) return 'RecollectionPage';
         
         // 通过页面内容特征判断
         const hasChatList = document.querySelector('.chat-list');
         const hasMeContent = document.querySelector('.me-profile-section');
         const hasDiscoverContent = document.querySelector('.discover-content');
+        const hasRecollectionContent = document.querySelector('.recollection-content');
         
         if (hasChatList) return 'ChatListPage';
         if (hasMeContent) return 'MePage';
         if (hasDiscoverContent) return 'DiscoverPage';
+        if (hasRecollectionContent) return 'RecollectionPage';
         
         return '';
       };
 
       const currentPageName = getCurrentPageName();
-      const isAllowedPage = ['ChatListPage', 'MePage', 'DiscoverPage'].includes(currentPageName);
+      const isAllowedPage = ['ChatListPage', 'MePage', 'DiscoverPage', 'RecollectionPage'].includes(currentPageName);
       
       setShouldShow(isAllowedPage);
       

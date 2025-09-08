@@ -6,6 +6,7 @@ import ChatListPage from './components/qq/ChatListPage';
 import DesktopPage from './components/DesktopPage';
 import ShoppingPage from './components/shopping/ShoppingPage';
 import DiscoverPage from './components/discover/DiscoverPage';
+import RecollectionPage from './components/qq/recollection/RecollectionPage';
 import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 import MePage from './components/qq/me/MePage';
@@ -15,7 +16,7 @@ import { FirstLoadPage } from './components/firstloadpage';
 
 export default function Home() {
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping' | 'discover' | 'me'>('desktop');
+  const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping' | 'discover' | 'recollection' | 'me'>('desktop');
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
     apiKey: '',
@@ -247,14 +248,21 @@ export default function Home() {
       setCurrentPage('discover');
     };
 
+    const handleNavigateToRecollection = () => {
+      console.log('Home - 收到跳转到回忆页面事件');
+      setCurrentPage('recollection');
+    };
+
     window.addEventListener('navigateToChat', handleNavigateToChat);
     window.addEventListener('navigateToMe', handleNavigateToMe);
     window.addEventListener('navigateToDiscover', handleNavigateToDiscover);
+    window.addEventListener('navigateToRecollection', handleNavigateToRecollection);
     
     return () => {
       window.removeEventListener('navigateToChat', handleNavigateToChat);
       window.removeEventListener('navigateToMe', handleNavigateToMe);
       window.removeEventListener('navigateToDiscover', handleNavigateToDiscover);
+      window.removeEventListener('navigateToRecollection', handleNavigateToRecollection);
     };
   }, []);
 
@@ -310,6 +318,12 @@ export default function Home() {
     {
       id: 'discover',
       component: <DiscoverPage />,
+      direction: 'left' as const,
+      duration: 350
+    },
+    {
+      id: 'recollection',
+      component: <RecollectionPage />,
       direction: 'left' as const,
       duration: 350
     },

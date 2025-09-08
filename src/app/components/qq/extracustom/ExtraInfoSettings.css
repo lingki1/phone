@@ -117,6 +117,10 @@
   border-bottom: 1px solid #f1f3f4;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .extra-info-worldbook-item:last-child {
@@ -153,6 +157,50 @@
 .extra-info-worldbook-meta {
   font-size: 11px;
   color: #999;
+}
+
+.extra-info-worldbook-content-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.extra-info-delete-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.extra-info-delete-btn:hover {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.extra-info-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.extra-info-delete-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e0e0e0;
+  border-top: 2px solid #d32f2f;
+  border-radius: 50%;
+  animation: extra-info-spin 1s linear infinite;
+}
+
+@keyframes extra-info-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .extra-info-create-new-btn {
@@ -423,5 +471,209 @@
   
   .extra-config-name {
     color: #9ae6b4;
+  }
+}
+
+/* 删除确认对话框样式 */
+.extra-info-delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.extra-info-delete-modal .extra-info-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.extra-info-delete-modal .extra-info-modal-content {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: extraInfoSlideIn 0.3s ease;
+}
+
+.extra-info-delete-modal .extra-info-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8f9fa;
+}
+
+.extra-info-delete-modal .extra-info-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.extra-info-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.extra-info-modal-close:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.extra-info-delete-modal .extra-info-modal-body {
+  padding: 24px;
+}
+
+.extra-info-delete-warning {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.extra-info-warning-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.extra-info-delete-warning h4 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.extra-info-delete-warning p {
+  margin: 0 0 20px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.extra-info-delete-info {
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+}
+
+.extra-info-delete-info p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.extra-info-delete-info p:last-child {
+  margin-bottom: 0;
+}
+
+.extra-info-delete-modal .extra-info-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 20px 24px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.extra-info-confirm-delete-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  background: #dc3545;
+  color: white;
+}
+
+.extra-info-confirm-delete-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.extra-info-confirm-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 暗色主题删除对话框 */
+@media (prefers-color-scheme: dark) {
+  .extra-info-delete-modal .extra-info-modal-content {
+    background: #2d3748;
+  }
+  
+  .extra-info-delete-modal .extra-info-modal-header {
+    background: #4a5568;
+    border-bottom-color: #718096;
+  }
+  
+  .extra-info-delete-modal .extra-info-modal-header h3 {
+    color: #f7fafc;
+  }
+  
+  .extra-info-modal-close {
+    color: #a0aec0;
+  }
+  
+  .extra-info-modal-close:hover {
+    background: #718096;
+    color: #f7fafc;
+  }
+  
+  .extra-info-delete-warning h4 {
+    color: #f7fafc;
+  }
+  
+  .extra-info-delete-warning p {
+    color: #a0aec0;
+  }
+  
+  .extra-info-delete-info {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .extra-info-delete-info p {
+    color: #e2e8f0;
+  }
+  
+  .extra-info-delete-modal .extra-info-modal-actions {
+    border-top-color: #718096;
+  }
+  
+  .extra-info-delete-btn:hover {
+    background: #4a2c2c;
+    color: #f56565;
   }
 }

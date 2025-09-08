@@ -20,6 +20,7 @@ import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
 import { StoryModeToggle, StoryModeDisplay } from './storymode';
 import { BatchDeleteSelector } from './messageactions';
 import UnicodeEmojiPicker from '../Unicode/UnicodeEmojiPicker';
+import MemorySummary from './recollection/MemorySummary';
 import './ChatInterface.css';
 
 interface ApiConfig {
@@ -2382,7 +2383,7 @@ export default function ChatInterface({
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 1 3-3h7z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0-3-3h7z"/>
             </svg>
           </button>
           
@@ -2711,6 +2712,14 @@ export default function ChatInterface({
             {/* 预留位置给未来的功能按钮 */}
           </div>
           <div className="action-buttons-right">
+            <MemorySummary
+              chat={chat}
+              apiConfig={localApiConfig}
+              onSummaryGenerated={(summary) => {
+                console.log('记忆总结已生成:', summary);
+                // 可以在这里添加通知或其他处理逻辑
+              }}
+            />
             <StoryModeToggle
               isStoryMode={isStoryMode}
               onToggle={handleStoryModeToggle}

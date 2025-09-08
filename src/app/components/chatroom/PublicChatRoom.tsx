@@ -498,6 +498,13 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
               📋 {state.todos.filter(todo => !todo.isCompleted).length}
             </button>
           )}
+          <button
+            className="chatroom-todo-button"
+            onClick={scrollToBottomInstant}
+            title="到最新消息"
+          >
+            ↓ 最新
+          </button>
           <div className="chatroom-online-count">
             {state.users.length} 人在线
           </div>

@@ -26,6 +26,8 @@ export default function ExtraInfoSettings({
   const [availableWorldBooks, setAvailableWorldBooks] = useState<WorldBook[]>([]);
   const [selectedWorldBookId, setSelectedWorldBookId] = useState<string>('');
   const [isLoadingWorldBooks, setIsLoadingWorldBooks] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   // 加载可用的世界书
   useEffect(() => {
@@ -87,6 +89,39 @@ export default function ExtraInfoSettings({
     }
   };
 
+  // 删除世界书条目
+  const handleDeleteWorldBook = async (worldBookId: string) => {
+    setDeletingId(worldBookId);
+    try {
+      await dataManager.initDB();
+      await dataManager.deleteWorldBook(worldBookId);
+      
+      // 重新加载世界书列表
+      const allWorldBooks = await dataManager.getAllWorldBooks();
+      const extrainfoWorldBooks = allWorldBooks.filter(wb => wb.category === 'extrainfo');
+      setAvailableWorldBooks(extrainfoWorldBooks);
+      
+      // 如果删除的是当前选中的世界书，清空选择
+      if (selectedWorldBookId === worldBookId) {
+        setSelectedWorldBookId('');
+        setDescription('');
+      }
+      
+      console.log('World book deleted successfully:', worldBookId);
+    } catch (error) {
+      console.error('Failed to delete world book:', error);
+    } finally {
+      setDeletingId(null);
+      setShowDeleteConfirm(null);
+    }
+  };
+
+  // 显示删除确认
+  const showDeleteConfirmation = (worldBookId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // 阻止触发卡片选择
+    setShowDeleteConfirm(worldBookId);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -131,11 +166,25 @@ export default function ExtraInfoSettings({
                             className={`extra-info-worldbook-item ${selectedWorldBookId === worldBook.id ? 'selected' : ''}`}
                             onClick={() => handleWorldBookSelect(worldBook)}
                           >
-                            <div className="extra-info-worldbook-name">{worldBook.name}</div>
-                            <div className="extra-info-worldbook-content">{worldBook.content}</div>
-                            <div className="extra-info-worldbook-meta">
-                              {new Date(worldBook.updatedAt).toLocaleDateString()}
+                            <div className="extra-info-worldbook-content-wrapper">
+                              <div className="extra-info-worldbook-name">{worldBook.name}</div>
+                              <div className="extra-info-worldbook-content">{worldBook.content}</div>
+                              <div className="extra-info-worldbook-meta">
+                                {new Date(worldBook.updatedAt).toLocaleDateString()}
+                              </div>
                             </div>
+                            <button
+                              className="extra-info-delete-btn"
+                              onClick={(e) => showDeleteConfirmation(worldBook.id, e)}
+                              disabled={deletingId === worldBook.id}
+                              title="删除配置"
+                            >
+                              {deletingId === worldBook.id ? (
+                                <div className="extra-info-delete-spinner"></div>
+                              ) : (
+                                '🗑️'
+                              )}
+                            </button>
                           </div>
                         ))
                       ) : (
@@ -196,6 +245,55 @@ export default function ExtraInfoSettings({
           </button>
         </div>
       </div>
+
+      {/* 删除确认对话框 */}
+      {showDeleteConfirm && (
+        <div className="extra-info-delete-modal">
+          <div className="extra-info-modal-overlay" onClick={() => setShowDeleteConfirm(null)}></div>
+          <div className="extra-info-modal-content">
+            <div className="extra-info-modal-header">
+              <h3>确认删除</h3>
+              <button 
+                className="extra-info-modal-close"
+                onClick={() => setShowDeleteConfirm(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="extra-info-modal-body">
+              <div className="extra-info-delete-warning">
+                <div className="extra-info-warning-icon">⚠️</div>
+                <h4>确定要删除这个配置吗？</h4>
+                <p>删除后将无法恢复，此操作会同时从世界书中移除该条目。</p>
+                {(() => {
+                  const worldBook = availableWorldBooks.find(wb => wb.id === showDeleteConfirm);
+                  return worldBook ? (
+                    <div className="extra-info-delete-info">
+                      <p><strong>配置名称：</strong>{worldBook.name}</p>
+                      <p><strong>创建时间：</strong>{new Date(worldBook.createdAt || Date.now()).toLocaleDateString()}</p>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+            </div>
+            <div className="extra-info-modal-actions">
+              <button 
+                className="extra-info-cancel-btn"
+                onClick={() => setShowDeleteConfirm(null)}
+              >
+                取消
+              </button>
+              <button 
+                className="extra-info-confirm-delete-btn"
+                onClick={() => handleDeleteWorldBook(showDeleteConfirm)}
+                disabled={deletingId === showDeleteConfirm}
+              >
+                {deletingId === showDeleteConfirm ? '删除中...' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
