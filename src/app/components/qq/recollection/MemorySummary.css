@@ -82,6 +82,8 @@
   display: flex;
   flex-direction: column;
   animation: recollection-modal-slide-in 0.3s ease;
+  /* 稍微上移，避免贴近底部导航 */
+  margin-top: -16px;
 }
 
 @keyframes recollection-modal-slide-in {

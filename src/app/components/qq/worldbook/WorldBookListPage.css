@@ -476,18 +476,13 @@
   align-items: center;
 }
 
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--theme-text-tertiary);
-  z-index: 1;
-}
+.search-icon { display: none; }
 
 .search-input {
   background: var(--theme-bg-secondary);
   border: 1px solid var(--theme-border-color);
   border-radius: 8px;
-  padding: 10px 12px 10px 40px;
+  padding: 10px 12px; /* 去除为图标预留的左侧内边距 */
   color: var(--theme-text-primary);
   font-size: 14px;
   width: 100%;
@@ -507,7 +502,7 @@
 @media (max-width: 767px) {
   .search-input {
     font-size: 16px; /* 防止iOS缩放 */
-    padding: 12px 12px 12px 40px;
+    padding: 12px; /* 移除图标占位 */
   }
   
   .search-input::placeholder {
@@ -519,16 +514,14 @@
 @media (max-width: 480px) {
   .search-input {
     font-size: 16px;
-    padding: 10px 10px 10px 36px;
+    padding: 10px; /* 移除图标占位 */
   }
   
   .search-input::placeholder {
     font-size: 16px;
   }
   
-  .search-icon {
-    left: 10px;
-  }
+  .search-icon { display: none; }
 }
 
 .clear-search-btn {

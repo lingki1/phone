@@ -298,10 +298,6 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
         {/* 搜索框 */}
         <div className="search-container">
           <div className="search-box">
-            <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-              <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
             <input
               type="text"
               className="search-input"
