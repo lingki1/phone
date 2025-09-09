@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import './DesktopPage.css';
-import { AnnouncementDisplay, AnnouncementEditor, Announcement } from './announcement';
+import { AnnouncementEditor, Announcement, AnnouncementHistoryDrawer } from './announcement';
 import { fetchAnnouncements } from './announcement/announcementService';
 import { PublicChatRoom } from './chatroom';
 import { BlackMarket } from './blackmarket';
@@ -44,7 +44,7 @@ interface DesktopPageProps {
 interface AppTile {
   id: string;
   name: string;
-  icon: string;
+  icon?: string;
   color: string;
   gradient: string;
   size: 'small' | 'medium' | 'large';
@@ -53,6 +53,68 @@ interface AppTile {
 }
 
 export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout }: DesktopPageProps) {
+  const MinimalIcon = ({ name }: { name: string }) => {
+    const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+    switch (name) {
+      case 'qq': // chat
+        return (
+          <svg {...commonProps} aria-label="聊天">
+            <path d="M21 12a8.5 8.5 0 1 1-4.2-7.35"/>
+            <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.73-.33-3.9-.94L3 21l1.44-4.21A8.5 8.5 0 0 1 12.5 3.5" opacity=".9"/>
+            <path d="M8 11h8M8 14h5"/>
+          </svg>
+        );
+      case 'blackmarket': // store
+        return (
+          <svg {...commonProps} aria-label="黑市">
+            <path d="M3 10h18"/>
+            <path d="M5 10l1.5-5h11L19 10"/>
+            <path d="M6 10v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7"/>
+            <path d="M10 14h4"/>
+          </svg>
+        );
+      case 'music':
+        return (
+          <svg {...commonProps} aria-label="音乐">
+            <path d="M15 4v10"/>
+            <path d="M15 4l5 1v9"/>
+            <circle cx="9" cy="15" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+        );
+      case 'shopping':
+        return (
+          <svg {...commonProps} aria-label="购物">
+            <path d="M6 6h14l-1.5 9a2 2 0 0 1-2 1.7H9a2 2 0 0 1-2-1.7L6 6z"/>
+            <path d="M6 6l-.8-2H3"/>
+            <path d="M9 11h8"/>
+          </svg>
+        );
+      case 'weibo': // hot/news
+        return (
+          <svg {...commonProps} aria-label="热点">
+            <path d="M4 12h16"/>
+            <path d="M4 8h12" opacity=".8"/>
+            <path d="M4 16h10" opacity=".8"/>
+            <circle cx="18" cy="8" r="2"/>
+          </svg>
+        );
+      case 'chatroom':
+        return (
+          <svg {...commonProps} aria-label="聊天室">
+            <path d="M4 6h12a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H11l-5 3v-3H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/>
+            <path d="M7.5 11h7"/>
+            <path d="M7.5 14h4.5"/>
+          </svg>
+        );
+      default:
+        return (
+          <svg {...commonProps} aria-label="应用">
+            <rect x="5" y="5" width="14" height="14" rx="4"/>
+          </svg>
+        );
+    }
+  };
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentDate, setCurrentDate] = useState(new Date());
   const [batteryLevel, setBatteryLevel] = useState<number>(85);
@@ -61,10 +123,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   
-  // 拖拽和编辑状态
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
   const [clickedApp, setClickedApp] = useState<string | null>(null);
   
   // 公告系统状态
@@ -172,10 +230,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       status: 'available'
     }
   ]);
-
-  // 长按检测相关
-  const longPressRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
-  const isLongPressRef = useRef<{ [key: string]: boolean }>({});
   
   // 时间点击重置定时器
   const timeClickResetTimer = useRef<NodeJS.Timeout | null>(null);
@@ -418,141 +472,10 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     }
   };
 
-  // 处理长按开始
-  const handleLongPressStart = (appId: string) => {
-    if (longPressRefs.current[appId]) {
-      clearTimeout(longPressRefs.current[appId]!);
-    }
-    
-    longPressRefs.current[appId] = setTimeout(() => {
-      isLongPressRef.current[appId] = true;
-      setIsEditMode(true);
-      setDraggedItem(appId);
-    }, 500); // 500ms长按触发
-  };
-
-  // 处理长按结束
-  const handleLongPressEnd = (appId: string) => {
-    if (longPressRefs.current[appId]) {
-      clearTimeout(longPressRefs.current[appId]!);
-      longPressRefs.current[appId] = null;
-    }
-  };
-
-  // 处理拖拽开始
-  const handleDragStart = (e: React.DragEvent, appId: string) => {
-    if (!isEditMode) return;
-    
-    console.log('开始拖拽:', appId);
-    setDraggedItem(appId);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', appId);
-    
-    // 设置拖拽图像
-    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-    dragImage.style.opacity = '0.5';
-    dragImage.style.transform = 'scale(1.1)';
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
-    
-    // 延迟移除拖拽图像
-    setTimeout(() => {
-      if (document.body.contains(dragImage)) {
-        document.body.removeChild(dragImage);
-      }
-    }, 0);
-  };
-
-  // 处理拖拽结束
-  const handleDragEnd = () => {
-    console.log('拖拽结束');
-    setDraggedItem(null);
-    setDragOverItem(null);
-  };
-
-  // 处理拖拽悬停
-  const handleDragOver = (e: React.DragEvent, targetAppId: string) => {
-    if (!isEditMode) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverItem(targetAppId);
-  };
-
-  // 处理拖拽放置
-  const handleDrop = (e: React.DragEvent, targetAppId: string) => {
-    if (!isEditMode || !draggedItem || draggedItem === targetAppId) return;
-    
-    e.preventDefault();
-    console.log('放置到:', targetAppId, '拖拽的是:', draggedItem);
-    
-    const draggedIndex = appTiles.findIndex(app => app.id === draggedItem);
-    const targetIndex = appTiles.findIndex(app => app.id === targetAppId);
-    
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      const newAppTiles = [...appTiles];
-      const [draggedApp] = newAppTiles.splice(draggedIndex, 1);
-      newAppTiles.splice(targetIndex, 0, draggedApp);
-      setAppTiles(newAppTiles);
-      console.log('排序完成:', newAppTiles.map(app => app.name));
-    }
-    
-    setDragOverItem(null);
-  };
-
-  // 处理网格容器的拖拽事件
-  const handleGridDragOver = (e: React.DragEvent) => {
-    if (!isEditMode) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleGridDrop = (e: React.DragEvent) => {
-    if (!isEditMode || !draggedItem) return;
-    
-    e.preventDefault();
-    console.log('放置到网格容器');
-    
-    // 如果放置到网格容器，将拖拽的项目放到最后
-    const draggedIndex = appTiles.findIndex(app => app.id === draggedItem);
-    if (draggedIndex !== -1) {
-      const newAppTiles = [...appTiles];
-      const [draggedApp] = newAppTiles.splice(draggedIndex, 1);
-      newAppTiles.push(draggedApp);
-      setAppTiles(newAppTiles);
-      console.log('移动到末尾完成');
-    }
-  };
-
-  // 切换应用大小
-  const toggleAppSize = (appId: string) => {
-    if (!isEditMode) return;
-    
-    setAppTiles(prev => prev.map(app => {
-      if (app.id === appId) {
-        const sizeMap = { small: 'medium', medium: 'large', large: 'small' } as const;
-        return { ...app, size: sizeMap[app.size] };
-      }
-      return app;
-    }));
-  };
-
-  // 退出编辑模式
-  const exitEditMode = () => {
-    setIsEditMode(false);
-    setDraggedItem(null);
-    Object.keys(isLongPressRef.current).forEach(key => {
-      isLongPressRef.current[key] = false;
-    });
-  };
+  // 已移除长按拖拽与大小切换功能
 
   // 处理应用点击
   const handleAppClick = async (app: AppTile) => {
-    if (isEditMode) {
-      // 编辑模式下点击切换大小
-      toggleAppSize(app.id);
-      return;
-    }
-
     if (app.status === 'coming-soon') {
       // 显示开发中提示
       alert(`${app.name} 功能正在开发中，敬请期待！`);
@@ -596,14 +519,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     }, 300); // 300ms动画时长
   };
 
-  // 处理触摸事件（移动端长按）
-  const handleTouchStart = (appId: string) => {
-    handleLongPressStart(appId);
-  };
-
-  const handleTouchEnd = (appId: string) => {
-    handleLongPressEnd(appId);
-  };
+  // 已移除移动端长按事件
 
   // 处理时间点击（隐藏入口）
   const handleTimeClick = () => {
@@ -701,14 +617,10 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   //   }
   // };
 
-  // 关闭公告
-  const handleDismissAnnouncement = (id: string) => {
-    // 这里可以记录用户关闭的公告，避免重复显示
-    console.log('用户关闭公告:', id);
-  };
+  // 关闭公告（已不再用于弹窗显示）
 
   return (
-    <div className="desktop-page">
+    <div className="desktop-page" style={{ background: 'linear-gradient(135deg, #f8c8dc 0%, #d1d5db 100%)' }}>
       {/* 状态栏 */}
       <div className="status-bar">
         <div className="status-left">
@@ -747,60 +659,45 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       </div>
 
       {/* 编辑模式提示 */}
-      {isEditMode && (
+      {false && (
         <div className="edit-mode-indicator">
-          <span>编辑模式 - 点击图标切换大小，拖拽排序</span>
-          <button className="exit-edit-btn" onClick={exitEditMode}>完成</button>
+          <span></span>
+          <button className="exit-edit-btn">完成</button>
         </div>
       )}
 
-      {/* 公告显示 */}
-      <AnnouncementDisplay 
-        announcements={announcements}
-        onDismiss={handleDismissAnnouncement}
-      />
+      {/* 公告显示已移除，改用抽屉浏览历史 */}
 
       {/* 时间显示区域 */}
       <div className="time-section">
-        <div 
-          className="current-time" 
-          onClick={handleTimeClick}
-          style={{ userSelect: 'none' }}
-        >
-          {formatTime(currentTime)}
+        <div className="time-panel">
+          <div 
+            className="current-time" 
+            onClick={handleTimeClick}
+            style={{ userSelect: 'none' }}
+          >
+            {formatTime(currentTime)}
+          </div>
+          <div className="current-date">{formatDate(currentDate)}</div>
+          <div className="greeting">美好的一天开始了</div>
         </div>
-        <div className="current-date">{formatDate(currentDate)}</div>
-        <div className="greeting">美好的一天开始了</div>
       </div>
 
       {/* 应用方块网格 */}
       <div 
         className="app-grid"
-        onDragOver={handleGridDragOver}
-        onDrop={handleGridDrop}
       >
         {appTiles.map((app, index) => (
           <div
             key={app.id}
-            className={`app-tile ${app.size} ${app.status} ${isEditMode ? 'edit-mode' : ''} ${draggedItem === app.id ? 'dragging' : ''} ${dragOverItem === app.id ? 'drag-over' : ''} ${clickedApp === app.id ? 'clicked' : ''}`}
+            className={`app-tile ${app.size} ${app.status} ${clickedApp === app.id ? 'clicked' : ''}`}
             style={{ 
-              background: app.gradient,
               animationDelay: `${index * 0.1}s`
             }}
-            draggable={isEditMode}
-            onDragStart={(e) => handleDragStart(e, app.id)}
-            onDragEnd={handleDragEnd}
-            onDragOver={(e) => handleDragOver(e, app.id)}
-            onDrop={(e) => handleDrop(e, app.id)}
-            onMouseDown={() => handleLongPressStart(app.id)}
-            onMouseUp={() => handleLongPressEnd(app.id)}
-            onMouseLeave={() => handleLongPressEnd(app.id)}
-            onTouchStart={() => handleTouchStart(app.id)}
-            onTouchEnd={() => handleTouchEnd(app.id)}
             onClick={() => handleAppClick(app)}
           >
             <div className="app-icon">
-              <span className="icon-emoji">{app.icon}</span>
+              <MinimalIcon name={app.id} />
             </div>
             <div className="app-name">{app.name}</div>
             {app.notifications && app.notifications > 0 && (
@@ -813,11 +710,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
             )}
             {app.status === 'insufficient-balance' && (
               <div className="insufficient-balance-badge">余额不足</div>
-            )}
-            {isEditMode && (
-              <div className="size-indicator">
-                {app.size === 'small' ? 'S' : app.size === 'medium' ? 'M' : 'L'}
-              </div>
             )}
             <div className="app-overlay"></div>
           </div>
@@ -844,6 +736,8 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
         onClose={() => setIsAnnouncementEditorOpen(false)}
         initialAnnouncements={announcements}
       />
+
+      <AnnouncementHistoryDrawer announcements={announcements} />
 
       {/* 公共聊天室 */}
       <PublicChatRoom

@@ -162,27 +162,27 @@ export default function AnnouncementEditor({
   if (!isOpen) return null;
 
   return (
-    <div className="announcement-editor-overlay">
-      <div className="announcement-editor">
-        <div className="editor-header">
+    <div className="groupmember-annc-editor-overlay">
+      <div className="groupmember-annc-editor-editor">
+        <div className="groupmember-annc-editor-editor-header">
           <h2>公告管理</h2>
-          <div className="header-actions">
-            <button className="btn-create" onClick={handleCreateNew}>
+          <div className="groupmember-annc-editor-header-actions">
+            <button className="groupmember-annc-editor-btn-create" onClick={handleCreateNew}>
               ➕ 新建公告
             </button>
-            <button className="btn-close" onClick={onClose}>
+            <button className="groupmember-annc-editor-btn-close" onClick={onClose}>
               ✕
             </button>
           </div>
         </div>
 
-        <div className="editor-content">
+        <div className="groupmember-annc-editor-content">
           {/* 编辑表单 */}
           {editingAnnouncement && (
-            <div className="edit-form">
+            <div className="groupmember-annc-editor-edit-form">
               <h3>{isCreating ? '创建新公告' : '编辑公告'}</h3>
               
-              <div className="form-row">
+              <div className="groupmember-annc-editor-form-row">
                 <label>标题 *</label>
                 <input
                   type="text"
@@ -195,7 +195,7 @@ export default function AnnouncementEditor({
                 />
               </div>
 
-              <div className="form-row">
+              <div className="groupmember-annc-editor-form-row">
                 <label>内容 *</label>
                 <textarea
                   value={editingAnnouncement.content}
@@ -208,8 +208,8 @@ export default function AnnouncementEditor({
                 />
               </div>
 
-              <div className="form-row-group">
-                <div className="form-col">
+              <div className="groupmember-annc-editor-form-row-group">
+                <div className="groupmember-annc-editor-form-col">
                   <label>类型</label>
                   <select
                     value={editingAnnouncement.type}
@@ -224,7 +224,7 @@ export default function AnnouncementEditor({
                   </select>
                 </div>
 
-                <div className="form-col">
+                <div className="groupmember-annc-editor-form-col">
                   <label>优先级</label>
                   <select
                     value={editingAnnouncement.priority}
@@ -239,8 +239,8 @@ export default function AnnouncementEditor({
                 </div>
               </div>
 
-              <div className="form-row-group">
-                <div className="form-col">
+              <div className="groupmember-annc-editor-form-row-group">
+                <div className="groupmember-annc-editor-form-col">
                   <label>开始时间（可选）</label>
                   <input
                     type="datetime-local"
@@ -257,7 +257,7 @@ export default function AnnouncementEditor({
                   />
                 </div>
 
-                <div className="form-col">
+                <div className="groupmember-annc-editor-form-col">
                   <label>结束时间（可选）</label>
                   <input
                     type="datetime-local"
@@ -275,11 +275,11 @@ export default function AnnouncementEditor({
                 </div>
               </div>
 
-              <div className="form-actions">
-                <button className="btn-save" onClick={handleSaveAnnouncement}>
+              <div className="groupmember-annc-editor-form-actions">
+                <button className="groupmember-annc-editor-btn-save" onClick={handleSaveAnnouncement}>
                   💾 保存
                 </button>
-                <button className="btn-cancel" onClick={handleCancelEdit}>
+                <button className="groupmember-annc-editor-btn-cancel" onClick={handleCancelEdit}>
                   取消
                 </button>
               </div>
@@ -287,35 +287,35 @@ export default function AnnouncementEditor({
           )}
 
           {/* 公告列表 */}
-          <div className="announcement-list">
+          <div className="groupmember-annc-editor-announcement-list">
             <h3>现有公告 ({announcements.length})</h3>
             {announcements.length === 0 ? (
-              <div className="empty-state">
+              <div className="groupmember-annc-editor-empty-state">
                 <p>暂无公告</p>
-                <button className="btn-create-empty" onClick={handleCreateNew}>
+                <button className="groupmember-annc-editor-btn-create-empty" onClick={handleCreateNew}>
                   创建第一条公告
                 </button>
               </div>
             ) : (
-              <div className="list-container">
+              <div className="groupmember-annc-editor-list-container">
                 {announcements.map(announcement => (
-                  <div key={announcement.id} className={`list-item ${announcement.isActive ? 'active' : 'inactive'}`}>
-                    <div className="item-header">
-                      <span className={`type-badge ${announcement.type}`}>
+                  <div key={announcement.id} className={`groupmember-annc-editor-list-item ${announcement.isActive ? 'active' : 'inactive'}`}>
+                    <div className="groupmember-annc-editor-item-header">
+                      <span className={`groupmember-annc-editor-type-badge ${announcement.type}`}>
                         {announcement.type === 'info' && '📢'}
                         {announcement.type === 'warning' && '⚠️'}
                         {announcement.type === 'success' && '✅'}
                         {announcement.type === 'error' && '❌'}
                       </span>
                       <h4>{announcement.title}</h4>
-                      <span className={`priority-badge ${announcement.priority}`}>
+                      <span className={`groupmember-annc-editor-priority-badge ${announcement.priority}`}>
                         {announcement.priority === 'high' && '高'}
                         {announcement.priority === 'medium' && '中'}
                         {announcement.priority === 'low' && '低'}
                       </span>
                     </div>
-                    <p className="item-content">{announcement.content}</p>
-                    <div className="item-meta">
+                    <p className="groupmember-annc-editor-item-content">{announcement.content}</p>
+                    <div className="groupmember-annc-editor-item-meta">
                       <span>创建：{formatDate(announcement.createdAt)}</span>
                       {announcement.startDate && (
                         <span>开始：{formatDate(announcement.startDate)}</span>
@@ -324,17 +324,17 @@ export default function AnnouncementEditor({
                         <span>结束：{formatDate(announcement.endDate)}</span>
                       )}
                     </div>
-                    <div className="item-actions">
+                    <div className="groupmember-annc-editor-item-actions">
                       <button 
-                        className={`btn-toggle ${announcement.isActive ? 'active' : 'inactive'}`}
+                        className={`groupmember-annc-editor-btn-toggle ${announcement.isActive ? 'active' : 'inactive'}`}
                         onClick={() => handleToggleActive(announcement.id)}
                       >
                         {announcement.isActive ? '🟢 启用' : '🔴 禁用'}
                       </button>
-                      <button className="btn-edit" onClick={() => handleEdit(announcement)}>
+                      <button className="groupmember-annc-editor-btn-edit" onClick={() => handleEdit(announcement)}>
                         ✏️ 编辑
                       </button>
-                      <button className="btn-delete" onClick={() => handleDelete(announcement.id)}>
+                      <button className="groupmember-annc-editor-btn-delete" onClick={() => handleDelete(announcement.id)}>
                         🗑️ 删除
                       </button>
                     </div>
@@ -345,11 +345,11 @@ export default function AnnouncementEditor({
           </div>
         </div>
 
-        <div className="editor-footer">
-          <button className="btn-save-all" onClick={handleSaveAll}>
+        <div className="groupmember-annc-editor-editor-footer">
+          <button className="groupmember-annc-editor-btn-save-all" onClick={handleSaveAll}>
             💾 保存所有更改
           </button>
-          <button className="btn-cancel-all" onClick={onClose}>
+          <button className="groupmember-annc-editor-btn-cancel-all" onClick={onClose}>
             取消
           </button>
         </div>

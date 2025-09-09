@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Announcement } from './types';
 import { fetchAnnouncements } from './announcementService';
-import AnnouncementDisplay from './AnnouncementDisplay';
+// AnnouncementDisplay 已废弃
 import AnnouncementEditor from './AnnouncementEditor';
 import './AnnouncementManager.css';
 
@@ -48,10 +48,7 @@ export default function AnnouncementManager({
     return () => clearInterval(interval);
   }, []);
 
-  // 处理关闭公告
-  const handleDismiss = (id: string) => {
-    setDismissedIds(prev => new Set([...prev, id]));
-  };
+  // 处理关闭公告（已不再用于弹窗显示，保留占位可按需恢复）
 
   // 处理编辑器保存 - 现在不需要了，因为每个操作都是实时保存的
   // const handleEditorSave = () => {
@@ -82,11 +79,7 @@ export default function AnnouncementManager({
 
   return (
     <div className="announcement-manager">
-      {/* 公告显示 */}
-      <AnnouncementDisplay 
-        announcements={announcements}
-        onDismiss={handleDismiss}
-      />
+      {/* 公告显示已移除，统一使用抽屉在页面侧边查看历史 */}
       
       {/* 公告编辑器 */}
       <AnnouncementEditor
