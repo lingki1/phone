@@ -15,6 +15,7 @@ interface StoryModeDisplayProps {
   onRegenerateAI: (messageId: string) => void;
   editingMessage: { id: string, content: string } | null;
   setEditingMessage: (editing: { id: string, content: string } | null) => void;
+  isAIThinking?: boolean; // AI正在思考/生成消息的状态
 }
 
 function StoryModeDisplay({
@@ -27,7 +28,8 @@ function StoryModeDisplay({
   onDeleteMessage,
   onRegenerateAI,
   editingMessage,
-  setEditingMessage
+  setEditingMessage,
+  isAIThinking = false
 }: StoryModeDisplayProps) {
   const storyContainerRef = useRef<HTMLDivElement>(null);
   const [visibleActions, setVisibleActions] = useState<Set<string>>(new Set());
@@ -227,6 +229,27 @@ function StoryModeDisplay({
     return parts.length > 0 ? parts : parseDecoratedText(text);
   }, [parseDecoratedText]);
 
+  // AI正在输入提示组件
+  const renderAITypingIndicator = useCallback(() => {
+    if (!isAIThinking) return null;
+    
+    return (
+      <div className="story-ai-typing-indicator">
+        <div className="story-ai-typing-content">
+          <div className="story-ai-typing-header">
+            <div className="story-ai-typing-sender">{chat.name}</div>
+            <div className="story-ai-typing-status">正在创作剧情...</div>
+          </div>
+          <div className="story-ai-typing-dots">
+            <span className="story-typing-dot"></span>
+            <span className="story-typing-dot"></span>
+            <span className="story-typing-dot"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }, [isAIThinking, chat.name]);
+
   const renderStoryContent = useCallback((content: string) => {
     // 兜底保护：避免 content 为 null/undefined 时调用 split 报错
     const safeContent = typeof content === 'string' ? content : '';
@@ -407,6 +430,7 @@ function StoryModeDisplay({
             </div>
           )}
           {displayedMessages.map((msg) => renderMessage(msg))}
+          {renderAITypingIndicator()}
         </div>
       )}
     </div>

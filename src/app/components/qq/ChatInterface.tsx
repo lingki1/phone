@@ -2523,6 +2523,7 @@ export default function ChatInterface({
             onRegenerateAI={handleStoryRegenerateAI}
             editingMessage={editingMessage}
             setEditingMessage={setEditingMessage}
+            isAIThinking={isLoading || isPending}
           />
         ) : (
           // 普通聊天模式显示
@@ -2756,13 +2757,15 @@ export default function ChatInterface({
               }
             } : handleKeyPress}
             onFocus={() => {
-              // 手机端输入框聚焦时滚动到视口
-              setTimeout(() => {
-                textareaRef.current?.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
-              }, 300);
+              // 手机端输入框聚焦时滚动到视口（剧情模式下禁用，避免干扰消息列表滚动）
+              if (!isStoryMode) {
+                setTimeout(() => {
+                  textareaRef.current?.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                  });
+                }, 300);
+              }
             }}
             placeholder={
               isPending 
