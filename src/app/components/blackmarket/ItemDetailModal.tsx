@@ -43,7 +43,16 @@ export default function ItemDetailModal({
 
         <div className="bm-detail-grid">
           <div className="bm-detail-media">
-            {item.thumbnailUrl ? (
+            {item.type === 'character' ? (
+              <Image
+                src={item.fileUrl || item.thumbnailUrl || '/avatars/default-avatar.svg'}
+                alt={item.name}
+                className="bm-detail-image"
+                width={720}
+                height={1280}
+                priority
+              />
+            ) : item.thumbnailUrl ? (
               <Image
                 src={item.thumbnailUrl}
                 alt={item.name}
