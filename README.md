@@ -77,6 +77,7 @@ npm run build
 - [x] 添加聊天界面页面
 - [x] 实现剧情模式功能
 - [x] 添加AI输入提示功能
+- [x] 平台内置API配置与服务端代理（/api/admin/system-api-config, /api/system-api-config, /api/server-ai）
 - [ ] 实现动态（QZone）页面
 - [ ] 添加设置页面功能
 - [ ] 集成真实的数据存储

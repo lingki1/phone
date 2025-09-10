@@ -31,7 +31,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const users = await databaseManager.getAllUsers();
+    // 分页参数
+    const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get('limit') || 20)));
+    const page = Math.max(1, Number(request.nextUrl.searchParams.get('page') || 1));
+    const offset = (page - 1) * limit;
+
+    const [total, users] = await Promise.all([
+      databaseManager.countUsers(),
+      databaseManager.getUsersPaged(limit, offset)
+    ]);
     
     // 移除密码字段
     const usersWithoutPassword = users.map(user => {
@@ -41,7 +49,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      users: usersWithoutPassword
+      users: usersWithoutPassword,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     });
   } catch (error) {
     console.error('Get users API error:', error);

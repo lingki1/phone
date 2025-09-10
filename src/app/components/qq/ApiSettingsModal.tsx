@@ -28,6 +28,7 @@ export default function ApiSettingsModal({
   const [config, setConfig] = useState<ApiConfig>(currentConfig);
   const [models, setModels] = useState<string[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [isLoadingPlatformConfig, setIsLoadingPlatformConfig] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // 用于强制刷新选择器
 
@@ -169,6 +170,34 @@ export default function ApiSettingsModal({
   // 检查当前选择的模型是否在可用模型列表中
   const isCurrentModelAvailable = config.model && models.includes(config.model);
 
+  const handleUsePlatformConfig = async () => {
+    try {
+      setIsLoadingPlatformConfig(true);
+      const resp = await fetch('/api/system-api-config');
+      const json = await resp.json();
+      if (!json?.success) {
+        alert(json?.message || '获取平台配置失败');
+        return;
+      }
+      if (!json?.data) {
+        alert('平台未提供内置配置，请联系管理员');
+        return;
+      }
+      const platformProxyUrl = String(json.data.proxyUrl || '/api/server-ai');
+      const platformModel = String(json.data.model || '');
+      // 应用平台配置到当前表单；apiKey 使用占位，真实密钥由服务器代理注入
+      setConfig({ proxyUrl: platformProxyUrl, apiKey: 'server-proxy', model: platformModel });
+      // 清空并刷新模型列表缓存
+      setModels([]);
+      localStorage.removeItem('savedModels');
+    } catch (e) {
+      console.error('加载平台配置失败:', e);
+      alert('加载平台配置失败');
+    } finally {
+      setIsLoadingPlatformConfig(false);
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
@@ -180,6 +209,17 @@ export default function ApiSettingsModal({
         </div>
         
         <div className="modal-body">
+          {/* 平台内置配置快捷使用 */}
+          <div className="save-config-section">
+            <button 
+              className="groupmember-platform-config-btn"
+              onClick={handleUsePlatformConfig}
+              disabled={isLoadingPlatformConfig}
+            >
+              {isLoadingPlatformConfig ? '正在加载平台配置...' : '使用平台内置配置'}
+            </button>
+            <small className="save-config-hint">通过服务器代理安全使用平台提供的API，无需填写密钥</small>
+          </div>
           {/* API配置选择器 */}
           <ApiConfigSelector 
             key={refreshKey} // 使用refreshKey强制重新渲染

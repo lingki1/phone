@@ -26,6 +26,8 @@ export default function UsersManagementPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,17 +63,18 @@ export default function UsersManagementPage() {
   });
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(page);
     fetchGroups();
-  }, []);
+  }, [page]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (p = 1) => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch(`/api/users?page=${p}&limit=20`);
       const data = await response.json();
       
       if (data.success) {
         setUsers(data.users);
+        setTotalPages(Number(data.pagination?.totalPages || 1));
       } else {
         setError(data.message || '获取用户列表失败');
       }
@@ -119,7 +122,7 @@ export default function UsersManagementPage() {
           role: 'user',
           group: 'default'
         });
-        fetchUsers();
+        fetchUsers(page);
       } else {
         setError(data.message || '创建用户失败');
       }
@@ -153,7 +156,7 @@ export default function UsersManagementPage() {
           role: 'user',
           group: 'default'
         });
-        fetchUsers();
+        fetchUsers(page);
       } else {
         setError(data.message || '更新用户失败');
       }
@@ -174,7 +177,7 @@ export default function UsersManagementPage() {
       const data = await response.json();
 
       if (data.success) {
-        fetchUsers();
+        fetchUsers(page);
       } else {
         setError(data.message || '删除用户失败');
       }
@@ -329,6 +332,21 @@ export default function UsersManagementPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* 分页 */}
+            <div className="flex items-center justify-between mt-4">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+              >上一页</button>
+              <span className="text-sm text-gray-600">第 {page} / {totalPages} 页</span>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+              >下一页</button>
             </div>
           </div>
         </div>

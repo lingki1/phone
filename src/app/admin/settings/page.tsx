@@ -17,11 +17,18 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [requireActivation, setRequireActivation] = useState(false);
+  // 平台内置API配置表单状态
+  const [sysProxyUrl, setSysProxyUrl] = useState('');
+  const [sysApiKey, setSysApiKey] = useState('');
+  const [sysModel, setSysModel] = useState('');
+  const [savingSystemApi, setSavingSystemApi] = useState(false);
   const [codes, setCodes] = useState<ActivationCode[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState(10);
   const [lastGeneratedCodes, setLastGeneratedCodes] = useState<string[]>([]);
   const [downloadType, setDownloadType] = useState<'all' | 'used' | 'unused'>('all');
+  const [codePage, setCodePage] = useState(1);
+  const [codeTotalPages, setCodeTotalPages] = useState(1);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -41,7 +48,11 @@ export default function AdminSettingsPage() {
   }, []);
 
   useEffect(() => {
-    fetchCodes();
+    fetchCodes(codePage);
+  }, [codePage]);
+
+  useEffect(() => {
+    fetchSystemApiConfig();
   }, []);
 
   const fetchSettings = async () => {
@@ -57,6 +68,53 @@ export default function AdminSettingsPage() {
       setError('网络错误');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSystemApiConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/system-api-config');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSysProxyUrl(String(data.data.proxyUrl || ''));
+        setSysApiKey(''); // 安全起见不回显，留空表示不变
+        setSysModel(String(data.data.model || ''));
+      }
+    } catch (_e) {
+      // ignore
+    }
+  };
+
+  const handleSaveSystemApi = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (savingSystemApi) return;
+    setSavingSystemApi(true);
+    setError('');
+    try {
+      const body: Record<string, string> = {
+        proxyUrl: sysProxyUrl,
+        model: sysModel
+      };
+      if (sysApiKey && sysApiKey.trim()) {
+        body.apiKey = sysApiKey.trim();
+      }
+      const res = await fetch('/api/admin/system-api-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || '保存平台内置API配置失败');
+      } else {
+        // 保存成功后，清空密钥输入框
+        setSysApiKey('');
+        alert('平台内置API配置已保存');
+      }
+    } catch (_e) {
+      setError('网络错误');
+    } finally {
+      setSavingSystemApi(false);
     }
   };
 
@@ -79,12 +137,13 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const fetchCodes = async () => {
+  const fetchCodes = async (p = 1) => {
     try {
-      const res = await fetch(`/api/admin/activation-codes?includeUsed=true`);
+      const res = await fetch(`/api/admin/activation-codes?includeUsed=true&page=${p}&limit=20`);
       const data = await res.json();
       if (data.success) {
         setCodes(data.codes || []);
+        setCodeTotalPages(Number(data.pagination?.totalPages || 1));
       }
     } catch (_e) {
       // ignore
@@ -118,46 +177,34 @@ export default function AdminSettingsPage() {
   };
 
   // 处理不同类型的激活码下载
-  const handleDownloadCodes = (type: 'all' | 'used' | 'unused') => {
-    let filteredCodes: ActivationCode[];
-    let filename: string;
-    let content: string[];
-
-    switch (type) {
-      case 'all':
-        filteredCodes = codes;
-        filename = 'activation-codes-all.txt';
-        content = [
-          '全部激活码：',
-          ...filteredCodes.map(c => `${c.code} - ${c.used_by || '未使用'} - ${c.created_by}`)
-        ];
-        break;
-      case 'used':
-        filteredCodes = codes.filter(c => c.used_by);
-        filename = 'activation-codes-used.txt';
-        content = [
-          '已经使用的激活码：',
-          ...filteredCodes.map(c => `${c.code} - ${c.used_by} - ${c.created_by}`)
-        ];
-        break;
-      case 'unused':
-        filteredCodes = codes.filter(c => !c.used_by);
-        filename = 'activation-codes-unused.txt';
-        content = [
-          '未用的激活码：',
-          ...filteredCodes.map(c => c.code)
-        ];
-        break;
-      default:
+  const handleDownloadCodes = async (type: 'all' | 'used' | 'unused') => {
+    try {
+      const status = type; // 'all' | 'used' | 'unused'
+      const res = await fetch(`/api/admin/activation-codes?status=${status}&exportAll=true`);
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.message || '导出失败');
         return;
-    }
+      }
+      const list: ActivationCode[] = data.codes || [];
+      if (list.length === 0) {
+        alert('没有符合条件的激活码');
+        return;
+      }
 
-    if (filteredCodes.length === 0) {
-      alert('没有符合条件的激活码');
-      return;
+      let filename = '';
+      let header = '';
+      if (type === 'all') { filename = 'activation-codes-all.txt'; header = '全部激活码：'; }
+      if (type === 'used') { filename = 'activation-codes-used.txt'; header = '已经使用的激活码：'; }
+      if (type === 'unused') { filename = 'activation-codes-unused.txt'; header = '未用的激活码：'; }
+      const lines = [
+        header,
+        ...list.map((c) => type === 'unused' ? c.code : `${c.code} - ${c.used_by || '未使用'} - ${c.created_by}`)
+      ];
+      downloadTxt(lines, filename);
+    } catch (_e) {
+      alert('网络错误');
     }
-
-    downloadTxt(content, filename);
   };
 
   if (loading) {
@@ -183,6 +230,64 @@ export default function AdminSettingsPage() {
       {error && (
         <div className="p-3 border border-red-300 text-red-700 rounded bg-red-50">{error}</div>
       )}
+
+      {/* 平台内置API配置（移至顶部） */}
+      <section className="bg-white p-6 border border-gray-200 rounded-lg space-y-4">
+        <h2 className="text-lg font-medium">平台内置API配置</h2>
+        <p className="text-sm text-gray-500">该配置保存在服务器（SQLite），前端不可见密钥。用户可在客户端一键使用此配置，通过服务器代理调用。</p>
+        <form className="space-y-4" onSubmit={handleSaveSystemApi}>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">服务器地址（无需 /v1）</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              placeholder="如 https://api.openai.com"
+              value={sysProxyUrl}
+              onChange={(e) => setSysProxyUrl(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">访问密钥（留空则不修改）</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              type="password"
+              placeholder="sk-***"
+              value={sysApiKey}
+              onChange={(e) => setSysApiKey(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">默认模型（可选）</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              placeholder="如 gpt-4o-mini"
+              value={sysModel}
+              onChange={(e) => setSysModel(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={savingSystemApi}
+              className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+            >
+              {savingSystemApi ? '保存中...' : '保存平台内置配置'}
+            </button>
+            <button
+              type="button"
+              onClick={fetchSystemApiConfig}
+              className="dos-btn px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+            >
+              重新载入
+            </button>
+          </div>
+          <div className="text-xs text-gray-500">
+            前端用户将通过 `/api/server-ai` 代理使用该配置，密钥仅保存在服务器端并由代理注入。
+          </div>
+        </form>
+      </section>
 
       {/* 注册设置区域 */}
       <section className="bg-white p-6 border border-gray-200 rounded-lg">
@@ -287,6 +392,22 @@ export default function AdminSettingsPage() {
               <div className="p-3 text-sm text-gray-500">暂无激活码</div>
             )}
           </div>
+        </div>
+        {/* 分页 */}
+        <div className="flex items-center justify-between mt-4">
+          <button
+            type="button"
+            disabled={codePage <= 1}
+            onClick={() => setCodePage(p => Math.max(1, p - 1))}
+            className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+          >上一页</button>
+          <span className="text-sm text-gray-600">第 {codePage} / {codeTotalPages} 页</span>
+          <button
+            type="button"
+            disabled={codePage >= codeTotalPages}
+            onClick={() => setCodePage(p => Math.min(codeTotalPages, p + 1))}
+            className="dos-btn px-3 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+          >下一页</button>
         </div>
       </section>
     </div>

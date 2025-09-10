@@ -171,6 +171,17 @@ class DatabaseManager {
         )
       `);
 
+      // 平台内置 API 配置表（仅服务器端保存，不暴露到 IndexedDB）
+      await this.run(`
+        CREATE TABLE IF NOT EXISTS system_api_config (
+          id TEXT PRIMARY KEY,
+          proxy_url TEXT NOT NULL,
+          api_key TEXT NOT NULL,
+          model TEXT DEFAULT '',
+          updated_at TEXT NOT NULL
+        )
+      `);
+
       // 创建索引
       await this.run('CREATE INDEX IF NOT EXISTS idx_users_username ON users (username)');
       await this.run('CREATE INDEX IF NOT EXISTS idx_users_role ON users (role)');
@@ -385,6 +396,18 @@ class DatabaseManager {
     return result as User[];
   }
 
+  async getUsersPaged(limit: number, offset: number): Promise<User[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const result = await this.all('SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?', [limit, offset]);
+    return result as User[];
+  }
+
+  async countUsers(): Promise<number> {
+    if (!this.db) throw new Error('Database not initialized');
+    const row = await this.get('SELECT COUNT(1) as cnt FROM users') as { cnt?: number } | null;
+    return Number(row?.cnt || 0);
+  }
+
   async getUsersByGroup(groupId: string): Promise<User[]> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -536,6 +559,36 @@ class DatabaseManager {
     return result as SystemSetting || null;
   }
 
+  // 平台内置 API 配置相关方法
+  async setSystemApiConfig(config: { proxyUrl: string; apiKey: string; model?: string }): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const now = new Date().toISOString();
+    await this.run(`
+      INSERT INTO system_api_config (id, proxy_url, api_key, model, updated_at)
+      VALUES ('default', ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        proxy_url = excluded.proxy_url,
+        api_key = excluded.api_key,
+        model = excluded.model,
+        updated_at = excluded.updated_at
+    `, [config.proxyUrl, config.apiKey, config.model || '', now]);
+  }
+
+  async getSystemApiConfig(): Promise<{ proxyUrl: string; apiKey: string; model: string; updated_at: string } | null> {
+    if (!this.db) throw new Error('Database not initialized');
+    const row = await this.get(`
+      SELECT proxy_url as proxyUrl, api_key as apiKey, model as model, updated_at as updated_at
+      FROM system_api_config WHERE id = 'default'
+    `) as { proxyUrl?: string; apiKey?: string; model?: string; updated_at?: string } | null;
+    if (!row || !row.proxyUrl || !row.apiKey) return null;
+    return {
+      proxyUrl: String(row.proxyUrl),
+      apiKey: String(row.apiKey),
+      model: String(row.model || ''),
+      updated_at: String(row.updated_at || '')
+    };
+  }
+
   // 激活码相关方法
   async createActivationCodes(count: number, createdBy: string): Promise<ActivationCode[]> {
     if (!this.db) throw new Error('Database not initialized');
@@ -577,6 +630,110 @@ class DatabaseManager {
       used_by_username?: string;
     }>;
     // 转换结果，将used_by_username映射到used_by字段
+    return rows.map((row) => ({
+      code: row.code,
+      used_by: row.used_by_username || row.used_by,
+      used_at: row.used_at,
+      created_by: row.created_by,
+      created_at: row.created_at
+    })) as ActivationCode[];
+  }
+
+  async listActivationCodesPaged(includeUsed = false, limit = 20, offset = 0): Promise<ActivationCode[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const base = includeUsed ?
+      `FROM activation_codes ac 
+       LEFT JOIN users cu ON ac.created_by = cu.uid
+       LEFT JOIN users uu ON ac.used_by = uu.uid` :
+      `FROM activation_codes ac 
+       LEFT JOIN users cu ON ac.created_by = cu.uid
+       LEFT JOIN users uu ON ac.used_by = uu.uid
+       WHERE ac.used_by IS NULL`;
+    const sql = `SELECT ac.code, ac.used_by, ac.used_at, ac.created_at,
+                        cu.username as created_by, uu.username as used_by_username
+                 ${base}
+                 ORDER BY ac.created_at DESC
+                 LIMIT ? OFFSET ?`;
+    const rows = await this.all(sql, [limit, offset]) as Array<{
+      code: string;
+      used_by?: string;
+      used_at?: string;
+      created_by: string;
+      created_at: string;
+      used_by_username?: string;
+    }>;
+    return rows.map((row) => ({
+      code: row.code,
+      used_by: row.used_by_username || row.used_by,
+      used_at: row.used_at,
+      created_by: row.created_by,
+      created_at: row.created_at
+    })) as ActivationCode[];
+  }
+
+  async countActivationCodes(includeUsed = false): Promise<number> {
+    if (!this.db) throw new Error('Database not initialized');
+    const sql = includeUsed ?
+      `SELECT COUNT(1) as cnt FROM activation_codes` :
+      `SELECT COUNT(1) as cnt FROM activation_codes WHERE used_by IS NULL`;
+    const row = await this.get(sql) as { cnt?: number } | null;
+    return Number(row?.cnt || 0);
+  }
+
+  // 按状态（all/used/unused）分页查询与计数/全量查询（用于下载）
+  async listActivationCodesByStatusPaged(status: 'all' | 'used' | 'unused', limit = 20, offset = 0): Promise<ActivationCode[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const where = status === 'all' ? '' : status === 'used' ? 'WHERE ac.used_by IS NOT NULL' : 'WHERE ac.used_by IS NULL';
+    const sql = `SELECT ac.code, ac.used_by, ac.used_at, ac.created_at,
+                        cu.username as created_by, uu.username as used_by_username
+                 FROM activation_codes ac 
+                 LEFT JOIN users cu ON ac.created_by = cu.uid
+                 LEFT JOIN users uu ON ac.used_by = uu.uid
+                 ${where}
+                 ORDER BY ac.created_at DESC
+                 LIMIT ? OFFSET ?`;
+    const rows = await this.all(sql, [limit, offset]) as Array<{
+      code: string;
+      used_by?: string;
+      used_at?: string;
+      created_by: string;
+      created_at: string;
+      used_by_username?: string;
+    }>;
+    return rows.map((row) => ({
+      code: row.code,
+      used_by: row.used_by_username || row.used_by,
+      used_at: row.used_at,
+      created_by: row.created_by,
+      created_at: row.created_at
+    })) as ActivationCode[];
+  }
+
+  async countActivationCodesByStatus(status: 'all' | 'used' | 'unused'): Promise<number> {
+    if (!this.db) throw new Error('Database not initialized');
+    const where = status === 'all' ? '' : status === 'used' ? 'WHERE used_by IS NOT NULL' : 'WHERE used_by IS NULL';
+    const row = await this.get(`SELECT COUNT(1) as cnt FROM activation_codes ${where}`) as { cnt?: number } | null;
+    return Number(row?.cnt || 0);
+  }
+
+  async listActivationCodesByStatusAll(status: 'all' | 'used' | 'unused'): Promise<ActivationCode[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const where = status === 'all' ? '' : status === 'used' ? 'WHERE ac.used_by IS NOT NULL' : 'WHERE ac.used_by IS NULL';
+    const sql = `SELECT ac.code, ac.used_by, ac.used_at, ac.created_at,
+                        cu.username as created_by, uu.username as used_by_username
+                 FROM activation_codes ac 
+                 LEFT JOIN users cu ON ac.created_by = cu.uid
+                 LEFT JOIN users uu ON ac.used_by = uu.uid
+                 ${where}
+                 ORDER BY ac.created_at DESC`;
+    const rows = await this.all(sql) as Array<{
+      code: string;
+      used_by?: string;
+      used_at?: string;
+      created_by: string;
+      created_at: string;
+      used_by_username?: string;
+    }>;
     return rows.map((row) => ({
       code: row.code,
       used_by: row.used_by_username || row.used_by,
