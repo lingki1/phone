@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import databaseManager from '@/app/auth/utils/database';
 
+export const runtime = 'nodejs';
+
 async function handle(req: NextRequest) {
   await databaseManager.init();
   const cfg = await databaseManager.getSystemApiConfig();
@@ -12,28 +14,38 @@ async function handle(req: NextRequest) {
   const pathname = req.nextUrl.pathname.replace(/^\/api\/server-ai\/?/, '');
   const targetUrl = new URL(pathname, cfg.proxyUrl.replace(/\/$/, '/') ).toString();
 
-  const headers = new Headers(req.headers);
-  headers.set('Authorization', `Bearer ${cfg.apiKey}`);
-  // 确保 JSON 类型
-  if (!headers.has('content-type')) {
-    headers.set('content-type', 'application/json');
+  // 构造转发头（白名单）
+  const forwardHeaders = new Headers();
+  forwardHeaders.set('Authorization', `Bearer ${cfg.apiKey}`);
+  forwardHeaders.set('Accept', 'application/json');
+  // 传递 UA 有助于部分提供商识别请求来源
+  const ua = req.headers.get('user-agent') || 'Lingki-Server-Proxy/1.0';
+  forwardHeaders.set('User-Agent', ua);
+  if (!['GET','HEAD'].includes(req.method)) {
+    const ct = req.headers.get('content-type') || 'application/json';
+    forwardHeaders.set('Content-Type', ct);
   }
 
   const init: RequestInit = {
     method: req.method,
-    headers,
+    headers: forwardHeaders,
     body: ['GET','HEAD'].includes(req.method) ? undefined : await req.text()
   };
 
-  const resp = await fetch(targetUrl, init);
-  const proxyHeaders = new Headers(resp.headers);
-  // 安全处理：删除敏感头
-  proxyHeaders.delete('set-cookie');
-  return new NextResponse(resp.body, {
-    status: resp.status,
-    statusText: resp.statusText,
-    headers: proxyHeaders,
-  });
+  try {
+    const resp = await fetch(targetUrl, init);
+    const proxyHeaders = new Headers(resp.headers);
+    // 安全处理：删除敏感头
+    proxyHeaders.delete('set-cookie');
+    return new NextResponse(resp.body, {
+      status: resp.status,
+      statusText: resp.statusText,
+      headers: proxyHeaders,
+    });
+  } catch (error) {
+    console.error('server-ai proxy error:', { targetUrl, error });
+    return NextResponse.json({ success: false, message: 'Upstream fetch failed', targetUrl, error: (error as Error).message }, { status: 502 });
+  }
 }
 
 export const GET = handle;
