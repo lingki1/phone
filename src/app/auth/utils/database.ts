@@ -408,6 +408,29 @@ class DatabaseManager {
     return Number(row?.cnt || 0);
   }
 
+  async getUsersBySearchPaged(search: string, limit: number, offset: number): Promise<User[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    const like = `%${search}%`;
+    const rows = await this.all(
+      `SELECT * FROM users
+       WHERE username LIKE ? OR email LIKE ? OR uid LIKE ?
+       ORDER BY created_at DESC
+       LIMIT ? OFFSET ?`,
+      [like, like, like, limit, offset]
+    );
+    return rows as User[];
+  }
+
+  async countUsersBySearch(search: string): Promise<number> {
+    if (!this.db) throw new Error('Database not initialized');
+    const like = `%${search}%`;
+    const row = await this.get(
+      `SELECT COUNT(1) as cnt FROM users WHERE username LIKE ? OR email LIKE ? OR uid LIKE ?`,
+      [like, like, like]
+    ) as { cnt?: number } | null;
+    return Number(row?.cnt || 0);
+  }
+
   async getUsersByGroup(groupId: string): Promise<User[]> {
     if (!this.db) throw new Error('Database not initialized');
 

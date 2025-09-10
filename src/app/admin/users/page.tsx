@@ -31,6 +31,7 @@ export default function UsersManagementPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -63,13 +64,14 @@ export default function UsersManagementPage() {
   });
 
   useEffect(() => {
-    fetchUsers(page);
+    fetchUsers(page, searchTerm);
     fetchGroups();
-  }, [page]);
+  }, [page, searchTerm]);
 
-  const fetchUsers = async (p = 1) => {
+  const fetchUsers = async (p = 1, term = '') => {
     try {
-      const response = await fetch(`/api/users?page=${p}&limit=20`);
+      const q = term && term.trim() ? `&q=${encodeURIComponent(term.trim())}` : '';
+      const response = await fetch(`/api/users?page=${p}&limit=20${q}`);
       const data = await response.json();
       
       if (data.success) {
@@ -211,16 +213,17 @@ export default function UsersManagementPage() {
     return group ? group.name : groupId;
   };
 
-  // 过滤用户
-  const filteredUsers = users.filter(user => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      user.username.toLowerCase().includes(term) ||
-      user.uid.toLowerCase().includes(term) ||
-      (user.email && user.email.toLowerCase().includes(term))
-    );
-  });
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
 
   if (loading) {
     return (
@@ -262,15 +265,91 @@ export default function UsersManagementPage() {
             </div>
 
             {/* 搜索框 */}
-            <div className="mb-4">
+            <div className="mb-4 flex gap-2">
               <input
                 type="text"
                 placeholder="搜索用户名、UID或邮箱..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
+              <button
+                onClick={handleSearch}
+                className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                搜索
+              </button>
             </div>
+
+            {/* 编辑用户表单 */}
+            {editingUser && (
+              <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">编辑用户</h3>
+                <form onSubmit={handleUpdateUser}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">用户名</label>
+                      <input
+                        type="text"
+                        required
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={editUser.username}
+                        onChange={(e) => setEditUser({...editUser, username: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">邮箱</label>
+                      <input
+                        type="email"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={editUser.email}
+                        onChange={(e) => setEditUser({...editUser, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">角色</label>
+                      <select
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={editUser.role}
+                        onChange={(e) => setEditUser({...editUser, role: e.target.value as 'user' | 'admin' | 'super_admin'})}
+                      >
+                        <option value="user">用户</option>
+                        <option value="admin">管理员</option>
+                        <option value="super_admin">超级管理员</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">分组</label>
+                      <select
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={editUser.group}
+                        onChange={(e) => setEditUser({...editUser, group: e.target.value})}
+                      >
+                        {groups.map(group => (
+                          <option key={group.id} value={group.id}>{group.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setEditingUser(null)}
+                      className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    >
+                      保存
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
             {/* 用户列表 */}
             <div className="border border-gray-200 rounded">
@@ -285,7 +364,7 @@ export default function UsersManagementPage() {
                 <div className="p-2">操作</div>
               </div>
               <div className="divide-y">
-                {filteredUsers.map((user) => (
+                {users.map((user) => (
                   <div key={user.uid} className="grid grid-cols-8 text-sm items-center">
                     <div className="p-2 font-medium">{user.username}</div>
                     <div className="p-2 font-mono text-xs">{user.uid}</div>
@@ -326,7 +405,7 @@ export default function UsersManagementPage() {
                     </div>
                   </div>
                 ))}
-                {filteredUsers.length === 0 && (
+                {users.length === 0 && (
                   <div className="p-3 text-sm text-gray-500">
                     {searchTerm ? '没有找到匹配的用户' : '暂无用户'}
                   </div>
@@ -431,76 +510,6 @@ export default function UsersManagementPage() {
           </div>
         )}
 
-        {/* 编辑用户表单 */}
-        {editingUser && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">编辑用户</h3>
-                <form onSubmit={handleUpdateUser}>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">用户名</label>
-                    <input
-                      type="text"
-                      required
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      value={editUser.username}
-                      onChange={(e) => setEditUser({...editUser, username: e.target.value})}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">邮箱</label>
-                    <input
-                      type="email"
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      value={editUser.email}
-                      onChange={(e) => setEditUser({...editUser, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">角色</label>
-                                         <select
-                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                       value={editUser.role}
-                       onChange={(e) => setEditUser({...editUser, role: e.target.value as 'user' | 'admin' | 'super_admin'})}
-                     >
-                      <option value="user">用户</option>
-                      <option value="admin">管理员</option>
-                      <option value="super_admin">超级管理员</option>
-                    </select>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">分组</label>
-                    <select
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      value={editUser.group}
-                      onChange={(e) => setEditUser({...editUser, group: e.target.value})}
-                    >
-                      {groups.map(group => (
-                        <option key={group.id} value={group.id}>{group.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditingUser(null)}
-                      className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

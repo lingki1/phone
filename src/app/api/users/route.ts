@@ -35,10 +35,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get('limit') || 20)));
     const page = Math.max(1, Number(request.nextUrl.searchParams.get('page') || 1));
     const offset = (page - 1) * limit;
+    const q = (request.nextUrl.searchParams.get('q') || '').trim();
 
     const [total, users] = await Promise.all([
-      databaseManager.countUsers(),
-      databaseManager.getUsersPaged(limit, offset)
+      q ? databaseManager.countUsersBySearch(q) : databaseManager.countUsers(),
+      q ? databaseManager.getUsersBySearchPaged(q, limit, offset) : databaseManager.getUsersPaged(limit, offset)
     ]);
     
     // 移除密码字段
