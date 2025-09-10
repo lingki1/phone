@@ -137,6 +137,9 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 黑市状态
   const [isBlackMarketOpen, setIsBlackMarketOpen] = useState(false);
   
+  // 背景色状态
+  const [backgroundColor, setBackgroundColor] = useState<string>('linear-gradient(135deg, #f8c8dc 0%, #d1d5db 100%)');
+  
   
   // 处理角色导入
   const handleImportCharacter = async (character: ChatItem) => {
@@ -416,6 +419,14 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     fetchMe();
   }, []);
 
+  // 加载保存的背景色
+  useEffect(() => {
+    const savedBg = localStorage.getItem('desktop-background-color');
+    if (savedBg) {
+      setBackgroundColor(savedBg);
+    }
+  }, []);
+
   // 点击外部关闭用户菜单
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -606,6 +617,24 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     return groupId;
   };
 
+  // 处理背景色变更
+  const handleBackgroundColorChange = (color: string) => {
+    setBackgroundColor(color);
+    localStorage.setItem('desktop-background-color', color);
+  };
+
+  // 预设背景色选项
+  const backgroundColors = [
+    { name: '粉灰渐变', value: 'linear-gradient(135deg, #f8c8dc 0%, #d1d5db 100%)' },
+    { name: '蓝紫渐变', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    { name: '绿青渐变', value: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+    { name: '橙红渐变', value: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+    { name: '紫粉渐变', value: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+    { name: '深蓝渐变', value: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)' },
+    { name: '暖橙渐变', value: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
+    { name: '冷灰渐变', value: 'linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)' }
+  ];
+
   // 保存公告数据 - 现在不需要了，因为使用API实时保存
   // const handleSaveAnnouncements = (newAnnouncements: Announcement[]) => {
   //   try {
@@ -620,7 +649,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 关闭公告（已不再用于弹窗显示）
 
   return (
-    <div className="desktop-page" style={{ background: 'linear-gradient(135deg, #f8c8dc 0%, #d1d5db 100%)' }}>
+    <div className="desktop-page" style={{ background: backgroundColor }}>
       {/* 状态栏 */}
       <div className="status-bar">
         <div className="status-left">
@@ -647,6 +676,25 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
                   <div className="authuser-meta">角色：{currentUser?.role || 'user'}</div>
                   <div className="authuser-meta">分组：{getUserGroupName()}</div>
                 </div>
+                
+                {/* 背景色选择器 */}
+                <div className="authuser-section">
+                  <div className="authuser-section-title">背景主题</div>
+                  <div className="background-color-grid">
+                    {backgroundColors.map((color, index) => (
+                      <button
+                        key={index}
+                        className={`background-color-option ${backgroundColor === color.value ? 'active' : ''}`}
+                        style={{ background: color.value }}
+                        onClick={() => handleBackgroundColorChange(color.value)}
+                        title={color.name}
+                      >
+                        <span className="color-check">{backgroundColor === color.value ? '✓' : ''}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
                 <button className="authuser-item authuser-logout" onClick={handleLogout}>退出登录</button>
               </div>
             )}
