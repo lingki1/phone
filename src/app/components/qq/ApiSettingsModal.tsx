@@ -209,17 +209,6 @@ export default function ApiSettingsModal({
         </div>
         
         <div className="modal-body">
-          {/* 平台内置配置快捷使用 */}
-          <div className="save-config-section">
-            <button 
-              className="groupmember-platform-config-btn"
-              onClick={handleUsePlatformConfig}
-              disabled={isLoadingPlatformConfig}
-            >
-              {isLoadingPlatformConfig ? '正在加载平台配置...' : '使用平台内置配置'}
-            </button>
-            <small className="save-config-hint">通过服务器代理安全使用平台提供的API，无需填写密钥</small>
-          </div>
           {/* API配置选择器 */}
           <ApiConfigSelector 
             key={refreshKey} // 使用refreshKey强制重新渲染
@@ -244,7 +233,20 @@ export default function ApiSettingsModal({
 
 
           <div className="form-group">
-            <label htmlFor="proxy-url">服务器地址</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label htmlFor="proxy-url">请输入服务器地址 或</label>
+              <button 
+                type="button"
+                className="groupmember-platform-config-btn"
+                onClick={async () => {
+                  await handleUsePlatformConfig();
+                  alert('已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。');
+                }}
+                disabled={isLoadingPlatformConfig}
+              >
+                {isLoadingPlatformConfig ? '加载中...' : '使用平台内置AI'}
+              </button>
+            </div>
             <input
               type="text"
               id="proxy-url"

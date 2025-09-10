@@ -6,10 +6,10 @@ import Image from 'next/image';
 
 interface CharacterCardViewerProps {
   character: CharacterCard;
-  onDownload: (character: CharacterCard) => void;
+  onDownload: (_character: CharacterCard) => void;
 }
 
-export function CharacterCardViewer({ character, onDownload }: CharacterCardViewerProps) {
+export function CharacterCardViewer({ character, onDownload: _onDownload }: CharacterCardViewerProps) {
   return (
     <div className="character-card-viewer">
       <div className="character-header">
@@ -70,16 +70,11 @@ export function CharacterCardViewer({ character, onDownload }: CharacterCardView
       </div>
 
       <div className="character-stats">
-        <span>📥 {character.downloadCount} 次下载</span>
+        <span>🔥 {character.downloadCount} 热度</span>
         <span>📅 {new Date(character.uploadDate).toLocaleDateString()}</span>
       </div>
 
-      <button 
-        className="download-btn"
-        onClick={() => onDownload(character)}
-      >
-        下载角色卡
-      </button>
+      {/* 下载按钮已移除 */}
     </div>
   );
 }

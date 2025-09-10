@@ -666,72 +666,50 @@
   padding: 8px;
 }
 
+/* 扁平化操作按钮：移除绿色/红色样式，改为无框轻量按钮 */
 .import-button {
-  padding: 8px 16px;
-  background: var(--success-color, #10b981);
-  color: white;
+  padding: 4px 8px;
+  background: transparent;
+  color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: background 0.15s ease;
 }
 
 .import-button:hover {
-  background: var(--success-hover, #059669);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .import-button:disabled {
-  background: var(--text-tertiary, #9ca3af);
-  color: var(--text-secondary, #6b7280);
-  cursor: not-allowed;
-  transform: none;
   opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.download-button {
-  padding: 8px 16px;
-  background: var(--accent-color, #8b5cf6);
-  color: white;
+/* 移除下载按钮样式，不再展示下载按钮 */
+.download-button { display: none !important; }
+/* 保持操作区按钮间距合理 */
+.media-download .import-button + .delete-button {
+  margin-left: 8px;
+}
+
+.delete-button {
+  padding: 4px 8px;
+  background: transparent;
+  color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.download-button:hover {
-  background: var(--accent-hover, #7c3aed);
-  transform: translateY(-1px);
-}
-
-.download-button:disabled {
-  background: var(--text-tertiary, #9ca3af);
-  color: var(--text-secondary, #6b7280);
-  cursor: not-allowed;
-  transform: none;
-  opacity: 0.6;
-}
-
-.delete-button {
-  padding: 6px 10px;
-  background: var(--danger-color, #ef4444);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: background 0.15s ease;
   margin-left: 4px;
 }
 
 .delete-button:hover {
-  background: var(--danger-hover, #dc2626);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .blackmarket-empty-state {

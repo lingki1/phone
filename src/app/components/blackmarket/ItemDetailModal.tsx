@@ -9,7 +9,7 @@ interface ItemDetailModalProps {
   open: boolean;
   item: BlackMarketItem | null;
   onClose: () => void;
-  onDownload: (item: BlackMarketItem) => void;
+  onDownload: (_item: BlackMarketItem) => void;
   onImportCharacter?: (item: BlackMarketItem) => void;
   onImportWorldBook?: (item: BlackMarketItem) => void;
   onDelete?: (item: BlackMarketItem) => void;
@@ -20,7 +20,7 @@ export default function ItemDetailModal({
   open, 
   item, 
   onClose, 
-  onDownload, 
+  onDownload: _onDownload, 
   onImportCharacter, 
   onImportWorldBook,
   onDelete,
@@ -64,7 +64,7 @@ export default function ItemDetailModal({
             <div className="bm-detail-meta">
               <span>作者：{item.author}</span>
               <span>{new Date(item.uploadDate).toLocaleString()}</span>
-              <span>📥 {item.downloadCount}</span>
+              <span>🔥 {item.downloadCount}</span>
             </div>
 
             <div className="bm-detail-desc" aria-label="描述">
@@ -96,7 +96,7 @@ export default function ItemDetailModal({
                   导入
                 </button>
               )}
-              <button className="download-button" onClick={() => onDownload(item)}>下载</button>
+              {/* 下载按钮已移除 */}
               {canDelete && onDelete && (
                 <button 
                   className="delete-button" 

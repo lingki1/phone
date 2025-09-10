@@ -7,9 +7,10 @@ import './AnnouncementHistoryDrawer.css';
 
 interface AnnouncementHistoryDrawerProps {
   announcements: Announcement[];
+  disabled?: boolean;
 }
 
-export default function AnnouncementHistoryDrawer({ announcements }: AnnouncementHistoryDrawerProps) {
+export default function AnnouncementHistoryDrawer({ announcements, disabled }: AnnouncementHistoryDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [list, setList] = useState<Announcement[]>([]);
 
@@ -31,6 +32,8 @@ export default function AnnouncementHistoryDrawer({ announcements }: Announcemen
     };
     reload();
   }, [isOpen]);
+
+  if (disabled) return null;
 
   const sorted = [...list].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

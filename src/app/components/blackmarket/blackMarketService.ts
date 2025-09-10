@@ -63,41 +63,14 @@ class BlackMarketService {
     }
   }
 
-  // 下载物品
-  async downloadItem(id: string, type: 'character' | 'worldbook'): Promise<void> {
+  // 增加热度（由“导入”触发）
+  async incrementHeat(id: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/download/${id}`, {
+      await fetch(`${this.baseUrl}/items/${id}/download`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type }),
       });
-
-      if (!response.ok) {
-        throw new Error('下载失败');
-      }
-
-      // 获取文件内容
-      const blob = await response.blob();
-      const fileName = response.headers.get('content-disposition')?.match(/filename="(.+)"$/)?.[1] || `${type}_${id}`;
-      
-      // 创建下载链接
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      // 更新下载数量
-      await this.incrementDownloadCount(id);
-
     } catch (error) {
-      console.error('下载物品失败:', error);
-      throw error;
+      console.error('更新热度失败:', error);
     }
   }
 
@@ -159,16 +132,8 @@ class BlackMarketService {
     }
   }
 
-  // 增加下载次数
-  private async incrementDownloadCount(id: string): Promise<void> {
-    try {
-      await fetch(`${this.baseUrl}/items/${id}/download`, {
-        method: 'POST',
-      });
-    } catch (error) {
-      console.error('更新下载次数失败:', error);
-    }
-  }
+  // 兼容保留（不再使用）
+  // private async incrementDownloadCount(id: string): Promise<void> {}
 
   // 删除物品
   async deleteItem(id: string): Promise<{ success: boolean; message: string }> {

@@ -785,7 +785,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
         initialAnnouncements={announcements}
       />
 
-      <AnnouncementHistoryDrawer announcements={announcements} />
+      <AnnouncementHistoryDrawer announcements={announcements} disabled={isBlackMarketOpen || isChatRoomOpen} />
 
       {/* 公共聊天室 */}
       <PublicChatRoom

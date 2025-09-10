@@ -155,53 +155,32 @@
 }
 
 .import-button {
-  padding: 8px 16px;
-  background: var(--success-color, #10b981);
-  color: white;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--text-primary, #1f2937);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: background 0.15s ease;
 }
 
 .import-button:hover {
-  background: var(--success-hover, #059669);
-  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .import-button:disabled {
-  background: var(--text-tertiary, #9ca3af);
-  color: var(--text-secondary, #6b7280);
-  cursor: not-allowed;
-  transform: none;
   opacity: 0.6;
-}
-
-.download-button {
-  padding: 8px 16px;
-  background: var(--accent-color, #8b5cf6);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.download-button:hover {
-  background: var(--accent-hover, #7c3aed);
-  transform: translateY(-1px);
-}
-
-.download-button:disabled {
-  background: var(--text-tertiary, #9ca3af);
-  color: var(--text-secondary, #6b7280);
   cursor: not-allowed;
-  transform: none;
-  opacity: 0.6;
+}
+
+/* 下载按钮已移除，隐藏相关样式 */
+.download-button { display: none !important; }
+/* 调整剩余按钮间距 */
+.import-button + .delete-button,
+.delete-button + .bm-detail-secondary {
+  margin-left: 8px;
 }
 
 .bm-detail-secondary { 

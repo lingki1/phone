@@ -417,20 +417,13 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       return Array.from(tagSet);
     };
 
-  // 处理下载
-  const handleDownload = async (item: BlackMarketItem) => {
-    try {
-      await blackMarketService.downloadItem(item.id, item.type);
-      // 更新下载数量
-      loadData();
-    } catch (error) {
-      console.error('下载失败:', error);
-      alert('下载失败，请稍后重试');
-    }
+  // 取消下载功能
+  const handleDownload = async (_item: BlackMarketItem) => {
+    alert('已移除下载功能，请使用“导入”来体验内容');
   };
 
   // 防抖动的下载处理函数
-  const { debouncedCallback: debouncedHandleDownload, isProcessing: isDownloading } = useDebounceState(handleDownload, 300);
+  const { debouncedCallback: debouncedHandleDownload } = useDebounceState(handleDownload, 300);
 
   // 处理角色导入
   const handleImportCharacter = async (item: BlackMarketItem) => {
@@ -525,6 +518,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           await onImportCharacter(newChat);
           console.log('黑市导入 - 导入回调执行成功');
           alert('角色导入成功！');
+          // 导入成功后增加热度
+          await blackMarketService.incrementHeat(item.id);
+          loadData();
         } catch (error) {
           console.error('黑市导入 - 导入回调执行失败:', error);
           alert('导入失败，请稍后重试');
@@ -588,6 +584,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             await onImportWorldBook(worldBooks[0]);
             console.log('黑市导入世界书 - 导入回调执行成功');
             alert(`世界书导入成功！导入了 ${worldBooks.length} 个条目`);
+            // 导入成功后增加热度
+            await blackMarketService.incrementHeat(item.id);
+            loadData();
           } catch (error) {
             console.error('黑市导入世界书 - 导入回调执行失败:', error);
             alert('导入失败，请稍后重试');
@@ -617,6 +616,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             await onImportWorldBook(worldBooks[0]);
             console.log('黑市导入世界书 - 导入回调执行成功');
             alert(`世界书导入成功！导入了 ${worldBooks.length} 个条目`);
+            // 导入成功后增加热度
+            await blackMarketService.incrementHeat(item.id);
+            loadData();
           } catch (error) {
             console.error('黑市导入世界书 - 导入回调执行失败:', error);
             alert('导入失败，请稍后重试');
@@ -647,10 +649,10 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             <button className="blackmarket-back-button" onClick={onClose} title="返回桌面">
               ← 
             </button>
-            <h2>🏪 黑市</h2>
+            <h2>黑市</h2>
           </div>
           <div className="bm-head-actions">
-            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser}>📤 上传</button>
+            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser}>上传</button>
           </div>
         </div>
 
@@ -807,16 +809,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                              {isImportingWorldBook ? '导入中...' : '导入'}
                            </button>
                          )}
-                         <button 
-                           className="download-button" 
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             debouncedHandleDownload(item);
-                           }}
-                           disabled={isDownloading}
-                         >
-                           {isDownloading ? '下载中...' : '下载'}
-                         </button>
+                         {/* 下载按钮已移除 */}
                          {(currentUser?.username === item.author || 
                            currentUser?.role === 'admin' || 
                            currentUser?.role === 'super_admin') && (
