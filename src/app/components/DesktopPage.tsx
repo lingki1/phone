@@ -221,7 +221,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       color: '#F59E0B',
       gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
       size: 'medium',
-      status: 'coming-soon'
+      status: 'available'
     },
     {
       id: 'shopping',
@@ -523,6 +523,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       setClickedApp(app.id);
       setTimeout(() => {
         setIsBlackMarketOpen(true);
+        setClickedApp(null);
+      }, 300);
+      return;
+    }
+
+    // 音乐应用：打开全局播放器
+    if (app.id === 'music') {
+      setClickedApp(app.id);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('audio:open'));
         setClickedApp(null);
       }, 300);
       return;
@@ -840,6 +850,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
           setIsAuthModalOpen(false);
         }}
       />
+
     </div>
   );
 } 
