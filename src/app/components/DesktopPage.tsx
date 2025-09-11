@@ -8,6 +8,7 @@ import { PublicChatRoom } from './chatroom';
 import { BlackMarket } from './blackmarket';
 import { ChatItem, WorldBook } from '../types/chat';
 import { dataManager } from '../utils/dataManager';
+import AuthModal from './auth/AuthModal';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
 
@@ -39,6 +40,7 @@ interface DesktopPageProps {
   userBalance: number;
   isLoadingBalance: boolean;
   onLogout?: () => void;
+  isAuthenticated?: boolean;
 }
 
 interface AppTile {
@@ -52,7 +54,7 @@ interface AppTile {
   status?: 'coming-soon' | 'available' | 'insufficient-balance';
 }
 
-export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout }: DesktopPageProps) {
+export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout, isAuthenticated }: DesktopPageProps) {
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
@@ -122,6 +124,23 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // 如果上层已知为已登录，则在挂载/切换时拉取用户信息（避免未登录时发起401）
+  useEffect(() => {
+    const loadUserIfAuthenticated = async () => {
+      if (!isAuthenticated || currentUser) return;
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success) {
+            setCurrentUser(data.user);
+          }
+        }
+      } catch (_e) {}
+    };
+    loadUserIfAuthenticated();
+  }, [isAuthenticated, currentUser]);
   
   const [clickedApp, setClickedApp] = useState<string | null>(null);
   
@@ -402,22 +421,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 移除自动数据库版本冲突检测
   // 让IndexedDB自己处理所有升级，只在用户手动点击时才执行恢复
 
-  // 获取当前用户信息
-  useEffect(() => {
-    const fetchMe = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data?.success) {
-          setCurrentUser(data.user);
-        }
-      } catch (_e) {
-        // ignore
-      }
-    };
-    fetchMe();
-  }, []);
+  // 不在首页初始请求 /api/auth/me，仅在登录成功后由上层传递或刷新
 
   // 加载保存的背景色
   useEffect(() => {
@@ -487,6 +491,11 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
 
   // 处理应用点击
   const handleAppClick = async (app: AppTile) => {
+    // 未登录统一拦截到登录弹窗（公告历史抽屉除外，由其内部按钮控制）
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (app.status === 'coming-soon') {
       // 显示开发中提示
       alert(`${app.name} 功能正在开发中，敬请期待！`);
@@ -586,11 +595,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
     try {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
+        credentials: 'include'
       });
 
       if (response.ok) {
         // 清除本地存储的用户信息
         localStorage.removeItem('userToken');
+        setCurrentUser(null);
+        setIsUserMenuOpen(false);
+        // 通知上层
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         // 调用父组件的退出登录回调
         if (onLogout) {
           onLogout();
@@ -664,12 +678,18 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
           <div className="authuser-menu" ref={userMenuRef}>
             <button
               className="authuser-avatar-button"
-              title={currentUser?.username || '用户'}
-              onClick={() => setIsUserMenuOpen(v => !v)}
+              title={currentUser ? (currentUser?.username || '用户') : '登录'}
+              onClick={() => {
+                if (!currentUser) {
+                  setIsAuthModalOpen(true);
+                  return;
+                }
+                setIsUserMenuOpen(v => !v);
+              }}
             >
-              {getUserInitial()}
+              {currentUser ? getUserInitial() : '登录'}
             </button>
-            {isUserMenuOpen && (
+            {currentUser && isUserMenuOpen && (
               <div className="authuser-dropdown">
                 <div className="authuser-header">
                   <div className="authuser-name">{currentUser?.username || '未登录'}</div>
@@ -799,6 +819,26 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
         onClose={() => setIsBlackMarketOpen(false)}
         onImportCharacter={handleImportCharacter}
         onImportWorldBook={handleImportWorldBook}
+      />
+
+      {/* 登录弹窗 */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={async () => {
+          try {
+            const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.success) {
+                setCurrentUser(data.user);
+                // 通知上层应用登录成功
+                window.dispatchEvent(new CustomEvent('auth:login-success', { detail: { user: data.user } }));
+              }
+            }
+          } catch (_e) {}
+          setIsAuthModalOpen(false);
+        }}
       />
     </div>
   );

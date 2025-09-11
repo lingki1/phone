@@ -195,23 +195,31 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<BlackMarketItem | null>(null);
 
-  // 获取当前用户信息
+  // 获取当前用户信息（仅在黑市打开时尝试一次，401静默）
   useEffect(() => {
+    if (!isOpen) return;
+    let aborted = false;
     const fetchUser = async () => {
       try {
         const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (aborted) return;
+        if (res.status === 401) {
+          // 未登录，保持 currentUser 为 null
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           if (data?.success) {
             setCurrentUser(data.user);
           }
         }
-      } catch (error) {
-        console.error('获取用户信息失败:', error);
+      } catch (_error) {
+        // 静默失败
       }
     };
     fetchUser();
-  }, []);
+    return () => { aborted = true; };
+  }, [isOpen]);
 
   // 根据屏幕宽度设置最大可见标签数
   useEffect(() => {

@@ -44,7 +44,7 @@ export default function AnnouncementHistoryDrawer({ announcements, disabled }: A
       {isOpen && (
         <div className="groupmember-annc-drawer-backdrop" onClick={() => setIsOpen(false)} />
       )}
-      <aside className={`groupmember-annc-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
+      <aside className={`groupmember-annc-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen} data-announcement>
         <div className="groupmember-annc-drawer-panel">
           <div className="groupmember-annc-header">
             <h3 className="groupmember-annc-title">历史公告</h3>
@@ -87,6 +87,7 @@ export default function AnnouncementHistoryDrawer({ announcements, disabled }: A
         onClick={() => setIsOpen(v => !v)}
         title={isOpen ? '关闭历史公告' : '查看历史公告'}
         aria-label={isOpen ? '关闭历史公告' : '查看历史公告'}
+        data-announcement
       >
         {isOpen ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

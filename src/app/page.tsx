@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import ChatListPage from './components/qq/ChatListPage';
 import DesktopPage from './components/DesktopPage';
 import ShoppingPage from './components/shopping/ShoppingPage';
@@ -10,12 +9,10 @@ import RecollectionPage from './components/qq/recollection/RecollectionPage';
 import PageTransitionManager from './components/utils/PageTransitionManager';
 import { dataManager } from './utils/dataManager';
 import MePage from './components/qq/me/MePage';
-import AuthModal from './components/auth/AuthModal';
 // 公告展示仅在 DesktopPage 中渲染，这里不再引入
-import { FirstLoadPage } from './components/firstloadpage';
+// import { FirstLoadPage } from './components/firstloadpage';
 
 export default function Home() {
-  const router = useRouter();
   const [currentPage, setCurrentPage] = useState<'desktop' | 'chat' | 'shopping' | 'discover' | 'recollection' | 'me'>('desktop');
   const [apiConfig, setApiConfig] = useState({
     proxyUrl: '',
@@ -25,72 +22,9 @@ export default function Home() {
   const [userBalance, setUserBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   // 公告列表状态移至 DesktopPage 内部
 
-  // 检查用户认证状态
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // 设置5秒超时
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch('/api/auth/me', {
-          signal: controller.signal,
-          cache: 'no-cache'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setIsAuthenticated(true);
-          setShowAuthModal(false);
-        } else {
-          // 未登录，显示登录模态窗口
-          setIsAuthenticated(false);
-          setShowAuthModal(true);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        // 认证检查失败或超时，显示登录模态窗口
-        setIsAuthenticated(false);
-        setShowAuthModal(true);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-    
-    // 备用超时机制：10秒后强制结束检查状态
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('Auth check timeout, forcing to show login');
-      setIsCheckingAuth(false);
-      setIsAuthenticated(false);
-      setShowAuthModal(true);
-    }, 10000);
-    
-    checkAuth().finally(() => {
-      clearTimeout(fallbackTimeout);
-    });
-    
-    return () => {
-      clearTimeout(fallbackTimeout);
-    };
-  }, [router]);
-
-  // 当用户未认证时，确保认证模态窗口显示
-  useEffect(() => {
-    if (!isAuthenticated && !isCheckingAuth) {
-      setShowAuthModal(true);
-    }
-  }, [isAuthenticated, isCheckingAuth]);
+  // 不在首页自动请求 /api/auth/me，未登录时允许自由浏览
 
   // 加载API配置和用户余额
   useEffect(() => {
@@ -148,36 +82,7 @@ export default function Home() {
     };
   }, []);
 
-  // 监听用户交互，未登录时重新显示登录窗口
-  useEffect(() => {
-    if (isAuthenticated || isCheckingAuth) return;
-
-    const handleUserInteraction = (e: Event) => {
-       // 如果点击的是公告相关元素，允许交互
-       const target = e.target as HTMLElement;
-       if (target.closest('[data-announcement]') || target.closest('.auth-modal-overlay')) {
-         return;
-       }
-       
-       // 阻止交互生效并显示登录窗口
-       e.preventDefault();
-       e.stopPropagation();
-       if (!showAuthModal) {
-         setShowAuthModal(true);
-       }
-     };
-
-    // 监听点击和键盘事件
-    document.addEventListener('click', handleUserInteraction, true);
-    document.addEventListener('keydown', handleUserInteraction, true);
-    document.addEventListener('touchstart', handleUserInteraction, true);
-
-    return () => {
-      document.removeEventListener('click', handleUserInteraction, true);
-      document.removeEventListener('keydown', handleUserInteraction, true);
-      document.removeEventListener('touchstart', handleUserInteraction, true);
-    };
-  }, [isAuthenticated, isCheckingAuth, showAuthModal]);
+  // 未登录允许任意点击，不强制弹出登录
 
   // 这里不再负责公告数据加载
 
@@ -191,19 +96,6 @@ export default function Home() {
       .catch(() => {})
       .finally(() => clearTimeout(timeoutId));
   }, []);
-
-  // 获取用户余额
-  const fetchUserBalance = async () => {
-    try {
-      await dataManager.initDB();
-      const balance = await dataManager.getBalance();
-      setUserBalance(balance);
-    } catch (error) {
-      console.error('Failed to fetch user balance:', error);
-    } finally {
-      setIsLoadingBalance(false);
-    }
-  };
 
   // 刷新余额
   const refreshBalance = async () => {
@@ -257,12 +149,22 @@ export default function Home() {
     window.addEventListener('navigateToMe', handleNavigateToMe);
     window.addEventListener('navigateToDiscover', handleNavigateToDiscover);
     window.addEventListener('navigateToRecollection', handleNavigateToRecollection);
+    const handleAuthLoginSuccess = (_e: Event) => {
+      setIsAuthenticated(true);
+    };
+    window.addEventListener('auth:login-success', handleAuthLoginSuccess as EventListener);
+    const handleAuthLogout = (_e: Event) => {
+      setIsAuthenticated(false);
+    };
+    window.addEventListener('auth:logout', handleAuthLogout as EventListener);
     
     return () => {
       window.removeEventListener('navigateToChat', handleNavigateToChat);
       window.removeEventListener('navigateToMe', handleNavigateToMe);
       window.removeEventListener('navigateToDiscover', handleNavigateToDiscover);
       window.removeEventListener('navigateToRecollection', handleNavigateToRecollection);
+      window.removeEventListener('auth:login-success', handleAuthLoginSuccess as EventListener);
+      window.removeEventListener('auth:logout', handleAuthLogout as EventListener);
     };
   }, []);
 
@@ -274,18 +176,11 @@ export default function Home() {
 
 
 
-  // 处理登录成功
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    setShowAuthModal(false);
-    // 重新加载用户数据
-    fetchUserBalance();
-  };
+  // 登录成功由事件驱动，此处不再保留未使用的回调
 
   // 处理退出登录
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setShowAuthModal(true);
     // 重置所有状态
     setUserBalance(0);
     setIsLoadingBalance(true);
@@ -299,7 +194,7 @@ export default function Home() {
   const pages = [
     {
       id: 'desktop',
-      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} onLogout={handleLogout} />,
+      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} onLogout={handleLogout} isAuthenticated={isAuthenticated} />,
       direction: 'fade' as const,
       duration: 400
     },
@@ -335,16 +230,6 @@ export default function Home() {
     }
   ];
 
-  // 如果正在检查认证状态，显示加载页面
-  if (isCheckingAuth) {
-    return (
-      <FirstLoadPage 
-        message="检查登录状态"
-        subMessage="如果长时间无响应，请刷新页面"
-      />
-    );
-  }
-
   return (
     <>
       {/* 始终显示桌面页面作为背景 */}
@@ -356,16 +241,6 @@ export default function Home() {
           defaultDuration={350}
         />
       </div>
-      
-      {/* 认证模态窗口覆盖在桌面页面上 */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => {
-          // 允许未登录用户关闭窗口查看公告
-          setShowAuthModal(false);
-        }}
-        onLoginSuccess={handleLoginSuccess}
-      />
       
       {/* 公告在 DesktopPage 内部渲染 */}
     </>

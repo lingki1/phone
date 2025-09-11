@@ -50,21 +50,17 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
 
       if (data.success) {
         // 登录成功
-        setSuccess('登录成功！正在跳转...');
+        setSuccess('登录成功！');
         
-        // 立即调用回调函数
         if (onLoginSuccess) {
+          // 在有回调（模态内）时，不刷新页面，交由上层处理
           onLoginSuccess();
-          // 即使有回调，也要跳转到首页
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1000);
           setLoading(false);
         } else {
-          // 如果没有回调，则延迟跳转让用户看到成功消息
+          // 独立页面场景保留跳转
           setTimeout(() => {
             window.location.href = '/';
-          }, 1000);
+          }, 800);
           setLoading(false);
         }
       } else {
