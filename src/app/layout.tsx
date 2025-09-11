@@ -7,6 +7,7 @@ import { AiPendingProvider } from "./components/async";
 import { NotificationProvider } from "./components/notice";
 import { AudioProvider, FloatingAudioButton, AudioPlayer } from "@audio";
 import AudioEventsBridge from "./components/audio/AudioEventsBridge";
+import AudioHelpPortal from "./components/audio/AudioHelpPortal";
 
 export const metadata: Metadata = {
   title: "Lingki-AI",
@@ -58,6 +59,7 @@ export default function RootLayout({
                 <AudioProvider>
                   {children}
                   <AudioEventsBridge />
+                  <AudioHelpPortal />
                   <FloatingAudioButton />
                   <AudioPlayer />
                 </AudioProvider>

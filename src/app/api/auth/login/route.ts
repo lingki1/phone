@@ -14,10 +14,12 @@ export async function POST(request: NextRequest) {
     const result = await authService.login({ username, password });
 
     if (result.success) {
+      const maxAge = 3 * 24 * 60 * 60; // 3 天（秒）
+      const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
       return NextResponse.json(result, {
         status: 200,
         headers: {
-          'Set-Cookie': `token=${result.token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`
+          'Set-Cookie': `token=${result.token}; HttpOnly; Path=/; Max-Age=${maxAge}; Expires=${expires}; SameSite=Lax`
         }
       });
     } else {

@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import { useMemo } from 'react';
 import { useAudioPlayer } from '@audio/AudioProvider';
 
@@ -78,20 +78,30 @@ export default function AudioPlayer() {
       </div>
 
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <input
-            type="file"
-            accept="audio/*"
-            multiple
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const files = e.target.files;
-              if (files && files.length > 0) addLocalFiles(files);
-              e.currentTarget.value = '';
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input
+              type="file"
+              accept="audio/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) addLocalFiles(files);
+                e.currentTarget.value = '';
+              }}
+            />
+            <span style={glassBtn()}>选择本地音乐</span>
+          </label>
+          <button
+            style={glassBtn()}
+            onClick={() => {
+              try { window.dispatchEvent(new CustomEvent('audio:open-help')); } catch {}
             }}
-          />
-          <span style={glassBtn()}>选择本地音乐</span>
-        </label>
+          >
+            如何获取本地音乐文件
+          </button>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
           <div style={{ fontWeight: 600, minHeight: 24, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={current?.name || ''}>{current?.name || '未选择音轨'}</div>
@@ -144,6 +154,7 @@ export default function AudioPlayer() {
           ))}
         </div>
       </div>
+      {/* 帮助弹窗已移动到全局 Portal */}
     </div>
     </>
   );

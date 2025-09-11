@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       {
         status: 200,
         headers: {
-          'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict'
+          'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
         }
       }
     );
