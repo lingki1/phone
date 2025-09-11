@@ -54,7 +54,7 @@ interface AppTile {
   status?: 'coming-soon' | 'available' | 'insufficient-balance';
 }
 
-export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout, isAuthenticated }: DesktopPageProps) {
+export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout, isAuthenticated: _isAuthenticated }: DesktopPageProps) {
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
@@ -749,6 +749,21 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       )}
 
       {/* 公告显示已移除，改用抽屉浏览历史 */}
+
+      {/* 全局搜索区域 */}
+      <div className="desktop-search">
+        <div className="desktop-search-box">
+          <svg className="desktop-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input 
+            className="desktop-search-input" 
+            type="text" 
+            placeholder="搜索应用、设置或网页..."
+          />
+        </div>
+      </div>
 
       {/* 时间显示区域 */}
       <div className="time-section">
