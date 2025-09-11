@@ -9,6 +9,7 @@ import { BlackMarket } from './blackmarket';
 import { ChatItem, WorldBook } from '../types/chat';
 import { dataManager } from '../utils/dataManager';
 import AuthModal from './auth/AuthModal';
+import CreativeSpace from './creativespace/CreativeSpace';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
 
@@ -58,6 +59,14 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
+      case 'creativespace':
+        return (
+          <svg {...commonProps} aria-label="我的创意">
+            <path d="M9 18h6"/>
+            <path d="M10 22h4"/>
+            <path d="M2 11a10 10 0 1 1 20 0c0 3.5-2 5.5-4 7H6c-2-1.5-4-3.5-4-7z"/>
+          </svg>
+        );
       case 'qq': // chat
         return (
           <svg {...commonProps} aria-label="聊天">
@@ -160,6 +169,9 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 黑市状态
   const [isBlackMarketOpen, setIsBlackMarketOpen] = useState(false);
   
+  // 我的创意状态
+  const [isCreativeOpen, setIsCreativeOpen] = useState(false);
+  
   // 背景色状态
   const [backgroundColor, setBackgroundColor] = useState<string>('linear-gradient(135deg, #f8c8dc 0%, #d1d5db 100%)');
   
@@ -252,6 +264,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       icon: '🗣️',
       color: '#10B981',
       gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      size: 'medium',
+      status: 'available'
+    }
+    ,
+    {
+      id: 'creativespace',
+      name: '我的创意',
+      icon: '✨',
+      color: '#06B6D4',
+      gradient: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)',
       size: 'medium',
       status: 'available'
     }
@@ -527,6 +549,16 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       setClickedApp(app.id);
       setTimeout(() => {
         setIsBlackMarketOpen(true);
+        setClickedApp(null);
+      }, 300);
+      return;
+    }
+
+    // 处理我的创意应用
+    if (app.id === 'creativespace') {
+      setClickedApp(app.id);
+      setTimeout(() => {
+        setIsCreativeOpen(true);
         setClickedApp(null);
       }, 300);
       return;
@@ -848,6 +880,12 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
         onClose={() => setIsBlackMarketOpen(false)}
         onImportCharacter={handleImportCharacter}
         onImportWorldBook={handleImportWorldBook}
+      />
+
+      {/* 我的创意 */}
+      <CreativeSpace
+        isOpen={isCreativeOpen}
+        onClose={() => setIsCreativeOpen(false)}
       />
 
       {/* 登录弹窗 */}
