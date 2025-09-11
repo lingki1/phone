@@ -125,22 +125,26 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  // 如果上层已知为已登录，则在挂载/切换时拉取用户信息（避免未登录时发起401）
+  // 刷新后自动恢复登录：尝试获取用户信息，401 时静默忽略
   useEffect(() => {
-    const loadUserIfAuthenticated = async () => {
-      if (!isAuthenticated || currentUser) return;
+    let cancelled = false;
+    const loadUser = async () => {
+      if (currentUser) return;
       try {
         const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
-        if (res.ok) {
+        if (!cancelled && res.ok) {
           const data = await res.json();
           if (data?.success) {
             setCurrentUser(data.user);
           }
         }
-      } catch (_e) {}
+      } catch (_e) {
+        // 未登录或请求失败时忽略
+      }
     };
-    loadUserIfAuthenticated();
-  }, [isAuthenticated, currentUser]);
+    loadUser();
+    return () => { cancelled = true; };
+  }, [currentUser]);
   
   const [clickedApp, setClickedApp] = useState<string | null>(null);
   
