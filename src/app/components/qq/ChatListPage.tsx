@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 import ChatListHeader from './ChatListHeader';
 import ChatList from './ChatList';
 import ApiSettingsModal from './ApiSettingsModal';
@@ -49,6 +50,7 @@ interface ChatListPageProps {
 }
 
 export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'all' | 'single' | 'group'>('all');
   const [activeView, setActiveView] = useState<string>('messages');
   const [currentScreen, setCurrentScreen] = useState<'list' | 'chat' | 'worldbook'>('list');
@@ -78,7 +80,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   // 个人设置状态
   const [personalSettings, setPersonalSettings] = useState<PersonalSettings>({
     userAvatar: '/avatars/user-avatar.svg',
-    userNickname: '用户',
+    userNickname: t('QQ.Header.user', '用户'),
     userBio: ''
   });
   
@@ -844,7 +846,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
   if (isLoading) {
     return (
       <div className="chat-list-page loading">
-        <div className="loading-spinner">加载中...</div>
+        <div className="loading-spinner">{t('QQ.Page.loading', '加载中...')}</div>
       </div>
     );
   }
@@ -877,7 +879,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
             <input
               type="text"
               className="chatlist-search-input"
-              placeholder="搜索..."
+              placeholder={t('QQ.Page.searchPlaceholder', '搜索...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -912,7 +914,7 @@ export default function ChatListPage({ onBackToDesktop }: ChatListPageProps) {
           personalSettings={personalSettings}
           currentPreset={currentPreset || undefined}
         />
-      ) : <div>聊天加载中...</div>,
+      ) : <div>{t('QQ.Page.chatLoading', '聊天加载中...')}</div>,
       direction: 'left' as const,
       duration: 0
     },

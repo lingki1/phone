@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 import './ApiSettingsModal.css';
 import ApiConfigSelector from './apisaving/ApiConfigSelector';
 import SaveConfigDialog from './apisaving/SaveConfigDialog';
@@ -25,6 +26,7 @@ export default function ApiSettingsModal({
   onSave, 
   currentConfig 
 }: ApiSettingsModalProps) {
+  const { t } = useI18n();
   const [config, setConfig] = useState<ApiConfig>(currentConfig);
   const [models, setModels] = useState<string[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -87,7 +89,7 @@ export default function ApiSettingsModal({
 
   const fetchModels = async () => {
     if (!config.proxyUrl || !config.apiKey) {
-      alert('请先填写反代地址和API密钥');
+      alert(t('QQ.ApiSettings.fillProxyAndKey', '请先填写反代地址和API密钥'));
       return;
     }
 
@@ -122,7 +124,7 @@ export default function ApiSettingsModal({
       }
     } catch (error) {
       console.error('获取模型列表失败:', error);
-      alert(`获取模型列表失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      alert(`${t('QQ.ApiSettings.fetchModelsFailed', '获取模型列表失败')}: ${error instanceof Error ? error.message : t('QQ.ApiSettings.unknownError', '未知错误')}`);
     } finally {
       setIsLoadingModels(false);
     }
@@ -130,7 +132,7 @@ export default function ApiSettingsModal({
 
   const handleSave = () => {
     if (!config.proxyUrl || !config.apiKey || !config.model) {
-      alert('请填写完整的API配置信息');
+      alert(t('QQ.ApiSettings.fillAll', '请填写完整的API配置信息'));
       return;
     }
 
@@ -176,11 +178,11 @@ export default function ApiSettingsModal({
       const resp = await fetch('/api/system-api-config');
       const json = await resp.json();
       if (!json?.success) {
-        alert(json?.message || '获取平台配置失败');
+        alert(json?.message || t('QQ.ApiSettings.platformFailed', '获取平台配置失败'));
         return;
       }
       if (!json?.data) {
-        alert('平台未提供内置配置，请联系管理员');
+        alert(t('QQ.ApiSettings.noPlatformConfig', '平台未提供内置配置，请联系管理员'));
         return;
       }
       const platformProxyUrl = String(json.data.proxyUrl || '/api/server-ai');
@@ -192,7 +194,7 @@ export default function ApiSettingsModal({
       localStorage.removeItem('savedModels');
     } catch (e) {
       console.error('加载平台配置失败:', e);
-      alert('加载平台配置失败');
+      alert(t('QQ.ApiSettings.loadPlatformFailed', '加载平台配置失败'));
     } finally {
       setIsLoadingPlatformConfig(false);
     }
@@ -204,7 +206,7 @@ export default function ApiSettingsModal({
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="api-settings-modal">
         <div className="modal-header">
-          <h2>AI 连接配置</h2>
+          <h2>{t('QQ.ApiSettings.title', 'AI 连接配置')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
@@ -223,10 +225,10 @@ export default function ApiSettingsModal({
               onClick={handleSaveConfig}
               disabled={!config.proxyUrl || !config.apiKey || !config.model}
             >
-              保存当前配置
+              {t('QQ.ApiSettings.saveCurrent', '保存当前配置')}
             </button>
             <small className="save-config-hint">
-              保存后可以快速切换不同的API配置
+              {t('QQ.ApiSettings.saveHint', '保存后可以快速切换不同的API配置')}
             </small>
           </div>
 
@@ -234,17 +236,17 @@ export default function ApiSettingsModal({
 
           <div className="form-group">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label htmlFor="proxy-url">请输入服务器地址 或</label>
+              <label htmlFor="proxy-url">{t('QQ.ApiSettings.enterServerOr', '请输入服务器地址 或')}</label>
               <button 
                 type="button"
                 className="groupmember-platform-config-btn"
                 onClick={async () => {
                   await handleUsePlatformConfig();
-                  alert('已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。');
+                  alert(t('QQ.ApiSettings.platformApplied', '已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。'));
                 }}
                 disabled={isLoadingPlatformConfig}
               >
-                {isLoadingPlatformConfig ? '加载中...' : '使用平台内置AI'}
+                {isLoadingPlatformConfig ? t('QQ.ApiSettings.loading', '加载中...') : t('QQ.ApiSettings.usePlatform', '使用平台内置AI')}
               </button>
             </div>
             <input
@@ -252,42 +254,42 @@ export default function ApiSettingsModal({
               id="proxy-url"
               value={config.proxyUrl}
               onChange={(e) => handleInputChange('proxyUrl', e.target.value)}
-              placeholder="输入你的AI服务地址，例如: https://api.openai.com"
+              placeholder={t('QQ.ApiSettings.placeholder.proxy', '输入你的AI服务地址，例如: https://api.openai.com')}
             />
-            <small className="field-hint">不需要添加 /v1 后缀，系统会自动处理</small>
+            <small className="field-hint">{t('QQ.ApiSettings.hint.proxy', '不需要添加 /v1 后缀，系统会自动处理')}</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="api-key">访问密钥</label>
+            <label htmlFor="api-key">{t('QQ.ApiSettings.apiKey', '访问密钥')}</label>
             <input
               type="password"
               id="api-key"
               value={config.apiKey}
               onChange={(e) => handleInputChange('apiKey', e.target.value)}
-              placeholder="输入你的API密钥，以 sk- 开头"
+              placeholder={t('QQ.ApiSettings.placeholder.key', '输入你的API密钥，以 sk- 开头')}
             />
-            <small className="field-hint">密钥会被安全保存，不会泄露给他人</small>
+            <small className="field-hint">{t('QQ.ApiSettings.hint.key', '密钥会被安全保存，不会泄露给他人')}</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="model-select">AI 模型选择</label>
+            <label htmlFor="model-select">{t('QQ.ApiSettings.model', 'AI 模型选择')}</label>
             <select
               id="model-select"
               value={config.model}
               onChange={(e) => handleInputChange('model', e.target.value)}
             >
-              <option value="">点击选择你喜欢的AI模型</option>
+              <option value="">{t('QQ.ApiSettings.placeholder.model', '点击选择你喜欢的AI模型')}</option>
               {models.map(model => (
                 <option key={model} value={model}>
                   {model}
-                  {model === config.model && !isCurrentModelAvailable && ' (已保存)'}
+                  {model === config.model && !isCurrentModelAvailable && ` (${t('QQ.ApiSettings.saved', '已保存')})`}
                 </option>
               ))}
             </select>
             <small className="field-hint">
               {isCurrentModelAvailable 
-                ? '不同模型有不同的特点和能力' 
-                : '当前选择的模型可能不在可用列表中，建议重新获取模型列表'
+                ? t('QQ.ApiSettings.modelHint.diff', '不同模型有不同的特点和能力')
+                : t('QQ.ApiSettings.modelHint.notInList', '当前选择的模型可能不在可用列表中，建议重新获取模型列表')
               }
             </small>
           </div>
@@ -297,15 +299,15 @@ export default function ApiSettingsModal({
             onClick={fetchModels}
             disabled={isLoadingModels}
           >
-            {isLoadingModels ? '正在获取模型列表...' : '获取可用模型'}
+            {isLoadingModels ? t('QQ.ApiSettings.fetching', '正在获取模型列表...') : t('QQ.ApiSettings.fetch', '获取可用模型')}
           </button>
 
 
         </div>
 
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onClose}>取消</button>
-          <button className="save-btn" onClick={handleSave}>保存配置</button>
+          <button className="cancel-btn" onClick={onClose}>{t('QQ.ApiSettings.cancel', '取消')}</button>
+          <button className="save-btn" onClick={handleSave}>{t('QQ.ApiSettings.save', '保存配置')}</button>
         </div>
       </div>
       

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 import './BottomNavigation.css';
 
 // 导航项类型定义
@@ -76,6 +77,7 @@ export default function BottomNavigation({
   newContentCount = {},
   forceShow = false
 }: BottomNavigationProps) {
+  const { t } = useI18n();
   const [shouldShow, setShouldShow] = useState(false);
 
   // 检测当前页面是否应该显示底部导航
@@ -203,7 +205,7 @@ export default function BottomNavigation({
                 </div>
               )}
             </div>
-            <span className="nav-label">{item.label}</span>
+            <span className="nav-label">{t(`QQ.BottomNav.labels.${item.key}`, item.label)}</span>
           </div>
         );
       })}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 import Image from 'next/image';
 
 interface PersonalSettings {
@@ -26,6 +27,7 @@ interface ChatListHeaderProps {
 }
 
 export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend, onOpenCreateGroup, onOpenWorldBook, onOpenCharacterImport, onBackToDesktop, onOpenMePage, personalSettings, maxMemory, onMaxMemoryChange, showContextSettings, onToggleContextSettings }: ChatListHeaderProps) {
+  const { t } = useI18n();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
 
   // 添加点击空白区域关闭菜单的功能
@@ -71,7 +73,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
           <div className="user-avatar-container">
             <Image 
               src={personalSettings?.userAvatar || '/avatars/user-avatar.svg'} 
-              alt="用户头像" 
+              alt={t('QQ.Header.userAvatar', '用户头像')} 
               width={48}
               height={48}
               className="user-avatar"
@@ -80,7 +82,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
             />
           </div>
           <div className="user-name" onClick={onOpenMePage}>
-            {personalSettings?.userNickname || '用户'}
+            {personalSettings?.userNickname || t('QQ.Header.user', '用户')}
           </div>
         </div>
       </div>
@@ -91,19 +93,19 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
           className={`toggle-btn ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => onTabChange('all')}
         >
-          全部
+          {t('QQ.Header.tab.all', '全部')}
         </button>
         <button 
           className={`toggle-btn ${activeTab === 'single' ? 'active' : ''}`}
           onClick={() => onTabChange('single')}
         >
-          单聊
+          {t('QQ.Header.tab.single', '单聊')}
         </button>
         <button 
           className={`toggle-btn ${activeTab === 'group' ? 'active' : ''}`}
           onClick={() => onTabChange('group')}
         >
-          群聊
+          {t('QQ.Header.tab.group', '群聊')}
         </button>
       </div>
 
@@ -136,9 +138,9 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
               e.currentTarget.style.backgroundColor = '#f8f9fa';
               e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
             }}
-            title="设置AI上下文注入的消息数量上限"
+            title={t('QQ.Header.contextSettings.title', '设置AI上下文注入的消息数量上限')}
           >
-            上下文
+            {t('QQ.Header.contextSettings.button', '上下文')}
           </button>
           
           {/* 设置面板 */}
@@ -161,7 +163,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <h4 style={{ margin: 0, fontSize: '14px', color: '#333', fontWeight: '600' }}>
-                  AI上下文设置
+                  {t('QQ.Header.contextSettings.panelTitle', 'AI上下文设置')}
                 </h4>
                 <button
                   onClick={onToggleContextSettings}
@@ -178,7 +180,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
-                  title="关闭"
+                  title={t('QQ.common.close', '关闭')}
                 >
                   ×
                 </button>
@@ -192,7 +194,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                       marginBottom: '8px',
                       fontWeight: '500'
                     }}>
-                      上下文注入消息上限
+                      {t('QQ.Header.contextSettings.maxMemoryLabel', '上下文注入消息上限')}
                     </label>
                     
                     {/* 滑块容器 */}
@@ -331,7 +333,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                       marginTop: '6px',
                       lineHeight: '1.4'
                     }}>
-                      控制注入到AI的历史消息数量，数值越大AI记忆越完整，但响应可能变慢
+                      {t('QQ.Header.contextSettings.tip', '控制注入到AI的历史消息数量，数值越大AI记忆越完整，但响应可能变慢')}
                     </small>
                     
                     <div style={{ 
@@ -343,7 +345,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                       fontSize: '11px',
                       color: '#856404'
                     }}>
-                      <strong>💡 提示：</strong>最多可设置500条消息，超过此数量可能导致AI响应变慢或API调用失败
+                      <strong>💡 {t('QQ.common.hint', '提示')}：</strong>{t('QQ.Header.contextSettings.limitHint', '最多可设置500条消息，超过此数量可能导致AI响应变慢或API调用失败')}
                     </div>
                   </div>
               
@@ -354,10 +356,10 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                 border: '1px solid #e9ecef'
               }}>
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                  当前设置：<strong style={{ color: '#007bff' }}>{maxMemory}</strong> 条消息
+                  {t('QQ.Header.contextSettings.current', '当前设置：')}<strong style={{ color: '#007bff' }}>{maxMemory}</strong> {t('QQ.Header.contextSettings.messages', '条消息')}
                 </div>
                 <div style={{ fontSize: '11px', color: '#999' }}>
-                  设置已保存到本地，立即生效于AI调用
+                  {t('QQ.Header.contextSettings.saved', '设置已保存到本地，立即生效于AI调用')}
                 </div>
               </div>
             </div>
@@ -369,7 +371,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
             className="add-btn"
             onClick={() => setShowAddDropdown(!showAddDropdown)}
             type="button"
-            title="添加"
+            title={t('QQ.Header.add', '添加')}
           >
             +
           </button>
@@ -384,7 +386,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                   <line x1="20" y1="8" x2="20" y2="14" stroke="currentColor" strokeWidth="2"/>
                   <line x1="17" y1="11" x2="23" y2="11" stroke="currentColor" strokeWidth="2"/>
                 </svg>
-                <span>添加好友</span>
+                <span>{t('QQ.Header.addFriend', '添加好友')}</span>
               </div>
               <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenCreateGroup(); }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -392,14 +394,14 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                   <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
                   <path d="M23 11l-2-2v4l2-2z" stroke="currentColor" strokeWidth="2"/>
                 </svg>
-                <span>创建群聊</span>
+                <span>{t('QQ.Header.createGroup', '创建群聊')}</span>
               </div>
               <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenWorldBook(); }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
                 </svg>
-                <span>世界书</span>
+                <span>{t('QQ.Header.worldBook', '世界书')}</span>
               </div>
               {onOpenCharacterImport && (
                 <div className="dropdown-item" onClick={() => { setShowAddDropdown(false); onOpenCharacterImport(); }}>
@@ -408,7 +410,7 @@ export default function ChatListHeader({ activeTab, onTabChange, onOpenAddFriend
                     <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2"/>
                     <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  <span>导入角色卡片</span>
+                  <span>{t('QQ.Header.importCharacter', '导入角色卡片')}</span>
                 </div>
               )}
             </div>

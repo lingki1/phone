@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -8,6 +9,7 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onLoginSuccess }: LoginFormProps) {
+  const { t } = useI18n();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
 
     // 基本验证
     if (!username.trim() || !password.trim()) {
-      setError('请填写用户名和密码');
+      setError(t('Auth.login.fillUserAndPass', '请填写用户名和密码'));
       setLoading(false);
       return;
     }
@@ -50,7 +52,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
 
       if (data.success) {
         // 登录成功
-        setSuccess('登录成功！');
+        setSuccess(t('Auth.login.success', '登录成功！'));
         
         if (onLoginSuccess) {
           // 在有回调（模态内）时，不刷新页面，交由上层处理
@@ -64,12 +66,12 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
           setLoading(false);
         }
       } else {
-        setError(data.message || '登录失败');
+        setError(data.message || t('Auth.login.fail', '登录失败'));
         setLoading(false);
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('网络错误，请稍后重试');
+      setError(t('Auth.common.networkError', '网络错误，请稍后重试'));
       setLoading(false);
     }
   };
@@ -86,7 +88,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
 
       <div className="auth-form-group">
         <label htmlFor="username" className="auth-label">
-          用户名
+          {t('Auth.common.username', '用户名')}
         </label>
         <input
           id="username"
@@ -94,7 +96,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
           type="text"
           required
           className="auth-input"
-          placeholder="请输入用户名"
+          placeholder={t('Auth.placeholder.username', '请输入用户名')}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -102,7 +104,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
 
       <div className="auth-form-group">
         <label htmlFor="password" className="auth-label">
-          密码
+          {t('Auth.common.password', '密码')}
         </label>
         <div className="auth-password-toggle">
           <input
@@ -111,7 +113,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
             type="password"
             required
             className="auth-input"
-            placeholder="请输入密码"
+            placeholder={t('Auth.placeholder.password', '请输入密码')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -124,7 +126,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
         className="auth-button"
       >
         {loading && <span className="auth-loading"></span>}
-        {loading ? '登录中...' : '登录'}
+        {loading ? t('Auth.login.submitting', '登录中...') : t('Auth.login.submit', '登录')}
       </button>
     </form>
   );

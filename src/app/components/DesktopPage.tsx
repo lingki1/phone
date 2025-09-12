@@ -6,7 +6,9 @@ import { AnnouncementEditor, Announcement, AnnouncementHistoryDrawer } from './a
 import { fetchAnnouncements } from './announcement/announcementService';
 import { PublicChatRoom } from './chatroom';
 import { BlackMarket } from './blackmarket';
+import LocaleSwitcher from '../components/i18n/LocaleSwitcher';
 import { ChatItem, WorldBook } from '../types/chat';
+import { useI18n } from '../components/i18n/I18nProvider';
 import { dataManager } from '../utils/dataManager';
 import AuthModal from './auth/AuthModal';
 import CreativeSpace from './creativespace/CreativeSpace';
@@ -54,25 +56,26 @@ interface AppTile {
 }
 
 export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isAuthenticated }: DesktopPageProps) {
+  const { t, locale } = useI18n();
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
       case 'creativespace':
         return (
-          <svg {...commonProps} aria-label="我的创意">
+          <svg {...commonProps} aria-label={t('Desktop.aria.creativespace', '我的创意')}>
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
         );
       case 'qq': // chat
         return (
-          <svg {...commonProps} aria-label="聊天">
+          <svg {...commonProps} aria-label={t('Desktop.aria.qq', '聊天')}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             <path d="M8 9h8M8 13h6"/>
           </svg>
         );
       case 'blackmarket': // store
         return (
-          <svg {...commonProps} aria-label="黑市">
+          <svg {...commonProps} aria-label={t('Desktop.aria.blackmarket', '黑市')}>
             <path d="M3 10h18"/>
             <path d="M5 10l1.5-5h11L19 10"/>
             <path d="M6 10v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7"/>
@@ -81,7 +84,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         );
       case 'music':
         return (
-          <svg {...commonProps} aria-label="音乐">
+          <svg {...commonProps} aria-label={t('Desktop.aria.music', '音乐')}>
             <path d="M9 18V5l12-2v13"/>
             <circle cx="6" cy="18" r="3"/>
             <circle cx="18" cy="16" r="3"/>
@@ -89,7 +92,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         );
       case 'shopping':
         return (
-          <svg {...commonProps} aria-label="购物">
+          <svg {...commonProps} aria-label={t('Desktop.aria.shopping', '购物')}>
             <circle cx="9" cy="21" r="1"/>
             <circle cx="20" cy="21" r="1"/>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
@@ -97,14 +100,14 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         );
       case 'weibo': // hot/news
         return (
-          <svg {...commonProps} aria-label="热点">
+          <svg {...commonProps} aria-label={t('Desktop.aria.weibo', '热点')}>
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             <circle cx="18" cy="6" r="2" fill="currentColor"/>
           </svg>
         );
       case 'chatroom':
         return (
-          <svg {...commonProps} aria-label="聊天室">
+          <svg {...commonProps} aria-label={t('Desktop.aria.chatroom', '聊天室')}>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             <path d="M13 8H7M17 12H7"/>
             <circle cx="18" cy="8" r="2" fill="currentColor"/>
@@ -112,7 +115,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         );
       default:
         return (
-          <svg {...commonProps} aria-label="应用">
+          <svg {...commonProps} aria-label={t('Desktop.aria.app', '应用')}>
             <rect x="5" y="5" width="14" height="14" rx="4"/>
           </svg>
         );
@@ -178,10 +181,10 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     try {
       await dataManager.saveChat(character);
       console.log('DesktopPage - 角色导入成功，已保存到数据库');
-      alert('角色导入成功！');
+      alert(t('Desktop.alert.importCharacterSuccess', '角色导入成功！'));
     } catch (error) {
       console.error('DesktopPage - 保存导入角色失败:', error);
-      alert('导入失败，请稍后重试');
+      alert(t('Desktop.alert.commonFailure', '导入失败，请稍后重试'));
     }
   };
 
@@ -195,10 +198,10 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     try {
       await dataManager.saveWorldBook(worldBook);
       console.log('DesktopPage - 世界书导入成功，已保存到数据库');
-      alert('世界书导入成功！');
+      alert(t('Desktop.alert.importWorldBookSuccess', '世界书导入成功！'));
     } catch (error) {
       console.error('DesktopPage - 保存导入世界书失败:', error);
-      alert('导入失败，请稍后重试');
+      alert(t('Desktop.alert.commonFailure', '导入失败，请稍后重试'));
     }
   };
   const [appTiles] = useState<AppTile[]>([
@@ -451,7 +454,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
 
   // 格式化时间
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -460,7 +463,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
 
   // 格式化日期
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(locale, {
       month: 'long',
       day: 'numeric',
       weekday: 'long'
@@ -503,7 +506,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     }
     if (app.status === 'coming-soon') {
       // 显示开发中提示
-      alert(`${app.name} 功能正在开发中，敬请期待！`);
+      alert(t('Desktop.alert.comingSoon', '功能正在开发中，敬请期待！'));
       return;
     }
 
@@ -513,12 +516,12 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         await dataManager.initDB();
         const currentBalance = await dataManager.getBalance();
         if (currentBalance < 5) {
-          alert(`余额不足！当前余额：¥${currentBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
+          alert(t('Desktop.alert.insufficientBalanceDetail', `余额不足！当前余额：¥${currentBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`));
           return;
         }
       } catch (error) {
         console.error('检查余额失败:', error);
-        alert('检查余额失败，请稍后重试');
+        alert(t('Desktop.alert.checkBalanceFailed', '检查余额失败，请稍后重试'));
         return;
       }
     }
@@ -608,13 +611,13 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
 
   // 处理隐藏入口
   const handleSecretEntrance = () => {
-    const password = prompt('请输入管理密码：');
+    const password = prompt(t('Desktop.prompt.enterAdminPassword', '请输入管理密码：'));
     if (password === 'WWh930117') {
       setIsAnnouncementEditorOpen(true);
       setTimeClickCount(0);
       setLastTimeClickTime(0);
     } else if (password !== null) {
-      alert('密码错误！');
+      alert(t('Desktop.alert.wrongPassword', '密码错误！'));
       setTimeClickCount(0);
       setLastTimeClickTime(0);
     }
@@ -623,7 +626,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
 
   // 处理退出登录
   const handleLogout = async () => {
-    if (!confirm('确定要退出登录吗？')) {
+    if (!confirm(t('Desktop.confirm.logout', '确定要退出登录吗？'))) {
       return;
     }
 
@@ -645,11 +648,11 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
           onLogout();
         }
       } else {
-        alert('退出登录失败，请稍后重试');
+        alert(t('Desktop.alert.logoutFailed', '退出登录失败，请稍后重试'));
       }
     } catch (error) {
       console.error('Logout error:', error);
-      alert('退出登录失败，请稍后重试');
+      alert(t('Desktop.alert.logoutFailed', '退出登录失败，请稍后重试'));
     }
   };
 
@@ -661,8 +664,8 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
 
   const getUserGroupName = () => {
     const groupId: string | undefined = currentUser?.group || currentUser?.group_id;
-    if (!groupId) return '未分组';
-    if (groupId === 'default') return '默认分组';
+    if (!groupId) return t('Desktop.user.group.ungrouped', '未分组');
+    if (groupId === 'default') return t('Desktop.user.group.default', '默认分组');
     return groupId;
   };
 
@@ -704,10 +707,14 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         <div className="status-left">
         </div>
         <div className="status-right">
+          {/* 语言下拉 - 紧挨登录按钮左侧 */}
+          <div style={{ marginRight: 8 }}>
+            <LocaleSwitcher compact />
+          </div>
           <div className="authuser-menu" ref={userMenuRef}>
             <button
               className="authuser-avatar-button"
-              title={currentUser ? (currentUser?.username || '用户') : '登录'}
+              title={currentUser ? (currentUser?.username || t('Desktop.user.title', '用户')) : t('Desktop.user.login', '登录')}
               onClick={() => {
                 if (!currentUser) {
                   setIsAuthModalOpen(true);
@@ -716,19 +723,19 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
                 setIsUserMenuOpen(v => !v);
               }}
             >
-              {currentUser ? getUserInitial() : '登录'}
+              {currentUser ? getUserInitial() : t('Desktop.user.login', '登录')}
             </button>
             {currentUser && isUserMenuOpen && (
               <div className="authuser-dropdown">
                 <div className="authuser-header">
-                  <div className="authuser-name">{currentUser?.username || '未登录'}</div>
-                  <div className="authuser-meta">角色：{currentUser?.role || 'user'}</div>
-                  <div className="authuser-meta">分组：{getUserGroupName()}</div>
+                  <div className="authuser-name">{currentUser?.username || t('Desktop.user.notLoggedIn', '未登录')}</div>
+                  <div className="authuser-meta">{t('Desktop.user.role', '角色：')}{currentUser?.role || 'user'}</div>
+                  <div className="authuser-meta">{t('Desktop.user.group.label', '分组：')}{getUserGroupName()}</div>
                 </div>
                 
                 {/* 背景色选择器 */}
                 <div className="authuser-section">
-                  <div className="authuser-section-title">背景主题</div>
+                  <div className="authuser-section-title">{t('Desktop.theme.background', '背景主题')}</div>
                   <div className="background-color-grid">
                     {backgroundColors.map((color, index) => (
                       <button
@@ -744,11 +751,11 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
                   </div>
                 </div>
                 
-                <button className="authuser-item authuser-logout" onClick={handleLogout}>退出登录</button>
+                <button className="authuser-item authuser-logout" onClick={handleLogout}>{t('Desktop.user.logout', '退出登录')}</button>
               </div>
             )}
           </div>
-          <span className="battery-icon" title={`电池状态: ${batteryLevel}% ${isCharging ? '充电中' : '未充电'}`}>
+          <span className="battery-icon" title={`${t('Desktop.battery.status', '电池状态')}: ${batteryLevel}% ${isCharging ? t('Desktop.battery.charging', '充电中') : t('Desktop.battery.notCharging', '未充电')}`}>
             {getBatteryIcon()}
           </span>
           <span className="battery-percentage">{batteryLevel}%</span>
@@ -775,7 +782,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
           <input 
             className="desktop-search-input" 
             type="text" 
-            placeholder="搜索应用、设置或网页..."
+            placeholder={t('Desktop.searchPlaceholder', '搜索应用、设置或网页...')}
           />
         </div>
       </div>
@@ -791,7 +798,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
             {formatTime(currentTime)}
           </div>
           <div className="current-date">{formatDate(currentDate)}</div>
-          <div className="greeting">美好的一天开始了</div>
+          <div className="greeting">{t('Desktop.greeting', '美好的一天开始了')}</div>
         </div>
       </div>
 
@@ -811,17 +818,17 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
             <div className="app-icon">
               <MinimalIcon name={app.id} />
             </div>
-            <div className="app-name">{app.name}</div>
+            <div className="app-name">{t(`Desktop.appName.${app.id}`, app.name)}</div>
             {app.notifications && app.notifications > 0 && (
               <div className="notification-badge">
                 {app.notifications > 99 ? '99+' : app.notifications}
               </div>
             )}
             {app.status === 'coming-soon' && (
-              <div className="coming-soon-badge">开发中</div>
+              <div className="coming-soon-badge">{t('Desktop.comingSoon', '开发中')}</div>
             )}
             {app.status === 'insufficient-balance' && (
-              <div className="insufficient-balance-badge">余额不足</div>
+              <div className="insufficient-balance-badge">{t('Desktop.insufficientBalance', '余额不足')}</div>
             )}
           </div>
         ))}

@@ -1,0 +1,56 @@
+.locale-switcher-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 6px 32px 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) inset, 0 1px 0 rgba(255,255,255,0.25);
+  color: #111827;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.locale-switcher-select:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.locale-switcher-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.25);
+  border-color: rgba(22, 119, 255, 0.6);
+}
+
+.locale-switcher-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.locale-switcher-caret {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: rgba(17, 24, 39, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  .locale-switcher-select {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(17, 25, 40, 0.35);
+    color: #e5e7eb;
+  }
+  .locale-switcher-select:hover {
+    background: rgba(17, 25, 40, 0.5);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .locale-switcher-caret {
+    color: rgba(229, 231, 235, 0.7);
+  }
+}
+
+

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../../components/i18n/I18nProvider';
 import Image from 'next/image';
 
 interface ChatItem {
@@ -27,8 +28,22 @@ interface ChatListProps {
 }
 
 export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat, onAssociateWorldBook, onResetChat, searchQuery, searchHitMap }: ChatListProps) {
+  const { t, locale } = useI18n();
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  
+  function formatTimestamp(ts: string, currentLocale: string) {
+    // 如果传入的是固定格式字符串，这里可做进一步解析
+    try {
+      // 优先尝试能否转换为 Date
+      const d = new Date(ts);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString(currentLocale, { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch {}
+    // 回退：直接返回原值
+    return ts;
+  }
 
   const handleChatClick = (chatId: string) => {
     // 如果菜单是打开的，不触发聊天点击
@@ -77,7 +92,7 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
 
   const handleDeleteClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (confirm('确定要删除这个聊天吗？')) {
+    if (confirm(t('QQ.ChatList.confirm.delete', '确定要删除这个聊天吗？'))) {
       onDeleteChat?.(chatId);
     }
     setActiveMenuId(null);
@@ -100,7 +115,7 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
 
   const handleResetChatClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (confirm('确定要清空这个角色的所有聊天记录吗？此操作不可撤销！')) {
+    if (confirm(t('QQ.ChatList.confirm.reset', '确定要清空这个角色的所有聊天记录吗？此操作不可撤销！'))) {
       onResetChat?.(chatId);
     }
     setActiveMenuId(null);
@@ -133,7 +148,7 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
   if (chats.length === 0) {
     return (
       <div className="chat-list-empty">
-        <p>点击右上角 &quot;+&quot; 或群组图标添加聊天</p>
+        <p>{t('QQ.ChatList.empty', '点击右上角 "+" 或群组图标添加聊天')}</p>
       </div>
     );
   }
@@ -159,7 +174,7 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
             <div className="info">
               <div className="name-line">
                 <span className="name">{chat.name}</span>
-                {chat.isGroup && <span className="group-tag">群聊</span>}
+                {chat.isGroup && <span className="group-tag">{t('QQ.ChatList.groupTag', '群聊')}</span>}
               </div>
               <div className="last-msg">{chat.lastMessage}</div>
               {searchQuery?.trim() && searchHitMap?.[chat.id]?.content && (
@@ -170,7 +185,7 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
             </div>
             
             <div className="meta">
-              <div className="timestamp">{chat.timestamp}</div>
+              <div className="timestamp">{formatTimestamp(chat.timestamp, locale)}</div>
               {chat.unreadCount > 0 && (
                 <div className="unread-badge">
                   <span className="unread-count">
@@ -204,25 +219,25 @@ export default function ChatList({ chats, onChatClick, onDeleteChat, onEditChat,
               className="menu-item"
               onClick={(e) => handleEditClick(e, activeMenuId)}
             >
-              编辑
+              {t('QQ.ChatList.menu.edit', '编辑')}
             </button>
             <button 
               className="menu-item"
               onClick={(e) => handleAssociateWorldBookClick(e, activeMenuId)}
             >
-              关联世界书
+              {t('QQ.ChatList.menu.associateWorldBook', '关联世界书')}
             </button>
             <button 
               className="menu-item"
               onClick={(e) => handleResetChatClick(e, activeMenuId)}
             >
-              重置聊天
+              {t('QQ.ChatList.menu.resetChat', '重置聊天')}
             </button>
             <button 
               className="menu-item delete"
               onClick={(e) => handleDeleteClick(e, activeMenuId)}
             >
-              删除
+              {t('QQ.ChatList.menu.delete', '删除')}
             </button>
           </div>
         </div>

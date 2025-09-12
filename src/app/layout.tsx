@@ -6,6 +6,7 @@ import ViewportHandler from "./components/utils/ViewportHandler";
 import { AiPendingProvider } from "./components/async";
 import { NotificationProvider } from "./components/notice";
 import { AudioProvider, FloatingAudioButton, AudioPlayer } from "@audio";
+import { I18nProvider } from "./components/i18n/I18nProvider";
 import AudioEventsBridge from "./components/audio/AudioEventsBridge";
 import AudioHelpPortal from "./components/audio/AudioHelpPortal";
 
@@ -57,7 +58,9 @@ export default function RootLayout({
               <AiPendingProvider>
                 <ViewportHandler />
                 <AudioProvider>
-                  {children}
+                  <I18nProvider>
+                    {children}
+                  </I18nProvider>
                   <AudioEventsBridge />
                   <AudioHelpPortal />
                   <FloatingAudioButton />

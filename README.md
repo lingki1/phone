@@ -78,6 +78,10 @@ npm run build
 - [x] 实现剧情模式功能
 - [x] 添加AI输入提示功能
 - [x] 平台内置API配置与服务端代理（/api/admin/system-api-config, /api/system-api-config, /api/server-ai）
+- [x] i18n：引入 Provider 与本地消息文件（zh-CN / en）
+- [x] i18n：新增 `src/app/components/i18n/LocaleSwitcher.tsx`
+- [x] i18n：在首页 Desktop 添加语言切换按钮（右上角）
+- [x] i18n：首页关键文案改为可翻译（搜索占位、问候语、徽标）
 - [ ] 实现动态（QZone）页面
 - [ ] 添加设置页面功能
 - [ ] 集成真实的数据存储
