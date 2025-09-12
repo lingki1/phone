@@ -387,6 +387,7 @@
   background: transparent;
   aspect-ratio: 1;
   width: 100%;
+  max-width: 120px; /* 限制最大宽度，防止高分辨率下过大 */
   animation: fadeInUp 0.8s ease-out both;
 }
 
@@ -568,22 +569,7 @@
   }
 }
 
-/* 应用覆盖层 */
-.app-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.app-tile:hover .app-overlay {
-  opacity: 1;
-}
+/* 应用覆盖层已移除 */
 
 /* 应用方块内部光效 */
 .app-tile::after {
@@ -756,6 +742,7 @@
   .app-tile {
     aspect-ratio: 1;
     min-height: 72px;
+    max-width: 80px; /* 小屏设备限制更小 */
   }
   
   .icon-emoji {
@@ -864,6 +851,10 @@
     margin-top: 14px;
   }
   
+  .app-tile {
+    max-width: 100px; /* 平板设备适中大小 */
+  }
+  
   .current-time {
     font-size: 5rem;
     letter-spacing: 1px;
@@ -916,6 +907,10 @@
     gap: 16px;
     padding: 30px 50px 60px 50px;
     margin-top: 16px;
+  }
+  
+  .app-tile {
+    max-width: 120px; /* 桌面设备最大尺寸 */
   }
   
   .current-time {
@@ -1164,27 +1159,7 @@
   }
 }
 
-/* 点击时的覆盖层特效 */
-.app-tile.clicked .app-overlay {
-  animation: overlayFlash 0.3s ease-out forwards;
-}
-
-@keyframes overlayFlash {
-  0% {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-    opacity: 0;
-  }
-  
-  30% {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
-    opacity: 1;
-  }
-  
-  100% {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
-    opacity: 0;
-  }
-}
+/* 点击时的覆盖层特效已移除 */
 
 /* 点击时的通知徽章特效 */
 .app-tile.clicked .notification-badge {

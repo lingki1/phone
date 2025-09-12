@@ -702,7 +702,6 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
       {/* 状态栏 */}
       <div className="status-bar">
         <div className="status-left">
-          <span className="signal-icon">📶</span>
         </div>
         <div className="status-right">
           <div className="authuser-menu" ref={userMenuRef}>
@@ -824,7 +823,6 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
             {app.status === 'insufficient-balance' && (
               <div className="insufficient-balance-badge">余额不足</div>
             )}
-            <div className="app-overlay"></div>
           </div>
         ))}
       </div>
