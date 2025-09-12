@@ -38,8 +38,6 @@ interface CurrentUser {
 
 interface DesktopPageProps {
   onOpenApp: (appName: string) => Promise<void>;
-  userBalance: number;
-  isLoadingBalance: boolean;
   onLogout?: () => void;
   isAuthenticated?: boolean;
 }
@@ -55,24 +53,21 @@ interface AppTile {
   status?: 'coming-soon' | 'available' | 'insufficient-balance';
 }
 
-export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, onLogout, isAuthenticated: _isAuthenticated }: DesktopPageProps) {
+export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isAuthenticated }: DesktopPageProps) {
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
       case 'creativespace':
         return (
           <svg {...commonProps} aria-label="我的创意">
-            <path d="M9 18h6"/>
-            <path d="M10 22h4"/>
-            <path d="M2 11a10 10 0 1 1 20 0c0 3.5-2 5.5-4 7H6c-2-1.5-4-3.5-4-7z"/>
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
         );
       case 'qq': // chat
         return (
           <svg {...commonProps} aria-label="聊天">
-            <path d="M21 12a8.5 8.5 0 1 1-4.2-7.35"/>
-            <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.73-.33-3.9-.94L3 21l1.44-4.21A8.5 8.5 0 0 1 12.5 3.5" opacity=".9"/>
-            <path d="M8 11h8M8 14h5"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M8 9h8M8 13h6"/>
           </svg>
         );
       case 'blackmarket': // store
@@ -87,35 +82,32 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       case 'music':
         return (
           <svg {...commonProps} aria-label="音乐">
-            <path d="M15 4v10"/>
-            <path d="M15 4l5 1v9"/>
-            <circle cx="9" cy="15" r="3"/>
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
             <circle cx="18" cy="16" r="3"/>
           </svg>
         );
       case 'shopping':
         return (
           <svg {...commonProps} aria-label="购物">
-            <path d="M6 6h14l-1.5 9a2 2 0 0 1-2 1.7H9a2 2 0 0 1-2-1.7L6 6z"/>
-            <path d="M6 6l-.8-2H3"/>
-            <path d="M9 11h8"/>
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
           </svg>
         );
       case 'weibo': // hot/news
         return (
           <svg {...commonProps} aria-label="热点">
-            <path d="M4 12h16"/>
-            <path d="M4 8h12" opacity=".8"/>
-            <path d="M4 16h10" opacity=".8"/>
-            <circle cx="18" cy="8" r="2"/>
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <circle cx="18" cy="6" r="2" fill="currentColor"/>
           </svg>
         );
       case 'chatroom':
         return (
           <svg {...commonProps} aria-label="聊天室">
-            <path d="M4 6h12a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H11l-5 3v-3H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/>
-            <path d="M7.5 11h7"/>
-            <path d="M7.5 14h4.5"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M13 8H7M17 12H7"/>
+            <circle cx="18" cy="8" r="2" fill="currentColor"/>
           </svg>
         );
       default:
@@ -209,7 +201,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       alert('导入失败，请稍后重试');
     }
   };
-  const [appTiles, setAppTiles] = useState<AppTile[]>([
+  const [appTiles] = useState<AppTile[]>([
     {
       id: 'qq',
       name: 'QwQ',
@@ -246,8 +238,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       color: '#EF4444',
       gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
       size: 'medium',
-      status: userBalance >= 5 ? 'available' : 'insufficient-balance',
-      notifications: userBalance < 5 ? 1 : undefined
+      status: 'available'
     },
     {
       id: 'weibo',
@@ -282,19 +273,7 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
   // 时间点击重置定时器
   const timeClickResetTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // 更新购物应用状态当余额变化时
-  useEffect(() => {
-    setAppTiles(prev => prev.map(app => {
-      if (app.id === 'shopping') {
-        return {
-          ...app,
-          status: userBalance >= 5 ? 'available' : 'insufficient-balance',
-          notifications: userBalance < 5 ? 1 : undefined
-        };
-      }
-      return app;
-    }));
-  }, [userBalance]);
+  // 移除购物应用状态更新逻辑，改为点击时动态检查
 
   // 初始化公告数据
   useEffect(() => {
@@ -528,10 +507,20 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       return;
     }
 
-    if (app.status === 'insufficient-balance') {
-      // 显示余额不足提示
-      alert(`余额不足！当前余额：¥${userBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
-      return;
+    // 处理购物应用：动态检查余额
+    if (app.id === 'shopping') {
+      try {
+        await dataManager.initDB();
+        const currentBalance = await dataManager.getBalance();
+        if (currentBalance < 5) {
+          alert(`余额不足！当前余额：¥${currentBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
+          return;
+        }
+      } catch (error) {
+        console.error('检查余额失败:', error);
+        alert('检查余额失败，请稍后重试');
+        return;
+      }
     }
 
     // 处理聊天室应用
@@ -714,11 +703,6 @@ export default function DesktopPage({ onOpenApp, userBalance, isLoadingBalance, 
       <div className="status-bar">
         <div className="status-left">
           <span className="signal-icon">📶</span>
-          {!isLoadingBalance && (
-            <span className="balance-display" title={`当前余额：¥${userBalance.toFixed(2)}`}>
-              💰 ¥{userBalance.toFixed(2)}
-            </span>
-          )}
         </div>
         <div className="status-right">
           <div className="authuser-menu" ref={userMenuRef}>

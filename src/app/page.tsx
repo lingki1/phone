@@ -19,8 +19,6 @@ export default function Home() {
     apiKey: '',
     model: ''
   });
-  const [userBalance, setUserBalance] = useState<number>(0);
-  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // 公告列表状态移至 DesktopPage 内部
 
@@ -34,18 +32,11 @@ export default function Home() {
       try {
         await dataManager.initDB();
         
-        // 并行加载API配置和用户余额
-        const [config, balance] = await Promise.all([
-          dataManager.getApiConfig(),
-          dataManager.getBalance()
-        ]);
-        
+        // 加载API配置
+        const config = await dataManager.getApiConfig();
         setApiConfig(config);
-        setUserBalance(balance);
       } catch (error) {
         console.error('Failed to load data:', error);
-      } finally {
-        setIsLoadingBalance(false);
       }
     };
     
@@ -97,25 +88,11 @@ export default function Home() {
       .finally(() => clearTimeout(timeoutId));
   }, []);
 
-  // 刷新余额
-  const refreshBalance = async () => {
-    try {
-      const balance = await dataManager.getBalance();
-      setUserBalance(balance);
-    } catch (error) {
-      console.error('Failed to refresh balance:', error);
-    }
-  };
 
   const handleOpenApp = async (appName: string) => {
     if (appName === 'qq') {
       setCurrentPage('chat');
     } else if (appName === 'shopping') {
-      // 检查余额是否足够
-      if (userBalance < 5) {
-        alert(`余额不足！当前余额：¥${userBalance.toFixed(2)}，需要至少 ¥5.00 才能进入购物页面。\n\n您可以通过与AI角色聊天来获得虚拟货币。`);
-        return;
-      }
       setCurrentPage('shopping');
     } else if (appName === 'discover') {
       setCurrentPage('discover');
@@ -170,8 +147,6 @@ export default function Home() {
 
   const handleBackToDesktop = () => {
     setCurrentPage('desktop');
-    // 返回桌面时刷新余额
-    refreshBalance();
   };
 
 
@@ -181,9 +156,7 @@ export default function Home() {
   // 处理退出登录
   const handleLogout = () => {
     setIsAuthenticated(false);
-    // 重置所有状态
-    setUserBalance(0);
-    setIsLoadingBalance(true);
+    // 重置API配置
     setApiConfig({
       proxyUrl: '',
       apiKey: '',
@@ -194,7 +167,7 @@ export default function Home() {
   const pages = [
     {
       id: 'desktop',
-      component: <DesktopPage onOpenApp={handleOpenApp} userBalance={userBalance} isLoadingBalance={isLoadingBalance} onLogout={handleLogout} isAuthenticated={isAuthenticated} />,
+      component: <DesktopPage onOpenApp={handleOpenApp} onLogout={handleLogout} isAuthenticated={isAuthenticated} />,
       direction: 'fade' as const,
       duration: 400
     },
