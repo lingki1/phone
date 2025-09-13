@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SendRedPacketProps } from '../../../types/money';
+import { useI18n } from '../../i18n/I18nProvider';
 import './SendRedPacket.css';
 
 export default function SendRedPacket({
@@ -11,6 +12,7 @@ export default function SendRedPacket({
   currentBalance,
   recipientName
 }: SendRedPacketProps) {
+  const { t } = useI18n();
   const [amount, setAmount] = useState<string>('');
   const [message, setMessage] = useState<string>('恭喜发财，大吉大利！');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,22 +33,22 @@ export default function SendRedPacket({
     const numAmount = parseFloat(amount);
     
     if (!amount || isNaN(numAmount)) {
-      setError('请输入有效金额');
+      setError(t('QQ.ChatInterface.Money.SendRedPacket.errors.invalidAmount', '请输入有效金额'));
       return false;
     }
     
     if (numAmount <= 0) {
-      setError('金额必须大于0');
+      setError(t('QQ.ChatInterface.Money.SendRedPacket.errors.amountTooSmall', '金额必须大于0'));
       return false;
     }
     
     if (numAmount > currentBalance) {
-      setError('余额不足');
+      setError(t('QQ.ChatInterface.Money.SendRedPacket.errors.insufficientBalance', '余额不足'));
       return false;
     }
     
     if (numAmount > 10000) {
-      setError('单次红包金额不能超过10000元');
+      setError(t('QQ.ChatInterface.Money.SendRedPacket.errors.amountTooLarge', '单次红包金额不能超过10000元'));
       return false;
     }
     
@@ -69,7 +71,7 @@ export default function SendRedPacket({
       onClose();
     } catch (error) {
       // 即使发生错误，也允许用户关闭界面
-      setError('发送失败，请重试');
+      setError(t('QQ.ChatInterface.Money.SendRedPacket.errors.sendFailed', '发送失败，请重试'));
       console.error('Send red packet error:', error);
       // 发送失败时仍然关闭界面（根据需求8.4）
       onClose();
@@ -101,9 +103,9 @@ export default function SendRedPacket({
           >
             ×
           </button>
-          <h3>发红包</h3>
+          <h3>{t('QQ.ChatInterface.Money.SendRedPacket.title', '发红包')}</h3>
           <div className="recipient-info">
-            <span>发给: {recipientName}</span>
+            <span>{t('QQ.ChatInterface.Money.SendRedPacket.recipient', '发给: {{name}}').replace('{{name}}', recipientName)}</span>
           </div>
         </div>
 
@@ -111,7 +113,7 @@ export default function SendRedPacket({
         <div className="red-packet-preview">
           <div className="red-packet-bg">
             <div className="red-packet-icon">🧧</div>
-            <div className="red-packet-title">恭喜发财</div>
+            <div className="red-packet-title">{t('QQ.ChatInterface.Money.SendRedPacket.preview.title', '恭喜发财')}</div>
             <div className="red-packet-amount">
               {amount ? `¥${amount}` : '¥0.00'}
             </div>
@@ -121,7 +123,7 @@ export default function SendRedPacket({
         {/* 金额输入区域 */}
         <div className="amount-input-section">
           <div className="balance-info">
-            <span>当前余额: ¥{currentBalance.toFixed(2)}</span>
+            <span>{t('QQ.ChatInterface.Money.SendRedPacket.balance', '当前余额: ¥{{amount}}').replace('{{amount}}', currentBalance.toFixed(2))}</span>
           </div>
           
           <div className="amount-input-container">
@@ -141,12 +143,12 @@ export default function SendRedPacket({
 
         {/* 祝福语输入 */}
         <div className="message-input-section">
-          <label>祝福语</label>
+          <label>{t('QQ.ChatInterface.Money.SendRedPacket.blessing.label', '祝福语')}</label>
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="恭喜发财，大吉大利！"
+            placeholder={t('QQ.ChatInterface.Money.SendRedPacket.blessing.placeholder', '恭喜发财，大吉大利！')}
             className="message-input"
             maxLength={50}
             disabled={isLoading}
@@ -161,7 +163,7 @@ export default function SendRedPacket({
             onClick={handleSend}
             disabled={isLoading || !amount || parseFloat(amount) <= 0}
           >
-            {isLoading ? '发送中...' : '塞钱进红包'}
+            {isLoading ? t('QQ.ChatInterface.Money.SendRedPacket.buttons.sending', '发送中...') : t('QQ.ChatInterface.Money.SendRedPacket.buttons.send', '塞钱进红包')}
           </button>
         </div>
       </div>

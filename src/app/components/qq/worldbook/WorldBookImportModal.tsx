@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { WorldBook } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import './WorldBookImportModal.css';
 
 interface WorldBookImportModalProps {
@@ -30,7 +31,7 @@ const convertSillytavernToWorldBooks = (presetData: PresetData): WorldBook[] => 
   const worldBooks: WorldBook[] = [];
   
   if (!presetData.prompts || !Array.isArray(presetData.prompts)) {
-    throw new Error('无效的预设格式：缺少prompts数组');
+        throw new Error('无效的预设格式：缺少prompts数组');
   }
 
   const roleToCategory = (role: string): string => {
@@ -95,6 +96,7 @@ const detectPresetFormat = (data: unknown): 'sillytavern' | 'unknown' => {
 };
 
 export default function WorldBookImportModal({ isOpen, onClose, onImport }: WorldBookImportModalProps) {
+  const { t } = useI18n();
   const [jsonInput, setJsonInput] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
@@ -114,17 +116,17 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
         // 转换Sillytavern预设
         const worldBooks = convertSillytavernToWorldBooks(parsed as PresetData);
         if (worldBooks.length === 0) {
-          throw new Error('预设中没有找到有效的世界书数据');
+          throw new Error(t('QQ.ChatInterface.WorldBookImportModal.errors.noValidData', '预设中没有找到有效的世界书数据'));
         }
         return worldBooks;
       } else {
-        throw new Error('不支持的预设格式，请使用Sillytavern预设格式');
+        throw new Error(t('QQ.ChatInterface.WorldBookImportModal.errors.unsupportedFormat', '不支持的预设格式，请使用Sillytavern预设格式'));
       }
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(`JSON解析错误: ${error.message}`);
+        throw new Error(t('QQ.ChatInterface.WorldBookImportModal.errors.jsonParse', 'JSON解析错误: {{message}}').replace('{{message}}', error.message));
       }
-      throw new Error('JSON格式错误');
+      throw new Error(t('QQ.ChatInterface.WorldBookImportModal.errors.jsonFormat', 'JSON格式错误'));
     }
   };
 
@@ -142,7 +144,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
       setShowPreview(false);
     };
     reader.onerror = () => {
-      setValidationError('文件读取失败');
+      setValidationError(t('QQ.ChatInterface.WorldBookImportModal.errors.fileReadFailed', '文件读取失败'));
     };
     reader.readAsText(file);
   };
@@ -150,7 +152,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
   // 预览转换结果
   const handlePreview = () => {
     if (!jsonInput.trim()) {
-      setValidationError('请输入JSON数据');
+      setValidationError(t('QQ.ChatInterface.WorldBookImportModal.errors.noJsonData', '请输入JSON数据'));
       return;
     }
 
@@ -166,7 +168,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
       if (error instanceof Error) {
         setValidationError(error.message);
       } else {
-        setValidationError('预览失败，请检查数据格式');
+        setValidationError(t('QQ.ChatInterface.WorldBookImportModal.errors.previewFailed', '预览失败，请检查数据格式'));
       }
     }
   };
@@ -174,7 +176,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
   // 处理导入
   const handleImport = async () => {
     if (!jsonInput.trim()) {
-      setValidationError('请输入JSON数据');
+      setValidationError(t('QQ.ChatInterface.WorldBookImportModal.errors.noJsonData', '请输入JSON数据'));
       return;
     }
 
@@ -194,7 +196,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
       if (error instanceof Error) {
         setValidationError(error.message);
       } else {
-        setValidationError('导入失败，请检查数据格式');
+        setValidationError(t('QQ.ChatInterface.WorldBookImportModal.errors.importFailed', '导入失败，请检查数据格式'));
       }
     } finally {
       setIsImporting(false);
@@ -253,13 +255,13 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
       <div className="world-book-import-modal" onClick={e => e.stopPropagation()}>
         {/* 模态框头部 */}
         <div className="wb-import-modal-header">
-          <h2>导入预设</h2>
+          <h2>{t('QQ.ChatInterface.WorldBookImportModal.title', '导入预设')}</h2>
           <button className="wb-close-btn" onClick={onClose}>×</button>
         </div>
 
         {/* 说明文字 */}
         <div className="import-description">
-          <p>导入预设文件（如Sillytavern预设），自动转换为世界书格式</p>
+          <p>{t('QQ.ChatInterface.WorldBookImportModal.description', '导入预设文件（如Sillytavern预设），自动转换为世界书格式')}</p>
         </div>
 
         {/* 文件上传 */}
@@ -275,30 +277,30 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
             className="wb-upload-btn"
             onClick={() => fileInputRef.current?.click()}
           >
-            📁 选择预设文件
+            📁 {t('QQ.ChatInterface.WorldBookImportModal.buttons.selectFile', '选择预设文件')}
           </button>
         </div>
 
         {/* JSON输入区域 */}
         <div className="json-input-section">
           <div className="wb-input-header">
-            <label htmlFor="json-input">预设JSON数据</label>
+            <label htmlFor="json-input">{t('QQ.ChatInterface.WorldBookImportModal.labels.jsonData', '预设JSON数据')}</label>
             <div className="wb-input-actions">
               <button className="wb-action-btn" onClick={generateExample}>
-                📝 生成示例
+                📝 {t('QQ.ChatInterface.WorldBookImportModal.buttons.generateExample', '生成示例')}
               </button>
               <button className="wb-action-btn" onClick={clearInput}>
-                🗑️ 清空
+                🗑️ {t('QQ.ChatInterface.WorldBookImportModal.buttons.clear', '清空')}
               </button>
               <button className="wb-action-btn" onClick={handlePreview}>
-                👁️ 预览转换
+                👁️ {t('QQ.ChatInterface.WorldBookImportModal.buttons.preview', '预览转换')}
               </button>
             </div>
           </div>
           <textarea
             id="json-input"
             className="json-input"
-            placeholder="请输入预设文件的JSON数据..."
+            placeholder={t('QQ.ChatInterface.WorldBookImportModal.placeholders.jsonInput', '请输入预设文件的JSON数据...')}
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
             rows={12}
@@ -308,7 +310,7 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
         {/* 转换预览 */}
         {showPreview && convertedWorldBooks.length > 0 && (
           <div className="preview-section">
-            <h3>转换预览 ({convertedWorldBooks.length} 个世界书)</h3>
+            <h3>{t('QQ.ChatInterface.WorldBookImportModal.preview.title', '转换预览 ({{count}} 个世界书)').replace('{{count}}', String(convertedWorldBooks.length))}</h3>
             <div className="preview-list">
               {convertedWorldBooks.map((worldBook, index) => (
                 <div key={index} className="preview-item">
@@ -338,14 +340,14 @@ export default function WorldBookImportModal({ isOpen, onClose, onImport }: Worl
         {/* 操作按钮 */}
         <div className="wb-import-modal-footer">
           <button className="wb-cancel-btn" onClick={onClose}>
-            取消
+            {t('QQ.ChatInterface.WorldBookImportModal.buttons.cancel', '取消')}
           </button>
           <button 
             className={`wb-import-btn ${isImporting ? 'importing' : ''}`}
             onClick={handleImport}
             disabled={isImporting || !jsonInput.trim()}
           >
-            {isImporting ? '导入中...' : '开始导入'}
+            {isImporting ? t('QQ.ChatInterface.WorldBookImportModal.buttons.importing', '导入中...') : t('QQ.ChatInterface.WorldBookImportModal.buttons.startImport', '开始导入')}
           </button>
         </div>
       </div>

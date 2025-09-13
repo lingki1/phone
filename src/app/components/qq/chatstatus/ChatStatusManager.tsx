@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { dataManager } from '../../../utils/dataManager';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export interface ChatStatus {
   isOnline: boolean;
@@ -17,11 +18,12 @@ export interface ChatStatusManagerProps {
 }
 
 export default function ChatStatusManager({ chatId, onStatusUpdate }: ChatStatusManagerProps) {
+  const { t } = useI18n();
   const [, setStatus] = useState<ChatStatus>({
     isOnline: true,
-    mood: '心情愉快',
-    location: '在家中',
-    outfit: '穿着休闲装',
+    mood: t('QQ.ChatInterface.status.defaultMood', '心情愉快'),
+    location: t('QQ.ChatInterface.status.defaultLocation', '在家中'),
+    outfit: t('QQ.ChatInterface.status.defaultOutfit', '穿着休闲装'),
     lastUpdate: Date.now()
   });
 

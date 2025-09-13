@@ -7,6 +7,7 @@ import { DiscoverPost, DiscoverSettings, DiscoverComment } from '../../types/dis
 import { ChatItem } from '../../types/chat';
 import { aiCommentService } from './utils/aiCommentService';
 import { autoGenerationService } from './utils/autoGenerationService';
+import { useI18n } from '../i18n/I18nProvider';
 import BottomNavigation from '../qq/BottomNavigation';
 
 import PostComposer from './PostComposer';
@@ -16,6 +17,7 @@ import DiscoverSettingsPanel from './DiscoverSettingsPanel';
 import './DiscoverPage.css';
 
 export default function DiscoverPage() {
+  const { t } = useI18n();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
   const [visiblePosts, setVisiblePosts] = useState<DiscoverPost[]>([]);
   const [settings, setSettings] = useState<DiscoverSettings | null>(null);
@@ -82,7 +84,7 @@ export default function DiscoverPage() {
       window.removeEventListener('aiCommentsGenerated', handleNewContentUpdate);
       window.removeEventListener('viewStateUpdated', handleNewContentUpdate);
     };
-  }, []);
+  }, [t]);
 
   // 加载数据
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function DiscoverPage() {
         
         // 设置超时机制，确保不会永远卡在加载状态
         const loadingTimeout = setTimeout(() => {
-          console.warn('⚠️ 数据加载超时，强制完成加载');
+          console.warn('⚠️ ' + t('QQ.ChatInterface.Discover.DiscoverPage.warnings.dataLoadTimeout', '数据加载超时，强制完成加载'));
           setIsLoading(false);
         }, 10000); // 10秒超时
         
@@ -133,9 +135,9 @@ export default function DiscoverPage() {
         if (settingsData) {
           // 异步启动，不等待完成
           autoGenerationService.start(settingsData).then(() => {
-            console.log('🚀 自动生成服务已启动');
+            console.log('🚀 ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.autoGenerationStarted', '自动生成服务已启动'));
           }).catch((error) => {
-            console.warn('⚠️ 自动生成服务启动失败:', error);
+            console.warn('⚠️ ' + t('QQ.ChatInterface.Discover.DiscoverPage.warnings.autoGenerationFailed', '自动生成服务启动失败:'), error);
           });
         }
 
@@ -155,7 +157,7 @@ export default function DiscoverPage() {
     };
 
     loadData();
-  }, []);
+  }, [t]);
 
   // 监听AI评论生成完成事件
   useEffect(() => {
@@ -177,7 +179,7 @@ export default function DiscoverPage() {
         // 触发新内容计数更新
         window.dispatchEvent(new CustomEvent('viewStateUpdated'));
         
-        console.log(`动态 ${postId} 的AI评论已更新，共 ${updatedComments.length} 条评论`);
+        console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.aiCommentsUpdated', '动态 {{postId}} 的AI评论已更新，共 {{count}} 条评论').replace('{{postId}}', postId).replace('{{count}}', updatedComments.length.toString()));
       } catch (error) {
         console.error('Failed to update AI comments:', error);
       }
@@ -208,7 +210,7 @@ export default function DiscoverPage() {
           // 触发新内容计数更新
           window.dispatchEvent(new CustomEvent('viewStateUpdated'));
           
-          console.log('✅ AI动态生成完成，已更新动态列表');
+          console.log('✅ ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.aiPostsGenerated', 'AI动态生成完成，已更新动态列表'));
         } catch (error) {
           console.error('Failed to update AI posts:', error);
         }
@@ -221,7 +223,7 @@ export default function DiscoverPage() {
       window.removeEventListener('aiCommentsGenerated', handleAiCommentsGenerated);
       window.removeEventListener('aiPostGenerated', handleAiPostGenerated);
     };
-  }, []);
+  }, [t]);
 
   // 用户进入动态页面时更新查看状态
   useEffect(() => {
@@ -234,7 +236,7 @@ export default function DiscoverPage() {
           // 触发查看状态更新事件
           window.dispatchEvent(new CustomEvent('viewStateUpdated'));
           
-          console.log('✅ 已更新用户查看状态，时间戳:', latestPost.timestamp);
+          console.log('✅ ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.viewStateUpdated', '已更新用户查看状态，时间戳:'), latestPost.timestamp);
         } catch (error) {
           console.warn('Failed to update view state:', error);
         }
@@ -244,7 +246,7 @@ export default function DiscoverPage() {
     // 延迟执行，确保页面完全加载
     const timer = setTimeout(updateViewState, 1000);
     return () => clearTimeout(timer);
-  }, [posts]);
+  }, [posts, t]);
 
   // 发布新动态
   const handlePublishPost = async (postData: {
@@ -404,7 +406,7 @@ export default function DiscoverPage() {
   const handleDeletePost = async (postId: string) => {
     try {
       // 确认删除
-      if (!confirm('确定要删除这条动态吗？删除后无法恢复。')) {
+      if (!confirm(t('QQ.ChatInterface.Discover.DiscoverPage.confirm.deletePost', '确定要删除这条动态吗？删除后无法恢复。'))) {
         return;
       }
 
@@ -418,7 +420,7 @@ export default function DiscoverPage() {
           try {
             await dataManager.deleteDiscoverComment(comment.id);
           } catch (error) {
-            console.warn('删除评论失败:', comment.id, error);
+            console.warn(t('QQ.ChatInterface.Discover.DiscoverPage.warnings.deleteCommentFailed', '删除评论失败:'), comment.id, error);
           }
         }
       }
@@ -447,10 +449,10 @@ export default function DiscoverPage() {
       // 触发新内容计数更新
       window.dispatchEvent(new CustomEvent('viewStateUpdated'));
       
-      console.log('✅ 动态删除成功:', postId);
+      console.log('✅ ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.postDeleted', '动态删除成功:'), postId);
     } catch (error) {
       console.error('Failed to delete post:', error);
-      alert('删除动态失败，请重试');
+      alert(t('QQ.ChatInterface.Discover.DiscoverPage.errors.deleteFailed', '删除动态失败，请重试'));
     }
   };
 
@@ -494,7 +496,7 @@ export default function DiscoverPage() {
       window.dispatchEvent(new CustomEvent('viewStateUpdated'));
 
       // 显示AI评论生成提示
-      console.log('💬 用户评论已发布，AI角色正在思考回复...');
+      console.log('💬 ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.userCommentPublished', '用户评论已发布，AI角色正在思考回复...'));
 
       // 触发AI评论生成（无论是否@角色都会生成）
       await triggerAiCommentForPost(postId);
@@ -503,7 +505,7 @@ export default function DiscoverPage() {
       setTimeout(async () => {
         const currentPost = posts.find(p => p.id === postId);
         if (currentPost && currentPost.comments.filter(c => c.aiGenerated).length === 0) {
-          console.log('🔄 用户评论后2秒内没有AI评论，重新触发生成');
+          console.log('🔄 ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.retryAiComment', '用户评论后2秒内没有AI评论，重新触发生成'));
           await triggerAiCommentForPost(postId);
         }
       }, 2000);
@@ -517,18 +519,18 @@ export default function DiscoverPage() {
     try {
       // 检查设置是否允许AI评论
       if (!settings?.allowAiComments) {
-        console.log('AI评论功能已禁用');
+        console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.aiCommentsDisabled', 'AI评论功能已禁用'));
         return;
       }
 
       // 获取当前动态
       const currentPost = posts.find(p => p.id === postId);
       if (!currentPost) {
-        console.error('未找到动态:', postId);
+        console.error(t('QQ.ChatInterface.Discover.DiscoverPage.errors.postNotFound', '未找到动态:'), postId);
         return;
       }
 
-      console.log('💬 用户评论后触发AI评论生成，动态ID:', postId);
+      console.log('💬 ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.triggerAiComment', '用户评论后触发AI评论生成，动态ID:'), postId);
 
       // 延迟2秒后生成AI评论，给用户更好的体验
       setTimeout(async () => {
@@ -537,40 +539,40 @@ export default function DiscoverPage() {
           const result = await aiCommentService.generateCommentsForPost(currentPost);
           
           if (result.success) {
-            console.log('✅ AI评论生成成功，共生成', result.comments.length, '条评论');
+            console.log('✅ ' + t('QQ.ChatInterface.Discover.DiscoverPage.logs.aiCommentsGenerated', 'AI评论生成成功，共生成 {{count}} 条评论').replace('{{count}}', result.comments.length.toString()));
             
             // 触发评论更新事件，让UI自动刷新
             window.dispatchEvent(new CustomEvent('aiCommentsGenerated', {
               detail: { postId: postId }
             }));
           } else {
-            console.warn('⚠️ AI评论生成失败:', result.error);
+            console.warn('⚠️ ' + t('QQ.ChatInterface.Discover.DiscoverPage.warnings.aiCommentFailed', 'AI评论生成失败:'), result.error);
           }
         } catch (error) {
-          console.error('❌ 延迟AI评论生成失败:', error);
+          console.error('❌ ' + t('QQ.ChatInterface.Discover.DiscoverPage.errors.delayedAiCommentFailed', '延迟AI评论生成失败:'), error);
         }
       }, 2000);
 
     } catch (error) {
-      console.error('❌ 触发AI评论生成失败:', error);
+      console.error('❌ ' + t('QQ.ChatInterface.Discover.DiscoverPage.errors.triggerAiCommentFailed', '触发AI评论生成失败:'), error);
     }
   };
 
   // 处理底部导航切换
   const handleViewChange = (view: string) => {
-    console.log('DiscoverPage - 底部导航点击:', view);
+    console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.bottomNavClick', 'DiscoverPage - 底部导航点击:'), view);
     
     if (view === 'messages') {
       // 跳转到消息页面
-      console.log('DiscoverPage - 触发navigateToChat事件');
+      console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.navigateToChat', 'DiscoverPage - 触发navigateToChat事件'));
       window.dispatchEvent(new CustomEvent('navigateToChat'));
     } else if (view === 'me') {
       // 跳转到个人页面
-      console.log('DiscoverPage - 触发navigateToMe事件');
+      console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.navigateToMe', 'DiscoverPage - 触发navigateToMe事件'));
       window.dispatchEvent(new CustomEvent('navigateToMe'));
     } else if (view === 'recollection') {
       // 跳转到回忆页面
-      console.log('DiscoverPage - 触发navigateToRecollection事件');
+      console.log(t('QQ.ChatInterface.Discover.DiscoverPage.logs.navigateToRecollection', 'DiscoverPage - 触发navigateToRecollection事件'));
       window.dispatchEvent(new CustomEvent('navigateToRecollection'));
     }
     // 'moments' 已经在当前页面，不需要处理
@@ -616,7 +618,7 @@ export default function DiscoverPage() {
       <div className="discover-page discover-loading">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>加载中...</p>
+          <p>{t('QQ.ChatInterface.Discover.DiscoverPage.loading', '加载中...')}</p>
         </div>
       </div>
     );
@@ -641,10 +643,10 @@ export default function DiscoverPage() {
         {/* 触底加载锚点 */}
         <div ref={sentinelRef} style={{ height: 1 }} />
         {isLoadingMore && (
-          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>加载中...</div>
+          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>{t('QQ.ChatInterface.Discover.DiscoverPage.loading', '加载中...')}</div>
         )}
         {!hasMore && visiblePosts.length > 0 && (
-          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>没有更多了</div>
+          <div style={{ padding: '8px 0', textAlign: 'center', color: '#888' }}>{t('QQ.ChatInterface.Discover.DiscoverPage.noMore', '没有更多了')}</div>
         )}
       </div>
 

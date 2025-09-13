@@ -1,6 +1,7 @@
 'use client';
 
 import { WorldBook } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import './WorldBookCard.css';
 
 interface WorldBookCardProps {
@@ -20,12 +21,13 @@ export default function WorldBookCard({
   isSelected = false, 
   onToggleSelection 
 }: WorldBookCardProps) {
+  const { t, locale } = useI18n();
   const handleEdit = () => {
     onEdit(worldBook);
   };
 
   const handleDelete = () => {
-    if (window.confirm(`确定要删除世界书"${worldBook.name}"吗？`)) {
+    if (window.confirm(t('QQ.ChatInterface.WorldBookCard.confirm.delete', '确定要删除世界书"{{name}}"吗？').replace('{{name}}', worldBook.name))) {
       onDelete(worldBook.id);
     }
   };
@@ -44,7 +46,7 @@ export default function WorldBookCard({
   // 格式化创建时间
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(locale || 'zh-CN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -72,7 +74,7 @@ export default function WorldBookCard({
               <button 
                 className="action-btn edit-btn"
                 onClick={handleEdit}
-                title="编辑"
+                title={t('QQ.ChatInterface.WorldBookCard.actions.edit', '编辑')}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -82,7 +84,7 @@ export default function WorldBookCard({
               <button 
                 className="action-btn delete-btn"
                 onClick={handleDelete}
-                title="删除"
+                title={t('QQ.ChatInterface.WorldBookCard.actions.delete', '删除')}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="m3 6 3 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -108,8 +110,8 @@ export default function WorldBookCard({
       <p className="world-book-preview">{contentPreview}</p>
       
       <div className="world-book-meta">
-        <span className="world-book-date">创建于 {formatDate(worldBook.createdAt)}</span>
-        <span className="world-book-length">{worldBook.content.length} 字符</span>
+        <span className="world-book-date">{t('QQ.ChatInterface.WorldBookCard.meta.createdAt', '创建于 {{date}}').replace('{{date}}', formatDate(worldBook.createdAt))}</span>
+        <span className="world-book-length">{t('QQ.ChatInterface.WorldBookCard.meta.charCount', '{{count}} 字符').replace('{{count}}', String(worldBook.content.length))}</span>
       </div>
     </div>
   );

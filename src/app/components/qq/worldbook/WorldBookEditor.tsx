@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { WorldBook } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import './WorldBookEditor.css';
 
 interface WorldBookEditorProps {
@@ -11,6 +12,7 @@ interface WorldBookEditorProps {
 }
 
 export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBookEditorProps) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [content, setContent] = useState('');
   const [description, setDescription] = useState('');
@@ -39,21 +41,21 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
     const newErrors: { name?: string; content?: string; category?: string } = {};
 
     if (!name.trim()) {
-      newErrors.name = '世界书名称不能为空';
+      newErrors.name = t('QQ.ChatInterface.WorldBookEditor.errors.nameRequired', '世界书名称不能为空');
     } else if (name.trim().length > 50) {
-      newErrors.name = '世界书名称不能超过50个字符';
+      newErrors.name = t('QQ.ChatInterface.WorldBookEditor.errors.nameTooLong', '世界书名称不能超过50个字符');
     }
 
     if (!category.trim()) {
-      newErrors.category = '世界书分类不能为空';
+      newErrors.category = t('QQ.ChatInterface.WorldBookEditor.errors.categoryRequired', '世界书分类不能为空');
     } else if (category.trim().length > 20) {
-      newErrors.category = '世界书分类不能超过20个字符';
+      newErrors.category = t('QQ.ChatInterface.WorldBookEditor.errors.categoryTooLong', '世界书分类不能超过20个字符');
     }
 
     if (!content.trim()) {
-      newErrors.content = '世界书内容不能为空';
+      newErrors.content = t('QQ.ChatInterface.WorldBookEditor.errors.contentRequired', '世界书内容不能为空');
     } else if (content.trim().length > 10000) {
-      newErrors.content = '世界书内容不能超过10000个字符';
+      newErrors.content = t('QQ.ChatInterface.WorldBookEditor.errors.contentTooLong', '世界书内容不能超过10000个字符');
     }
 
     setErrors(newErrors);
@@ -80,7 +82,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
       await onSave(savedWorldBook);
     } catch (error) {
       console.error('Failed to save world book:', error);
-      alert('保存失败，请重试');
+      alert(t('QQ.ChatInterface.WorldBookEditor.errors.saveFailed', '保存失败，请重试'));
     } finally {
       setIsSaving(false);
     }
@@ -89,7 +91,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
   // 取消编辑
   const handleCancel = () => {
     if (name || content || description || category) {
-      if (window.confirm('确定要取消编辑吗？未保存的内容将丢失。')) {
+      if (window.confirm(t('QQ.ChatInterface.WorldBookEditor.confirm.cancel', '确定要取消编辑吗？未保存的内容将丢失。'))) {
         onCancel();
       }
     } else {
@@ -98,7 +100,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
   };
 
   const isEditing = !!worldBook;
-  const title = isEditing ? '编辑世界书' : '创建世界书';
+  const title = isEditing ? t('QQ.ChatInterface.WorldBookEditor.title.edit', '编辑世界书') : t('QQ.ChatInterface.WorldBookEditor.title.create', '创建世界书');
 
   return (
     <div className="world-book-editor">
@@ -113,20 +115,20 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
                       className="wb-cancel-btn"
           onClick={handleCancel}
         >
-          取消
+          {t('QQ.ChatInterface.WorldBookEditor.buttons.cancel', '取消')}
         </button>
       </div>
 
       <div className="editor-content">
         <div className="form-group">
           <label htmlFor="worldbook-name" className="form-label">
-            世界书名称 <span className="required">*</span>
+            {t('QQ.ChatInterface.WorldBookEditor.fields.name', '世界书名称')} <span className="required">*</span>
           </label>
           <input
             id="worldbook-name"
             type="text"
             className={`world-book-name-input ${errors.name ? 'error' : ''}`}
-            placeholder="请输入世界书名称"
+            placeholder={t('QQ.ChatInterface.WorldBookEditor.placeholders.name', '请输入世界书名称')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={50}
@@ -137,13 +139,13 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
 
         <div className="form-group">
           <label htmlFor="worldbook-description" className="form-label">
-            简短描述
+            {t('QQ.ChatInterface.WorldBookEditor.fields.description', '简短描述')}
           </label>
           <input
             id="worldbook-description"
             type="text"
             className="world-book-description-input"
-            placeholder="简短描述这个世界书的用途（可选）"
+            placeholder={t('QQ.ChatInterface.WorldBookEditor.placeholders.description', '简短描述这个世界书的用途（可选）')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={100}
@@ -153,13 +155,13 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
 
         <div className="form-group">
           <label htmlFor="worldbook-category" className="form-label">
-            分类 <span className="required">*</span>
+            {t('QQ.ChatInterface.WorldBookEditor.fields.category', '分类')} <span className="required">*</span>
           </label>
           <input
             id="worldbook-category"
             type="text"
             className={`world-book-category-input ${errors.category ? 'error' : ''}`}
-            placeholder="请输入世界书分类，如：科幻、奇幻、现代等"
+            placeholder={t('QQ.ChatInterface.WorldBookEditor.placeholders.category', '请输入世界书分类，如：科幻、奇幻、现代等')}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             maxLength={20}
@@ -170,12 +172,12 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
 
         <div className="form-group content-group">
           <label htmlFor="worldbook-content" className="form-label">
-            世界书内容 <span className="required">*</span>
+            {t('QQ.ChatInterface.WorldBookEditor.fields.content', '世界书内容')} <span className="required">*</span>
           </label>
           <textarea
             id="worldbook-content"
             className={`world-book-content-textarea ${errors.content ? 'error' : ''}`}
-            placeholder="请输入世界书内容，这些内容将作为AI聊天的背景设定..."
+            placeholder={t('QQ.ChatInterface.WorldBookEditor.placeholders.content', '请输入世界书内容，这些内容将作为AI聊天的背景设定...')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             maxLength={20000}
@@ -191,7 +193,7 @@ export default function WorldBookEditor({ worldBook, onSave, onCancel }: WorldBo
           onClick={handleSave}
           disabled={isSaving}
         >
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? t('QQ.ChatInterface.WorldBookEditor.buttons.saving', '保存中...') : t('QQ.ChatInterface.WorldBookEditor.buttons.save', '保存')}
         </button>
       </div>
     </div>

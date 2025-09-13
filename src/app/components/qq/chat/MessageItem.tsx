@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import Image from 'next/image';
 import { Message, ChatItem } from '../../../types/chat';
 import { MessageActionButtons } from '../messageactions';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface PersonalSettings {
   userAvatar: string;
@@ -50,6 +51,7 @@ const MessageItem = memo(({
   formatTime,
   setEditingMessage
 }: MessageItemProps) => {
+  const { t } = useI18n();
   const [showActions, setShowActions] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
 
@@ -191,7 +193,7 @@ const MessageItem = memo(({
                 }} 
                 className="edit-save-btn"
               >
-                ✅ 保存
+                ✅ {t('QQ.ChatInterface.Message.edit.save', '保存')}
               </button>
               <button 
                 onClick={(e) => {
@@ -200,7 +202,7 @@ const MessageItem = memo(({
                 }} 
                 className="edit-cancel-btn"
               >
-                ❌ 取消
+                ❌ {t('QQ.ChatInterface.Message.edit.cancel', '取消')}
               </button>
             </div>
           </div>

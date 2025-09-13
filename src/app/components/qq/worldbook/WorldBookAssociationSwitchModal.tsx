@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import './WorldBookAssociationSwitchModal.css';
 
 interface WorldBookAssociationSwitchModalProps {
@@ -18,6 +19,7 @@ export default function WorldBookAssociationSwitchModal({
   linkedWorldBookIds,
   onUpdateLinkedWorldBooks
 }: WorldBookAssociationSwitchModalProps) {
+  const { t } = useI18n();
   const [worldBooks, setWorldBooks] = useState<WorldBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,7 +108,7 @@ export default function WorldBookAssociationSwitchModal({
       <div className="world-book-association-switch-modal" onClick={e => e.stopPropagation()}>
         {/* 模态框头部 */}
         <div className="wb-association-switch-modal-header">
-          <h2>世界书关联管理</h2>
+          <h2>{t('QQ.ChatInterface.WorldBookAssociationSwitchModal.title', '世界书关联管理')}</h2>
           <button className="wb-close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -116,7 +118,7 @@ export default function WorldBookAssociationSwitchModal({
             <input
               type="text"
               className="search-input"
-              placeholder="搜索世界书..."
+              placeholder={t('QQ.ChatInterface.WorldBookAssociationSwitchModal.search.placeholder', '搜索世界书...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -143,7 +145,7 @@ export default function WorldBookAssociationSwitchModal({
           {isLoading ? (
             <div className="loading-state">
               <div className="loading-spinner"></div>
-              <p>加载中...</p>
+              <p>{t('QQ.ChatInterface.WorldBookAssociationSwitchModal.loading', '加载中...')}</p>
             </div>
           ) : filteredWorldBooks.length === 0 ? (
             <div className="empty-state">
@@ -151,8 +153,8 @@ export default function WorldBookAssociationSwitchModal({
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              <h3>没有找到世界书</h3>
-              <p>尝试调整搜索条件或分类筛选</p>
+              <h3>{t('QQ.ChatInterface.WorldBookAssociationSwitchModal.empty.notFound', '没有找到世界书')}</h3>
+              <p>{t('QQ.ChatInterface.WorldBookAssociationSwitchModal.empty.adjustFilters', '尝试调整搜索条件或分类筛选')}</p>
             </div>
           ) : (
             <div className="world-book-list">
@@ -182,7 +184,7 @@ export default function WorldBookAssociationSwitchModal({
         {/* 底部信息 */}
         <div className="wb-association-switch-modal-footer">
           <div className="wb-footer-info">
-            <span>已关联: {linkedCount} 个</span>
+            <span>{t('QQ.ChatInterface.WorldBookAssociationSwitchModal.footer.linked', '已关联: {{count}} 个').replace('{{count}}', String(linkedCount))}</span>
           </div>
         </div>
       </div>

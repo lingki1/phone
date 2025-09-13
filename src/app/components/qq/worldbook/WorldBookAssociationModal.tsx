@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import './WorldBookAssociationModal.css';
 
 interface WorldBookAssociationModalProps {
@@ -20,13 +21,14 @@ export default function WorldBookAssociationModal({
   onClose, 
   onSave 
 }: WorldBookAssociationModalProps) {
+  const { t } = useI18n();
   const [worldBooks, setWorldBooks] = useState<WorldBook[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // 加载世界书列表
-  const loadWorldBooks = async () => {
+  const loadWorldBooks = useCallback(async () => {
     try {
       setIsLoading(true);
       const books = await dataManager.getAllWorldBooks();
@@ -34,11 +36,11 @@ export default function WorldBookAssociationModal({
       setWorldBooks(books);
     } catch (error) {
       console.error('Failed to load world books:', error);
-      alert('加载世界书失败');
+      alert(t('QQ.ChatInterface.WorldBookAssociationModal.errors.loadFailed', '加载世界书失败'));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
   // 初始化
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function WorldBookAssociationModal({
       setSelectedIds([...currentLinkedIds]);
       loadWorldBooks();
     }
-  }, [isVisible, currentLinkedIds]);
+  }, [isVisible, currentLinkedIds, loadWorldBooks]);
 
   // 切换选择状态
   const toggleSelection = (id: string) => {
@@ -65,7 +67,7 @@ export default function WorldBookAssociationModal({
       onClose();
     } catch (error) {
       console.error('Failed to save associations:', error);
-      alert('保存失败，请重试');
+      alert(t('QQ.ChatInterface.WorldBookAssociationModal.errors.saveFailed', '保存失败，请重试'));
     } finally {
       setIsSaving(false);
     }
@@ -83,7 +85,7 @@ export default function WorldBookAssociationModal({
     <div className="world-book-association-modal-overlay" onClick={handleCancel}>
       <div className="world-book-association-modal" onClick={(e) => e.stopPropagation()}>
         <div className="wb-association-header">
-          <h2 className="wb-association-title">关联世界书</h2>
+          <h2 className="wb-association-title">{t('QQ.ChatInterface.WorldBookAssociationModal.title', '关联世界书')}</h2>
           <button className="wb-close-btn" onClick={handleCancel}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="m18 6-12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -93,15 +95,15 @@ export default function WorldBookAssociationModal({
         </div>
 
         <div className="association-info">
-          <p className="chat-info">为 <strong>{chatName}</strong> 选择要关联的世界书</p>
-          <p className="help-text">选中的世界书内容将在AI聊天时自动注入到系统提示词中</p>
+          <p className="chat-info">{t('QQ.ChatInterface.WorldBookAssociationModal.info.selectFor', '为 <strong>{{name}}</strong> 选择要关联的世界书').replace('{{name}}', chatName)}</p>
+          <p className="help-text">{t('QQ.ChatInterface.WorldBookAssociationModal.info.help', '选中的世界书内容将在AI聊天时自动注入到系统提示词中')}</p>
         </div>
 
         <div className="association-content">
           {isLoading ? (
             <div className="loading-state">
               <div className="loading-spinner"></div>
-              <p>加载中...</p>
+              <p>{t('QQ.ChatInterface.WorldBookAssociationModal.loading', '加载中...')}</p>
             </div>
           ) : worldBooks.length === 0 ? (
             <div className="empty-state">
@@ -109,8 +111,8 @@ export default function WorldBookAssociationModal({
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              <h3>还没有世界书</h3>
-              <p>请先创建世界书，然后再进行关联</p>
+              <h3>{t('QQ.ChatInterface.WorldBookAssociationModal.empty.noBooks', '还没有世界书')}</h3>
+              <p>{t('QQ.ChatInterface.WorldBookAssociationModal.empty.createFirst', '请先创建世界书，然后再进行关联')}</p>
             </div>
           ) : (
             <div className="world-book-options">
@@ -153,18 +155,18 @@ export default function WorldBookAssociationModal({
 
         <div className="association-footer">
           <div className="selection-summary">
-            已选择 {selectedIds.length} 个世界书
+            {t('QQ.ChatInterface.WorldBookAssociationModal.summary.selected', '已选择 {{count}} 个世界书').replace('{{count}}', String(selectedIds.length))}
           </div>
           <div className="wb-footer-actions">
             <button className="wb-cancel-btn" onClick={handleCancel}>
-              取消
+              {t('QQ.ChatInterface.WorldBookAssociationModal.buttons.cancel', '取消')}
             </button>
             <button 
               className={`wb-save-btn ${isSaving ? 'saving' : ''}`}
               onClick={handleSave}
               disabled={isSaving || worldBooks.length === 0}
             >
-              {isSaving ? '保存中...' : '保存'}
+              {isSaving ? t('QQ.ChatInterface.WorldBookAssociationModal.buttons.saving', '保存中...') : t('QQ.ChatInterface.WorldBookAssociationModal.buttons.save', '保存')}
             </button>
           </div>
         </div>

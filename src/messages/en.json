@@ -1,0 +1,1205 @@
+{
+  "Common": {
+    "language": "Language",
+    "english": "English",
+    "chinese": "Chinese",
+    "switchLanguage": "Switch Language"
+  },
+  "Desktop": {
+    "searchPlaceholder": "Search...",
+    "comingSoon": "Coming soon",
+    "insufficientBalance": "Insufficient balance",
+    "greeting": "A beautiful day begins",
+    "aria": {
+      "creativespace": "Creative Space",
+      "qq": "Chat",
+      "blackmarket": "Black Market",
+      "music": "Music",
+      "shopping": "Shopping",
+      "weibo": "Hot",
+      "chatroom": "Chat Room",
+      "app": "App"
+    },
+    "alert": {
+      "importCharacterSuccess": "Character imported successfully!",
+      "commonFailure": "Operation failed, please try again later",
+      "importWorldBookSuccess": "World book imported successfully!",
+      "comingSoon": "Coming soon. Stay tuned!",
+      "insufficientBalanceDetail": "Insufficient balance!",
+      "checkBalanceFailed": "Failed to check balance, please try again later",
+      "wrongPassword": "Wrong password!",
+      "logoutFailed": "Logout failed, please try again later"
+    },
+    "prompt": {
+      "enterAdminPassword": "Please enter admin password:"
+    },
+    "confirm": {
+      "logout": "Are you sure you want to logout?"
+    },
+    "user": {
+      "title": "User",
+      "login": "Login",
+      "notLoggedIn": "Not logged in",
+      "role": "Role: ",
+      "group": {
+        "label": "Group: ",
+        "ungrouped": "Ungrouped",
+        "default": "Default"
+      },
+      "logout": "Logout"
+    },
+    "battery": {
+      "status": "Battery",
+      "charging": "Charging",
+      "notCharging": "Not charging"
+    },
+    "appName": {
+      "qq": "QwQ",
+      "blackmarket": "Black Market",
+      "music": "Music",
+      "shopping": "Shopping",
+      "weibo": "Hot",
+      "chatroom": "Chat Room",
+      "creativespace": "Creative Space"
+    }
+  },
+  "Home": {
+    "title": "Welcome"
+  },
+  "Auth": {
+    "common": {
+      "username": "Username",
+      "password": "Password",
+      "email": "Email",
+      "networkError": "Network error, please try again later"
+    },
+    "placeholder": {
+      "username": "Enter username",
+      "usernameWithRule": "Enter username (3-20 characters)",
+      "password": "Enter password",
+      "passwordWithRule": "Enter password (at least 6 characters)",
+      "confirmPassword": "Re-enter password",
+      "activationCode": "Enter activation code (if admin enabled)",
+      "emailOptional": "Enter email (optional)"
+    },
+    "login": {
+      "fillUserAndPass": "Please enter username and password",
+      "success": "Login successful!",
+      "fail": "Login failed",
+      "submitting": "Logging in...",
+      "submit": "Login"
+    },
+    "register": {
+      "enterUsername": "Please enter username",
+      "usernameLength": "Username must be 3-20 characters",
+      "enterPassword": "Please enter password",
+      "passwordLength": "Password must be at least 6 characters",
+      "passwordMismatch": "Passwords do not match",
+      "success": "Registered successfully! Redirecting...",
+      "fail": "Registration failed",
+      "submitting": "Registering...",
+      "submit": "Register",
+      "activationCode": "Activation Code",
+      "confirmPassword": "Confirm Password"
+    },
+    "modal": {
+      "closeTitle": "Close login window (view announcements)",
+      "loginTitle": "Lingki-Phone",
+      "registerTitle": "Create account",
+      "loginSubtitle": "Sign in to your account",
+      "registerSubtitle": "Fill in the information to create an account",
+      "noAccount": "No account?",
+      "haveAccount": "Already have an account?",
+      "registerNow": "Register now",
+      "loginNow": "Login now"
+    }
+  }
+  ,
+  "QQ": {
+    "common": {
+      "close": "Close",
+      "hint": "Hint"
+    },
+    "ChatInterface": {
+      "system": "System",
+      "status": {
+        "defaultMood": "Feeling good",
+        "defaultLocation": "At home",
+        "defaultOutfit": "Casual outfit",
+        "online": "Online",
+        "offline": "Offline",
+        "status": "Status",
+        "mood": "Mood",
+        "location": "Location",
+        "outfit": "Outfit"
+      },
+      "error": {
+        "setupApi": "Please set API configuration first. Configure proxy URL, API key and model in settings.",
+        "contentFiltered": "Content filtered by safety policy. Try softer wording or adjust role settings.",
+        "apiServer": "API server error",
+        "code": "Code",
+        "aiFailed": "AI reply failed. Please check your API settings.",
+        "responseFormat": "AI response format error. Please check model settings.",
+        "requestFailed": "API request failed. Check network and proxy settings.",
+        "aiFailedPrefix": "AI reply failed"
+      },
+      "title": {
+        "worldBook": "World Book Association",
+        "extraInfo": "Extra Info Settings",
+        "chatBackground": "Chat Background Settings",
+        "giftHistory": "View Gift History",
+        "switchPersona": "Switch Persona",
+        "memoryManager": "Memory Manager",
+        "groupMemberManager": "Group Members",
+        "singleChatMemoryManager": "Chat Memory",
+        "scrollToBottom": "Scroll to latest",
+        "cancelAi": "Cancel AI reply",
+        "continue": "Continue story",
+        "send": "Send message",
+        "generateStory": "Generate Story",
+        "needContent": "Need content to generate",
+        "generate": "Generate AI reply",
+        "needMessage": "Need a new message to generate"
+      },
+      "emptyChat": "Start chatting with {{name}}!",
+      "emoji": "Emoji",
+      "redPacket": "Transfer",
+      "redPacketShort": "Transfer",
+      "autoOn": "Auto-generate AI reply after sending",
+      "autoOff": "Click the button to generate after sending",
+      "autoGenerate": "Auto-generate",
+      "manualGenerate": "Manual",
+      "placeholder": {
+        "generatingStory": "AI is generating the story...",
+        "generating": "AI is replying...",
+        "story": "Continue the story...",
+        "group": "Type a message. Use @ to mention members...",
+        "single": "Type a message..."
+      },
+      "continue": "Continue",
+      "send": "Send",
+      "generate": "Generate",
+      "reply": "AI Reply",
+      "StoryToggle": {
+        "title": {
+          "toNormal": "Switch to Chat Mode",
+          "toStory": "Switch to Story Mode"
+        },
+        "text": {
+          "online": "Chat",
+          "story": "Story"
+        }
+      },
+      "StoryMode": {
+        "creating": "Creating story...",
+        "me": "Me",
+        "quote": "Quote",
+        "edit": "Edit",
+        "delete": "Delete",
+        "regenerate": "Regenerate",
+        "save": "Save",
+        "cancel": "Cancel",
+        "startWriting": "Start writing your story!",
+        "clickToStart": "Click the input box below to start",
+        "loadMore": "Load more story history",
+        "loading": "Loading...",
+        "loadMoreText": "Load more"
+      },
+      "StoryModeInput": {
+        "title": "Story Writing",
+        "characters": "chars",
+        "continue": "Continue story",
+        "continueText": "Continue",
+        "generateTitle": "AI Generate Story",
+        "needContent": "Need content to generate",
+        "generateText": "AI Generate"
+      },
+      "MemorySummary": {
+        "title": {
+          "generate": "Generate Memory Summary"
+        },
+        "button": "Memory Summary",
+        "header": "Memory Summary",
+        "generatingLocked": "Generating, cannot close",
+        "clickToClose": "Click to close",
+        "close": "Close",
+        "generating": "Generating memory summary...",
+        "lockedNotice": "Window is locked during generation, please wait",
+        "streamingPreview": "Streaming preview:",
+        "retry": "Retry",
+        "resultTitle": "Summary:",
+        "processStatus": "Processing Status",
+        "resultLabel": "Result:",
+        "resultBytes": "Summarized {{bytes}} bytes of content",
+        "saved": "Memory summary has been auto-saved to World Book!",
+        "save": "Save",
+        "regenerate": "Regenerate",
+        "complete": "Done",
+        "startTip1": "Click 'Generate' and the AI will craft a refined recollection based on your chat with {{name}}.",
+        "startTip2": "The summary will be auto-saved under the 'recollection' category in World Book.",
+        "pickRange": "Choose message range:",
+        "from": "From",
+        "to": "To",
+        "items": "items",
+        "total": "Total messages: {{total}}",
+        "rangeStat": "Summarize messages {{start}} to {{end}} ({{count}} total)",
+        "generate": "Generate",
+        "summaryGenerated": "Memory summary generated:"
+      },
+      "persona": {
+        "empty": "No saved personas",
+        "unnamed": "Unnamed",
+        "switchFailed": "Failed to switch persona, please try again",
+        "settingsUpdated": "Personal settings updated to database:"
+      },
+      "confirm": {
+        "deleteMessage": "Are you sure you want to delete this message?",
+        "deleteStoryMessage": "Are you sure you want to delete this story message?"
+      },
+      "GiftHistory": {
+        "title": "Gift History",
+        "count": "Total {{count}} records",
+        "loading": "Loading gift records...",
+        "empty": {
+          "title": "No gift records",
+          "desc": "Your received gifts will appear here"
+        },
+        "itemsTitle": "🎁 Gift Items",
+        "shipping": {
+          "instant": "Instant",
+          "fast": "Fast (1 min)",
+          "slow": "Slow (10 min)",
+          "standard": "Standard"
+        }
+      },
+      "Message": {
+        "edit": {
+          "save": "Save",
+          "cancel": "Cancel"
+        }
+      },
+      "Pagination": {
+        "loading": "Loading...",
+        "loadMore": "Load more history",
+        "remaining": "({{count}} more messages)"
+      },
+      "ExtraInfoSettings": {
+        "title": "Extra Info Settings",
+        "enable": {
+          "label": "Enable extra info feature",
+          "desc": "When enabled, AI will include HTML-formatted extra info in replies",
+          "worldbookTip": "Config will be auto-saved to World Book, category 'extrainfo'"
+        },
+        "select": {
+          "label": "Choose configuration",
+          "loading": "Loading...",
+          "deleteTitle": "Delete configuration",
+          "empty": "No configurations",
+          "createNew": "Create new configuration"
+        },
+        "description": {
+          "label": "Feature description",
+          "selectedBadge": "Using existing configuration",
+          "placeholder": "e.g. A status bar showing mood, location and outfit",
+          "desc": "Describe the content and style you want the AI to generate",
+          "worldbookTip": "The description will be saved to World Book. AI will generate HTML accordingly."
+        },
+        "footer": {
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "confirmDelete": {
+          "title": "Confirm delete",
+          "messageTitle": "Are you sure you want to delete this configuration?",
+          "messageDesc": "This cannot be undone and will also remove the entry from World Book.",
+          "name": "Name:",
+          "createdAt": "Created at:",
+          "cancel": "Cancel",
+          "confirm": "Delete",
+          "deleting": "Deleting..."
+        }
+      },
+      "ExtraInfoDisplay": {
+        "label": "Extra Info",
+        "renderError": "HTML render failed",
+        "source": "Generated by {{name}}"
+      },
+      "ChatBackgroundModal": {
+        "title": "Set chat background - {{name}}",
+        "upload": {
+          "compressing": "Compressing image...",
+          "placeholderTitle": "Click to upload background image",
+          "placeholderHint": "Supports JPG, PNG, GIF up to 10MB. Will be optimized automatically",
+          "clickToChange": "Click to change image",
+          "chooseImageError": "Please select an image file",
+          "tooLargeError": "Image size cannot exceed 10MB",
+          "processError": "Image processing failed, please try again"
+        },
+        "opacity": "Background opacity: {{percent}}%",
+        "buttons": {
+          "clear": "Clear background",
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "saveError": "Save failed, please try again"
+      },
+      "WorldBookListPage": {
+        "title": "World Book Management",
+        "errors": {
+          "loadFailed": "Failed to load world books, please refresh and try again",
+          "deleteFailed": "Delete failed, please try again"
+        },
+        "import": {
+          "success": "Successfully imported {{count}} world books",
+          "partial": "Import completed: {{success}} successful, {{error}} failed",
+          "failed": "Import failed, please try again"
+        },
+        "batchDelete": {
+          "noSelection": "Please select world books to delete first",
+          "confirm": "Are you sure you want to delete {{count}} selected world books? This action cannot be undone.",
+          "success": "Successfully deleted {{count}} world books",
+          "partial": "Delete completed: {{success}} successful, {{error}} failed",
+          "failed": "Batch delete failed, please try again"
+        },
+        "batchCategory": {
+          "noSelection": "Please select world books to change category first",
+          "success": "Successfully updated category for {{count}} world books",
+          "partial": "Update completed: {{success}} successful, {{error}} failed"
+        },
+        "actions": {
+          "batch": "Batch Operations",
+          "import": "Import",
+          "create": "Create"
+        },
+        "batch": {
+          "selected": "Selected {{count}}",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "delete": "Delete ({{count}})",
+          "deleting": "Deleting...",
+          "changeCategory": "Change Category",
+          "cancel": "Cancel"
+        },
+        "search": {
+          "placeholder": "Search world book names, content or descriptions..."
+        },
+        "filter": {
+          "all": "All",
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "loading": "Loading...",
+        "empty": {
+          "search": "No related world books found",
+          "searchHint": "Try using other keywords to search",
+          "noBooks": "No world books yet",
+          "createHint": "Create your first world book to add rich background settings for AI chat",
+          "createFirst": "Create First World Book"
+        },
+        "results": {
+          "found": "Found {{count}} results",
+          "total": "Total {{count}} world books"
+        },
+        "pagination": {
+          "prev": "Previous",
+          "next": "Next"
+        },
+        "categoryModal": {
+          "title": "Batch Change Category",
+          "selectExisting": "Select existing category",
+          "noSelection": "No selection",
+          "inputNew": "Or enter new category",
+          "placeholder": "e.g.: extrainfo / notes / tags…",
+          "tip": "Tip: Prioritize new category; if no new category is entered, use the dropdown selection.",
+          "cancel": "Cancel",
+          "apply": "Apply"
+        }
+      },
+      "WorldBookEditor": {
+        "title": {
+          "create": "Create World Book",
+          "edit": "Edit World Book"
+        },
+        "errors": {
+          "nameRequired": "World book name cannot be empty",
+          "nameTooLong": "World book name cannot exceed 50 characters",
+          "categoryRequired": "World book category cannot be empty",
+          "categoryTooLong": "World book category cannot exceed 20 characters",
+          "contentRequired": "World book content cannot be empty",
+          "contentTooLong": "World book content cannot exceed 10000 characters",
+          "saveFailed": "Save failed, please try again"
+        },
+        "confirm": {
+          "cancel": "Are you sure you want to cancel editing? Unsaved content will be lost."
+        },
+        "fields": {
+          "name": "World Book Name",
+          "description": "Brief Description",
+          "category": "Category",
+          "content": "World Book Content"
+        },
+        "placeholders": {
+          "name": "Enter world book name",
+          "description": "Briefly describe the purpose of this world book (optional)",
+          "category": "Enter world book category, e.g.: sci-fi, fantasy, modern, etc.",
+          "content": "Enter world book content, this content will be used as background settings for AI chat..."
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving..."
+        }
+      },
+      "WorldBookCard": {
+        "actions": {
+          "edit": "Edit",
+          "delete": "Delete"
+        },
+        "confirm": {
+          "delete": "Are you sure you want to delete world book \"{{name}}\"?"
+        },
+        "meta": {
+          "createdAt": "Created on {{date}}",
+          "charCount": "{{count}} characters"
+        }
+      },
+      "WorldBookAssociationModal": {
+        "title": "Associate World Books",
+        "info": {
+          "selectFor": "Select world books to associate with <strong>{{name}}</strong>",
+          "help": "Selected world book content will be automatically injected into system prompts during AI chat"
+        },
+        "errors": {
+          "loadFailed": "Failed to load world books",
+          "saveFailed": "Save failed, please try again"
+        },
+        "loading": "Loading...",
+        "empty": {
+          "noBooks": "No world books yet",
+          "createFirst": "Please create world books first, then associate them"
+        },
+        "summary": {
+          "selected": "Selected {{count}} world books"
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving..."
+        }
+      },
+      "WorldBookAssociationSwitchModal": {
+        "title": "World Book Association Management",
+        "search": {
+          "placeholder": "Search world books..."
+        },
+        "loading": "Loading...",
+        "empty": {
+          "notFound": "No world books found",
+          "adjustFilters": "Try adjusting search conditions or category filters"
+        },
+        "footer": {
+          "linked": "Linked: {{count}}"
+        }
+      },
+      "WorldBookImportModal": {
+        "title": "Import Presets",
+        "description": "Import preset files (such as Sillytavern presets) and automatically convert to world book format",
+        "errors": {
+          "invalidFormat": "Invalid preset format: missing prompts array",
+          "noValidData": "No valid world book data found in preset",
+          "unsupportedFormat": "Unsupported preset format, please use Sillytavern preset format",
+          "jsonParse": "JSON parsing error: {{message}}",
+          "jsonFormat": "JSON format error",
+          "fileReadFailed": "File read failed",
+          "noJsonData": "Please enter JSON data",
+          "previewFailed": "Preview failed, please check data format",
+          "importFailed": "Import failed, please check data format"
+        },
+        "labels": {
+          "jsonData": "Preset JSON Data"
+        },
+        "placeholders": {
+          "jsonInput": "Please enter preset file JSON data..."
+        },
+        "buttons": {
+          "selectFile": "Select Preset File",
+          "generateExample": "Generate Example",
+          "clear": "Clear",
+          "preview": "Preview Conversion",
+          "cancel": "Cancel",
+          "startImport": "Start Import",
+          "importing": "Importing..."
+        },
+        "preview": {
+          "title": "Conversion Preview ({{count}} world books)"
+        }
+      },
+      "MessageActions": {
+        "BatchDeleteSelector": {
+          "title": "Batch Delete Messages",
+          "errors": {
+            "noSelection": "Please select messages to delete first"
+          },
+          "confirm": {
+            "delete": "Are you sure you want to delete {{count}} selected messages? This action cannot be undone!"
+          },
+          "selectAll": "Select All ({{selected}}/{{total}})",
+          "buttons": {
+            "cancel": "Cancel",
+            "deleteSelected": "Delete Selected ({{count}})"
+          },
+          "sender": {
+            "me": "Me",
+            "ai": "AI"
+          }
+        },
+        "MessageActionButtons": {
+          "aria": {
+            "toolbar": "Message action toolbar"
+          },
+          "actions": {
+            "quote": "Quote",
+            "edit": "Edit",
+            "regenerate": "Regenerate",
+            "delete": "Delete",
+            "batchDelete": "Batch Delete"
+          },
+          "confirm": {
+            "delete": "Are you sure you want to delete this message?"
+          }
+        }
+      },
+      "Money": {
+        "AiRedPacketResponse": {
+          "title": {
+            "accepted": "Red Packet Accepted",
+            "rejected": "Red Packet Rejected"
+          },
+          "badge": {
+            "accepted": "Accepted",
+            "rejected": "Rejected"
+          },
+          "amount": {
+            "return": "Return ¥"
+          }
+        },
+        "ReceiveRedPacket": {
+          "defaultMessage": "Congratulations and good luck!",
+          "status": {
+            "claimed": "Claimed",
+            "pending": "Pending"
+          },
+          "hint": {
+            "clickToOpen": "Click to open red packet"
+          },
+          "loading": {
+            "opening": "Opening..."
+          },
+          "buttons": {
+            "open": "Open Red Packet"
+          },
+          "success": {
+            "congratulations": "Congratulations! You got a red packet"
+          },
+          "details": {
+            "sendTime": "Send Time:",
+            "status": "Red Packet Status:"
+          }
+        },
+        "RedPacketMessage": {
+          "title": {
+            "send": "Send Red Packet",
+            "received": "Received Red Packet",
+            "receivedClaimed": "Red Packet Claimed",
+            "request": "Request Red Packet",
+            "default": "Red Packet Message"
+          },
+          "badge": {
+            "pending": "Pending",
+            "claimed": "Claimed"
+          },
+          "info": {
+            "sendTo": "Send to {{name}}",
+            "from": "From {{name}}",
+            "request": "Requesting red packet from you"
+          },
+          "claimedAt": "Claimed at {{time}}",
+          "action": {
+            "claim": "Click to claim",
+            "send": "Click to send"
+          }
+        },
+        "SendRedPacket": {
+          "title": "Send Red Packet",
+          "recipient": "Send to: {{name}}",
+          "preview": {
+            "title": "Congratulations"
+          },
+          "balance": "Current Balance: ¥{{amount}}",
+          "blessing": {
+            "label": "Blessing Message",
+            "placeholder": "Congratulations and good luck!"
+          },
+          "errors": {
+            "invalidAmount": "Please enter a valid amount",
+            "amountTooSmall": "Amount must be greater than 0",
+            "insufficientBalance": "Insufficient balance",
+            "amountTooLarge": "Single red packet amount cannot exceed ¥10,000",
+            "sendFailed": "Send failed, please try again"
+          },
+          "buttons": {
+            "sending": "Sending...",
+            "send": "Put Money in Red Packet"
+          }
+        }
+      },
+      "CharacterImport": {
+        "CharacterImportModal": {
+          "title": "Import Character Card",
+          "upload": {
+            "title": "Select SillyTavern Character Card",
+            "supportedFormat": "Supports PNG format character card files",
+            "tip": "Click to select file or drag here",
+            "note": "Avatar will be automatically compressed and optimized"
+          },
+          "loading": {
+            "parsing": "Parsing character card and optimizing avatar...",
+            "subtitle": "This may take a few seconds"
+          },
+          "errors": {
+            "parseFailed": "Parse failed",
+            "noValidData": "No valid character data found",
+            "processFailed": "File processing failed",
+            "importFailed": "Character import failed"
+          },
+          "defaultMessage": "Let's start chatting!",
+          "defaultUser": "User"
+        },
+        "CharacterPreview": {
+          "title": "Character Preview",
+          "subtitle": "Confirm information is correct before importing character",
+          "unknownCreator": "Unknown Creator",
+          "persona": {
+            "title": "Character Persona",
+            "empty": "No character persona available"
+          },
+          "firstMessage": {
+            "title": "Story Mode Opening",
+            "note": "After import, this opening will be automatically sent when first entering story mode"
+          },
+          "info": {
+            "title": "Character Information",
+            "version": "Version",
+            "tags": "Tags",
+            "scenario": "Scenario",
+            "none": "None"
+          },
+          "extended": {
+            "viewDetails": "View Detailed Information",
+            "firstMessage": "First Message",
+            "exampleDialogue": "Example Dialogue",
+            "creatorNotes": "Creator Notes",
+            "historyInstructions": "History Instructions",
+            "worldScenario": "World Scenario",
+            "characterBook": "Character Book"
+          },
+          "buttons": {
+            "cancel": "Cancel",
+            "import": "Import Character"
+          }
+        }
+      },
+      "Discover": {
+        "DiscoverPage": {
+          "loading": "Loading...",
+          "noMore": "No more content",
+          "warnings": {
+            "dataLoadTimeout": "Data loading timeout, forcing completion",
+            "autoGenerationFailed": "Auto generation service startup failed:",
+            "deleteCommentFailed": "Failed to delete comment:",
+            "aiCommentFailed": "AI comment generation failed:",
+            "delayedAiCommentFailed": "Delayed AI comment generation failed:",
+            "triggerAiCommentFailed": "Failed to trigger AI comment generation:"
+          },
+          "logs": {
+            "autoGenerationStarted": "Auto generation service started",
+            "aiCommentsUpdated": "AI comments updated for post {{postId}}, {{count}} comments total",
+            "aiPostsGenerated": "AI posts generation completed, post list updated",
+            "viewStateUpdated": "User view state updated, timestamp:",
+            "postDeleted": "Post deleted successfully:",
+            "userCommentPublished": "User comment published, AI characters are thinking about replies...",
+            "retryAiComment": "No AI comments within 2 seconds after user comment, retrying generation",
+            "aiCommentsDisabled": "AI comments feature disabled",
+            "postNotFound": "Post not found:",
+            "triggerAiComment": "Triggering AI comment generation after user comment, post ID:",
+            "aiCommentsGenerated": "AI comments generated successfully, {{count}} comments generated",
+            "bottomNavClick": "DiscoverPage - Bottom navigation clicked:",
+            "navigateToChat": "DiscoverPage - Triggering navigateToChat event",
+            "navigateToMe": "DiscoverPage - Triggering navigateToMe event",
+            "navigateToRecollection": "DiscoverPage - Triggering navigateToRecollection event"
+          },
+          "errors": {
+            "deleteFailed": "Failed to delete post, please try again"
+          }
+        },
+        "DiscoverHeader": {
+          "title": "Moments",
+          "postCount": "{{count}} posts",
+          "settings": {
+            "title": "Moments Settings",
+            "ariaLabel": "Moments Settings"
+          },
+          "compose": {
+            "title": "Publish Post",
+            "ariaLabel": "Publish Post"
+          }
+        },
+        "DiscoverSettingsPanel": {
+          "title": "Moments Settings",
+          "status": {
+            "current": "Current Status:",
+            "autoGenerateEnabled": "✅ Auto post generation enabled",
+            "autoGenerateDisabled": "❌ Auto post generation disabled",
+            "comments": "Comment Status:",
+            "aiCommentsEnabled": "✅ AI comments enabled",
+            "aiCommentsDisabled": "❌ AI comments disabled"
+          },
+          "autoGenerate": {
+            "label": "Auto Generate AI Posts",
+            "description": "AI characters will automatically publish posts"
+          },
+          "generateInterval": {
+            "label": "Generation Interval (minutes)",
+            "options": {
+              "5min": "5 minutes",
+              "10min": "10 minutes",
+              "15min": "15 minutes",
+              "30min": "30 minutes",
+              "1hour": "1 hour",
+              "2hours": "2 hours",
+              "4hours": "4 hours",
+              "8hours": "8 hours",
+              "12hours": "12 hours",
+              "24hours": "24 hours"
+            },
+            "hint": "Time interval for AI post generation, minimum 5 minutes to avoid conflicts with slow models"
+          },
+          "maxPostsPerDay": {
+            "label": "Daily Max Posts",
+            "hint": "Limit the number of posts published per day"
+          },
+          "allowAiComments": {
+            "label": "Allow AI Comments",
+            "description": "AI characters can comment on posts"
+          },
+          "allowAiLikes": {
+            "label": "Allow AI Likes",
+            "description": "AI characters can like posts"
+          },
+          "preventAiCrossComments": {
+            "label": "Prevent AI Cross Comments",
+            "description": "When enabled, AI characters can only comment on user posts, not on each other's posts",
+            "hint": "When this option is enabled, AI characters will only comment on user-published posts and will not comment on other AI characters' posts"
+          },
+          "privacyLevel": {
+            "label": "Default Privacy Level",
+            "options": {
+              "public": "Public",
+              "friends": "Friends Only",
+              "private": "Private"
+            },
+            "hint": "Default visibility range for new posts"
+          },
+          "notifyOnNewPosts": {
+            "label": "New Post Notifications",
+            "description": "Show notifications when receiving new posts"
+          },
+          "theme": {
+            "label": "Moments Theme",
+            "options": {
+              "default": "Default",
+              "dark": "Dark",
+              "light": "Light",
+              "auto": "Follow System"
+            },
+            "hint": "Display theme for moments page"
+          },
+          "buttons": {
+            "cancel": "Cancel",
+            "saving": "Saving...",
+            "save": "Save Configuration"
+          },
+          "logs": {
+            "settingsSaved": "Settings saved and auto generation service updated",
+            "settingUpdated": "Setting updated: {{key}} = {{value}}"
+          }
+        },
+        "PostCard": {
+          "newBadge": "New",
+          "delete": {
+            "title": "Delete Post"
+          },
+          "stats": {
+            "likes": "{{count}} likes",
+            "comments": "{{count}} comments"
+          },
+          "commentInput": {
+            "placeholder": "Write your comment...",
+            "send": "Send"
+          },
+          "time": {
+            "justNow": "Just now",
+            "minutesAgo": "{{minutes}} minutes ago",
+            "hoursAgo": "{{hours}} hours ago",
+            "daysAgo": "{{days}} days ago"
+          }
+        },
+        "PostComposer": {
+          "title": "Publish Post",
+          "defaultUser": "User",
+          "privacy": {
+            "public": "🌍 Public",
+            "friends": "👥 Friends Only"
+          },
+          "content": {
+            "label": "Post Content",
+            "placeholder": "Share your thoughts...",
+            "hint": "Maximum 500 characters"
+          },
+          "images": {
+            "label": "Add Images",
+            "disabled": "Add Images (Disabled)",
+            "disabledTitle": "Image upload temporarily disabled to avoid large data transfer",
+            "disabledHint": "Image upload temporarily disabled to avoid large data transfer"
+          },
+          "tags": {
+            "label": "Tags",
+            "placeholder": "Add tags...",
+            "add": "Add",
+            "removeAriaLabel": "Remove tag {{tag}}",
+            "hint": "Maximum 5 tags"
+          },
+          "location": {
+            "label": "Location",
+            "placeholder": "📍 Add location"
+          },
+          "mood": {
+            "label": "Mood",
+            "placeholder": "😊 Add mood"
+          },
+          "buttons": {
+            "cancel": "Cancel",
+            "publishing": "Publishing...",
+            "publish": "Publish Post"
+          }
+        },
+        "PostActions": {
+          "like": {
+            "like": "Like",
+            "unlike": "Unlike",
+            "text": "Like"
+          },
+          "share": {
+            "title": "Share Post",
+            "text": "Check out this interesting post!",
+            "ariaLabel": "Share",
+            "linkCopied": "Link copied to clipboard"
+          }
+        },
+        "PostComments": {
+          "newBadge": "New",
+          "reply": "Reply",
+          "replyTo": "Reply to @{{name}}",
+          "replyInput": {
+            "placeholder": "Write your reply...",
+            "send": "Send"
+          },
+          "empty": "No comments yet, be the first to comment!",
+          "showMore": {
+            "collapse": "Collapse comments (showing latest {{count}} only)",
+            "expand": "View all {{total}} comments (including {{old}} older comments)"
+          },
+          "time": {
+            "justNow": "Just now",
+            "minutesAgo": "{{minutes}} minutes ago",
+            "hoursAgo": "{{hours}} hours ago",
+            "daysAgo": "{{days}} days ago"
+          }
+        },
+        "PostList": {
+          "loading": "Loading...",
+          "empty": {
+            "title": "No posts yet",
+            "description": "Publish your first post and start sharing your life!"
+          },
+          "logs": {
+            "viewStateUpdated": "View state updated, timestamp:",
+            "newContentMarked": "New content marking completed:",
+            "commentsVisibilityChanged": "Comments visibility change detected:",
+            "commentsViewStateUpdated": "Comments view state updated, timestamp:"
+          }
+        }
+      },
+      "MemoryManager": {
+        "title": "Group Memory Manager",
+        "info": "Link each AI member to its 1:1 chat memory so it remembers your relationship in group chats.",
+        "status": {
+          "linked": "Linked",
+          "unlinked": "Unlinked",
+          "noSingle": "No 1:1 memory"
+        },
+        "count": {
+          "total": "Total {{count}} memories",
+          "normal": "💬 {{count}} chats",
+          "story": "📖 {{count}} stories"
+        },
+        "limits": "Limits: Chat {{normal}}, Story {{story}}",
+        "lastUpdated": "Last updated: {{time}}",
+        "actions": {
+          "settings": { "title": "Set message limits", "label": "Settings" },
+          "refresh": { "title": "Refresh memory", "label": "Refresh" },
+          "unlink": { "title": "Unlink", "label": "Unlink" },
+          "link": { "title": "Link and set limits", "label": "Link" }
+        },
+        "limitModal": {
+          "title": "Set message limits",
+          "normalLabel": "Chat messages:",
+          "storyLabel": "Story messages:",
+          "hint": "items (up to 100)",
+          "save": "Save",
+          "cancel": "Cancel",
+          "alertPickSingle": "Please select a 1:1 chat to link first"
+        }
+      },
+      "SingleChatMemoryManager": {
+        "title": "1:1 ↔ Group Memory Manager",
+        "info": "Link this 1:1 chat with group memories to reflect your behavior and relationships in groups.",
+        "status": {
+          "linked": "Linked",
+          "unlinked": "Unlinked",
+          "noGroup": "No group memory linked"
+        },
+        "count": {
+          "total": "Total {{count}} messages",
+          "normal": "💬 {{count}} chats",
+          "story": "📖 {{count}} stories"
+        },
+        "limits": "Limits: Chat {{normal}}, Story {{story}}",
+        "actions": {
+          "settings": { "title": "Set message limits", "label": "Settings" },
+          "refresh": { "title": "Refresh group memory", "label": "Refresh" },
+          "unlink": { "title": "Unlink", "label": "Unlink" },
+          "link": { "title": "Link and set limits", "label": "Link" }
+        },
+        "limitModal": {
+          "title": "Set message limits",
+          "normalLabel": "Chat messages:",
+          "storyLabel": "Story messages:",
+          "hint": "items (up to 100)",
+          "save": "Save",
+          "cancel": "Cancel"
+        }
+      }
+    },
+    "ChatInterface.persona": {
+      "empty": "No saved personas",
+      "unnamed": "Unnamed",
+      "switchFailed": "Failed to switch persona, please try again",
+      "settingsUpdated": "Personal settings updated to database:"
+    },
+    "ChatInterface.confirm": {
+      "deleteMessage": "Are you sure you want to delete this message?",
+      "deleteStoryMessage": "Are you sure you want to delete this story message?"
+    },
+    "ChatInterface.StoryToggle": {
+      "title": {
+        "toNormal": "Switch to Chat Mode",
+        "toStory": "Switch to Story Mode"
+      },
+      "text": {
+        "online": "Chat",
+        "story": "Story"
+      }
+    },
+    "ChatInterface.StoryMode": {
+      "creating": "Creating story...",
+      "me": "Me",
+      "quote": "Quote",
+      "edit": "Edit",
+      "delete": "Delete",
+      "regenerate": "Regenerate",
+      "save": "Save",
+      "cancel": "Cancel",
+      "startWriting": "Start writing your story!",
+      "clickToStart": "Click the input box below to start",
+      "loadMore": "Load more story history",
+      "loading": "Loading...",
+      "loadMoreText": "Load more"
+    },
+    "ChatInterface.StoryModeInput": {
+      "title": "Story Writing",
+      "characters": "chars",
+      "continue": "Continue story",
+      "continueText": "Continue",
+      "generateTitle": "AI Generate Story",
+      "needContent": "Need content to generate",
+      "generateText": "AI Generate"
+    },
+    "QQ.StoryMode.MemorySync": {
+      "firstConversation": "First conversation",
+      "firstMeeting": "First meeting",
+      "neutral": "Neutral",
+      "intimate": "Intimate",
+      "friendly": "Friendly",
+      "formal": "Formal",
+      "familiar": "Familiar",
+      "happy": "Happy",
+      "angry": "Angry",
+      "sad": "Sad",
+      "nervous": "Nervous",
+      "calm": "Calm",
+      "continueCurrentMode": "Continue current mode",
+      "switchToStory": "Switch from chat to story mode",
+      "switchToChat": "Switch from story to chat mode",
+      "modeSwitch": "Mode switch",
+      "firstConversationContext": "This is the first conversation",
+      "syncFailed": "Memory sync failed",
+      "unknownRelationship": "Unknown relationship",
+      "unknownEmotion": "Unknown emotion",
+      "totalRecords": "Total {{total}} interaction records, including {{normal}} chat mode and {{story}} story mode.",
+      "switchToStoryContext": "Now switching to story mode, please remember the previous chat content and reflect these relationship developments in the story.",
+      "switchToChatContext": "Now switching to chat mode, please remember the previous story development and reflect these relationship changes in the chat.",
+      "currentRelationship": "Current relationship status: {{context}}",
+      "recentTopics": ", recent discussion topics: {{topics}}",
+      "currentEmotion": "Current emotional state: {{emotion}}",
+      "user": "User",
+      "ai": "AI",
+      "recentConversations": "Recent {{count}} conversations:\n{{messages}}"
+    },
+    "ChatInterface.MemorySummary": {
+      "title": {
+        "generate": "Generate Memory Summary"
+      },
+      "button": "Memory Summary",
+      "header": "Memory Summary",
+      "generatingLocked": "Generating, cannot close",
+      "clickToClose": "Click to close",
+      "close": "Close",
+      "generating": "Generating memory summary...",
+      "lockedNotice": "Window is locked during generation, please wait",
+      "streamingPreview": "Streaming preview:",
+      "retry": "Retry",
+      "resultTitle": "Summary:",
+      "processStatus": "Processing Status",
+      "resultLabel": "Result:",
+      "resultBytes": "Summarized {{bytes}} bytes of content",
+      "saved": "Memory summary has been auto-saved to World Book!",
+      "save": "Save",
+      "regenerate": "Regenerate",
+      "complete": "Done",
+      "startTip1": "Click 'Generate' and the AI will craft a refined recollection based on your chat with {{name}}.",
+      "startTip2": "The summary will be auto-saved under the 'recollection' category in World Book.",
+      "pickRange": "Choose message range:",
+      "from": "From",
+      "to": "To",
+      "items": "items",
+      "total": "Total messages: {{total}}",
+      "rangeStat": "Summarize messages {{start}} to {{end}} ({{count}} total)",
+      "generate": "Generate",
+      "summaryGenerated": "Memory summary generated:"
+    },
+    "Header": {
+      "userAvatar": "User Avatar",
+      "user": "User",
+      "tab": {
+        "all": "All",
+        "single": "Single",
+        "group": "Group"
+      },
+      "contextSettings": {
+        "title": "Set the max number of context messages",
+        "button": "Context",
+        "panelTitle": "AI Context Settings",
+        "maxMemoryLabel": "Max injected context messages",
+        "tip": "Control how many history messages are injected. Larger values improve memory but may slow responses.",
+        "limitHint": "Up to 500 messages. Exceeding may slow responses or cause API failures.",
+        "current": "Current: ",
+        "messages": "messages",
+        "saved": "Settings saved locally and take effect immediately"
+      },
+      "add": "Add",
+      "addFriend": "Add Friend",
+      "createGroup": "Create Group",
+      "worldBook": "World Book",
+      "importCharacter": "Import Character Card"
+    },
+    "Page": {
+      "loading": "Loading...",
+      "searchPlaceholder": "Search...",
+      "chatLoading": "Chat loading..."
+    }
+    ,
+    "ChatList": {
+      "empty": "Click the \"+\" at top-right or group icon to add a chat",
+      "groupTag": "Group",
+      "menu": {
+        "edit": "Edit",
+        "associateWorldBook": "Link World Book",
+        "resetChat": "Reset Chat",
+        "delete": "Delete"
+      },
+      "confirm": {
+        "delete": "Are you sure you want to delete this chat?",
+        "reset": "Clear all messages of this character? This cannot be undone!"
+      }
+    }
+    ,
+    "BottomNav": {
+      "labels": {
+        "messages": "Messages",
+        "moments": "Moments",
+        "recollection": "Recollection",
+        "me": "Me"
+      }
+    }
+  }
+  ,
+  "QQ.ApiSettings": {
+    "title": "AI Connection Settings",
+    "fillProxyAndKey": "Please enter proxy URL and API key first",
+    "fetchModelsFailed": "Failed to fetch models",
+    "unknownError": "Unknown error",
+    "fillAll": "Please complete all API settings",
+    "platformFailed": "Failed to fetch platform config",
+    "noPlatformConfig": "Platform has no built-in config, contact admin",
+    "loadPlatformFailed": "Failed to load platform config",
+    "saveCurrent": "Save Current Config",
+    "saveHint": "You can quickly switch between API configs after saving",
+    "enterServerOr": "Enter server address or",
+    "platformApplied": "Platform API applied. Click 'Fetch Models' and choose one you like.",
+    "loading": "Loading...",
+    "usePlatform": "Use Built-in AI",
+    "placeholder": {
+      "proxy": "Enter your AI service URL, e.g. https://api.openai.com",
+      "key": "Enter your API key starting with sk-",
+      "model": "Click to choose your preferred AI model"
+    },
+    "hint": {
+      "proxy": "No need to append /v1, it will be handled automatically",
+      "key": "Your key is stored securely and won’t be leaked"
+    },
+    "apiKey": "API Key",
+    "model": "AI Model",
+    "saved": "Saved",
+    "modelHint": {
+      "diff": "Different models have different features and capabilities",
+      "notInList": "Selected model may not be available. Please refetch"
+    },
+    "fetching": "Fetching models...",
+    "fetch": "Fetch Models",
+    "cancel": "Cancel",
+    "save": "Save Config"
+  }
+}
+
+

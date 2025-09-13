@@ -15,7 +15,7 @@ export class CharacterCardParser {
       if (!file.type.startsWith('image/')) {
         return {
           success: false,
-          error: '请选择图片文件'
+          error: 'Please select an image file'
         };
       }
 
@@ -64,7 +64,7 @@ export class CharacterCardParser {
         const base64 = result.split(',')[1];
         resolve(base64);
       };
-      reader.onerror = () => reject(new Error('文件读取失败'));
+      reader.onerror = () => reject(new Error('File read failed'));
       reader.readAsDataURL(file);
     });
   }
@@ -134,9 +134,9 @@ export class CharacterCardParser {
       // 调试信息：输出所有找到的文本块
       console.log('找到的文本块:', textChunks.map(chunk => ({ keyword: chunk.keyword, preview: chunk.text.substring(0, 50) })));
       
-      throw new Error('未找到角色数据');
+      throw new Error('Character data not found');
     } catch (error) {
-      throw new Error('PNG 元数据提取失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      throw new Error('PNG metadata extraction failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }
 
@@ -262,7 +262,7 @@ export class CharacterCardParser {
         try {
           character = JSON.parse(metadata);
         } catch {
-          throw new Error('无法解析角色数据：既不是有效的 Base64 编码，也不是有效的 JSON 格式');
+          throw new Error('Unable to parse character data: neither valid Base64 encoding nor valid JSON format');
         }
       }
       
@@ -297,7 +297,7 @@ export class CharacterCardParser {
       // 验证必要字段
       if (!characterName) {
         console.error('角色数据中未找到名称字段，可用字段:', Object.keys(characterData));
-        throw new Error('角色名称缺失');
+        throw new Error('Character name missing');
       }
 
       // 获取描述信息
@@ -353,7 +353,7 @@ export class CharacterCardParser {
         extensions: characterData.extensions ? (characterData.extensions as Record<string, unknown>) : {}
       };
     } catch (error) {
-      throw new Error('SillyTavern 数据解析失败: ' + (error instanceof Error ? error.message : '解析错误'));
+      throw new Error('SillyTavern data parsing failed: ' + (error instanceof Error ? error.message : 'Parsing error'));
     }
   }
 
@@ -443,12 +443,12 @@ export class CharacterCardParser {
     const errors: string[] = [];
     
     if (!character.name.trim()) {
-      errors.push('角色名称不能为空');
+      errors.push('Character name cannot be empty');
     }
     
     // 检查人设：personality 或 description 至少有一个不为空
     if (!character.personality.trim() && !character.description.trim()) {
-      errors.push('角色人设不能为空（personality 和 description 都为空）');
+      errors.push('Character persona cannot be empty (both personality and description are empty)');
     }
     
     return errors;

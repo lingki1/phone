@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Message } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import './BatchDeleteSelector.css';
 
 export interface BatchDeleteSelectorProps {
@@ -17,6 +18,7 @@ export default function BatchDeleteSelector({
   onCancel,
   isVisible
 }: BatchDeleteSelectorProps) {
+  const { t, locale } = useI18n();
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
@@ -55,12 +57,12 @@ export default function BatchDeleteSelector({
   // 处理批量删除
   const handleBatchDelete = () => {
     if (selectedMessages.size === 0) {
-      alert('请先选择要删除的消息');
+      alert(t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.errors.noSelection', '请先选择要删除的消息'));
       return;
     }
 
     const count = selectedMessages.size;
-    const confirmMessage = `确定要删除选中的 ${count} 条消息吗？此操作不可撤销！`;
+    const confirmMessage = t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.confirm.delete', '确定要删除选中的 {{count}} 条消息吗？此操作不可撤销！').replace('{{count}}', String(count));
     
     if (confirm(confirmMessage)) {
       onBatchDelete(Array.from(selectedMessages));
@@ -79,7 +81,7 @@ export default function BatchDeleteSelector({
   // 格式化时间
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('zh-CN', { 
+    return date.toLocaleTimeString(locale || 'zh-CN', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -92,7 +94,7 @@ export default function BatchDeleteSelector({
       <div className="batch-delete-header">
         <div className="batch-delete-title">
           <span className="batch-delete-icon">🗑️</span>
-          <span>批量删除消息</span>
+          <span>{t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.title', '批量删除消息')}</span>
         </div>
         <button className="batch-delete-close" onClick={onCancel}>
           ✕
@@ -106,7 +108,7 @@ export default function BatchDeleteSelector({
             checked={selectAll}
             onChange={handleSelectAll}
           />
-          <span>全选 ({selectedMessages.size}/{messages.length})</span>
+          <span>{t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.selectAll', '全选 ({{selected}}/{{total}})').replace('{{selected}}', String(selectedMessages.size)).replace('{{total}}', String(messages.length))}</span>
         </label>
         
         <div className="batch-delete-actions">
@@ -114,14 +116,14 @@ export default function BatchDeleteSelector({
             className="batch-delete-btn cancel"
             onClick={onCancel}
           >
-            取消
+            {t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.buttons.cancel', '取消')}
           </button>
           <button 
             className="batch-delete-btn confirm"
             onClick={handleBatchDelete}
             disabled={selectedMessages.size === 0}
           >
-            删除选中 ({selectedMessages.size})
+            {t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.buttons.deleteSelected', '删除选中 ({{count}})').replace('{{count}}', String(selectedMessages.size))}
           </button>
         </div>
       </div>
@@ -144,7 +146,7 @@ export default function BatchDeleteSelector({
             <div className="batch-delete-message-content">
               <div className="batch-delete-message-header">
                 <span className="batch-delete-message-sender">
-                  {message.role === 'user' ? '我' : (message.senderName || 'AI')}
+                  {message.role === 'user' ? t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.sender.me', '我') : (message.senderName || t('QQ.ChatInterface.MessageActions.BatchDeleteSelector.sender.ai', 'AI'))}
                 </span>
                 <span className="batch-delete-message-time">
                   {formatTime(message.timestamp)}

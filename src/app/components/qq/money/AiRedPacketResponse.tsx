@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
 import './AiRedPacketResponse.css';
 
 interface AiRedPacketResponseProps {
@@ -16,9 +17,10 @@ export default function AiRedPacketResponse({
   message,
   timestamp
 }: AiRedPacketResponseProps) {
+  const { t, locale } = useI18n();
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale || 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -31,7 +33,7 @@ export default function AiRedPacketResponse({
   };
 
   const getResponseTitle = () => {
-    return action === 'accepted' ? '已接受红包' : '已拒绝红包';
+    return action === 'accepted' ? t('QQ.ChatInterface.Money.AiRedPacketResponse.title.accepted', '已接受红包') : t('QQ.ChatInterface.Money.AiRedPacketResponse.title.rejected', '已拒绝红包');
   };
 
   const getResponseColor = () => {
@@ -51,14 +53,14 @@ export default function AiRedPacketResponse({
           <div className="response-header">
             <span className="response-title">{getResponseTitle()}</span>
             <span className={`response-badge ${getResponseColor()}`}>
-              {action === 'accepted' ? '已接受' : '已拒绝'}
+              {action === 'accepted' ? t('QQ.ChatInterface.Money.AiRedPacketResponse.badge.accepted', '已接受') : t('QQ.ChatInterface.Money.AiRedPacketResponse.badge.rejected', '已拒绝')}
             </span>
           </div>
 
           {/* 金额显示（接受时显示金额，拒绝时显示返还金额） */}
           {amount > 0 && (
             <div className="response-amount">
-              {action === 'accepted' ? '¥' : '返还 ¥'}{amount.toFixed(2)}
+              {action === 'accepted' ? '¥' : t('QQ.ChatInterface.Money.AiRedPacketResponse.amount.return', '返还 ¥')}{amount.toFixed(2)}
             </div>
           )}
 

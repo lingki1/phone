@@ -22,6 +22,7 @@ import { BatchDeleteSelector } from './messageactions';
 import UnicodeEmojiPicker from '../Unicode/UnicodeEmojiPicker';
 import MemorySummary from './recollection/MemorySummary';
 import './ChatInterface.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface ApiConfig {
   proxyUrl: string;
@@ -76,6 +77,7 @@ export default function ChatInterface({
   personalSettings,
   currentPreset
 }: ChatInterfaceProps) {
+  const { t } = useI18n();
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentAiUser, setCurrentAiUser] = useState<{name: string, avatar: string} | null>(null);
@@ -130,9 +132,9 @@ export default function ChatInterface({
   // 聊天状态相关状态
   const [chatStatus, setChatStatus] = useState<ChatStatus>({
     isOnline: true,
-    mood: '心情愉快',
-    location: '在家中',
-    outfit: '穿着休闲装',
+    mood: t('QQ.ChatInterface.status.defaultMood', '心情愉快'),
+    location: t('QQ.ChatInterface.status.defaultLocation', '在家中'),
+    outfit: t('QQ.ChatInterface.status.defaultOutfit', '穿着休闲装'),
     lastUpdate: Date.now()
   });
 
@@ -458,9 +460,9 @@ export default function ChatInterface({
       setShowPersonaMenu(false);
     } catch (e) {
       console.error('快速切换人设失败:', e);
-      alert('切换人设失败，请重试');
+      alert(t('QQ.ChatInterface.persona.switchFailed', '切换人设失败，请重试'));
     }
-  }, []);
+  }, [t]);
 
   // 加载用户余额
   useEffect(() => {
@@ -995,7 +997,7 @@ export default function ChatInterface({
 
     if (!effectiveApiConfig.proxyUrl || !effectiveApiConfig.apiKey || !effectiveApiConfig.model) {
       // 根据模式处理API配置缺失错误
-      const errorContent = '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。';
+      const errorContent = t('QQ.ChatInterface.error.setupApi', '请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。');
       
       if (isStoryModeCall) {
         // 剧情模式：将错误消息添加到剧情模式消息列表
@@ -1005,7 +1007,7 @@ export default function ChatInterface({
           content: errorContent,
           timestamp: Date.now(),
           type: 'text',
-          senderName: '系统',
+          senderName: t('QQ.ChatInterface.system', '系统'),
           isRead: true
         };
         
@@ -1026,7 +1028,7 @@ export default function ChatInterface({
           role: 'assistant',
           content: errorContent,
           timestamp: Date.now(),
-          senderName: '系统',
+          senderName: t('QQ.ChatInterface.system', '系统'),
           senderAvatarId: undefined // 系统消息不需要头像
         };
 
@@ -1127,10 +1129,10 @@ export default function ChatInterface({
         
         // 特殊处理内容过滤错误
         if (errorMessage.includes('No candidates returned') || errorCode === 500) {
-          errorMessage = '内容被安全策略过滤，请尝试调整角色设定或使用更温和的描述。';
+          errorMessage = t('QQ.ChatInterface.error.contentFiltered', '内容被安全策略过滤，请尝试调整角色设定或使用更温和的描述。');
         }
         
-        throw new Error(`API服务器错误: ${errorMessage} (代码: ${errorCode})`);
+        throw new Error(`${t('QQ.ChatInterface.error.apiServer', 'API服务器错误')}: ${errorMessage} (${t('QQ.ChatInterface.error.code', '代码')}: ${errorCode})`);
       }
       
       // 检查响应格式
@@ -1215,17 +1217,17 @@ export default function ChatInterface({
       console.error('AI回复失败:', error);
       
       // 根据错误类型提供不同的错误信息
-      let errorContent = 'AI回复失败，请检查API配置是否正确。';
+      let errorContent = t('QQ.ChatInterface.error.aiFailed', 'AI回复失败，请检查API配置是否正确。');
       
       if (error instanceof Error) {
         if (error.message.includes('API服务器错误')) {
-          errorContent = `AI服务器错误: ${error.message.replace('API服务器错误: ', '')}`;
+          errorContent = `${t('QQ.ChatInterface.error.apiServer', 'AI服务器错误')}: ${error.message.replace('API服务器错误: ', '')}`;
         } else if (error.message.includes('API响应格式错误')) {
-          errorContent = 'AI响应格式错误，请检查模型配置。';
+          errorContent = t('QQ.ChatInterface.error.responseFormat', 'AI响应格式错误，请检查模型配置。');
         } else if (error.message.includes('API请求失败')) {
-          errorContent = 'API请求失败，请检查网络连接和代理设置。';
+          errorContent = t('QQ.ChatInterface.error.requestFailed', 'API请求失败，请检查网络连接和代理设置。');
         } else {
-          errorContent = `AI回复失败: ${error.message}`;
+          errorContent = `${t('QQ.ChatInterface.error.aiFailedPrefix', 'AI回复失败')}: ${error.message}`;
         }
       }
       
@@ -1238,7 +1240,7 @@ export default function ChatInterface({
           content: errorContent,
           timestamp: Date.now(),
           type: 'text',
-          senderName: '系统',
+          senderName: t('QQ.ChatInterface.system', '系统'),
           isRead: true
         };
         
@@ -1259,7 +1261,7 @@ export default function ChatInterface({
           role: 'assistant',
           content: errorContent,
           timestamp: Date.now(),
-          senderName: '系统',
+          senderName: t('QQ.ChatInterface.system', '系统'),
           senderAvatarId: undefined // 系统消息不需要头像
         };
 
@@ -1276,7 +1278,7 @@ export default function ChatInterface({
       setCurrentAiUser(null); // 清除当前AI用户信息
       endAiTask(); // 结束AI任务
     }
-  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask, handleStoryModeAiResponse, extraInfoConfig]);
+  }, [localApiConfig, chat, dbPersonalSettings, personalSettings, allChats, availableContacts, chatStatus, currentPreset, onUpdateChat, endAiTask, handleStoryModeAiResponse, extraInfoConfig, t]);
 
   // 将triggerAiResponse赋值给useRef，避免循环依赖
   useEffect(() => {
@@ -1688,14 +1690,14 @@ export default function ChatInterface({
 
   // 删除消息（优化：使用useCallback缓存）
   const handleDeleteMessage = useCallback((messageId: string) => {
-    if (confirm('确定要删除这条消息吗？')) {
+    if (confirm(t('QQ.ChatInterface.confirm.deleteMessage', '确定要删除这条消息吗？'))) {
       const updatedChat = {
         ...chat,
         messages: chat.messages.filter(msg => msg.id !== messageId)
       };
       onUpdateChat(updatedChat);
     }
-  }, [chat, onUpdateChat]);
+  }, [chat, onUpdateChat, t]);
 
   // 批量删除消息
   const handleBatchDelete = useCallback((messageIds: string[]) => {
@@ -1733,7 +1735,7 @@ export default function ChatInterface({
 
   // 删除剧情模式消息
   const handleStoryDeleteMessage = useCallback(async (messageId: string) => {
-    if (!confirm('确定要删除这条剧情消息吗？')) return;
+    if (!confirm(t('QQ.ChatInterface.confirm.deleteStoryMessage', '确定要删除这条剧情消息吗？'))) return;
     try {
       const updated = storyModeMessages.filter(m => m.id !== messageId);
       setStoryModeMessages(updated);
@@ -1741,7 +1743,7 @@ export default function ChatInterface({
     } catch (error) {
       console.error('删除剧情模式消息失败:', error);
     }
-  }, [storyModeMessages, chat.id]);
+  }, [storyModeMessages, chat.id, t]);
 
   // 剧情模式下重新生成AI回复
   const handleStoryRegenerateAI = useCallback(async (messageId: string) => {
@@ -2379,7 +2381,7 @@ export default function ChatInterface({
           <button 
             className="action-btn"
             onClick={() => setShowWorldBookAssociationSwitch(true)}
-            title="世界书关联管理"
+            title={t('QQ.ChatInterface.title.worldBook', '世界书关联管理')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
@@ -2390,7 +2392,7 @@ export default function ChatInterface({
           <button 
             className="action-btn"
             onClick={() => setShowExtraInfoSettings(true)}
-            title="设置额外信息"
+            title={t('QQ.ChatInterface.title.extraInfo', '设置额外信息')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -2399,7 +2401,7 @@ export default function ChatInterface({
           <button 
             className="action-btn"
             onClick={() => setShowBackgroundModal(true)}
-            title="设置聊天背景"
+            title={t('QQ.ChatInterface.title.chatBackground', '设置聊天背景')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -2410,7 +2412,7 @@ export default function ChatInterface({
           <button 
             className="action-btn"
             onClick={() => setShowGiftHistory(true)}
-            title="查看礼物记录"
+            title={t('QQ.ChatInterface.title.giftHistory', '查看礼物记录')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20,12 20,22 4,22 4,12"/>
@@ -2426,7 +2428,7 @@ export default function ChatInterface({
             <button
               className="action-btn"
               onClick={() => setShowPersonaMenu(prev => !prev)}
-              title="切换人设"
+              title={t('QQ.ChatInterface.title.switchPersona', '切换人设')}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="7" r="4"/>
@@ -2436,18 +2438,18 @@ export default function ChatInterface({
             {showPersonaMenu && (
               <div className="mask-persona-dropdown">
                 {personaList.length === 0 ? (
-                  <div className="empty-list">暂无保存的人设</div>
+                  <div className="empty-list">{t('QQ.ChatInterface.persona.empty', '暂无保存的人设')}</div>
                 ) : (
                   <div className="persona-list mask-persona-list">
                     {personaList.map(p => (
                       <div key={p.id} className={`persona-item mask-persona-item ${p.isActive ? 'active' : ''}`} onClick={() => handleQuickSelectPersona(p.id)}>
                         <div className="persona-main mask-persona-main">
                           <div className="persona-avatar mask-persona-avatar">
-                            <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || '未命名'} width={48} height={48} unoptimized={p.userAvatar?.startsWith?.('data:')} />
+                            <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')} width={48} height={48} unoptimized={p.userAvatar?.startsWith?.('data:')} />
                           </div>
                           <div className="persona-info mask-persona-info">
                             <div className="persona-title mask-persona-title">
-                              <span className="persona-name mask-persona-name">{p.userNickname || '未命名'}</span>
+                              <span className="persona-name mask-persona-name">{p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')}</span>
                             </div>
                             <div className="persona-bio mask-persona-bio">{(p.userBio || '').slice(0, 60)}</div>
                           </div>
@@ -2465,7 +2467,7 @@ export default function ChatInterface({
               <button 
                 className="action-btn"
                 onClick={() => setShowMemoryManager(true)}
-                title="记忆管理"
+                title={t('QQ.ChatInterface.title.memoryManager', '记忆管理')}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -2478,7 +2480,7 @@ export default function ChatInterface({
               <button 
                 className="action-btn"
                 onClick={() => setShowMemberManager(true)}
-                title="群成员管理"
+                title={t('QQ.ChatInterface.title.groupMemberManager', '群成员管理')}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -2492,7 +2494,7 @@ export default function ChatInterface({
             <button 
               className="action-btn"
               onClick={() => setShowSingleChatMemoryManager(true)}
-              title="群聊记忆管理"
+              title={t('QQ.ChatInterface.title.singleChatMemoryManager', '群聊记忆管理')}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -2530,7 +2532,7 @@ export default function ChatInterface({
           <>
             {chat.messages.length === 0 ? (
               <div className="empty-chat">
-                <p>开始和 {chat.name} 聊天吧！</p>
+                <p>{t('QQ.ChatInterface.emptyChat', '开始和 {{name}} 聊天吧！').replace('{{name}}', chat.name)}</p>
               </div>
             ) : (
               <>
@@ -2548,7 +2550,7 @@ export default function ChatInterface({
                   <button 
                     className="scroll-to-bottom-btn"
                     onClick={() => scrollToBottom(true)}
-                    title="滚动到最新消息"
+                    title={t('QQ.ChatInterface.title.scrollToBottom', '滚动到最新消息')}
                   >
                     ↓
                   </button>
@@ -2614,7 +2616,7 @@ export default function ChatInterface({
                     setCurrentAiUser(null);
                     endAiTask();
                   }}
-                  title="取消AI回复"
+                  title={t('QQ.ChatInterface.title.cancelAi', '取消AI回复')}
                 >
                   ✕
                 </button>
@@ -2669,7 +2671,7 @@ export default function ChatInterface({
                 className="action-btn unicode-emoji-btn"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isLoading || isPending}
-                title="表情"
+                title={t('QQ.ChatInterface.emoji', '表情')}
               >
                 <span className="btn-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2679,7 +2681,7 @@ export default function ChatInterface({
                     <line x1="15" y1="9" x2="15.01" y2="9"/>
                   </svg>
                 </span>
-                <span className="btn-text">表情</span>
+                <span className="btn-text">{t('QQ.ChatInterface.emoji', '表情')}</span>
               </button>
               
               {/* Unicode表情选择器 - 放在按钮容器内 */}
@@ -2696,7 +2698,7 @@ export default function ChatInterface({
                 className="action-btn red-packet-btn"
                 onClick={() => setShowSendRedPacket(true)}
                 disabled={isLoading || isPending}
-                title="发送红包"
+                title={t('QQ.ChatInterface.redPacket', '发送红包')}
               >
                 <span className="btn-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2707,7 +2709,7 @@ export default function ChatInterface({
                     <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
                   </svg>
                 </span>
-                <span className="btn-text">红包</span>
+                <span className="btn-text">{t('QQ.ChatInterface.redPacketShort', '红包')}</span>
               </button>
             )}
             {/* 预留位置给未来的功能按钮 */}
@@ -2717,7 +2719,7 @@ export default function ChatInterface({
               chat={chat}
               apiConfig={localApiConfig}
               onSummaryGenerated={(summary) => {
-                console.log('记忆总结已生成:', summary);
+                console.log(t('QQ.ChatInterface.MemorySummary.summaryGenerated', '记忆总结已生成:'), summary);
                 // 可以在这里添加通知或其他处理逻辑
               }}
             />
@@ -2727,7 +2729,7 @@ export default function ChatInterface({
               disabled={isLoading || isPending}
             />
             <div className="reply-trigger-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-              <label title={autoGenerateOnSend ? '发送消息后自动调用AI生成回复' : '发送消息后需要点击AI生成按钮'} style={{ display: 'flex', alignItems: 'center', cursor: (isLoading || isPending) ? 'not-allowed' : 'pointer', gap: '6px' }}>
+              <label title={autoGenerateOnSend ? t('QQ.ChatInterface.autoOn', '发送消息后自动调用AI生成回复') : t('QQ.ChatInterface.autoOff', '发送消息后需要点击AI生成按钮')} style={{ display: 'flex', alignItems: 'center', cursor: (isLoading || isPending) ? 'not-allowed' : 'pointer', gap: '6px' }}>
                 <input
                   type="checkbox"
                   checked={autoGenerateOnSend}
@@ -2735,7 +2737,7 @@ export default function ChatInterface({
                   disabled={isLoading || isPending}
                 />
                 <span style={{ fontSize: '12px', color: '#666' }}>
-                  {autoGenerateOnSend ? '发送即生成' : '按键生成'}
+                  {autoGenerateOnSend ? t('QQ.ChatInterface.autoGenerate', '发送即生成') : t('QQ.ChatInterface.manualGenerate', '按键生成')}
                 </span>
               </label>
             </div>
@@ -2769,8 +2771,8 @@ export default function ChatInterface({
             }}
             placeholder={
               isPending 
-                ? (isStoryMode ? "AI正在生成剧情中，请稍候..." : "AI正在回复中，请稍候...")
-                : (isStoryMode ? "继续编写剧情..." : (chat.isGroup ? "输入消息，@可提及群成员..." : "输入消息..."))
+                ? (isStoryMode ? t('QQ.ChatInterface.placeholder.generatingStory', 'AI正在生成剧情中，请稍候...') : t('QQ.ChatInterface.placeholder.generating', 'AI正在回复中，请稍候...'))
+                : (isStoryMode ? t('QQ.ChatInterface.placeholder.story', '继续编写剧情...') : (chat.isGroup ? t('QQ.ChatInterface.placeholder.group', '输入消息，@可提及群成员...') : t('QQ.ChatInterface.placeholder.single', '输入消息...')))
             }
             rows={1}
             disabled={isLoading || isPending}
@@ -2791,7 +2793,7 @@ export default function ChatInterface({
                 }
               } : handleSendMessage}
               disabled={isLoading || isPending || (isStoryMode ? !storyModeInput.trim() : !message.trim())}
-              title={isStoryMode ? "继续剧情" : "发送消息"}
+              title={isStoryMode ? t('QQ.ChatInterface.title.continue', '继续剧情') : t('QQ.ChatInterface.title.send', '发送消息')}
             >
               <span className="btn-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2799,7 +2801,7 @@ export default function ChatInterface({
                   <polygon points="22,2 15,22 11,13 2,9 22,2"/>
                 </svg>
               </span>
-              <span className="btn-text">{isStoryMode ? "继续" : "发送"}</span>
+              <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.continue', '继续') : t('QQ.ChatInterface.send', '发送')}</span>
             </button>
             {!autoGenerateOnSend && (
               <button 
@@ -2808,8 +2810,8 @@ export default function ChatInterface({
                 disabled={isLoading || isPending || !hasNewUserMessage || (isStoryMode ? storyModeMessages.length === 0 : chat.messages.length === 0)}
                 title={
                   isStoryMode 
-                    ? (hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成")
-                    : (hasNewUserMessage ? "生成AI回复" : "需要新消息才能生成回复")
+                    ? (hasNewUserMessage ? t('QQ.ChatInterface.title.generateStory', 'AI生成剧情') : t('QQ.ChatInterface.title.needContent', '需要新内容才能生成'))
+                    : (hasNewUserMessage ? t('QQ.ChatInterface.title.generate', '生成AI回复') : t('QQ.ChatInterface.title.needMessage', '需要新消息才能生成回复'))
                 }
               >
                 <span className="btn-icon">
@@ -2820,7 +2822,7 @@ export default function ChatInterface({
                     <path d="M8.5 4.5l3 3m-3 3l3-3"/>
                   </svg>
                 </span>
-                <span className="btn-text">{isStoryMode ? "AI生成" : "AI回复"}</span>
+                <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.generate', 'AI生成') : t('QQ.ChatInterface.reply', 'AI回复')}</span>
               </button>
             )}
           </div>
@@ -2843,7 +2845,7 @@ export default function ChatInterface({
               await dataManager.savePersonalSettings(settings);
               setDbPersonalSettings(settings);
 
-              console.log('个人设置已更新到数据库:', settings);
+              console.log(t('QQ.ChatInterface.persona.settingsUpdated', '个人设置已更新到数据库:'), settings);
             } catch (error) {
               console.error('Failed to save personal settings to database:', error);
               // 如果数据库保存失败，回退到localStorage

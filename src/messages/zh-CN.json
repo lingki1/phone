@@ -1,0 +1,1205 @@
+{
+  "Common": {
+    "language": "语言",
+    "english": "英语",
+    "chinese": "中文",
+    "switchLanguage": "切换语言"
+  },
+  "Desktop": {
+    "searchPlaceholder": "搜索...",
+    "comingSoon": "开发中",
+    "insufficientBalance": "余额不足",
+    "greeting": "美好的一天开始了",
+    "aria": {
+      "creativespace": "我的创意",
+      "qq": "聊天",
+      "blackmarket": "黑市",
+      "music": "音乐",
+      "shopping": "购物",
+      "weibo": "热点",
+      "chatroom": "聊天室",
+      "app": "应用"
+    },
+    "alert": {
+      "importCharacterSuccess": "角色导入成功！",
+      "commonFailure": "操作失败，请稍后重试",
+      "importWorldBookSuccess": "世界书导入成功！",
+      "comingSoon": "功能正在开发中，敬请期待！",
+      "insufficientBalanceDetail": "余额不足！",
+      "checkBalanceFailed": "检查余额失败，请稍后重试",
+      "wrongPassword": "密码错误！",
+      "logoutFailed": "退出登录失败，请稍后重试"
+    },
+    "prompt": {
+      "enterAdminPassword": "请输入管理密码："
+    },
+    "confirm": {
+      "logout": "确定要退出登录吗？"
+    },
+    "user": {
+      "title": "用户",
+      "login": "登录",
+      "notLoggedIn": "未登录",
+      "role": "角色：",
+      "group": {
+        "label": "分组：",
+        "ungrouped": "未分组",
+        "default": "默认分组"
+      },
+      "logout": "退出登录"
+    },
+    "battery": {
+      "status": "电池状态",
+      "charging": "充电中",
+      "notCharging": "未充电"
+    },
+    "appName": {
+      "qq": "QwQ",
+      "blackmarket": "黑市",
+      "music": "音乐",
+      "shopping": "购物",
+      "weibo": "热点",
+      "chatroom": "聊天室",
+      "creativespace": "我的创意"
+    }
+  },
+  "Home": {
+    "title": "欢迎"
+  },
+  "Auth": {
+    "common": {
+      "username": "用户名",
+      "password": "密码",
+      "email": "邮箱",
+      "networkError": "网络错误，请稍后重试"
+    },
+    "placeholder": {
+      "username": "请输入用户名",
+      "usernameWithRule": "请输入用户名 (3-20个字符)",
+      "password": "请输入密码",
+      "passwordWithRule": "请输入密码 (至少6个字符)",
+      "confirmPassword": "请再次输入密码",
+      "activationCode": "请输入激活码（若管理员开启需要）",
+      "emailOptional": "请输入邮箱 (可选)"
+    },
+    "login": {
+      "fillUserAndPass": "请填写用户名和密码",
+      "success": "登录成功！",
+      "fail": "登录失败",
+      "submitting": "登录中...",
+      "submit": "登录"
+    },
+    "register": {
+      "enterUsername": "请输入用户名",
+      "usernameLength": "用户名长度必须在3-20个字符之间",
+      "enterPassword": "请输入密码",
+      "passwordLength": "密码长度不能少于6个字符",
+      "passwordMismatch": "两次输入的密码不一致",
+      "success": "注册成功！正在跳转...",
+      "fail": "注册失败",
+      "submitting": "注册中...",
+      "submit": "注册",
+      "activationCode": "激活码",
+      "confirmPassword": "确认密码"
+    },
+    "modal": {
+      "closeTitle": "关闭登录窗口（可查看公告）",
+      "loginTitle": "Lingki-傻瓜机",
+      "registerTitle": "创建账户",
+      "loginSubtitle": "请登录您的账户",
+      "registerSubtitle": "请填写以下信息创建账户",
+      "noAccount": "没有账户？",
+      "haveAccount": "已有账户？",
+      "registerNow": "立即注册",
+      "loginNow": "立即登录"
+    }
+  }
+  ,
+  "QQ": {
+    "common": {
+      "close": "关闭",
+      "hint": "提示"
+    },
+    "ChatInterface": {
+      "system": "系统",
+      "status": {
+        "defaultMood": "心情愉快",
+        "defaultLocation": "在家中",
+        "defaultOutfit": "穿着休闲装",
+        "online": "在线",
+        "offline": "离线",
+        "status": "状态",
+        "mood": "心情",
+        "location": "位置",
+        "outfit": "穿着"
+      },
+      "error": {
+        "setupApi": "请先设置API配置才能使用AI聊天功能。请在设置中配置代理地址、API密钥和模型名称。",
+        "contentFiltered": "内容被安全策略过滤，请尝试调整角色设定或使用更温和的描述。",
+        "apiServer": "API服务器错误",
+        "code": "代码",
+        "aiFailed": "AI回复失败，请检查API配置是否正确。",
+        "responseFormat": "AI响应格式错误，请检查模型配置。",
+        "requestFailed": "API请求失败，请检查网络连接和代理设置。",
+        "aiFailedPrefix": "AI回复失败"
+      },
+      "title": {
+        "worldBook": "世界书关联管理",
+        "extraInfo": "设置额外信息",
+        "chatBackground": "设置聊天背景",
+        "giftHistory": "查看礼物记录",
+        "switchPersona": "切换人设",
+        "memoryManager": "记忆管理",
+        "groupMemberManager": "群成员管理",
+        "singleChatMemoryManager": "群聊记忆管理",
+        "scrollToBottom": "滚动到最新消息",
+        "cancelAi": "取消AI回复",
+        "continue": "继续剧情",
+        "send": "发送消息",
+        "generateStory": "AI生成剧情",
+        "needContent": "需要新内容才能生成",
+        "generate": "生成AI回复",
+        "needMessage": "需要新消息才能生成回复"
+      },
+      "emptyChat": "开始和 {{name}} 聊天吧！",
+      "emoji": "表情",
+      "redPacket": "发送红包",
+      "redPacketShort": "红包",
+      "autoOn": "发送消息后自动调用AI生成回复",
+      "autoOff": "发送消息后需要点击AI生成按钮",
+      "autoGenerate": "发送即生成",
+      "manualGenerate": "按键生成",
+      "placeholder": {
+        "generatingStory": "AI正在生成剧情中，请稍候...",
+        "generating": "AI正在回复中，请稍候...",
+        "story": "继续编写剧情...",
+        "group": "输入消息，@可提及群成员...",
+        "single": "输入消息..."
+      },
+      "continue": "继续",
+      "send": "发送",
+      "generate": "AI生成",
+      "reply": "AI回复",
+      "StoryToggle": {
+        "title": {
+          "toNormal": "切换到普通聊天模式",
+          "toStory": "切换到剧情模式"
+        },
+        "text": {
+          "online": "线上",
+          "story": "剧情"
+        }
+      },
+      "StoryMode": {
+        "creating": "正在创作剧情...",
+        "me": "我",
+        "quote": "引用",
+        "edit": "编辑",
+        "delete": "删除",
+        "regenerate": "重新生成",
+        "save": "保存",
+        "cancel": "取消",
+        "startWriting": "开始编写你的剧情故事吧！",
+        "clickToStart": "点击下方输入框开始创作",
+        "loadMore": "加载更多历史剧情",
+        "loading": "加载中...",
+        "loadMoreText": "加载更多"
+      },
+      "StoryModeInput": {
+        "title": "剧情编写",
+        "characters": "字符",
+        "continue": "继续剧情",
+        "continueText": "继续",
+        "generateTitle": "AI生成剧情",
+        "needContent": "需要新内容才能生成",
+        "generateText": "AI生成"
+      },
+      "MemorySummary": {
+        "title": {
+          "generate": "生成记忆总结"
+        },
+        "button": "记忆总结",
+        "header": "记忆总结",
+        "generatingLocked": "正在生成中，无法关闭",
+        "clickToClose": "点击关闭",
+        "close": "关闭",
+        "generating": "正在生成记忆总结...",
+        "lockedNotice": "生成过程中窗口已锁定，请耐心等待",
+        "streamingPreview": "实时生成预览：",
+        "retry": "重试",
+        "resultTitle": "总结内容：",
+        "processStatus": "处理状态",
+        "resultLabel": "结果：",
+        "resultBytes": "已把 {{bytes}} 字节内容总结完成",
+        "saved": "记忆总结已自动保存到世界书！",
+        "save": "保存",
+        "regenerate": "重新生成",
+        "complete": "完成",
+        "startTip1": "点击“生成总结”按钮，AI将根据您与{{name}}的聊天记录，创作一篇优美的回忆小说。",
+        "startTip2": "总结将自动保存到世界书的“recollection”分类中。",
+        "pickRange": "选择要总结的消息范围：",
+        "from": "从",
+        "to": "到",
+        "items": "条",
+        "total": "总消息数：{{total}} 条",
+        "rangeStat": "将总结第 {{start}} 到第 {{end}} 条消息（共 {{count}} 条）",
+        "generate": "生成总结",
+        "summaryGenerated": "记忆总结已生成:"
+      },
+      "persona": {
+        "empty": "暂无保存的人设",
+        "unnamed": "未命名",
+        "switchFailed": "切换人设失败，请重试",
+        "settingsUpdated": "个人设置已更新到数据库:"
+      },
+      "confirm": {
+        "deleteMessage": "确定要删除这条消息吗？",
+        "deleteStoryMessage": "确定要删除这条剧情消息吗？"
+      },
+      "GiftHistory": {
+        "title": "礼物记录",
+        "count": "{{count}} 条记录",
+        "loading": "正在加载礼物记录...",
+        "empty": {
+          "title": "暂无礼物记录",
+          "desc": "这里会显示您收到的所有礼物"
+        },
+        "itemsTitle": "🎁 礼品清单",
+        "shipping": {
+          "instant": "极速立刻",
+          "fast": "快速1分钟",
+          "slow": "慢速10分钟",
+          "standard": "标准配送"
+        }
+      },
+      "Message": {
+        "edit": {
+          "save": "保存",
+          "cancel": "取消"
+        }
+      },
+      "Pagination": {
+        "loading": "加载中...",
+        "loadMore": "加载更多历史消息",
+        "remaining": "(还有 {{count}} 条消息)"
+      },
+      "ExtraInfoSettings": {
+        "title": "额外信息设置",
+        "enable": {
+          "label": "启用额外信息功能",
+          "desc": "启用后，AI会在回复中包含HTML格式的额外信息",
+          "worldbookTip": "配置将自动保存到世界书系统，分类为\"extrainfo\""
+        },
+        "select": {
+          "label": "选择配置",
+          "loading": "加载中...",
+          "deleteTitle": "删除配置",
+          "empty": "暂无可用配置",
+          "createNew": "创建新配置"
+        },
+        "description": {
+          "label": "功能描述",
+          "selectedBadge": "✓ 使用现有配置",
+          "placeholder": "例如：我希望制作一个状态栏，显示当前的心情、位置和穿着信息",
+          "desc": "请详细描述你希望AI生成的额外信息内容和样式",
+          "worldbookTip": "📝 描述内容将作为世界书内容保存，AI会根据此描述生成相应的HTML"
+        },
+        "footer": {
+          "cancel": "取消",
+          "save": "保存"
+        },
+        "confirmDelete": {
+          "title": "确认删除",
+          "messageTitle": "确定要删除这个配置吗？",
+          "messageDesc": "删除后将无法恢复，此操作会同时从世界书中移除该条目。",
+          "name": "配置名称：",
+          "createdAt": "创建时间：",
+          "cancel": "取消",
+          "confirm": "确认删除",
+          "deleting": "删除中..."
+        }
+      },
+      "ExtraInfoDisplay": {
+        "label": "额外信息",
+        "renderError": "HTML渲染失败",
+        "source": "由 {{name}} 生成"
+      },
+      "ChatBackgroundModal": {
+        "title": "设置聊天背景 - {{name}}",
+        "upload": {
+          "compressing": "正在压缩图片...",
+          "placeholderTitle": "点击上传背景图片",
+          "placeholderHint": "支持 JPG、PNG、GIF 格式，最大 10MB，会自动压缩优化",
+          "clickToChange": "点击更换图片",
+          "chooseImageError": "请选择图片文件",
+          "tooLargeError": "图片大小不能超过10MB",
+          "processError": "图片处理失败，请重试"
+        },
+        "opacity": "背景透明度: {{percent}}%",
+        "buttons": {
+          "clear": "清除背景",
+          "cancel": "取消",
+          "save": "保存"
+        },
+        "saveError": "保存失败，请重试"
+      },
+      "WorldBookListPage": {
+        "title": "世界书管理",
+        "errors": {
+          "loadFailed": "加载世界书失败，请刷新重试",
+          "deleteFailed": "删除失败，请重试"
+        },
+        "import": {
+          "success": "成功导入 {{count}} 个世界书",
+          "partial": "导入完成：成功 {{success}} 个，失败 {{error}} 个",
+          "failed": "导入失败，请重试"
+        },
+        "batchDelete": {
+          "noSelection": "请先选择要删除的世界书",
+          "confirm": "确定要删除选中的 {{count}} 个世界书吗？此操作不可撤销。",
+          "success": "成功删除 {{count}} 个世界书",
+          "partial": "删除完成：成功 {{success}} 个，失败 {{error}} 个",
+          "failed": "批量删除失败，请重试"
+        },
+        "batchCategory": {
+          "noSelection": "请先选择要更换分类的世界书",
+          "success": "成功更新 {{count}} 个世界书的分类",
+          "partial": "更新完成：成功 {{success}} 个，失败 {{error}} 个"
+        },
+        "actions": {
+          "batch": "批量操作",
+          "import": "导入",
+          "create": "创建"
+        },
+        "batch": {
+          "selected": "已选择 {{count}} 个",
+          "selectAll": "全选",
+          "deselectAll": "取消全选",
+          "delete": "删除 ({{count}})",
+          "deleting": "删除中...",
+          "changeCategory": "更换分类",
+          "cancel": "取消"
+        },
+        "search": {
+          "placeholder": "搜索世界书名称、内容或描述..."
+        },
+        "filter": {
+          "all": "全部",
+          "expand": "展开",
+          "collapse": "收起"
+        },
+        "loading": "加载中...",
+        "empty": {
+          "search": "未找到相关世界书",
+          "searchHint": "尝试使用其他关键词搜索",
+          "noBooks": "还没有世界书",
+          "createHint": "创建你的第一个世界书，为AI聊天添加丰富的背景设定",
+          "createFirst": "创建第一个世界书"
+        },
+        "results": {
+          "found": "找到 {{count}} 个结果",
+          "total": "共 {{count}} 个世界书"
+        },
+        "pagination": {
+          "prev": "上一页",
+          "next": "下一页"
+        },
+        "categoryModal": {
+          "title": "批量更换分类",
+          "selectExisting": "选择已有分类",
+          "noSelection": "不选择",
+          "inputNew": "或输入新分类",
+          "placeholder": "例如：extrainfo / notes / tags…",
+          "tip": "提示：优先使用新分类；若未填写新分类则使用下拉选择的分类。",
+          "cancel": "取消",
+          "apply": "应用"
+        }
+      },
+      "WorldBookEditor": {
+        "title": {
+          "create": "创建世界书",
+          "edit": "编辑世界书"
+        },
+        "errors": {
+          "nameRequired": "世界书名称不能为空",
+          "nameTooLong": "世界书名称不能超过50个字符",
+          "categoryRequired": "世界书分类不能为空",
+          "categoryTooLong": "世界书分类不能超过20个字符",
+          "contentRequired": "世界书内容不能为空",
+          "contentTooLong": "世界书内容不能超过10000个字符",
+          "saveFailed": "保存失败，请重试"
+        },
+        "confirm": {
+          "cancel": "确定要取消编辑吗？未保存的内容将丢失。"
+        },
+        "fields": {
+          "name": "世界书名称",
+          "description": "简短描述",
+          "category": "分类",
+          "content": "世界书内容"
+        },
+        "placeholders": {
+          "name": "请输入世界书名称",
+          "description": "简短描述这个世界书的用途（可选）",
+          "category": "请输入世界书分类，如：科幻、奇幻、现代等",
+          "content": "请输入世界书内容，这些内容将作为AI聊天的背景设定..."
+        },
+        "buttons": {
+          "cancel": "取消",
+          "save": "保存",
+          "saving": "保存中..."
+        }
+      },
+      "WorldBookCard": {
+        "actions": {
+          "edit": "编辑",
+          "delete": "删除"
+        },
+        "confirm": {
+          "delete": "确定要删除世界书\"{{name}}\"吗？"
+        },
+        "meta": {
+          "createdAt": "创建于 {{date}}",
+          "charCount": "{{count}} 字符"
+        }
+      },
+      "WorldBookAssociationModal": {
+        "title": "关联世界书",
+        "info": {
+          "selectFor": "为 <strong>{{name}}</strong> 选择要关联的世界书",
+          "help": "选中的世界书内容将在AI聊天时自动注入到系统提示词中"
+        },
+        "errors": {
+          "loadFailed": "加载世界书失败",
+          "saveFailed": "保存失败，请重试"
+        },
+        "loading": "加载中...",
+        "empty": {
+          "noBooks": "还没有世界书",
+          "createFirst": "请先创建世界书，然后再进行关联"
+        },
+        "summary": {
+          "selected": "已选择 {{count}} 个世界书"
+        },
+        "buttons": {
+          "cancel": "取消",
+          "save": "保存",
+          "saving": "保存中..."
+        }
+      },
+      "WorldBookAssociationSwitchModal": {
+        "title": "世界书关联管理",
+        "search": {
+          "placeholder": "搜索世界书..."
+        },
+        "loading": "加载中...",
+        "empty": {
+          "notFound": "没有找到世界书",
+          "adjustFilters": "尝试调整搜索条件或分类筛选"
+        },
+        "footer": {
+          "linked": "已关联: {{count}} 个"
+        }
+      },
+      "WorldBookImportModal": {
+        "title": "导入预设",
+        "description": "导入预设文件（如Sillytavern预设），自动转换为世界书格式",
+        "errors": {
+          "invalidFormat": "无效的预设格式：缺少prompts数组",
+          "noValidData": "预设中没有找到有效的世界书数据",
+          "unsupportedFormat": "不支持的预设格式，请使用Sillytavern预设格式",
+          "jsonParse": "JSON解析错误: {{message}}",
+          "jsonFormat": "JSON格式错误",
+          "fileReadFailed": "文件读取失败",
+          "noJsonData": "请输入JSON数据",
+          "previewFailed": "预览失败，请检查数据格式",
+          "importFailed": "导入失败，请检查数据格式"
+        },
+        "labels": {
+          "jsonData": "预设JSON数据"
+        },
+        "placeholders": {
+          "jsonInput": "请输入预设文件的JSON数据..."
+        },
+        "buttons": {
+          "selectFile": "选择预设文件",
+          "generateExample": "生成示例",
+          "clear": "清空",
+          "preview": "预览转换",
+          "cancel": "取消",
+          "startImport": "开始导入",
+          "importing": "导入中..."
+        },
+        "preview": {
+          "title": "转换预览 ({{count}} 个世界书)"
+        }
+      },
+      "MessageActions": {
+        "BatchDeleteSelector": {
+          "title": "批量删除消息",
+          "errors": {
+            "noSelection": "请先选择要删除的消息"
+          },
+          "confirm": {
+            "delete": "确定要删除选中的 {{count}} 条消息吗？此操作不可撤销！"
+          },
+          "selectAll": "全选 ({{selected}}/{{total}})",
+          "buttons": {
+            "cancel": "取消",
+            "deleteSelected": "删除选中 ({{count}})"
+          },
+          "sender": {
+            "me": "我",
+            "ai": "AI"
+          }
+        },
+        "MessageActionButtons": {
+          "aria": {
+            "toolbar": "消息操作工具栏"
+          },
+          "actions": {
+            "quote": "引用",
+            "edit": "编辑",
+            "regenerate": "重新生成",
+            "delete": "删除",
+            "batchDelete": "多选删除"
+          },
+          "confirm": {
+            "delete": "确定要删除这条消息吗？"
+          }
+        }
+      },
+      "Money": {
+        "AiRedPacketResponse": {
+          "title": {
+            "accepted": "已接受红包",
+            "rejected": "已拒绝红包"
+          },
+          "badge": {
+            "accepted": "已接受",
+            "rejected": "已拒绝"
+          },
+          "amount": {
+            "return": "返还 ¥"
+          }
+        },
+        "ReceiveRedPacket": {
+          "defaultMessage": "恭喜发财，大吉大利！",
+          "status": {
+            "claimed": "已领取",
+            "pending": "待领取"
+          },
+          "hint": {
+            "clickToOpen": "点击拆开红包"
+          },
+          "loading": {
+            "opening": "正在拆开..."
+          },
+          "buttons": {
+            "open": "拆开红包"
+          },
+          "success": {
+            "congratulations": "恭喜你获得红包"
+          },
+          "details": {
+            "sendTime": "发送时间:",
+            "status": "红包状态:"
+          }
+        },
+        "RedPacketMessage": {
+          "title": {
+            "send": "发出红包",
+            "received": "收到红包",
+            "receivedClaimed": "红包已领取",
+            "request": "请求红包",
+            "default": "红包消息"
+          },
+          "badge": {
+            "pending": "待领取",
+            "claimed": "已领取"
+          },
+          "info": {
+            "sendTo": "发给 {{name}}",
+            "from": "来自 {{name}}",
+            "request": "向你请求红包"
+          },
+          "claimedAt": "领取于 {{time}}",
+          "action": {
+            "claim": "点击领取",
+            "send": "点击发送"
+          }
+        },
+        "SendRedPacket": {
+          "title": "发红包",
+          "recipient": "发给: {{name}}",
+          "preview": {
+            "title": "恭喜发财"
+          },
+          "balance": "当前余额: ¥{{amount}}",
+          "blessing": {
+            "label": "祝福语",
+            "placeholder": "恭喜发财，大吉大利！"
+          },
+          "errors": {
+            "invalidAmount": "请输入有效金额",
+            "amountTooSmall": "金额必须大于0",
+            "insufficientBalance": "余额不足",
+            "amountTooLarge": "单次红包金额不能超过10000元",
+            "sendFailed": "发送失败，请重试"
+          },
+          "buttons": {
+            "sending": "发送中...",
+            "send": "塞钱进红包"
+          }
+        }
+      },
+      "CharacterImport": {
+        "CharacterImportModal": {
+          "title": "导入角色卡片",
+          "upload": {
+            "title": "选择 SillyTavern 角色卡片",
+            "supportedFormat": "支持 PNG 格式的角色卡片文件",
+            "tip": "点击选择文件或拖拽到此处",
+            "note": "头像会自动压缩优化"
+          },
+          "loading": {
+            "parsing": "正在解析角色卡片并优化头像...",
+            "subtitle": "这可能需要几秒钟时间"
+          },
+          "errors": {
+            "parseFailed": "解析失败",
+            "noValidData": "未找到有效的角色数据",
+            "processFailed": "处理文件失败",
+            "importFailed": "导入角色失败"
+          },
+          "defaultMessage": "开始聊天吧！",
+          "defaultUser": "用户"
+        },
+        "CharacterPreview": {
+          "title": "角色预览",
+          "subtitle": "确认信息无误后导入角色",
+          "unknownCreator": "未知创建者",
+          "persona": {
+            "title": "角色人设",
+            "empty": "暂无角色人设"
+          },
+          "firstMessage": {
+            "title": "剧情模式开场白",
+            "note": "导入后，在剧情模式中首次进入时会自动发送此开场白"
+          },
+          "info": {
+            "title": "角色信息",
+            "version": "版本",
+            "tags": "标签",
+            "scenario": "场景",
+            "none": "无"
+          },
+          "extended": {
+            "viewDetails": "查看详细信息",
+            "firstMessage": "首次消息",
+            "exampleDialogue": "示例对话",
+            "creatorNotes": "创建者备注",
+            "historyInstructions": "历史指令",
+            "worldScenario": "世界设定",
+            "characterBook": "角色书"
+          },
+          "buttons": {
+            "cancel": "取消",
+            "import": "导入角色"
+          }
+        }
+      },
+      "Discover": {
+        "DiscoverPage": {
+          "loading": "加载中...",
+          "noMore": "没有更多了",
+          "warnings": {
+            "dataLoadTimeout": "数据加载超时，强制完成加载",
+            "autoGenerationFailed": "自动生成服务启动失败:",
+            "deleteCommentFailed": "删除评论失败:",
+            "aiCommentFailed": "AI评论生成失败:",
+            "delayedAiCommentFailed": "延迟AI评论生成失败:",
+            "triggerAiCommentFailed": "触发AI评论生成失败:"
+          },
+          "logs": {
+            "autoGenerationStarted": "自动生成服务已启动",
+            "aiCommentsUpdated": "动态 {{postId}} 的AI评论已更新，共 {{count}} 条评论",
+            "aiPostsGenerated": "AI动态生成完成，已更新动态列表",
+            "viewStateUpdated": "已更新用户查看状态，时间戳:",
+            "postDeleted": "动态删除成功:",
+            "userCommentPublished": "用户评论已发布，AI角色正在思考回复...",
+            "retryAiComment": "用户评论后2秒内没有AI评论，重新触发生成",
+            "aiCommentsDisabled": "AI评论功能已禁用",
+            "postNotFound": "未找到动态:",
+            "triggerAiComment": "用户评论后触发AI评论生成，动态ID:",
+            "aiCommentsGenerated": "AI评论生成成功，共生成 {{count}} 条评论",
+            "bottomNavClick": "DiscoverPage - 底部导航点击:",
+            "navigateToChat": "DiscoverPage - 触发navigateToChat事件",
+            "navigateToMe": "DiscoverPage - 触发navigateToMe事件",
+            "navigateToRecollection": "DiscoverPage - 触发navigateToRecollection事件"
+          },
+          "errors": {
+            "deleteFailed": "删除动态失败，请重试"
+          }
+        },
+        "DiscoverHeader": {
+          "title": "动态",
+          "postCount": "{{count}} 条动态",
+          "settings": {
+            "title": "动态设置",
+            "ariaLabel": "动态设置"
+          },
+          "compose": {
+            "title": "发布动态",
+            "ariaLabel": "发布动态"
+          }
+        },
+        "DiscoverSettingsPanel": {
+          "title": "动态设置",
+          "status": {
+            "current": "当前状态:",
+            "autoGenerateEnabled": "✅ 自动生成动态已开启",
+            "autoGenerateDisabled": "❌ 自动生成动态已关闭",
+            "comments": "评论状态:",
+            "aiCommentsEnabled": "✅ AI评论已开启",
+            "aiCommentsDisabled": "❌ AI评论已关闭"
+          },
+          "autoGenerate": {
+            "label": "自动生成AI动态",
+            "description": "AI角色会自动发布动态"
+          },
+          "generateInterval": {
+            "label": "生成间隔（分钟）",
+            "options": {
+              "5min": "5分钟",
+              "10min": "10分钟",
+              "15min": "15分钟",
+              "30min": "30分钟",
+              "1hour": "1小时",
+              "2hours": "2小时",
+              "4hours": "4小时",
+              "8hours": "8小时",
+              "12hours": "12小时",
+              "24hours": "24小时"
+            },
+            "hint": "AI动态生成的时间间隔，最少5分钟以避免与慢速模型冲突"
+          },
+          "maxPostsPerDay": {
+            "label": "每日最大动态数",
+            "hint": "限制每日发布的动态数量"
+          },
+          "allowAiComments": {
+            "label": "允许AI评论",
+            "description": "AI角色可以对动态进行评论"
+          },
+          "allowAiLikes": {
+            "label": "允许AI点赞",
+            "description": "AI角色可以对动态进行点赞"
+          },
+          "preventAiCrossComments": {
+            "label": "禁止AI角色互相评论",
+            "description": "开启后，AI角色只能评论用户动态，不能互相评论",
+            "hint": "开启此选项后，AI角色将只对用户发布的动态进行评论，不会对其他AI角色的动态进行评论"
+          },
+          "privacyLevel": {
+            "label": "默认隐私级别",
+            "options": {
+              "public": "公开",
+              "friends": "仅好友",
+              "private": "私密"
+            },
+            "hint": "新动态的默认可见范围"
+          },
+          "notifyOnNewPosts": {
+            "label": "新动态通知",
+            "description": "收到新动态时显示通知"
+          },
+          "theme": {
+            "label": "动态主题",
+            "options": {
+              "default": "默认",
+              "dark": "深色",
+              "light": "浅色",
+              "auto": "跟随系统"
+            },
+            "hint": "动态页面的显示主题"
+          },
+          "buttons": {
+            "cancel": "取消",
+            "saving": "保存中...",
+            "save": "保存配置"
+          },
+          "logs": {
+            "settingsSaved": "设置已保存并更新自动生成服务",
+            "settingUpdated": "设置更新: {{key}} = {{value}}"
+          }
+        },
+        "PostCard": {
+          "newBadge": "新",
+          "delete": {
+            "title": "删除动态"
+          },
+          "stats": {
+            "likes": "{{count}} 人点赞",
+            "comments": "{{count}} 条评论"
+          },
+          "commentInput": {
+            "placeholder": "写下你的评论...",
+            "send": "发送"
+          },
+          "time": {
+            "justNow": "刚刚",
+            "minutesAgo": "{{minutes}}分钟前",
+            "hoursAgo": "{{hours}}小时前",
+            "daysAgo": "{{days}}天前"
+          }
+        },
+        "PostComposer": {
+          "title": "发布动态",
+          "defaultUser": "用户",
+          "privacy": {
+            "public": "🌍 公开",
+            "friends": "👥 仅好友"
+          },
+          "content": {
+            "label": "动态内容",
+            "placeholder": "分享你的想法...",
+            "hint": "最多500个字符"
+          },
+          "images": {
+            "label": "添加图片",
+            "disabled": "添加图片 (已禁用)",
+            "disabledTitle": "图片上传功能暂时关闭，避免数据传输过大",
+            "disabledHint": "图片上传功能暂时关闭，避免数据传输过大"
+          },
+          "tags": {
+            "label": "标签",
+            "placeholder": "添加标签...",
+            "add": "添加",
+            "removeAriaLabel": "删除标签 {{tag}}",
+            "hint": "最多添加5个标签"
+          },
+          "location": {
+            "label": "位置",
+            "placeholder": "📍 添加位置"
+          },
+          "mood": {
+            "label": "心情",
+            "placeholder": "😊 添加心情"
+          },
+          "buttons": {
+            "cancel": "取消",
+            "publishing": "发布中...",
+            "publish": "发布动态"
+          }
+        },
+        "PostActions": {
+          "like": {
+            "like": "点赞",
+            "unlike": "取消点赞",
+            "text": "点赞"
+          },
+          "share": {
+            "title": "分享动态",
+            "text": "看看这条有趣的动态！",
+            "ariaLabel": "分享",
+            "linkCopied": "链接已复制到剪贴板"
+          }
+        },
+        "PostComments": {
+          "newBadge": "新",
+          "reply": "回复",
+          "replyTo": "回复 @{{name}}",
+          "replyInput": {
+            "placeholder": "写下你的回复...",
+            "send": "发送"
+          },
+          "empty": "还没有评论，快来抢沙发吧！",
+          "showMore": {
+            "collapse": "收起评论（只显示最新 {{count}} 条）",
+            "expand": "查看全部 {{total}} 条评论（包含 {{old}} 条老评论）"
+          },
+          "time": {
+            "justNow": "刚刚",
+            "minutesAgo": "{{minutes}}分钟前",
+            "hoursAgo": "{{hours}}小时前",
+            "daysAgo": "{{days}}天前"
+          }
+        },
+        "PostList": {
+          "loading": "加载中...",
+          "empty": {
+            "title": "还没有动态",
+            "description": "发布你的第一条动态，开始分享生活吧！"
+          },
+          "logs": {
+            "viewStateUpdated": "已更新查看状态，时间戳:",
+            "newContentMarked": "标记新内容完成:",
+            "commentsVisibilityChanged": "检测到评论可见性变化:",
+            "commentsViewStateUpdated": "已更新评论查看状态，时间戳:"
+          }
+        }
+      },
+      "MemoryManager": {
+        "title": "群聊记忆管理",
+        "info": "为群聊中的每个AI角色链接对应的单聊记忆，让AI在群聊中保持与你的个人关系记忆。",
+        "status": {
+          "linked": "已链接",
+          "unlinked": "未链接",
+          "noSingle": "无单聊记忆"
+        },
+        "count": {
+          "total": "总计 {{count}} 条记忆",
+          "normal": "💬 {{count}} 条聊天",
+          "story": "📖 {{count}} 条剧情"
+        },
+        "limits": "限制: 聊天{{normal}}条, 剧情{{story}}条",
+        "lastUpdated": "最后更新: {{time}}",
+        "actions": {
+          "settings": { "title": "设置消息数量限制", "label": "设置" },
+          "refresh": { "title": "刷新记忆", "label": "刷新" },
+          "unlink": { "title": "取消链接", "label": "取消链接" },
+          "link": { "title": "链接记忆并设置数量限制", "label": "链接记忆" }
+        },
+        "limitModal": {
+          "title": "设置消息数量限制",
+          "normalLabel": "普通聊天消息数量:",
+          "storyLabel": "剧情模式消息数量:",
+          "hint": "条 (最多100条)",
+          "save": "保存设置",
+          "cancel": "取消",
+          "alertPickSingle": "请先选择要链接的单聊"
+        }
+      },
+      "SingleChatMemoryManager": {
+        "title": "单聊↔群聊 记忆管理",
+        "info": "将该单聊与群聊记忆关联，让AI在单聊中了解你在群聊中的表现和关系。",
+        "status": {
+          "linked": "已链接",
+          "unlinked": "未链接",
+          "noGroup": "未关联群聊记忆"
+        },
+        "count": {
+          "total": "总计 {{count}} 条消息",
+          "normal": "💬 {{count}} 条聊天",
+          "story": "📖 {{count}} 条剧情"
+        },
+        "limits": "限制: 聊天{{normal}}条, 剧情{{story}}条",
+        "actions": {
+          "settings": { "title": "设置消息数量限制", "label": "设置" },
+          "refresh": { "title": "刷新群聊记忆", "label": "刷新" },
+          "unlink": { "title": "取消链接", "label": "取消链接" },
+          "link": { "title": "链接群聊记忆并设置数量限制", "label": "链接记忆" }
+        },
+        "limitModal": {
+          "title": "设置消息数量限制",
+          "normalLabel": "普通聊天消息数量:",
+          "storyLabel": "剧情模式消息数量:",
+          "hint": "条 (最多100条)",
+          "save": "保存设置",
+          "cancel": "取消"
+        }
+      }
+    },
+    "ChatInterface.persona": {
+      "empty": "暂无保存的人设",
+      "unnamed": "未命名",
+      "switchFailed": "切换人设失败，请重试",
+      "settingsUpdated": "个人设置已更新到数据库:"
+    },
+    "ChatInterface.confirm": {
+      "deleteMessage": "确定要删除这条消息吗？",
+      "deleteStoryMessage": "确定要删除这条剧情消息吗？"
+    },
+    "ChatInterface.StoryToggle": {
+      "title": {
+        "toNormal": "切换到普通聊天模式",
+        "toStory": "切换到剧情模式"
+      },
+      "text": {
+        "online": "线上",
+        "story": "剧情"
+      }
+    },
+    "ChatInterface.StoryMode": {
+      "creating": "正在创作剧情...",
+      "me": "我",
+      "quote": "引用",
+      "edit": "编辑",
+      "delete": "删除",
+      "regenerate": "重新生成",
+      "save": "保存",
+      "cancel": "取消",
+      "startWriting": "开始编写你的剧情故事吧！",
+      "clickToStart": "点击下方输入框开始创作",
+      "loadMore": "加载更多历史剧情",
+      "loading": "加载中...",
+      "loadMoreText": "加载更多"
+    },
+    "ChatInterface.StoryModeInput": {
+      "title": "剧情编写",
+      "characters": "字符",
+      "continue": "继续剧情",
+      "continueText": "继续",
+      "generateTitle": "AI生成剧情",
+      "needContent": "需要新内容才能生成",
+      "generateText": "AI生成"
+    },
+    "QQ.StoryMode.MemorySync": {
+      "firstConversation": "首次对话",
+      "firstMeeting": "初次见面",
+      "neutral": "中性",
+      "intimate": "亲密",
+      "friendly": "友好",
+      "formal": "正式",
+      "familiar": "熟悉",
+      "happy": "开心",
+      "angry": "生气",
+      "sad": "伤心",
+      "nervous": "紧张",
+      "calm": "平静",
+      "continueCurrentMode": "继续当前模式",
+      "switchToStory": "从线上聊天切换到线下剧情",
+      "switchToChat": "从线下剧情切换到线上聊天",
+      "modeSwitch": "模式切换",
+      "firstConversationContext": "这是首次对话",
+      "syncFailed": "记忆同步失败",
+      "unknownRelationship": "未知关系",
+      "unknownEmotion": "未知情感",
+      "totalRecords": "总共有{{total}}条互动记录，其中聊天模式{{normal}}条，剧情模式{{story}}条。",
+      "switchToStoryContext": "现在切换到剧情模式，请记住之前的聊天内容，在剧情中体现这些关系发展。",
+      "switchToChatContext": "现在切换到聊天模式，请记住之前的剧情发展，在聊天中体现这些关系变化。",
+      "currentRelationship": "当前关系状态：{{context}}",
+      "recentTopics": "，最近讨论的话题：{{topics}}",
+      "currentEmotion": "当前情感状态：{{emotion}}",
+      "user": "用户",
+      "ai": "AI",
+      "recentConversations": "最近{{count}}条对话：\n{{messages}}"
+    },
+    "ChatInterface.MemorySummary": {
+      "title": {
+        "generate": "生成记忆总结"
+      },
+      "button": "记忆总结",
+      "header": "记忆总结",
+      "generatingLocked": "正在生成中，无法关闭",
+      "clickToClose": "点击关闭",
+      "close": "关闭",
+      "generating": "正在生成记忆总结...",
+      "lockedNotice": "生成过程中窗口已锁定，请耐心等待",
+      "streamingPreview": "实时生成预览：",
+      "retry": "重试",
+      "resultTitle": "总结内容：",
+      "processStatus": "处理状态",
+      "resultLabel": "结果：",
+      "resultBytes": "已把 {{bytes}} 字节内容总结完成",
+      "saved": "记忆总结已自动保存到世界书！",
+      "save": "保存",
+      "regenerate": "重新生成",
+      "complete": "完成",
+      "startTip1": "点击“生成总结”按钮，AI将根据您与{{name}}的聊天记录，创作一篇优美的回忆小说。",
+      "startTip2": "总结将自动保存到世界书的“recollection”分类中。",
+      "pickRange": "选择要总结的消息范围：",
+      "from": "从",
+      "to": "到",
+      "items": "条",
+      "total": "总消息数：{{total}} 条",
+      "rangeStat": "将总结第 {{start}} 到第 {{end}} 条消息（共 {{count}} 条）",
+      "generate": "生成总结",
+      "summaryGenerated": "记忆总结已生成:"
+    },
+    "Header": {
+      "userAvatar": "用户头像",
+      "user": "用户",
+      "tab": {
+        "all": "全部",
+        "single": "单聊",
+        "group": "群聊"
+      },
+      "contextSettings": {
+        "title": "设置AI上下文注入的消息数量上限",
+        "button": "上下文",
+        "panelTitle": "AI上下文设置",
+        "maxMemoryLabel": "上下文注入消息上限",
+        "tip": "控制注入到AI的历史消息数量，数值越大AI记忆越完整，但响应可能变慢",
+        "limitHint": "最多可设置500条消息，超过此数量可能导致AI响应变慢或API调用失败",
+        "current": "当前设置：",
+        "messages": "条消息",
+        "saved": "设置已保存到本地，立即生效于AI调用"
+      },
+      "add": "添加",
+      "addFriend": "添加好友",
+      "createGroup": "创建群聊",
+      "worldBook": "世界书",
+      "importCharacter": "导入角色卡片"
+    },
+    "Page": {
+      "loading": "加载中...",
+      "searchPlaceholder": "搜索...",
+      "chatLoading": "聊天加载中..."
+    }
+    ,
+    "ChatList": {
+      "empty": "点击右上角 \"+\" 或群组图标添加聊天",
+      "groupTag": "群聊",
+      "menu": {
+        "edit": "编辑",
+        "associateWorldBook": "关联世界书",
+        "resetChat": "重置聊天",
+        "delete": "删除"
+      },
+      "confirm": {
+        "delete": "确定要删除这个聊天吗？",
+        "reset": "确定要清空这个角色的所有聊天记录吗？此操作不可撤销！"
+      }
+    }
+    ,
+    "BottomNav": {
+      "labels": {
+        "messages": "消息",
+        "moments": "动态",
+        "recollection": "回忆",
+        "me": "我"
+      }
+    }
+  }
+  ,
+  "QQ.ApiSettings": {
+    "title": "AI 连接配置",
+    "fillProxyAndKey": "请先填写反代地址和API密钥",
+    "fetchModelsFailed": "获取模型列表失败",
+    "unknownError": "未知错误",
+    "fillAll": "请填写完整的API配置信息",
+    "platformFailed": "获取平台配置失败",
+    "noPlatformConfig": "平台未提供内置配置，请联系管理员",
+    "loadPlatformFailed": "加载平台配置失败",
+    "saveCurrent": "保存当前配置",
+    "saveHint": "保存后可以快速切换不同的API配置",
+    "enterServerOr": "请输入服务器地址 或",
+    "platformApplied": "已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。",
+    "loading": "加载中...",
+    "usePlatform": "使用平台内置AI",
+    "placeholder": {
+      "proxy": "输入你的AI服务地址，例如: https://api.openai.com",
+      "key": "输入你的API密钥，以 sk- 开头",
+      "model": "点击选择你喜欢的AI模型"
+    },
+    "hint": {
+      "proxy": "不需要添加 /v1 后缀，系统会自动处理",
+      "key": "密钥会被安全保存，不会泄露给他人"
+    },
+    "apiKey": "访问密钥",
+    "model": "AI 模型选择",
+    "saved": "已保存",
+    "modelHint": {
+      "diff": "不同模型有不同的特点和能力",
+      "notInList": "当前选择的模型可能不在可用列表中，建议重新获取模型列表"
+    },
+    "fetching": "正在获取模型列表...",
+    "fetch": "获取可用模型",
+    "cancel": "取消",
+    "save": "保存配置"
+  }
+}
+
+

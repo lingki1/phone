@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatStatus } from './ChatStatusManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import './ChatStatusDisplay.css';
 
 interface ChatStatusDisplayProps {
@@ -10,6 +11,7 @@ interface ChatStatusDisplayProps {
 }
 
 export default function ChatStatusDisplay({ status }: ChatStatusDisplayProps) {
+  const { t } = useI18n();
   const [showTooltip, setShowTooltip] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
@@ -141,7 +143,7 @@ export default function ChatStatusDisplay({ status }: ChatStatusDisplayProps) {
           {getStatusIcon('online')}
         </span>
         <span className="status-text">
-          {status.isOnline ? '在线' : '离线'}
+          {status.isOnline ? t('QQ.ChatInterface.status.online', '在线') : t('QQ.ChatInterface.status.offline', '离线')}
         </span>
       </div>
       
@@ -154,7 +156,7 @@ export default function ChatStatusDisplay({ status }: ChatStatusDisplayProps) {
         onMouseLeave={handleMouseLeave}
       >
         <span className="status-icon">{getStatusIcon('mood')}</span>
-        <span className="status-text">状态</span>
+        <span className="status-text">{t('QQ.ChatInterface.status.status', '状态')}</span>
         <span className="status-arrow">▼</span>
       </div>
 
@@ -171,19 +173,19 @@ export default function ChatStatusDisplay({ status }: ChatStatusDisplayProps) {
         >
           <div className="status-detail-item">
             <span className="status-icon">{getStatusIcon('mood')}</span>
-            <span className="status-label">心情:</span>
+            <span className="status-label">{t('QQ.ChatInterface.status.mood', '心情')}:</span>
             <span className="status-value">{status.mood}</span>
           </div>
           
           <div className="status-detail-item">
             <span className="status-icon">{getStatusIcon('location')}</span>
-            <span className="status-label">位置:</span>
+            <span className="status-label">{t('QQ.ChatInterface.status.location', '位置')}:</span>
             <span className="status-value">{status.location}</span>
           </div>
           
           <div className="status-detail-item">
             <span className="status-icon">{getStatusIcon('outfit')}</span>
-            <span className="status-label">穿着:</span>
+            <span className="status-label">{t('QQ.ChatInterface.status.outfit', '穿着')}:</span>
             <span className="status-value">{status.outfit}</span>
           </div>
         </div>

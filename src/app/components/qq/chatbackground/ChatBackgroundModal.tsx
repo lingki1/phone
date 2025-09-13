@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import './ChatBackgroundModal.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 import { compressImage } from '../../../utils/imageCompressor';
 
@@ -23,6 +24,7 @@ export default function ChatBackgroundModal({
   onSave,
   chatName
 }: ChatBackgroundModalProps) {
+  const { t } = useI18n();
   const [selectedImage, setSelectedImage] = useState<string | null>(currentBackground || null);
   const [selectedOpacity, setSelectedOpacity] = useState<number>(80); // 默认80%透明度
   const [isLoading, setIsLoading] = useState(false);
@@ -44,13 +46,13 @@ export default function ChatBackgroundModal({
 
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      setError('请选择图片文件');
+      setError(t('QQ.ChatInterface.ChatBackgroundModal.upload.chooseImageError', '请选择图片文件'));
       return;
     }
 
     // 验证文件大小（限制为10MB，压缩后会变小）
     if (file.size > 10 * 1024 * 1024) {
-      setError('图片大小不能超过10MB');
+      setError(t('QQ.ChatInterface.ChatBackgroundModal.upload.tooLargeError', '图片大小不能超过10MB'));
       return;
     }
 
@@ -69,7 +71,7 @@ export default function ChatBackgroundModal({
       setSelectedImage(compressedImage);
     } catch (error) {
       console.error('图片压缩失败:', error);
-      setError('图片处理失败，请重试');
+      setError(t('QQ.ChatInterface.ChatBackgroundModal.upload.processError', '图片处理失败，请重试'));
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +87,7 @@ export default function ChatBackgroundModal({
       console.log('背景保存成功');
     } catch (error) {
       console.error('保存背景失败:', error);
-      setError('保存失败，请重试');
+      setError(t('QQ.ChatInterface.ChatBackgroundModal.saveError', '保存失败，请重试'));
     }
   };
 
@@ -108,7 +110,7 @@ export default function ChatBackgroundModal({
       <div className="modal-container">
         {/* 头部 */}
         <div className="modal-header">
-          <h3>设置聊天背景 - {chatName}</h3>
+          <h3>{t('QQ.ChatInterface.ChatBackgroundModal.title', '设置聊天背景 - {{name}}').replace('{{name}}', chatName)}</h3>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -120,7 +122,7 @@ export default function ChatBackgroundModal({
               {isLoading ? (
                 <div className="loading">
                   <div className="spinner"></div>
-                  <span>正在压缩图片...</span>
+                  <span>{t('QQ.ChatInterface.ChatBackgroundModal.upload.compressing', '正在压缩图片...')}</span>
                 </div>
               ) : selectedImage ? (
                 <div className="preview">
@@ -138,14 +140,14 @@ export default function ChatBackgroundModal({
                     }}
                   />
                   <div className="preview-overlay">
-                    <span>点击更换图片</span>
+                    <span>{t('QQ.ChatInterface.ChatBackgroundModal.upload.clickToChange', '点击更换图片')}</span>
                   </div>
                 </div>
               ) : (
                 <div className="upload-placeholder">
                   <div className="upload-icon">📷</div>
-                  <span>点击上传背景图片</span>
-                  <small>支持 JPG、PNG、GIF 格式，最大 10MB，会自动压缩优化</small>
+                  <span>{t('QQ.ChatInterface.ChatBackgroundModal.upload.placeholderTitle', '点击上传背景图片')}</span>
+                  <small>{t('QQ.ChatInterface.ChatBackgroundModal.upload.placeholderHint', '支持 JPG、PNG、GIF 格式，最大 10MB，会自动压缩优化')}</small>
                 </div>
               )}
             </div>
@@ -169,7 +171,7 @@ export default function ChatBackgroundModal({
           {/* 透明度控制 */}
           {selectedImage && (
             <div className="opacity-control">
-              <label htmlFor="opacity-slider">背景透明度: {selectedOpacity}%</label>
+              <label htmlFor="opacity-slider">{t('QQ.ChatInterface.ChatBackgroundModal.opacity', '背景透明度: {{percent}}%').replace('{{percent}}', String(selectedOpacity))}</label>
               <input
                 id="opacity-slider"
                 type="range"
@@ -192,18 +194,18 @@ export default function ChatBackgroundModal({
             onClick={handleClear}
             disabled={!currentBackground && !selectedImage}
           >
-            清除背景
+            {t('QQ.ChatInterface.ChatBackgroundModal.buttons.clear', '清除背景')}
           </button>
           <div className="action-buttons">
             <button className="cancel-btn" onClick={onClose}>
-              取消
+              {t('QQ.ChatInterface.ChatBackgroundModal.buttons.cancel', '取消')}
             </button>
             <button 
               className="save-btn"
               onClick={handleSave}
               disabled={!selectedImage && !currentBackground}
             >
-              保存
+              {t('QQ.ChatInterface.ChatBackgroundModal.buttons.save', '保存')}
             </button>
           </div>
         </div>

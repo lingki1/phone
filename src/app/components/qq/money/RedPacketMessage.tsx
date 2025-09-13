@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Message, ChatItem } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import ReceiveRedPacket from './ReceiveRedPacket';
 import './RedPacketMessage.css';
 
@@ -20,6 +21,7 @@ export default function RedPacketMessage({
   onSend,
   isUserMessage = false
 }: RedPacketMessageProps) {
+  const { t, locale } = useI18n();
   const [showReceiveModal, setShowReceiveModal] = useState(false);
 
   if (!message.redPacketData) {
@@ -45,7 +47,7 @@ export default function RedPacketMessage({
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale || 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -69,13 +71,13 @@ export default function RedPacketMessage({
   const getRedPacketTitle = () => {
     switch (message.type) {
       case 'red_packet_send':
-        return '发出红包';
+        return t('QQ.ChatInterface.Money.RedPacketMessage.title.send', '发出红包');
       case 'red_packet_receive':
-        return redPacketData.isClaimed ? '红包已领取' : '收到红包';
+        return redPacketData.isClaimed ? t('QQ.ChatInterface.Money.RedPacketMessage.title.receivedClaimed', '红包已领取') : t('QQ.ChatInterface.Money.RedPacketMessage.title.received', '收到红包');
       case 'red_packet_request':
-        return '请求红包';
+        return t('QQ.ChatInterface.Money.RedPacketMessage.title.request', '请求红包');
       default:
-        return '红包消息';
+        return t('QQ.ChatInterface.Money.RedPacketMessage.title.default', '红包消息');
     }
   };
 
@@ -107,10 +109,10 @@ export default function RedPacketMessage({
           <div className="red-packet-header">
             <span className="red-packet-title">{getRedPacketTitle()}</span>
             {message.type === 'red_packet_receive' && !redPacketData.isClaimed && (
-              <span className="red-packet-badge">待领取</span>
+              <span className="red-packet-badge">{t('QQ.ChatInterface.Money.RedPacketMessage.badge.pending', '待领取')}</span>
             )}
             {message.type === 'red_packet_receive' && redPacketData.isClaimed && (
-              <span className="red-packet-badge claimed">已领取</span>
+              <span className="red-packet-badge claimed">{t('QQ.ChatInterface.Money.RedPacketMessage.badge.claimed', '已领取')}</span>
             )}
             {getStatusDisplay()}
           </div>
@@ -132,13 +134,13 @@ export default function RedPacketMessage({
           {/* 发送者/接收者信息 */}
           <div className="red-packet-info">
             {message.type === 'red_packet_send' && (
-              <span className="info-text">发给 {redPacketData.recipientName}</span>
+              <span className="info-text">{t('QQ.ChatInterface.Money.RedPacketMessage.info.sendTo', '发给 {{name}}').replace('{{name}}', redPacketData.recipientName)}</span>
             )}
             {message.type === 'red_packet_receive' && (
-              <span className="info-text">来自 {redPacketData.senderName}</span>
+              <span className="info-text">{t('QQ.ChatInterface.Money.RedPacketMessage.info.from', '来自 {{name}}').replace('{{name}}', redPacketData.senderName)}</span>
             )}
             {message.type === 'red_packet_request' && (
-              <span className="info-text">向你请求红包</span>
+              <span className="info-text">{t('QQ.ChatInterface.Money.RedPacketMessage.info.request', '向你请求红包')}</span>
             )}
           </div>
 
@@ -147,7 +149,7 @@ export default function RedPacketMessage({
             {formatTime(message.timestamp)}
             {redPacketData.isClaimed && redPacketData.claimedAt && (
               <span className="claim-time">
-                · 领取于 {formatTime(redPacketData.claimedAt)}
+                · {t('QQ.ChatInterface.Money.RedPacketMessage.claimedAt', '领取于 {{time}}').replace('{{time}}', formatTime(redPacketData.claimedAt))}
               </span>
             )}
           </div>
@@ -156,10 +158,10 @@ export default function RedPacketMessage({
         {/* 操作提示 */}
         <div className="red-packet-action">
           {message.type === 'red_packet_receive' && !redPacketData.isClaimed && (
-            <div className="action-hint">点击领取</div>
+            <div className="action-hint">{t('QQ.ChatInterface.Money.RedPacketMessage.action.claim', '点击领取')}</div>
           )}
           {message.type === 'red_packet_request' && (
-            <div className="action-hint">点击发送</div>
+            <div className="action-hint">{t('QQ.ChatInterface.Money.RedPacketMessage.action.send', '点击发送')}</div>
           )}
         </div>
 

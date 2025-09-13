@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import { MemorySyncService } from '../storymode/MemorySyncService';
+import { useI18n } from '../../i18n/I18nProvider';
 import './MemoryManager.css';
 
 interface MemoryManagerProps {
@@ -37,6 +38,7 @@ export default function MemoryManager({
   onUpdateChat,
   availableContacts
 }: MemoryManagerProps) {
+  const { t, locale } = useI18n();
   // 辅助类型与读取函数，避免显式 any
   interface MemoryLimitConfig {
     normalMessageLimit: number;
@@ -50,7 +52,11 @@ export default function MemoryManager({
   }, []);
   const [memoryStatus, setMemoryStatus] = useState<MemoryStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [_memorySyncService] = useState(() => MemorySyncService.getInstance());
+  const [_memorySyncService] = useState(() => {
+    const service = MemorySyncService.getInstance();
+    service.setTranslationFunction(t);
+    return service;
+  });
   const [showLimitSettings, setShowLimitSettings] = useState<string | null>(null);
   const [tempNormalLimit, setTempNormalLimit] = useState<number>(20);
   const [tempStoryLimit, setTempStoryLimit] = useState<number>(20);
@@ -343,7 +349,7 @@ export default function MemoryManager({
   // 格式化时间
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', { 
+    return date.toLocaleString(locale || 'zh-CN', { 
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -362,13 +368,13 @@ export default function MemoryManager({
     <div className="modal-overlay" onClick={onClose}>
       <div className="memory-manager-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>群聊记忆管理</h2>
+          <h2>{t('QQ.ChatInterface.MemoryManager.title', '群聊记忆管理')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="modal-body">
           <div className="memory-info">
-            <p>为群聊中的每个AI角色链接对应的单聊记忆，让AI在群聊中保持与你的个人关系记忆。</p>
+            <p>{t('QQ.ChatInterface.MemoryManager.info', '为群聊中的每个AI角色链接对应的单聊记忆，让AI在群聊中保持与你的个人关系记忆。')}</p>
           </div>
 
           <div className="memory-list">
@@ -395,46 +401,48 @@ export default function MemoryManager({
                   <div className="memory-status">
                     {status.isLinked ? (
                       <div className="linked-status">
-                        <span className="status-badge linked">已链接</span>
+                        <span className="status-badge linked">{t('QQ.ChatInterface.MemoryManager.status.linked', '已链接')}</span>
                         <div className="memory-stats">
-                          <span className="memory-count">总计 {status.totalMemoryCount} 条记忆</span>
+                          <span className="memory-count">{t('QQ.ChatInterface.MemoryManager.count.total', '总计 {{count}} 条记忆').replace('{{count}}', String(status.totalMemoryCount))}</span>
                           <div className="memory-breakdown">
                             {status.memoryCount > 0 && (
-                              <span className="normal-memory">💬 {status.memoryCount} 条聊天</span>
+                              <span className="normal-memory">{t('QQ.ChatInterface.MemoryManager.count.normal', '💬 {{count}} 条聊天').replace('{{count}}', String(status.memoryCount))}</span>
                             )}
                             {status.storyMemoryCount > 0 && (
-                              <span className="story-memory">📖 {status.storyMemoryCount} 条剧情</span>
+                              <span className="story-memory">{t('QQ.ChatInterface.MemoryManager.count.story', '📖 {{count}} 条剧情').replace('{{count}}', String(status.storyMemoryCount))}</span>
                             )}
                           </div>
                           <div className="memory-limits">
                             <span className="limit-info">
-                              限制: 聊天{status.normalMessageLimit}条, 剧情{status.storyMessageLimit}条
+                              {t('QQ.ChatInterface.MemoryManager.limits', '限制: 聊天{{normal}}条, 剧情{{story}}条')
+                                .replace('{{normal}}', String(status.normalMessageLimit || 0))
+                                .replace('{{story}}', String(status.storyMessageLimit || 0))}
                             </span>
                           </div>
                         </div>
                         {status.lastUpdated && (
                           <span className="last-updated">
-                            最后更新: {formatTime(status.lastUpdated)}
+                            {t('QQ.ChatInterface.MemoryManager.lastUpdated', '最后更新: {{time}}').replace('{{time}}', formatTime(status.lastUpdated))}
                           </span>
                         )}
                       </div>
                     ) : (
                       <div className="unlinked-status">
-                        <span className="status-badge unlinked">未链接</span>
+                        <span className="status-badge unlinked">{t('QQ.ChatInterface.MemoryManager.status.unlinked', '未链接')}</span>
                         {status.singleChatName ? (
                           <div className="memory-stats">
-                            <span className="memory-count">总计 {status.totalMemoryCount} 条记忆</span>
+                            <span className="memory-count">{t('QQ.ChatInterface.MemoryManager.count.total', '总计 {{count}} 条记忆').replace('{{count}}', String(status.totalMemoryCount))}</span>
                             <div className="memory-breakdown">
                               {status.memoryCount > 0 && (
-                                <span className="normal-memory">💬 {status.memoryCount} 条聊天</span>
+                                <span className="normal-memory">{t('QQ.ChatInterface.MemoryManager.count.normal', '💬 {{count}} 条聊天').replace('{{count}}', String(status.memoryCount))}</span>
                               )}
                               {status.storyMemoryCount > 0 && (
-                                <span className="story-memory">📖 {status.storyMemoryCount} 条剧情</span>
+                                <span className="story-memory">{t('QQ.ChatInterface.MemoryManager.count.story', '📖 {{count}} 条剧情').replace('{{count}}', String(status.storyMemoryCount))}</span>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <span className="no-memory">无单聊记忆</span>
+                          <span className="no-memory">{t('QQ.ChatInterface.MemoryManager.status.noSingle', '无单聊记忆')}</span>
                         )}
                       </div>
                     )}
@@ -447,25 +455,25 @@ export default function MemoryManager({
                           className="action-btn settings-btn"
                           onClick={() => showLimitSettingsModal(status.memberId)}
                           disabled={isLoading}
-                          title="设置消息数量限制"
+                          title={t('QQ.ChatInterface.MemoryManager.actions.settings.title', '设置消息数量限制')}
                         >
-                          ⚙️ 设置
+                          ⚙️ {t('QQ.ChatInterface.MemoryManager.actions.settings.label', '设置')}
                         </button>
                         <button 
                           className="action-btn refresh-btn"
                           onClick={() => refreshSingleChatMemory(status.memberId)}
                           disabled={isLoading}
-                          title="刷新记忆"
+                          title={t('QQ.ChatInterface.MemoryManager.actions.refresh.title', '刷新记忆')}
                         >
-                          🔄 刷新
+                          🔄 {t('QQ.ChatInterface.MemoryManager.actions.refresh.label', '刷新')}
                         </button>
                         <button 
                           className="action-btn unlink-btn"
                           onClick={() => unlinkSingleChatMemory(status.memberId)}
                           disabled={isLoading}
-                          title="取消链接"
+                          title={t('QQ.ChatInterface.MemoryManager.actions.unlink.title', '取消链接')}
                         >
-                          🔗 取消链接
+                          🔗 {t('QQ.ChatInterface.MemoryManager.actions.unlink.label', '取消链接')}
                         </button>
                       </>
                     ) : (
@@ -473,9 +481,9 @@ export default function MemoryManager({
                         className="action-btn link-btn"
                         onClick={() => showLimitSettingsModal(status.memberId)}
                         disabled={isLoading}
-                        title="链接记忆并设置数量限制"
+                        title={t('QQ.ChatInterface.MemoryManager.actions.link.title', '链接记忆并设置数量限制')}
                       >
-                        🔗 链接记忆
+                        🔗 {t('QQ.ChatInterface.MemoryManager.actions.link.label', '链接记忆')}
                       </button>
                     )}
                   </div>
@@ -491,12 +499,12 @@ export default function MemoryManager({
         <div className="limit-settings-overlay" onClick={() => setShowLimitSettings(null)}>
           <div className="limit-settings-modal" onClick={e => e.stopPropagation()}>
             <div className="settings-header">
-              <h3>设置消息数量限制</h3>
+              <h3>{t('QQ.ChatInterface.MemoryManager.limitModal.title', '设置消息数量限制')}</h3>
               <button className="close-btn" onClick={() => setShowLimitSettings(null)}>×</button>
             </div>
             <div className="settings-content">
               <div className="limit-input-group">
-                <label htmlFor="normalLimit">普通聊天消息数量:</label>
+                <label htmlFor="normalLimit">{t('QQ.ChatInterface.MemoryManager.limitModal.normalLabel', '普通聊天消息数量:')}</label>
                 <input
                   id="normalLimit"
                   type="number"
@@ -506,10 +514,10 @@ export default function MemoryManager({
                   onChange={(e) => setTempNormalLimit(parseInt(e.target.value) || 20)}
                   className="limit-input"
                 />
-                <span className="limit-hint">条 (最多100条)</span>
+                <span className="limit-hint">{t('QQ.ChatInterface.MemoryManager.limitModal.hint', '条 (最多100条)')}</span>
               </div>
               <div className="limit-input-group">
-                <label htmlFor="storyLimit">剧情模式消息数量:</label>
+                <label htmlFor="storyLimit">{t('QQ.ChatInterface.MemoryManager.limitModal.storyLabel', '剧情模式消息数量:')}</label>
                 <input
                   id="storyLimit"
                   type="number"
@@ -519,7 +527,7 @@ export default function MemoryManager({
                   onChange={(e) => setTempStoryLimit(parseInt(e.target.value) || 20)}
                   className="limit-input"
                 />
-                <span className="limit-hint">条 (最多100条)</span>
+                <span className="limit-hint">{t('QQ.ChatInterface.MemoryManager.limitModal.hint', '条 (最多100条)')}</span>
               </div>
               <div className="settings-actions">
                 <button 
@@ -531,18 +539,18 @@ export default function MemoryManager({
                       updateMemoryLimits(showLimitSettings, tempNormalLimit, tempStoryLimit);
                     } else {
                       // 未链接，需要先选择单聊
-                      alert('请先选择要链接的单聊');
+                      alert(t('QQ.ChatInterface.MemoryManager.limitModal.alertPickSingle', '请先选择要链接的单聊'));
                     }
                   }}
                   disabled={isLoading}
                 >
-                  保存设置
+                  {t('QQ.ChatInterface.MemoryManager.limitModal.save', '保存设置')}
                 </button>
                 <button 
                   className="cancel-btn"
                   onClick={() => setShowLimitSettings(null)}
                 >
-                  取消
+                  {t('QQ.ChatInterface.MemoryManager.limitModal.cancel', '取消')}
                 </button>
               </div>
             </div>

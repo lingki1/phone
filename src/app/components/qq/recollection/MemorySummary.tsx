@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
 import { dataManager } from '../../../utils/dataManager';
 import { ChatItem } from '../../../types/chat';
 import MarkdownRenderer from './MarkdownRenderer';
@@ -21,6 +22,7 @@ export default function MemorySummary({
   apiConfig, 
   onSummaryGenerated 
 }: MemorySummaryProps) {
+  const { t } = useI18n();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [summary, setSummary] = useState<string>('');
@@ -440,7 +442,7 @@ ${messagesText}
         className="recollection-memory-summary-btn"
         onClick={handleOpenModal}
         disabled={isGenerating}
-        title="生成记忆总结"
+        title={t('QQ.ChatInterface.MemorySummary.title.generate', '生成记忆总结')}
       >
         <span className="btn-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -451,7 +453,7 @@ ${messagesText}
             <polyline points="10,9 9,9 8,9"/>
           </svg>
         </span>
-        <span className="btn-text">记忆总结</span>
+        <span className="btn-text">{t('QQ.ChatInterface.MemorySummary.button', '记忆总结')}</span>
       </button>
 
       {/* 记忆总结模态框 */}
@@ -460,16 +462,16 @@ ${messagesText}
           <div 
             className={`recollection-modal-overlay ${isGenerating ? 'locked' : ''}`}
             onClick={isGenerating ? undefined : handleCloseModal}
-            title={isGenerating ? '正在生成中，无法关闭' : '点击关闭'}
+            title={isGenerating ? t('QQ.ChatInterface.MemorySummary.generatingLocked', '正在生成中，无法关闭') : t('QQ.ChatInterface.MemorySummary.clickToClose', '点击关闭')}
           ></div>
           <div className="recollection-modal-content">
             <div className="recollection-modal-header">
-              <h3>记忆总结</h3>
+              <h3>{t('QQ.ChatInterface.MemorySummary.header', '记忆总结')}</h3>
               <button 
                 className={`recollection-modal-close ${isGenerating ? 'disabled' : ''}`}
                 onClick={isGenerating ? undefined : handleCloseModal}
                 disabled={isGenerating}
-                title={isGenerating ? '正在生成中，无法关闭' : '关闭'}
+                title={isGenerating ? t('QQ.ChatInterface.MemorySummary.generatingLocked', '正在生成中，无法关闭') : t('QQ.ChatInterface.MemorySummary.close', '关闭')}
               >
                 ×
               </button>
@@ -479,16 +481,16 @@ ${messagesText}
               {isGenerating ? (
                 <div className="recollection-generating">
                   <div className="recollection-spinner"></div>
-                  <p>正在生成记忆总结...</p>
+                  <p>{t('QQ.ChatInterface.MemorySummary.generating', '正在生成记忆总结...')}</p>
                   <div className="recollection-lock-notice">
                     <span className="recollection-lock-icon">🔒</span>
-                    <span>生成过程中窗口已锁定，请耐心等待</span>
+                    <span>{t('QQ.ChatInterface.MemorySummary.lockedNotice', '生成过程中窗口已锁定，请耐心等待')}</span>
                   </div>
                   
                   {/* 流式生成内容预览 */}
                   {isStreaming && streamingSummary && (
                     <div className="recollection-streaming-preview">
-                      <h5>实时生成预览：</h5>
+                      <h5>{t('QQ.ChatInterface.MemorySummary.streamingPreview', '实时生成预览：')}</h5>
                       <div className="recollection-streaming-content">
                         <MarkdownRenderer content={streamingSummary} />
                         <div className="recollection-streaming-cursor">|</div>
@@ -503,12 +505,12 @@ ${messagesText}
                     className="recollection-retry-btn"
                     onClick={generateSummary}
                   >
-                    重试
+                    {t('QQ.ChatInterface.MemorySummary.retry', '重试')}
                   </button>
                 </div>
               ) : summary ? (
                 <div className="recollection-summary-result">
-                  <h4>总结内容：</h4>
+                  <h4>{t('QQ.ChatInterface.MemorySummary.resultTitle', '总结内容：')}</h4>
                   <div className="recollection-summary-content">
                     <MarkdownRenderer content={summary} />
                   </div>
@@ -516,11 +518,11 @@ ${messagesText}
                   {/* 输入字节统计信息 */}
                   {inputBytes !== null && (
                     <div className="recollection-token-stats">
-                      <h5>处理状态</h5>
+                      <h5>{t('QQ.ChatInterface.MemorySummary.processStatus', '处理状态')}</h5>
                       <div className="recollection-token-details">
                         <div className="recollection-token-item recollection-token-total">
-                          <span className="recollection-token-label">结果：</span>
-                          <span className="recollection-token-value">已把 {inputBytes} 字节内容总结完成</span>
+                          <span className="recollection-token-label">{t('QQ.ChatInterface.MemorySummary.resultLabel', '结果：')}</span>
+                          <span className="recollection-token-value">{t('QQ.ChatInterface.MemorySummary.resultBytes', '已把 {{bytes}} 字节内容总结完成').replace('{{bytes}}', String(inputBytes))}</span>
                         </div>
                       </div>
                     </div>
@@ -531,38 +533,38 @@ ${messagesText}
                       className="recollection-save-btn"
                       onClick={() => {
                         // 保存功能已在生成时自动执行，这里可以显示确认信息
-                        alert('记忆总结已自动保存到世界书！');
+                        alert(t('QQ.ChatInterface.MemorySummary.saved', '记忆总结已自动保存到世界书！'));
                       }}
                     >
-                      保存
+                      {t('QQ.ChatInterface.MemorySummary.save', '保存')}
                     </button>
                     <button 
                       className="recollection-regenerate-btn"
                       onClick={generateSummary}
                     >
-                      重新生成
+                      {t('QQ.ChatInterface.MemorySummary.regenerate', '重新生成')}
                     </button>
                     <button 
                       className="recollection-complete-btn"
                       onClick={handleCloseModal}
                     >
-                      完成
+                      {t('QQ.ChatInterface.MemorySummary.complete', '完成')}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="recollection-start">
-                  <p>点击&ldquo;生成总结&rdquo;按钮，AI将根据您与{chat.name}的聊天记录，创作一篇优美的回忆小说。</p>
-                  <p>总结将自动保存到世界书的&ldquo;recollection&rdquo;分类中。</p>
+                  <p>{t('QQ.ChatInterface.MemorySummary.startTip1', '点击“生成总结”按钮，AI将根据您与{{name}}的聊天记录，创作一篇优美的回忆小说。').replace('{{name}}', chat.name)}</p>
+                  <p>{t('QQ.ChatInterface.MemorySummary.startTip2', '总结将自动保存到世界书的“recollection”分类中。')}</p>
                   
                   {/* 消息范围选择 */}
                   <div className="recollection-message-range">
-                    <h4>选择要总结的消息范围：</h4>
+                    <h4>{t('QQ.ChatInterface.MemorySummary.pickRange', '选择要总结的消息范围：')}</h4>
                     
                     {/* 自定义范围选项 */}
                     <div className="recollection-range-option-group">
                       <div className="recollection-range-input-row">
-                        <span>从</span>
+                        <span>{t('QQ.ChatInterface.MemorySummary.from', '从')}</span>
                             <input
                               type="number"
                               min="1"
@@ -585,10 +587,10 @@ ${messagesText}
                               }}
                               className="recollection-range-input"
                             />
-                        <span>条</span>
+                        <span>{t('QQ.ChatInterface.MemorySummary.items', '条')}</span>
                           </div>
                       <div className="recollection-range-input-row">
-                        <span>到</span>
+                        <span>{t('QQ.ChatInterface.MemorySummary.to', '到')}</span>
                             <input
                               type="number"
                               min="1"
@@ -614,13 +616,17 @@ ${messagesText}
                               }}
                               className="recollection-range-input"
                             />
-                          <span>条</span>
+                          <span>{t('QQ.ChatInterface.MemorySummary.items', '条')}</span>
                         </div>
                     </div>
                     
                     <div className="recollection-range-info">
-                      <p>总消息数：{totalMessages} 条</p>
-                        <p>将总结第 {customStart} 到第 {customEnd} 条消息（共 {Math.max(0, customEnd - customStart + 1)} 条）</p>
+                      <p>{t('QQ.ChatInterface.MemorySummary.total', '总消息数：{{total}} 条').replace('{{total}}', String(totalMessages))}</p>
+                        <p>{t('QQ.ChatInterface.MemorySummary.rangeStat', '将总结第 {{start}} 到第 {{end}} 条消息（共 {{count}} 条）')
+                          .replace('{{start}}', String(customStart))
+                          .replace('{{end}}', String(customEnd))
+                          .replace('{{count}}', String(Math.max(0, customEnd - customStart + 1)))
+                        }</p>
                     </div>
                   </div>
                   
@@ -628,7 +634,7 @@ ${messagesText}
                     className="recollection-generate-btn"
                     onClick={generateSummary}
                   >
-                    生成总结
+                    {t('QQ.ChatInterface.MemorySummary.generate', '生成总结')}
                   </button>
                 </div>
               )}

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "announcement-2025-08-28-a",
+    "title": "0828",
+    "content": "修复黑市顶部被遮挡\n优化黑市tag显示\n增加消息批量删除\n黑市功能第二版，支持删除\n黑市功能第一版本，缺少删除功能",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-08-28T09:00:00.000Z",
+    "updatedAt": "2025-08-28T09:00:00.000Z"
+  },
+  {
+    "id": "announcement-2025-08-30-a",
+    "title": "0830",
+    "content": "消息交互功能按键点击触发，剧情模式发送按键优化\n修复剧情报错位置，增加剧情模式消息渲染",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-08-30T09:00:00.000Z",
+    "updatedAt": "2025-08-30T09:00:00.000Z"
+  },
+  {
+    "id": "announcement-2025-08-31-a",
+    "title": "0831",
+    "content": "重要修复数据库版本问题，增加api保存\n增加数据库强制备份\n增加数据库版本不一致导致的问题\n黑市下载防抖动\n世界书导入和编写增加为20000字符\n重做购物系统提示词\n重做shopping 生成商品提示词",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-08-31T09:00:00.000Z",
+    "updatedAt": "2025-08-31T09:00:00.000Z"
+  },
+  {
+    "id": "announcement-2025-09-01-a",
+    "title": "0901",
+    "content": "黑市压缩图片优化\n优化表情功能在小设备的显示\n增加表情功能\n修复自动备份无法关闭issue\n增加自动备份功能",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-01T09:00:00.000Z",
+    "updatedAt": "2025-09-01T09:00:00.000Z"
+  },
+  {
+    "id": "announcement-1755412949778-vnt6i3pa7",
+    "title": "lingki",
+    "content": "0902: 增加自然语言自定义回复html状态栏。\n角色聊天页面右上角-五角星 设置聊天状态栏,用自然语言描述你想要的状态栏，保存后的状态栏描述会自动存储到 世界书-分类extrainfo\n\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-02T06:42:29.778Z",
+    "updatedAt": "2025-09-09T08:53:53.102Z"
+  },
+  {
+    "id": "announcement-1756925385857-wf3jz2s61",
+    "title": "lingki",
+    "content": "0904：\n角色-三个点菜单：增加一键重置聊天信息。\n修复剧情模式进入崩溃报错，优化数据库对null的自动清理。\n重做上下文数量自定义。\n\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-03T18:49:45.858Z",
+    "updatedAt": "2025-09-09T08:53:55.717Z"
+  },
+  {
+    "id": "announcement-1757011888132-1j6nzru5t",
+    "title": "lingki",
+    "content": "0905: 增加新功能：多面具 （可以保存不同的用户人设）\n彻底清除很多indexedDB数据库错误的处理代码。\n删除‘数据库恢复’功能，这个功能导致数据库版本无法正常升级。\n\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-04T18:51:28.133Z",
+    "updatedAt": "2025-09-09T08:53:57.925Z"
+  },
+  {
+    "id": "announcement-1757146097711-vf88u6d34",
+    "title": "0906",
+    "content": "增加新功能：\n动态设置增加：禁止AI互相评论功能 \n配色管理增加标签 自定义主题 可以自定义主题配色了\n\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-06T08:08:17.711Z",
+    "updatedAt": "2025-09-09T08:54:00.469Z"
+  },
+  {
+    "id": "announcement-1757315037749-kjyte7jxe",
+    "title": "0908",
+    "content": "增加新功能：聊天记录总结-总结为偏向小说格式的回忆录！\n\n\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-08T07:03:57.750Z",
+    "updatedAt": "2025-09-08T07:03:57.750Z"
+  },
+  {
+    "id": "announcement-1757408067475-0q2hfwwlk",
+    "title": "0909",
+    "content": "日常更新，优化了下剧情模式的ui\nQ群：797017864 (傻瓜机)",
+    "type": "info",
+    "priority": "medium",
+    "isActive": true,
+    "createdAt": "2025-09-09T08:54:27.475Z",
+    "updatedAt": "2025-09-09T08:55:09.640Z"
+  }
+]

@@ -20,23 +20,72 @@ const I18N_STORAGE_KEY = 'app-locale';
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 function getByPath(obj: MessageMap, path: string): Primitive | MessageMap | undefined {
-  const keys = path.split('.');
+  const segments = path.split('.');
   let current: Primitive | MessageMap | undefined = obj;
-  for (const key of keys) {
-    if (current && typeof current === 'object' && key in (current as MessageMap)) {
-      current = (current as MessageMap)[key];
-    } else {
-      return undefined;
+  let index = 0;
+
+  while (index < segments.length) {
+    const segment = segments[index];
+
+    // 优先：正常的分层键
+    if (current && typeof current === 'object' && segment in (current as MessageMap)) {
+      current = (current as MessageMap)[segment];
+      index += 1;
+      continue;
     }
+
+    // 兼容：同层存在扁平化的点号键（如 "ChatInterface.StoryToggle" 或 "QQ.StoryMode.MemorySync"）
+    if (current && typeof current === 'object') {
+      const currentObj = current as MessageMap;
+      let matchedCombinedKey: string | undefined;
+
+      for (const key of Object.keys(currentObj)) {
+        if (!key.startsWith(segment + '.')) continue;
+        const keyParts = key.split('.');
+
+        // 检查该扁平化键是否恰好匹配接下来的若干段
+        let isFullMatch = true;
+        for (let j = 0; j < keyParts.length; j++) {
+          if (segments[index + j] !== keyParts[j]) {
+            isFullMatch = false;
+            break;
+          }
+        }
+        if (isFullMatch) {
+          matchedCombinedKey = key;
+          // 消费掉匹配到的各个分段
+          index += keyParts.length;
+          current = currentObj[key];
+          break;
+        }
+      }
+
+      if (matchedCombinedKey) {
+        continue;
+      }
+    }
+
+    // 未命中
+    return undefined;
   }
+
   return current;
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
+  function normalizeLocale(input: string | null | undefined): SupportedLocale {
+    if (!input) return 'zh-CN';
+    if (input === 'en' || input === 'zh-CN') return input;
+    const lower = String(input).toLowerCase();
+    if (lower.startsWith('en')) return 'en';
+    if (lower.startsWith('zh')) return 'zh-CN';
+    return 'zh-CN';
+  }
+
   const [locale, setLocaleState] = useState<SupportedLocale>(() => {
     if (typeof window === 'undefined') return 'zh-CN';
-    const saved = window.localStorage.getItem(I18N_STORAGE_KEY) as SupportedLocale | null;
-    return saved || 'zh-CN';
+    const saved = window.localStorage.getItem(I18N_STORAGE_KEY);
+    return normalizeLocale(saved);
   });
 
   const [messages, setMessages] = useState<MessageMap>({});

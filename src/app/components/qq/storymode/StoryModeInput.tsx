@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
 import './StoryModeInput.css';
 
 interface StoryModeInputProps {
@@ -20,6 +21,7 @@ export default function StoryModeInput({
   hasNewUserMessage,
   placeholder = "继续编写剧情..."
 }: StoryModeInputProps) {
+  const { t } = useI18n();
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,11 +71,11 @@ export default function StoryModeInput({
       <div className="story-input-header">
         <div className="story-input-title">
           <span className="story-title-icon">✍️</span>
-          <span className="story-title-text">剧情编写</span>
+          <span className="story-title-text">{t('QQ.ChatInterface.StoryModeInput.title', '剧情编写')}</span>
         </div>
         <div className="story-input-stats">
           <span className="story-char-count">{content.length}</span>
-          <span className="story-char-label">字符</span>
+          <span className="story-char-label">{t('QQ.ChatInterface.StoryModeInput.characters', '字符')}</span>
         </div>
       </div>
       
@@ -95,20 +97,20 @@ export default function StoryModeInput({
           className="story-send-btn"
           onClick={handleSend}
           disabled={!content.trim() || isLoading || isPending}
-          title="继续剧情"
+          title={t('QQ.ChatInterface.StoryModeInput.continue', '继续剧情')}
         >
           <span className="story-btn-icon">📝</span>
-          <span className="story-btn-text">继续</span>
+          <span className="story-btn-text">{t('QQ.ChatInterface.StoryModeInput.continueText', '继续')}</span>
         </button>
         
         <button
           className="story-generate-btn"
           onClick={handleGenerate}
           disabled={isLoading || isPending || !hasNewUserMessage}
-          title={hasNewUserMessage ? "AI生成剧情" : "需要新内容才能生成"}
+          title={hasNewUserMessage ? t('QQ.ChatInterface.StoryModeInput.generateTitle', 'AI生成剧情') : t('QQ.ChatInterface.StoryModeInput.needContent', '需要新内容才能生成')}
         >
           <span className="story-btn-icon">🤖</span>
-          <span className="story-btn-text">AI生成</span>
+          <span className="story-btn-text">{t('QQ.ChatInterface.StoryModeInput.generateText', 'AI生成')}</span>
         </button>
       </div>
     </div>

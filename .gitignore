@@ -45,7 +45,7 @@ data/
 *.db
 *.sqlite
 *.sqlite3
-*.json
+.json
 
 
 # logs

@@ -3,14 +3,23 @@ import { Message } from '../../../types/chat';
 
 export class MemorySyncService {
   private static instance: MemorySyncService;
+  private t: (key: string, fallback?: string) => string;
 
-  private constructor() {}
+  private constructor() {
+    // 默认翻译函数，直接返回fallback或key
+    this.t = (key: string, fallback?: string) => fallback || key;
+  }
 
   static getInstance(): MemorySyncService {
     if (!MemorySyncService.instance) {
       MemorySyncService.instance = new MemorySyncService();
     }
     return MemorySyncService.instance;
+  }
+
+  // 设置翻译函数
+  setTranslationFunction(translationFunction: (key: string, fallback?: string) => string) {
+    this.t = translationFunction;
   }
 
   // 获取完整的聊天记忆（包括两种模式）
@@ -127,10 +136,10 @@ export class MemorySyncService {
     } catch (error) {
       console.error('Failed to get mode transition context:', error);
       return {
-        transitionType: '首次对话',
+        transitionType: this.t('QQ.StoryMode.MemorySync.firstConversation', '首次对话'),
         contextMessages: [],
-        relationshipContext: '初次见面',
-        emotionalState: '中性',
+        relationshipContext: this.t('QQ.StoryMode.MemorySync.firstMeeting', '初次见面'),
+        emotionalState: this.t('QQ.StoryMode.MemorySync.neutral', '中性'),
         recentTopics: []
       };
     }
@@ -138,21 +147,21 @@ export class MemorySyncService {
 
   // 分析关系上下文
   private analyzeRelationshipContext(messages: Message[]): string {
-    if (messages.length === 0) return '初次见面';
+    if (messages.length === 0) return this.t('QQ.StoryMode.MemorySync.firstMeeting', '初次见面');
     
     // 分析消息中的关系线索
     const relationshipKeywords = {
-      '亲密': ['喜欢', '爱', '亲', '抱', '吻', '宝贝', '亲爱的'],
-      '友好': ['朋友', '伙伴', '一起', '合作', '帮助'],
-      '正式': ['您好', '请', '谢谢', '抱歉', '打扰'],
-      '熟悉': ['你', '我', '我们', '记得', '之前']
+      [this.t('QQ.StoryMode.MemorySync.intimate', '亲密')]: ['喜欢', '爱', '亲', '抱', '吻', '宝贝', '亲爱的'],
+      [this.t('QQ.StoryMode.MemorySync.friendly', '友好')]: ['朋友', '伙伴', '一起', '合作', '帮助'],
+      [this.t('QQ.StoryMode.MemorySync.formal', '正式')]: ['您好', '请', '谢谢', '抱歉', '打扰'],
+      [this.t('QQ.StoryMode.MemorySync.familiar', '熟悉')]: ['你', '我', '我们', '记得', '之前']
     };
     
     const relationshipScore = {
-      '亲密': 0,
-      '友好': 0,
-      '正式': 0,
-      '熟悉': 0
+      [this.t('QQ.StoryMode.MemorySync.intimate', '亲密')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.friendly', '友好')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.formal', '正式')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.familiar', '熟悉')]: 0
     };
     
     messages.forEach(msg => {
@@ -168,32 +177,32 @@ export class MemorySyncService {
     
     // 确定主要关系类型
     const maxScore = Math.max(...Object.values(relationshipScore));
-    if (maxScore === 0) return '初次见面';
+    if (maxScore === 0) return this.t('QQ.StoryMode.MemorySync.firstMeeting', '初次见面');
     
     const primaryRelationship = Object.entries(relationshipScore)
-      .find(([, score]) => score === maxScore)?.[0] || '熟悉';
+      .find(([, score]) => score === maxScore)?.[0] || this.t('QQ.StoryMode.MemorySync.familiar', '熟悉');
     
     return primaryRelationship;
   }
 
   // 分析情感状态
   private analyzeEmotionalState(messages: Message[]): string {
-    if (messages.length === 0) return '中性';
+    if (messages.length === 0) return this.t('QQ.StoryMode.MemorySync.neutral', '中性');
     
     const emotionKeywords = {
-      '开心': ['😊', '😄', '😆', '哈哈', '开心', '高兴', '快乐', '棒', '好'],
-      '生气': ['😠', '😡', '生气', '愤怒', '讨厌', '烦', '不好'],
-      '伤心': ['😢', '😭', '伤心', '难过', '哭', '悲伤', '失望'],
-      '紧张': ['😰', '😨', '紧张', '担心', '害怕', '焦虑'],
-      '平静': ['😐', '平静', '一般', '还行', '正常']
+      [this.t('QQ.StoryMode.MemorySync.happy', '开心')]: ['😊', '😄', '😆', '哈哈', '开心', '高兴', '快乐', '棒', '好'],
+      [this.t('QQ.StoryMode.MemorySync.angry', '生气')]: ['😠', '😡', '生气', '愤怒', '讨厌', '烦', '不好'],
+      [this.t('QQ.StoryMode.MemorySync.sad', '伤心')]: ['😢', '😭', '伤心', '难过', '哭', '悲伤', '失望'],
+      [this.t('QQ.StoryMode.MemorySync.nervous', '紧张')]: ['😰', '😨', '紧张', '担心', '害怕', '焦虑'],
+      [this.t('QQ.StoryMode.MemorySync.calm', '平静')]: ['😐', '平静', '一般', '还行', '正常']
     };
     
     const emotionScore = {
-      '开心': 0,
-      '生气': 0,
-      '伤心': 0,
-      '紧张': 0,
-      '平静': 0
+      [this.t('QQ.StoryMode.MemorySync.happy', '开心')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.angry', '生气')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.sad', '伤心')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.nervous', '紧张')]: 0,
+      [this.t('QQ.StoryMode.MemorySync.calm', '平静')]: 0
     };
     
     messages.forEach(msg => {
@@ -209,10 +218,10 @@ export class MemorySyncService {
     
     // 确定主要情感状态
     const maxScore = Math.max(...Object.values(emotionScore));
-    if (maxScore === 0) return '中性';
+    if (maxScore === 0) return this.t('QQ.StoryMode.MemorySync.neutral', '中性');
     
     const primaryEmotion = Object.entries(emotionScore)
-      .find(([, score]) => score === maxScore)?.[0] || '平静';
+      .find(([, score]) => score === maxScore)?.[0] || this.t('QQ.StoryMode.MemorySync.calm', '平静');
     
     return primaryEmotion;
   }
@@ -266,22 +275,22 @@ export class MemorySyncService {
     }
   ): string {
     if (fromMode === toMode) {
-      return '继续当前模式';
+      return this.t('QQ.StoryMode.MemorySync.continueCurrentMode', '继续当前模式');
     }
     
     if (memoryStats.totalCount === 0) {
-      return '首次对话';
+      return this.t('QQ.StoryMode.MemorySync.firstConversation', '首次对话');
     }
     
     if (fromMode === 'normal' && toMode === 'story') {
-      return '从线上聊天切换到线下剧情';
+      return this.t('QQ.StoryMode.MemorySync.switchToStory', '从线上聊天切换到线下剧情');
     }
     
     if (fromMode === 'story' && toMode === 'normal') {
-      return '从线下剧情切换到线上聊天';
+      return this.t('QQ.StoryMode.MemorySync.switchToChat', '从线下剧情切换到线上聊天');
     }
     
-    return '模式切换';
+    return this.t('QQ.StoryMode.MemorySync.modeSwitch', '模式切换');
   }
 
   // 同步记忆到AI上下文
@@ -296,9 +305,9 @@ export class MemorySyncService {
       
       if (allMessages.length === 0) {
         return {
-          memoryContext: '这是首次对话',
-          relationshipInfo: '初次见面',
-          emotionalContext: '中性',
+          memoryContext: this.t('QQ.StoryMode.MemorySync.firstConversationContext', '这是首次对话'),
+          relationshipInfo: this.t('QQ.StoryMode.MemorySync.firstMeeting', '初次见面'),
+          emotionalContext: this.t('QQ.StoryMode.MemorySync.neutral', '中性'),
           recentHistory: ''
         };
       }
@@ -324,9 +333,9 @@ export class MemorySyncService {
     } catch (error) {
       console.error('Failed to sync memory to context:', error);
       return {
-        memoryContext: '记忆同步失败',
-        relationshipInfo: '未知关系',
-        emotionalContext: '未知情感',
+        memoryContext: this.t('QQ.StoryMode.MemorySync.syncFailed', '记忆同步失败'),
+        relationshipInfo: this.t('QQ.StoryMode.MemorySync.unknownRelationship', '未知关系'),
+        emotionalContext: this.t('QQ.StoryMode.MemorySync.unknownEmotion', '未知情感'),
         recentHistory: ''
       };
     }
@@ -338,12 +347,15 @@ export class MemorySyncService {
     const normalMessages = messages.filter(msg => !msg.id.includes('_story_'));
     const storyMessages = messages.filter(msg => msg.id.includes('_story_'));
     
-    const context = `总共有${totalMessages}条互动记录，其中聊天模式${normalMessages.length}条，剧情模式${storyMessages.length}条。`;
+    const context = this.t('QQ.StoryMode.MemorySync.totalRecords', '总共有{{total}}条互动记录，其中聊天模式{{normal}}条，剧情模式{{story}}条。')
+      .replace('{{total}}', totalMessages.toString())
+      .replace('{{normal}}', normalMessages.length.toString())
+      .replace('{{story}}', storyMessages.length.toString());
     
     if (targetMode === 'story') {
-      return context + ' 现在切换到剧情模式，请记住之前的聊天内容，在剧情中体现这些关系发展。';
+      return context + ' ' + this.t('QQ.StoryMode.MemorySync.switchToStoryContext', '现在切换到剧情模式，请记住之前的聊天内容，在剧情中体现这些关系发展。');
     } else {
-      return context + ' 现在切换到聊天模式，请记住之前的剧情发展，在聊天中体现这些关系变化。';
+      return context + ' ' + this.t('QQ.StoryMode.MemorySync.switchToChatContext', '现在切换到聊天模式，请记住之前的剧情发展，在聊天中体现这些关系变化。');
     }
   }
 
@@ -352,10 +364,12 @@ export class MemorySyncService {
     const relationshipContext = this.analyzeRelationshipContext(messages);
     const recentTopics = this.extractRecentTopics(messages);
     
-    let info = `当前关系状态：${relationshipContext}`;
+    let info = this.t('QQ.StoryMode.MemorySync.currentRelationship', '当前关系状态：{{context}}')
+      .replace('{{context}}', relationshipContext);
     
     if (recentTopics.length > 0) {
-      info += `，最近讨论的话题：${recentTopics.join('、')}`;
+      info += this.t('QQ.StoryMode.MemorySync.recentTopics', '，最近讨论的话题：{{topics}}')
+        .replace('{{topics}}', recentTopics.join('、'));
     }
     
     return info;
@@ -364,7 +378,8 @@ export class MemorySyncService {
   // 生成情感上下文
   private generateEmotionalContext(messages: Message[]): string {
     const emotionalState = this.analyzeEmotionalState(messages);
-    return `当前情感状态：${emotionalState}`;
+    return this.t('QQ.StoryMode.MemorySync.currentEmotion', '当前情感状态：{{emotion}}')
+      .replace('{{emotion}}', emotionalState);
   }
 
   // 生成最近历史
@@ -379,11 +394,13 @@ export class MemorySyncService {
         minute: '2-digit'
       });
       
-      const sender = msg.role === 'user' ? '用户' : (msg.senderName || 'AI');
+      const sender = msg.role === 'user' ? this.t('QQ.StoryMode.MemorySync.user', '用户') : (msg.senderName || this.t('QQ.StoryMode.MemorySync.ai', 'AI'));
       return `[${time}] ${sender}: ${msg.content}`;
     }).join('\n');
     
-    return `最近${messages.length}条对话：\n${formattedMessages}`;
+    return this.t('QQ.StoryMode.MemorySync.recentConversations', '最近{{count}}条对话：\n{{messages}}')
+      .replace('{{count}}', messages.length.toString())
+      .replace('{{messages}}', formattedMessages);
   }
 }
 

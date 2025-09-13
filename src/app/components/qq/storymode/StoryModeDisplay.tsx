@@ -2,6 +2,7 @@
 
 import React, { useCallback, useRef, useEffect, useState, memo } from 'react';
 import { Message, ChatItem } from '../../../types/chat';
+import { useI18n } from '../../i18n/I18nProvider';
 import './StoryModeDisplay.css';
 
 interface StoryModeDisplayProps {
@@ -31,6 +32,7 @@ function StoryModeDisplay({
   setEditingMessage,
   isAIThinking = false
 }: StoryModeDisplayProps) {
+  const { t } = useI18n();
   const storyContainerRef = useRef<HTMLDivElement>(null);
   const [visibleActions, setVisibleActions] = useState<Set<string>>(new Set());
   // 分页与滚动状态
@@ -238,7 +240,7 @@ function StoryModeDisplay({
         <div className="story-ai-typing-content">
           <div className="story-ai-typing-header">
             <div className="story-ai-typing-sender">{chat.name}</div>
-            <div className="story-ai-typing-status">正在创作剧情...</div>
+            <div className="story-ai-typing-status">{t('QQ.ChatInterface.StoryMode.creating', '正在创作剧情...')}</div>
           </div>
           <div className="story-ai-typing-dots">
             <span className="story-typing-dot"></span>
@@ -248,7 +250,7 @@ function StoryModeDisplay({
         </div>
       </div>
     );
-  }, [isAIThinking, chat.name]);
+  }, [isAIThinking, chat.name, t]);
 
   const renderStoryContent = useCallback((content: string) => {
     // 兜底保护：避免 content 为 null/undefined 时调用 split 报错
@@ -310,7 +312,7 @@ function StoryModeDisplay({
         <div className="story-message-header">
           <div className="story-message-info">
             <div className="story-message-sender">
-              {isUser ? '我' : (msg.senderName || chat.name)}
+              {isUser ? t('QQ.ChatInterface.StoryMode.me', '我') : (msg.senderName || chat.name)}
             </div>
             <div className="story-message-time">
               {formatTime(msg.timestamp)}
@@ -328,7 +330,7 @@ function StoryModeDisplay({
             <button 
               className="story-action-btn"
               onClick={() => onQuoteMessage(msg)}
-              title="引用"
+              title={t('QQ.ChatInterface.StoryMode.quote', '引用')}
             >
               💬
             </button>
@@ -337,14 +339,14 @@ function StoryModeDisplay({
                 <button 
                   className="story-action-btn"
                   onClick={() => onEditMessage(msg.id, String(msg.content || ''))}
-                  title="编辑"
+                  title={t('QQ.ChatInterface.StoryMode.edit', '编辑')}
                 >
                   ✏️
                 </button>
                 <button 
                   className="story-action-btn"
                   onClick={() => onDeleteMessage(msg.id)}
-                  title="删除"
+                  title={t('QQ.ChatInterface.StoryMode.delete', '删除')}
                 >
                   🗑️
                 </button>
@@ -354,7 +356,7 @@ function StoryModeDisplay({
               <button 
                 className="story-action-btn"
                 onClick={() => onRegenerateAI(msg.id)}
-                title="重新生成"
+                title={t('QQ.ChatInterface.StoryMode.regenerate', '重新生成')}
               >
                 🔄
               </button>
@@ -380,7 +382,7 @@ function StoryModeDisplay({
                     onSaveEdit();
                   }}
                 >
-                  保存
+                  {t('QQ.ChatInterface.StoryMode.save', '保存')}
                 </button>
                 <button 
                   className="story-cancel-btn"
@@ -389,7 +391,7 @@ function StoryModeDisplay({
                     onCancelEdit();
                   }}
                 >
-                  取消
+                  {t('QQ.ChatInterface.StoryMode.cancel', '取消')}
                 </button>
               </div>
             </div>
@@ -401,7 +403,7 @@ function StoryModeDisplay({
         </div>
       </div>
     );
-  }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage, visibleActions]);
+  }, [chat, editingMessage, formatTime, renderStoryContent, onQuoteMessage, onEditMessage, onSaveEdit, onCancelEdit, onDeleteMessage, onRegenerateAI, setEditingMessage, visibleActions, t]);
 
   return (
     <div className="story-display-container" ref={storyContainerRef} onScroll={handleScroll}>
@@ -409,10 +411,10 @@ function StoryModeDisplay({
         <div className="story-empty-state">
           <div className="story-empty-icon">📖</div>
           <div className="story-empty-text">
-            开始编写你的剧情故事吧！
+            {t('QQ.ChatInterface.StoryMode.startWriting', '开始编写你的剧情故事吧！')}
           </div>
           <div className="story-empty-hint">
-            点击下方输入框开始创作
+            {t('QQ.ChatInterface.StoryMode.clickToStart', '点击下方输入框开始创作')}
           </div>
         </div>
       ) : (
@@ -423,9 +425,9 @@ function StoryModeDisplay({
                 className="story-action-btn"
                 onClick={handleLoadMore}
                 disabled={isLoadingMoreMessages}
-                title="加载更多历史剧情"
+                title={t('QQ.ChatInterface.StoryMode.loadMore', '加载更多历史剧情')}
               >
-                {isLoadingMoreMessages ? '加载中...' : '加载更多'}
+                {isLoadingMoreMessages ? t('QQ.ChatInterface.StoryMode.loading', '加载中...') : t('QQ.ChatInterface.StoryMode.loadMoreText', '加载更多')}
               </button>
             </div>
           )}

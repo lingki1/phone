@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { useI18n } from '../i18n/I18nProvider';
 import './PostComposer.css';
 
 interface PostComposerProps {
@@ -21,6 +22,7 @@ interface PostComposerProps {
 }
 
 export default function PostComposer({ onPublish, onCancel, userInfo }: PostComposerProps) {
+  const { t } = useI18n();
   const [content, setContent] = useState('');
   // const [images, setImages] = useState<string[]>([]); // 暂时禁用图片功能
   const [isPublic, setIsPublic] = useState(true);
@@ -101,7 +103,7 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onCancel()}>
       <div className="api-settings-modal">
         <div className="modal-header">
-          <h2>发布动态</h2>
+          <h2>{t('QQ.ChatInterface.Discover.PostComposer.title', '发布动态')}</h2>
           <button className="close-btn" onClick={onCancel}>×</button>
         </div>
         
@@ -111,18 +113,18 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
             <div className="user-info-display">
               <Image 
                 src={userInfo?.avatar || '/avatars/user-avatar.svg'} 
-                alt={userInfo?.nickname || '用户'}
+                alt={userInfo?.nickname || t('QQ.ChatInterface.Discover.PostComposer.defaultUser', '用户')}
                 width={40}
                 height={40}
                 className="user-avatar"
               />
               <div className="user-details">
-                <div className="username">{userInfo?.nickname || '用户'}</div>
+                <div className="username">{userInfo?.nickname || t('QQ.ChatInterface.Discover.PostComposer.defaultUser', '用户')}</div>
                 <button 
                   className={`privacy-btn ${isPublic ? 'public' : 'private'}`}
                   onClick={() => setIsPublic(!isPublic)}
                 >
-                  {isPublic ? '🌍 公开' : '👥 仅好友'}
+                  {isPublic ? t('QQ.ChatInterface.Discover.PostComposer.privacy.public', '🌍 公开') : t('QQ.ChatInterface.Discover.PostComposer.privacy.friends', '👥 仅好友')}
                 </button>
               </div>
             </div>
@@ -130,17 +132,17 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
 
           {/* 文本输入 */}
           <div className="form-group">
-            <label htmlFor="content">动态内容</label>
+            <label htmlFor="content">{t('QQ.ChatInterface.Discover.PostComposer.content.label', '动态内容')}</label>
             <textarea
               ref={textareaRef}
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="分享你的想法..."
+              placeholder={t('QQ.ChatInterface.Discover.PostComposer.content.placeholder', '分享你的想法...')}
               rows={4}
               maxLength={500}
             />
-            <small className="field-hint">最多500个字符</small>
+            <small className="field-hint">{t('QQ.ChatInterface.Discover.PostComposer.content.hint', '最多500个字符')}</small>
           </div>
 
           {/* 图片预览 - 暂时禁用 */}
@@ -172,20 +174,20 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
 
           {/* 添加图片按钮 - 暂时禁用 */}
           <div className="form-group">
-            <label>添加图片</label>
+            <label>{t('QQ.ChatInterface.Discover.PostComposer.images.label', '添加图片')}</label>
             <button 
               className="action-btn disabled"
               disabled={true}
-              title="图片上传功能暂时关闭，避免数据传输过大"
+              title={t('QQ.ChatInterface.Discover.PostComposer.images.disabledTitle', '图片上传功能暂时关闭，避免数据传输过大')}
             >
-              添加图片 (已禁用)
+              {t('QQ.ChatInterface.Discover.PostComposer.images.disabled', '添加图片 (已禁用)')}
             </button>
-            <small className="field-hint">图片上传功能暂时关闭，避免数据传输过大</small>
+            <small className="field-hint">{t('QQ.ChatInterface.Discover.PostComposer.images.disabledHint', '图片上传功能暂时关闭，避免数据传输过大')}</small>
           </div>
 
           {/* 标签输入 */}
           <div className="form-group">
-            <label htmlFor="tag-input">标签</label>
+            <label htmlFor="tag-input">{t('QQ.ChatInterface.Discover.PostComposer.tags.label', '标签')}</label>
             <div className="tag-input-container">
               <input
                 type="text"
@@ -193,7 +195,7 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="添加标签..."
+                placeholder={t('QQ.ChatInterface.Discover.PostComposer.tags.placeholder', '添加标签...')}
                 maxLength={20}
               />
               <button 
@@ -201,7 +203,7 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
                 onClick={addTag}
                 disabled={!tagInput.trim() || tags.length >= 5}
               >
-                添加
+                {t('QQ.ChatInterface.Discover.PostComposer.tags.add', '添加')}
               </button>
             </div>
             {tags.length > 0 && (
@@ -212,7 +214,7 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
                     <button 
                       className="remove-tag-btn"
                       onClick={() => removeTag(tag)}
-                      aria-label={`删除标签 ${tag}`}
+                      aria-label={t('QQ.ChatInterface.Discover.PostComposer.tags.removeAriaLabel', '删除标签 {{tag}}').replace('{{tag}}', tag)}
                     >
                       ×
                     </button>
@@ -220,30 +222,30 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
                 ))}
               </div>
             )}
-            <small className="field-hint">最多添加5个标签</small>
+            <small className="field-hint">{t('QQ.ChatInterface.Discover.PostComposer.tags.hint', '最多添加5个标签')}</small>
           </div>
 
           {/* 位置和心情 */}
           <div className="form-group">
-            <label htmlFor="location">位置</label>
+            <label htmlFor="location">{t('QQ.ChatInterface.Discover.PostComposer.location.label', '位置')}</label>
             <input
               type="text"
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="📍 添加位置"
+              placeholder={t('QQ.ChatInterface.Discover.PostComposer.location.placeholder', '📍 添加位置')}
               maxLength={50}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="mood">心情</label>
+            <label htmlFor="mood">{t('QQ.ChatInterface.Discover.PostComposer.mood.label', '心情')}</label>
             <input
               type="text"
               id="mood"
               value={mood}
               onChange={(e) => setMood(e.target.value)}
-              placeholder="😊 添加心情"
+              placeholder={t('QQ.ChatInterface.Discover.PostComposer.mood.placeholder', '😊 添加心情')}
               maxLength={20}
             />
           </div>
@@ -260,9 +262,9 @@ export default function PostComposer({ onPublish, onCancel, userInfo }: PostComp
         </div>
 
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onCancel} disabled={isSubmitting}>取消</button>
+          <button className="cancel-btn" onClick={onCancel} disabled={isSubmitting}>{t('QQ.ChatInterface.Discover.PostComposer.buttons.cancel', '取消')}</button>
           <button className="save-btn" onClick={handleSubmit} disabled={!canSubmit}>
-            {isSubmitting ? '发布中...' : '发布动态'}
+            {isSubmitting ? t('QQ.ChatInterface.Discover.PostComposer.buttons.publishing', '发布中...') : t('QQ.ChatInterface.Discover.PostComposer.buttons.publish', '发布动态')}
           </button>
         </div>
       </div>

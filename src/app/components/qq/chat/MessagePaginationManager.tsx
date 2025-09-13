@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Message, ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import './MessagePaginationManager.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface MessagePaginationManagerProps {
   chat: ChatItem;
@@ -30,6 +31,7 @@ export default function MessagePaginationManager({
   displayedMessages = [],
   messagesContainerRef
 }: MessagePaginationManagerProps) {
+  const { t } = useI18n();
   const [paginationState, setPaginationState] = useState<PaginationState>({
     isLoading: false,
     hasMore: true,
@@ -221,13 +223,13 @@ export default function MessagePaginationManager({
           {paginationState.isLoading ? (
             <>
               <div className="loading-spinner"></div>
-              <span>加载中...</span>
+              <span>{t('QQ.ChatInterface.Pagination.loading', '加载中...')}</span>
             </>
           ) : (
             <>
-              <span>加载更多历史消息</span>
+              <span>{t('QQ.ChatInterface.Pagination.loadMore', '加载更多历史消息')}</span>
               <span className="message-count">
-                (还有 {remainingMessages} 条消息)
+                {t('QQ.ChatInterface.Pagination.remaining', '(还有 {{count}} 条消息)').replace('{{count}}', String(remainingMessages))}
               </span>
             </>
           )}

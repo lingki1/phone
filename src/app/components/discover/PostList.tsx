@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DiscoverPost } from '../../types/discover';
 import { dataManager } from '../../utils/dataManager';
 import PostCard from './PostCard';
+import { useI18n } from '../i18n/I18nProvider';
 import './PostList.css';
 
 interface PostListProps {
@@ -21,6 +22,7 @@ export default function PostList({
   onDelete,
   currentUserId 
 }: PostListProps) {
+  const { t } = useI18n();
   const [postsWithNewMarkers, setPostsWithNewMarkers] = useState<DiscoverPost[]>([]);
   const [lastViewedTimestamp, setLastViewedTimestamp] = useState<number>(0);
 
@@ -29,7 +31,7 @@ export default function PostList({
     try {
       await dataManager.updateDiscoverViewState(currentUserId, timestamp);
       setLastViewedTimestamp(timestamp);
-      console.log('✅ 已更新查看状态，时间戳:', timestamp);
+      console.log('✅ ' + t('QQ.ChatInterface.Discover.PostList.logs.viewStateUpdated', '已更新查看状态，时间戳:'), timestamp);
       
       // 触发事件通知其他组件更新新内容计数
       window.dispatchEvent(new CustomEvent('viewStateUpdated'));
@@ -58,7 +60,7 @@ export default function PostList({
         
         setPostsWithNewMarkers(markedPosts);
         
-        console.log('📊 标记新内容完成:', {
+        console.log('📊 ' + t('QQ.ChatInterface.Discover.PostList.logs.newContentMarked', '标记新内容完成:'), {
           lastViewedTimestamp: currentLastViewed,
           totalPosts: posts.length,
           newPosts: markedPosts.filter(p => p.isNew).length,
@@ -86,14 +88,14 @@ export default function PostList({
     };
 
     markNewContent();
-  }, [posts, currentUserId, lastViewedTimestamp]);
+  }, [posts, currentUserId, lastViewedTimestamp, t]);
   // 如果还没有处理完，显示加载状态
   if (postsWithNewMarkers.length === 0 && posts.length > 0) {
     return (
       <div className="discover-content">
         <div className="discover-loading">
           <div className="loading-spinner"></div>
-          <p>加载中...</p>
+          <p>{t('QQ.ChatInterface.Discover.PostList.loading', '加载中...')}</p>
         </div>
       </div>
     );
@@ -104,9 +106,9 @@ export default function PostList({
       <div className="discover-content">
         <div className="discover-empty">
           <div className="discover-empty-icon">📱</div>
-          <div className="discover-empty-title">还没有动态</div>
+          <div className="discover-empty-title">{t('QQ.ChatInterface.Discover.PostList.empty.title', '还没有动态')}</div>
           <div className="discover-empty-description">
-            发布你的第一条动态，开始分享生活吧！
+            {t('QQ.ChatInterface.Discover.PostList.empty.description', '发布你的第一条动态，开始分享生活吧！')}
           </div>
         </div>
       </div>
@@ -136,7 +138,7 @@ export default function PostList({
           .map(comment => comment.timestamp)
       );
       
-      console.log('👁️ 检测到评论可见性变化:', {
+      console.log('👁️ ' + t('QQ.ChatInterface.Discover.PostList.logs.commentsVisibilityChanged', '检测到评论可见性变化:'), {
         postId: post.id,
         hasNewComments,
         lastViewedTimestamp,
@@ -148,7 +150,7 @@ export default function PostList({
       try {
         await dataManager.updateCommentsViewState(currentUserId, latestCommentTimestamp);
         setLastViewedTimestamp(latestCommentTimestamp);
-        console.log('✅ 已更新评论查看状态，时间戳:', latestCommentTimestamp);
+        console.log('✅ ' + t('QQ.ChatInterface.Discover.PostList.logs.commentsViewStateUpdated', '已更新评论查看状态，时间戳:'), latestCommentTimestamp);
         
         // 触发事件通知其他组件更新新内容计数
         window.dispatchEvent(new CustomEvent('viewStateUpdated'));

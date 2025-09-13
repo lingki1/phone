@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useI18n } from '../i18n/I18nProvider';
 import './PostActions.css';
 
 interface PostActionsProps {
@@ -12,13 +13,14 @@ export default function PostActions({
   isLiked, 
   onLike
 }: PostActionsProps) {
+  const { t } = useI18n();
   return (
     <div className="post-actions">
       <button 
         className={`action-btn like-btn ${isLiked ? 'liked' : ''}`}
         onClick={onLike}
-        title={isLiked ? '取消点赞' : '点赞'}
-        aria-label={isLiked ? '取消点赞' : '点赞'}
+        title={isLiked ? t('QQ.ChatInterface.Discover.PostActions.like.unlike', '取消点赞') : t('QQ.ChatInterface.Discover.PostActions.like.like', '点赞')}
+        aria-label={isLiked ? t('QQ.ChatInterface.Discover.PostActions.like.unlike', '取消点赞') : t('QQ.ChatInterface.Discover.PostActions.like.like', '点赞')}
       >
         <svg 
           width="20" 
@@ -35,7 +37,7 @@ export default function PostActions({
             strokeLinejoin="round"
           />
         </svg>
-        <span>点赞</span>
+        <span>{t('QQ.ChatInterface.Discover.PostActions.like.text', '点赞')}</span>
       </button>
 
       <button 
@@ -44,20 +46,20 @@ export default function PostActions({
           // 分享功能（可以扩展）
           if (navigator.share) {
             navigator.share({
-              title: '分享动态',
-              text: '看看这条有趣的动态！',
+              title: t('QQ.ChatInterface.Discover.PostActions.share.title', '分享动态'),
+              text: t('QQ.ChatInterface.Discover.PostActions.share.text', '看看这条有趣的动态！'),
               url: window.location.href
             });
           } else {
             // 复制链接
             navigator.clipboard.writeText(window.location.href).then(() => {
               // 可以显示提示
-              console.log('链接已复制到剪贴板');
+              console.log(t('QQ.ChatInterface.Discover.PostActions.share.linkCopied', '链接已复制到剪贴板'));
             });
           }
         }}
-        title="分享"
-        aria-label="分享"
+        title={t('QQ.ChatInterface.Discover.PostActions.share.title', '分享')}
+        aria-label={t('QQ.ChatInterface.Discover.PostActions.share.ariaLabel', '分享')}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
@@ -66,7 +68,7 @@ export default function PostActions({
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="currentColor" strokeWidth="2"/>
           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="currentColor" strokeWidth="2"/>
         </svg>
-        <span>分享</span>
+        <span>{t('QQ.ChatInterface.Discover.PostActions.share.text', '分享')}</span>
       </button>
     </div>
   );

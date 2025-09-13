@@ -2,6 +2,7 @@
 
 import React from 'react';
 import './ExtraInfoDisplay.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface ExtraInfoDisplayProps {
   message: {
@@ -15,6 +16,7 @@ interface ExtraInfoDisplayProps {
 }
 
 export default function ExtraInfoDisplay({ message, chatName }: ExtraInfoDisplayProps) {
+  const { t, locale } = useI18n();
   // 安全地渲染HTML内容
   const renderHTMLContent = () => {
     try {
@@ -32,14 +34,14 @@ export default function ExtraInfoDisplay({ message, chatName }: ExtraInfoDisplay
       return tempDiv.innerHTML;
     } catch (error) {
       console.error('Failed to render HTML content:', error);
-      return '<div class="extra-info-error">HTML渲染失败</div>';
+      return `<div class="extra-info-error">${t('QQ.ChatInterface.ExtraInfoDisplay.renderError', 'HTML渲染失败')}</div>`;
     }
   };
 
   return (
     <div className="extra-info-display">
       <div className="extra-info-header">
-        <span className="extra-info-label">额外信息</span>
+        <span className="extra-info-label">{t('QQ.ChatInterface.ExtraInfoDisplay.label', '额外信息')}</span>
         <span className="extra-info-description">{message.description}</span>
       </div>
       
@@ -50,10 +52,10 @@ export default function ExtraInfoDisplay({ message, chatName }: ExtraInfoDisplay
       
       <div className="extra-info-footer">
         <span className="extra-info-timestamp">
-          {new Date(message.timestamp).toLocaleString('zh-CN')}
+          {new Date(message.timestamp).toLocaleString(locale || 'zh-CN')}
         </span>
         <span className="extra-info-source">
-          由 {chatName} 生成
+          {t('QQ.ChatInterface.ExtraInfoDisplay.source', '由 {{name}} 生成').replace('{{name}}', chatName)}
         </span>
       </div>
     </div>

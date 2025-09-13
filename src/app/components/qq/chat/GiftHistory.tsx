@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import type { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import { useCurrentTheme } from '../../../hooks/useTheme';
+import { useI18n } from '../../i18n/I18nProvider';
 import './GiftHistory.css';
 
 interface GiftRecord {
@@ -27,6 +28,7 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
   const [isLoading, setIsLoading] = useState(false);
   const { currentThemeObject } = useCurrentTheme();
   void currentThemeObject; // avoid unused var warning
+  const { t, locale } = useI18n();
 
   useEffect(() => {
     const loadGifts = async () => {
@@ -63,10 +65,10 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
 
   const getShippingMethodText = (method?: string) => {
     switch (method) {
-      case 'instant': return '极速立刻';
-      case 'fast': return '快速1分钟';
-      case 'slow': return '慢速10分钟';
-      default: return '标准配送';
+      case 'instant': return t('QQ.ChatInterface.GiftHistory.shipping.instant', '极速立刻');
+      case 'fast': return t('QQ.ChatInterface.GiftHistory.shipping.fast', '快速1分钟');
+      case 'slow': return t('QQ.ChatInterface.GiftHistory.shipping.slow', '慢速10分钟');
+      default: return t('QQ.ChatInterface.GiftHistory.shipping.standard', '标准配送');
     }
   };
 
@@ -85,8 +87,8 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
         <div className="gift-history-header">
           <div className="gift-history-title">
             <div className="gift-icon">🎁</div>
-            <h3>礼物记录</h3>
-            <span className="gift-count">{gifts.length} 条记录</span>
+            <h3>{t('QQ.ChatInterface.GiftHistory.title', '礼物记录')}</h3>
+            <span className="gift-count">{t('QQ.ChatInterface.GiftHistory.count', '{{count}} 条记录').replace('{{count}}', String(gifts.length))}</span>
           </div>
           <button className="close-button" onClick={onClose}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,13 +102,13 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
           {isLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
-              <p>正在加载礼物记录...</p>
+              <p>{t('QQ.ChatInterface.GiftHistory.loading', '正在加载礼物记录...')}</p>
             </div>
           ) : gifts.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🎁</div>
-              <h4>暂无礼物记录</h4>
-              <p>这里会显示您收到的所有礼物</p>
+              <h4>{t('QQ.ChatInterface.GiftHistory.empty.title', '暂无礼物记录')}</h4>
+              <p>{t('QQ.ChatInterface.GiftHistory.empty.desc', '这里会显示您收到的所有礼物')}</p>
             </div>
           ) : (
             <div className="gift-list">
@@ -131,7 +133,7 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
                   {gift.items && gift.items.length > 0 && (
                     <div className="gift-items">
                       <div className="gift-items-header">
-                        <span className="gift-items-title">🎁 礼品清单</span>
+                        <span className="gift-items-title">{t('QQ.ChatInterface.GiftHistory.itemsTitle', '🎁 礼品清单')}</span>
                       </div>
                       {gift.items.map((item, idx) => (
                         <div key={idx} className="gift-item">
@@ -155,7 +157,7 @@ export default function GiftHistory({ isOpen, onClose, chat }: GiftHistoryProps)
                       </span>
                     </div>
                     <div className="gift-time">
-                      {new Date(gift.timestamp).toLocaleString('zh-CN', {
+                      {new Date(gift.timestamp).toLocaleString(locale || 'zh-CN', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',

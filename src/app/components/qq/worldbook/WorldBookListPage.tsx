@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import WorldBookCard from './WorldBookCard';
 import WorldBookEditor from './WorldBookEditor';
 import WorldBookImportModal from './WorldBookImportModal';
@@ -13,6 +14,7 @@ interface WorldBookListPageProps {
 }
 
 export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
+  const { t } = useI18n();
   const [worldBooks, setWorldBooks] = useState<WorldBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -37,7 +39,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // 加载世界书列表
-  const loadWorldBooks = async () => {
+  const loadWorldBooks = useCallback(async () => {
     try {
       setIsLoading(true);
       const books = await dataManager.getAllWorldBooks();
@@ -49,16 +51,16 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
       setCategoryOptions(cats);
     } catch (error) {
       console.error('Failed to load world books:', error);
-      alert('加载世界书失败，请刷新重试');
+      alert(t('QQ.ChatInterface.WorldBookListPage.errors.loadFailed', '加载世界书失败，请刷新重试'));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
   // 初始化加载
   useEffect(() => {
     loadWorldBooks();
-  }, []);
+  }, [loadWorldBooks]);
 
   // 创建新世界书
   const handleCreateNew = () => {
@@ -79,7 +81,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
       setWorldBooks(prev => prev.filter(wb => wb.id !== id));
     } catch (error) {
       console.error('Failed to delete world book:', error);
-      alert('删除失败，请重试');
+      alert(t('QQ.ChatInterface.WorldBookListPage.errors.deleteFailed', '删除失败，请重试'));
     }
   };
 
@@ -140,15 +142,15 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
       
       // 显示导入结果
       if (errorCount === 0) {
-        alert(`成功导入 ${successCount} 个世界书`);
+        alert(t('QQ.ChatInterface.WorldBookListPage.import.success', '成功导入 {{count}} 个世界书').replace('{{count}}', String(successCount)));
       } else {
-        alert(`导入完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+        alert(t('QQ.ChatInterface.WorldBookListPage.import.partial', '导入完成：成功 {{success}} 个，失败 {{error}} 个').replace('{{success}}', String(successCount)).replace('{{error}}', String(errorCount)));
       }
       
       setShowImportModal(false);
     } catch (error) {
       console.error('Import failed:', error);
-      alert('导入失败，请重试');
+      alert(t('QQ.ChatInterface.WorldBookListPage.import.failed', '导入失败，请重试'));
     }
   };
 
@@ -181,11 +183,11 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   // 批量删除
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) {
-      alert('请先选择要删除的世界书');
+      alert(t('QQ.ChatInterface.WorldBookListPage.batchDelete.noSelection', '请先选择要删除的世界书'));
       return;
     }
 
-    const confirmMessage = `确定要删除选中的 ${selectedIds.size} 个世界书吗？此操作不可撤销。`;
+    const confirmMessage = t('QQ.ChatInterface.WorldBookListPage.batchDelete.confirm', '确定要删除选中的 {{count}} 个世界书吗？此操作不可撤销。').replace('{{count}}', String(selectedIds.size));
     if (!confirm(confirmMessage)) {
       return;
     }
@@ -214,13 +216,13 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
 
       // 显示删除结果
       if (errorCount === 0) {
-        alert(`成功删除 ${successCount} 个世界书`);
+        alert(t('QQ.ChatInterface.WorldBookListPage.batchDelete.success', '成功删除 {{count}} 个世界书').replace('{{count}}', String(successCount)));
       } else {
-        alert(`删除完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+        alert(t('QQ.ChatInterface.WorldBookListPage.batchDelete.partial', '删除完成：成功 {{success}} 个，失败 {{error}} 个').replace('{{success}}', String(successCount)).replace('{{error}}', String(errorCount)));
       }
     } catch (error) {
       console.error('Batch delete failed:', error);
-      alert('批量删除失败，请重试');
+      alert(t('QQ.ChatInterface.WorldBookListPage.batchDelete.failed', '批量删除失败，请重试'));
     } finally {
       setIsDeleting(false);
     }
@@ -230,7 +232,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
   const handleBatchChangeCategory = async (newCategory: string) => {
     if (!newCategory) return;
     if (selectedIds.size === 0) {
-      alert('请先选择要更换分类的世界书');
+      alert(t('QQ.ChatInterface.WorldBookListPage.batchCategory.noSelection', '请先选择要更换分类的世界书'));
       return;
     }
     try {
@@ -257,7 +259,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
       setIsSelectionMode(false);
       const cats = Array.from(new Set(updated.map(b => b.category).filter(Boolean))).sort();
       setCategoryOptions(cats);
-      alert(errorCount === 0 ? `成功更新 ${successCount} 个世界书的分类` : `更新完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+      alert(errorCount === 0 ? t('QQ.ChatInterface.WorldBookListPage.batchCategory.success', '成功更新 {{count}} 个世界书的分类').replace('{{count}}', String(successCount)) : t('QQ.ChatInterface.WorldBookListPage.batchCategory.partial', '更新完成：成功 {{success}} 个，失败 {{error}} 个').replace('{{success}}', String(successCount)).replace('{{error}}', String(errorCount)));
     } finally {
       setIsDeleting(false);
     }
@@ -298,7 +300,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <h1 className="page-title">世界书管理</h1>
+        <h1 className="page-title">{t('QQ.ChatInterface.WorldBookListPage.title', '世界书管理')}</h1>
         <div className="wb-header-actions">
           {!isSelectionMode ? (
             <>
@@ -307,7 +309,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                批量操作
+                {t('QQ.ChatInterface.WorldBookListPage.actions.batch', '批量操作')}
               </button>
               <button className="import-btn groupmember-header-action-btn" onClick={() => setShowImportModal(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -315,14 +317,14 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                导入
+                {t('QQ.ChatInterface.WorldBookListPage.actions.import', '导入')}
               </button>
               <button className="create-btn groupmember-header-action-btn" onClick={handleCreateNew}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                创建
+                {t('QQ.ChatInterface.WorldBookListPage.actions.create', '创建')}
               </button>
             </>
           ) : null}
@@ -334,7 +336,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
         <div className="groupmember-batch-toolbar">
           {/* 第一行：已选择 x 个 */}
           <div className="groupmember-batch-row groupmember-batch-row-1">
-            <span className="groupmember-selected-count">已选择 {selectedIds.size} 个</span>
+            <span className="groupmember-selected-count">{t('QQ.ChatInterface.WorldBookListPage.batch.selected', '已选择 {{count}} 个').replace('{{count}}', String(selectedIds.size))}</span>
           </div>
           {/* 第二行：全选 删除 */}
           <div className="groupmember-batch-row groupmember-batch-row-2">
@@ -342,14 +344,14 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
               className="select-all-btn"
               onClick={toggleSelectAll}
             >
-              {selectedIds.size === filteredWorldBooks.length ? '取消全选' : '全选'}
+              {selectedIds.size === filteredWorldBooks.length ? t('QQ.ChatInterface.WorldBookListPage.batch.deselectAll', '取消全选') : t('QQ.ChatInterface.WorldBookListPage.batch.selectAll', '全选')}
             </button>
             <button 
               className="batch-delete-btn"
               onClick={handleBatchDelete}
               disabled={selectedIds.size === 0 || isDeleting}
             >
-              {isDeleting ? '删除中...' : `删除 (${selectedIds.size})`}
+              {isDeleting ? t('QQ.ChatInterface.WorldBookListPage.batch.deleting', '删除中...') : t('QQ.ChatInterface.WorldBookListPage.batch.delete', '删除 ({{count}})').replace('{{count}}', String(selectedIds.size))}
             </button>
           </div>
           {/* 第三行：更换分类 取消 */}
@@ -361,12 +363,12 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 setModalNewCategory('');
                 setShowCategoryModal(true);
               }}
-            >更换分类</button>
+            >{t('QQ.ChatInterface.WorldBookListPage.batch.changeCategory', '更换分类')}</button>
             <button 
               className="cancel-selection-btn"
               onClick={toggleSelectionMode}
             >
-              取消
+              {t('QQ.ChatInterface.WorldBookListPage.batch.cancel', '取消')}
             </button>
           </div>
         </div>
@@ -379,7 +381,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
             <input
               type="text"
               className="search-input"
-              placeholder="搜索世界书名称、内容或描述..."
+              placeholder={t('QQ.ChatInterface.WorldBookListPage.search.placeholder', '搜索世界书名称、内容或描述...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -404,7 +406,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 type="button"
                 className={`groupmember-tag-btn ${!categoryFilter ? 'active' : ''}`}
                 onClick={() => setCategoryFilter('')}
-              >全部</button>
+              >{t('QQ.ChatInterface.WorldBookListPage.filter.all', '全部')}</button>
               {categoryOptions.map(cat => (
                 <button
                   key={cat}
@@ -420,7 +422,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                 type="button"
                 className="groupmember-tag-expand-btn"
                 onClick={() => setTagsExpanded(v => !v)}
-              >{tagsExpanded ? '收起' : '展开'}</button>
+              >{tagsExpanded ? t('QQ.ChatInterface.WorldBookListPage.filter.collapse', '收起') : t('QQ.ChatInterface.WorldBookListPage.filter.expand', '展开')}</button>
             </div>
             </>
           )}
@@ -431,7 +433,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
           {isLoading ? (
             <div className="loading-state">
               <div className="loading-spinner"></div>
-              <p>加载中...</p>
+              <p>{t('QQ.ChatInterface.WorldBookListPage.loading', '加载中...')}</p>
             </div>
           ) : finallyFilteredWorldBooks.length === 0 ? (
             <div className="empty-state">
@@ -441,8 +443,8 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                     <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
                     <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <h3>未找到相关世界书</h3>
-                  <p>尝试使用其他关键词搜索</p>
+                  <h3>{t('QQ.ChatInterface.WorldBookListPage.empty.search', '未找到相关世界书')}</h3>
+                  <p>{t('QQ.ChatInterface.WorldBookListPage.empty.searchHint', '尝试使用其他关键词搜索')}</p>
                 </>
               ) : (
                 <>
@@ -450,10 +452,10 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2"/>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  <h3>还没有世界书</h3>
-                  <p>创建你的第一个世界书，为AI聊天添加丰富的背景设定</p>
+                  <h3>{t('QQ.ChatInterface.WorldBookListPage.empty.noBooks', '还没有世界书')}</h3>
+                  <p>{t('QQ.ChatInterface.WorldBookListPage.empty.createHint', '创建你的第一个世界书，为AI聊天添加丰富的背景设定')}</p>
                   <button className="create-first-btn" onClick={handleCreateNew}>
-                    创建第一个世界书
+                    {t('QQ.ChatInterface.WorldBookListPage.empty.createFirst', '创建第一个世界书')}
                   </button>
                 </>
               )}
@@ -462,11 +464,11 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
             <>
               <div className="list-header">
                 <span className="result-count">
-                  {searchQuery || categoryFilter ? `找到 ${finallyFilteredWorldBooks.length} 个结果` : `共 ${worldBooks.length} 个世界书`}
+                  {searchQuery || categoryFilter ? t('QQ.ChatInterface.WorldBookListPage.results.found', '找到 {{count}} 个结果').replace('{{count}}', String(finallyFilteredWorldBooks.length)) : t('QQ.ChatInterface.WorldBookListPage.results.total', '共 {{count}} 个世界书').replace('{{count}}', String(worldBooks.length))}
                 </span>
                 {isSelectionMode && (
                   <span className="selection-count">
-                    已选择 {selectedIds.size} 个
+                    {t('QQ.ChatInterface.WorldBookListPage.batch.selected', '已选择 {{count}} 个').replace('{{count}}', String(selectedIds.size))}
                   </span>
                 )}
               </div>
@@ -487,13 +489,13 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   className="groupmember-wb-page-btn"
                   disabled={currentPageSafe <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                >上一页</button>
+                >{t('QQ.ChatInterface.WorldBookListPage.pagination.prev', '上一页')}</button>
                 <span className="groupmember-wb-page-info">{currentPageSafe} / {totalPages}</span>
                 <button
                   className="groupmember-wb-page-btn"
                   disabled={currentPageSafe >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                >下一页</button>
+                >{t('QQ.ChatInterface.WorldBookListPage.pagination.next', '下一页')}</button>
               </div>
             </>
           )}
@@ -514,37 +516,37 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
         <div className="groupmember-category-modal-overlay" onClick={() => setShowCategoryModal(false)}>
           <div className="groupmember-category-modal" onClick={(e) => e.stopPropagation()}>
             <div className="groupmember-category-modal-header">
-              <h3>批量更换分类</h3>
+              <h3>{t('QQ.ChatInterface.WorldBookListPage.categoryModal.title', '批量更换分类')}</h3>
               <button className="groupmember-category-modal-close" onClick={() => setShowCategoryModal(false)}>×</button>
             </div>
             <div className="groupmember-category-modal-body">
               <div className="groupmember-category-row">
-                <label>选择已有分类</label>
+                <label>{t('QQ.ChatInterface.WorldBookListPage.categoryModal.selectExisting', '选择已有分类')}</label>
                 <select
                   className="groupmember-batch-category-select"
                   value={modalExistingCategory}
                   onChange={(e) => setModalExistingCategory(e.target.value)}
                 >
-                  <option value="">不选择</option>
+                  <option value="">{t('QQ.ChatInterface.WorldBookListPage.categoryModal.noSelection', '不选择')}</option>
                   {categoryOptions.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
               <div className="groupmember-category-row">
-                <label>或输入新分类</label>
+                <label>{t('QQ.ChatInterface.WorldBookListPage.categoryModal.inputNew', '或输入新分类')}</label>
                 <input
                   type="text"
                   className="groupmember-batch-category-input"
                   value={modalNewCategory}
                   onChange={(e) => setModalNewCategory(e.target.value)}
-                  placeholder="例如：extrainfo / notes / tags…"
+                  placeholder={t('QQ.ChatInterface.WorldBookListPage.categoryModal.placeholder', '例如：extrainfo / notes / tags…')}
                 />
               </div>
-              <div className="groupmember-category-tip">提示：优先使用新分类；若未填写新分类则使用下拉选择的分类。</div>
+              <div className="groupmember-category-tip">{t('QQ.ChatInterface.WorldBookListPage.categoryModal.tip', '提示：优先使用新分类；若未填写新分类则使用下拉选择的分类。')}</div>
             </div>
             <div className="groupmember-category-modal-footer">
-              <button className="groupmember-category-cancel" onClick={() => setShowCategoryModal(false)}>取消</button>
+              <button className="groupmember-category-cancel" onClick={() => setShowCategoryModal(false)}>{t('QQ.ChatInterface.WorldBookListPage.categoryModal.cancel', '取消')}</button>
               <button
                 className="groupmember-category-apply"
                 onClick={() => {
@@ -554,7 +556,7 @@ export default function WorldBookListPage({ onBack }: WorldBookListPageProps) {
                   setShowCategoryModal(false);
                 }}
                 disabled={selectedIds.size === 0 || (!modalNewCategory.trim() && !modalExistingCategory)}
-              >应用</button>
+              >{t('QQ.ChatInterface.WorldBookListPage.categoryModal.apply', '应用')}</button>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DiscoverComment } from '../../types/discover';
 import AvatarImage from './AvatarImage';
+import { useI18n } from '../i18n/I18nProvider';
 import './PostComments.css';
 
 interface PostCommentsProps {
@@ -21,6 +22,7 @@ export default function PostComments({
   currentUserId,
   onCommentsVisibilityChange
 }: PostCommentsProps) {
+  const { t, locale } = useI18n();
   const [showAllComments, setShowAllComments] = useState(false);
   const [replyTo, setReplyTo] = useState<{ commentId: string; authorName: string } | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -58,12 +60,12 @@ export default function PostComments({
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return '刚刚';
-    if (minutes < 60) return `${minutes}分钟前`;
-    if (hours < 24) return `${hours}小时前`;
-    if (days < 7) return `${days}天前`;
+    if (minutes < 1) return t('QQ.ChatInterface.Discover.PostComments.time.justNow', '刚刚');
+    if (minutes < 60) return t('QQ.ChatInterface.Discover.PostComments.time.minutesAgo', '{{minutes}}分钟前').replace('{{minutes}}', minutes.toString());
+    if (hours < 24) return t('QQ.ChatInterface.Discover.PostComments.time.hoursAgo', '{{hours}}小时前').replace('{{hours}}', hours.toString());
+    if (days < 7) return t('QQ.ChatInterface.Discover.PostComments.time.daysAgo', '{{days}}天前').replace('{{days}}', days.toString());
     
-    return new Date(timestamp).toLocaleDateString('zh-CN', {
+    return new Date(timestamp).toLocaleDateString(locale || 'zh-CN', {
       month: 'short',
       day: 'numeric'
     });
@@ -130,7 +132,7 @@ export default function PostComments({
     return (
       <div className="post-comments">
         <div className="comments-empty">
-          还没有评论，快来抢沙发吧！
+          {t('QQ.ChatInterface.Discover.PostComments.empty', '还没有评论，快来抢沙发吧！')}
         </div>
       </div>
     );
@@ -144,7 +146,7 @@ export default function PostComments({
             {/* 新评论标记 */}
             {comment.isNew && (
               <div className="new-comment-indicator">
-                <span className="new-badge">新</span>
+                <span className="new-badge">{t('QQ.ChatInterface.Discover.PostComments.newBadge', '新')}</span>
               </div>
             )}
             <div className="comment-avatar">
@@ -175,7 +177,7 @@ export default function PostComments({
                   className="reply-btn"
                   onClick={() => handleReply(comment.id, comment.authorName)}
                 >
-                  回复
+                  {t('QQ.ChatInterface.Discover.PostComments.reply', '回复')}
                 </button>
               </div>
             </div>
@@ -187,7 +189,7 @@ export default function PostComments({
       {replyTo && (
         <div className="reply-input-container">
           <div className="reply-input-header">
-            <span className="reply-to-text">回复 @{replyTo.authorName}</span>
+            <span className="reply-to-text">{t('QQ.ChatInterface.Discover.PostComments.replyTo', '回复 @{{name}}').replace('{{name}}', replyTo.authorName)}</span>
             <button className="cancel-reply-btn" onClick={handleCancelReply}>
               ×
             </button>
@@ -197,7 +199,7 @@ export default function PostComments({
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="写下你的回复..."
+              placeholder={t('QQ.ChatInterface.Discover.PostComments.replyInput.placeholder', '写下你的回复...')}
               className="reply-textarea"
               rows={2}
             />
@@ -206,7 +208,7 @@ export default function PostComments({
               disabled={!replyContent.trim()}
               className="reply-submit-btn"
             >
-              发送
+              {t('QQ.ChatInterface.Discover.PostComments.replyInput.send', '发送')}
             </button>
           </div>
         </div>
@@ -219,8 +221,8 @@ export default function PostComments({
           onClick={() => setShowAllComments(!showAllComments)}
         >
           {showAllComments 
-            ? `收起评论（只显示最新 ${Math.min(3, sortedComments.length)} 条）`
-            : `查看全部 ${comments.length} 条评论（包含 ${sortedComments.length - 3} 条老评论）`
+            ? t('QQ.ChatInterface.Discover.PostComments.showMore.collapse', '收起评论（只显示最新 {{count}} 条）').replace('{{count}}', Math.min(3, sortedComments.length).toString())
+            : t('QQ.ChatInterface.Discover.PostComments.showMore.expand', '查看全部 {{total}} 条评论（包含 {{old}} 条老评论）').replace('{{total}}', comments.length.toString()).replace('{{old}}', (sortedComments.length - 3).toString())
           }
         </button>
       )}

@@ -6,6 +6,7 @@ import AvatarImage from './AvatarImage';
 import PostImages from './PostImages';
 import PostActions from './PostActions';
 import PostComments from './PostComments';
+import { useI18n } from '../i18n/I18nProvider';
 import './PostCard.css';
 
 interface PostCardProps {
@@ -27,7 +28,7 @@ export default function PostCard({
   onVisibilityChange,
   onCommentsVisibilityChange
 }: PostCardProps) {
-
+  const { t, locale } = useI18n();
   const [commentInput, setCommentInput] = useState('');
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -64,12 +65,12 @@ export default function PostCard({
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return '刚刚';
-    if (minutes < 60) return `${minutes}分钟前`;
-    if (hours < 24) return `${hours}小时前`;
-    if (days < 7) return `${days}天前`;
+    if (minutes < 1) return t('QQ.ChatInterface.Discover.PostCard.time.justNow', '刚刚');
+    if (minutes < 60) return t('QQ.ChatInterface.Discover.PostCard.time.minutesAgo', '{{minutes}}分钟前').replace('{{minutes}}', minutes.toString());
+    if (hours < 24) return t('QQ.ChatInterface.Discover.PostCard.time.hoursAgo', '{{hours}}小时前').replace('{{hours}}', hours.toString());
+    if (days < 7) return t('QQ.ChatInterface.Discover.PostCard.time.daysAgo', '{{days}}天前').replace('{{days}}', days.toString());
     
-    return new Date(timestamp).toLocaleDateString('zh-CN', {
+    return new Date(timestamp).toLocaleDateString(locale || 'zh-CN', {
       month: 'short',
       day: 'numeric'
     });
@@ -120,7 +121,7 @@ export default function PostCard({
       {/* 新动态标记 */}
       {post.isNew && (
         <div className="new-post-indicator">
-          <span className="new-badge">新</span>
+          <span className="new-badge">{t('QQ.ChatInterface.Discover.PostCard.newBadge', '新')}</span>
         </div>
       )}
       
@@ -161,7 +162,7 @@ export default function PostCard({
             <button 
               className="post-delete-btn"
               onClick={onDelete}
-              title="删除动态"
+              title={t('QQ.ChatInterface.Discover.PostCard.delete.title', '删除动态')}
             >
               🗑️
             </button>
@@ -192,12 +193,12 @@ export default function PostCard({
       <div className="post-stats">
         {post.likes.length > 0 && (
           <div className="post-likes-count">
-            ❤️ {post.likes.length} 人点赞
+            ❤️ {t('QQ.ChatInterface.Discover.PostCard.stats.likes', '{{count}} 人点赞').replace('{{count}}', post.likes.length.toString())}
           </div>
         )}
         {post.comments.length > 0 && (
           <div className="post-comments-count">
-            💬 {post.comments.length} 条评论
+            💬 {t('QQ.ChatInterface.Discover.PostCard.stats.comments', '{{count}} 条评论').replace('{{count}}', post.comments.length.toString())}
           </div>
         )}
       </div>
@@ -223,7 +224,7 @@ export default function PostCard({
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="写下你的评论..."
+          placeholder={t('QQ.ChatInterface.Discover.PostCard.commentInput.placeholder', '写下你的评论...')}
           className="comment-textarea"
           rows={1}
         />
@@ -232,7 +233,7 @@ export default function PostCard({
           disabled={!commentInput.trim()}
           className="comment-submit-btn"
         >
-          发送
+          {t('QQ.ChatInterface.Discover.PostCard.commentInput.send', '发送')}
         </button>
       </div>
     </div>

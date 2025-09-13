@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ReceiveRedPacketProps } from '../../../types/money';
+import { useI18n } from '../../i18n/I18nProvider';
 import './ReceiveRedPacket.css';
 
 export default function ReceiveRedPacket({
@@ -11,6 +12,7 @@ export default function ReceiveRedPacket({
   onClaim,
   isClaimed
 }: ReceiveRedPacketProps) {
+  const { t, locale } = useI18n();
   const [isOpening, setIsOpening] = useState(false);
   const [isOpened, setIsOpened] = useState(isClaimed);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -62,7 +64,7 @@ export default function ReceiveRedPacket({
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale || 'zh-CN', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -90,7 +92,7 @@ export default function ReceiveRedPacket({
             </div>
             <div className="sender-name">{redPacket.senderName}</div>
             <div className="red-packet-message">
-              {redPacket.message || '恭喜发财，大吉大利！'}
+              {redPacket.message || t('QQ.ChatInterface.Money.ReceiveRedPacket.defaultMessage', '恭喜发财，大吉大利！')}
             </div>
           </div>
 
@@ -105,7 +107,7 @@ export default function ReceiveRedPacket({
           {isOpened ? (
             <div className="amount-display opened">
               <div className="amount-value">¥{redPacket.amount.toFixed(2)}</div>
-              <div className="claim-status">已领取</div>
+              <div className="claim-status">{t('QQ.ChatInterface.Money.ReceiveRedPacket.status.claimed', '已领取')}</div>
               {redPacket.claimedAt && (
                 <div className="claim-time">
                   {formatTime(redPacket.claimedAt)}
@@ -114,7 +116,7 @@ export default function ReceiveRedPacket({
             </div>
           ) : (
             <div className="claim-hint">
-              <div className="hint-text">点击拆开红包</div>
+              <div className="hint-text">{t('QQ.ChatInterface.Money.ReceiveRedPacket.hint.clickToOpen', '点击拆开红包')}</div>
             </div>
           )}
 
@@ -128,10 +130,10 @@ export default function ReceiveRedPacket({
                 {isOpening ? (
                   <div className="loading-spinner">
                     <div className="spinner"></div>
-                    <span>正在拆开...</span>
+                    <span>{t('QQ.ChatInterface.Money.ReceiveRedPacket.loading.opening', '正在拆开...')}</span>
                   </div>
                 ) : (
-                  '拆开红包'
+                  t('QQ.ChatInterface.Money.ReceiveRedPacket.buttons.open', '拆开红包')
                 )}
               </div>
             </div>
@@ -144,7 +146,7 @@ export default function ReceiveRedPacket({
         <div className="success-animation">
           <div className="success-content">
             <div className="success-icon">🎉</div>
-            <div className="success-text">恭喜你获得红包</div>
+            <div className="success-text">{t('QQ.ChatInterface.Money.ReceiveRedPacket.success.congratulations', '恭喜你获得红包')}</div>
             <div className="success-amount">¥{redPacket.amount.toFixed(2)}</div>
           </div>
           <div className="confetti">
@@ -158,13 +160,13 @@ export default function ReceiveRedPacket({
       {/* 红包详情 */}
       <div className="red-packet-details">
         <div className="detail-item">
-          <span className="detail-label">发送时间:</span>
+          <span className="detail-label">{t('QQ.ChatInterface.Money.ReceiveRedPacket.details.sendTime', '发送时间:')}</span>
           <span className="detail-value">{formatTime(redPacket.timestamp)}</span>
         </div>
         <div className="detail-item">
-          <span className="detail-label">红包状态:</span>
+          <span className="detail-label">{t('QQ.ChatInterface.Money.ReceiveRedPacket.details.status', '红包状态:')}</span>
           <span className={`detail-value ${isOpened ? 'claimed' : 'unclaimed'}`}>
-            {isOpened ? '已领取' : '待领取'}
+            {isOpened ? t('QQ.ChatInterface.Money.ReceiveRedPacket.status.claimed', '已领取') : t('QQ.ChatInterface.Money.ReceiveRedPacket.status.pending', '待领取')}
           </span>
         </div>
       </div>

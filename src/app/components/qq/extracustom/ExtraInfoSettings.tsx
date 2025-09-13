@@ -5,6 +5,7 @@ import { ExtraInfoConfig } from './types';
 import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import './ExtraInfoSettings.css';
+import { useI18n } from '../../i18n/I18nProvider';
 
 interface ExtraInfoSettingsProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ExtraInfoSettings({
   onUpdateConfig,
   chatName: _chatName
 }: ExtraInfoSettingsProps) {
+  const { t, locale } = useI18n();
   const [description, setDescription] = useState(config.description);
   const [isEnabled, setIsEnabled] = useState(config.enabled);
   const [availableWorldBooks, setAvailableWorldBooks] = useState<WorldBook[]>([]);
@@ -128,7 +130,7 @@ export default function ExtraInfoSettings({
     <div className="extra-info-settings-overlay" onClick={onClose}>
       <div className="extra-info-settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="extra-info-modal-header">
-          <h3>额外信息设置</h3>
+          <h3>{t('QQ.ChatInterface.ExtraInfoSettings.title', '额外信息设置')}</h3>
           <button className="extra-info-close-btn" onClick={onClose}>×</button>
         </div>
         
@@ -140,22 +142,22 @@ export default function ExtraInfoSettings({
                 checked={isEnabled}
                 onChange={handleToggle}
               />
-              <span>启用额外信息功能</span>
+              <span>{t('QQ.ChatInterface.ExtraInfoSettings.enable.label', '启用额外信息功能')}</span>
             </label>
             <p className="extra-info-setting-description">
-              启用后，AI会在回复中包含HTML格式的额外信息
+              {t('QQ.ChatInterface.ExtraInfoSettings.enable.desc', '启用后，AI会在回复中包含HTML格式的额外信息')}
             </p>
             <p className="extra-info-setting-description extra-info-worldbook-info">
-              💡 配置将自动保存到世界书系统，分类为&quot;extrainfo&quot;
+              {t('QQ.ChatInterface.ExtraInfoSettings.enable.worldbookTip', '配置将自动保存到世界书系统，分类为"extrainfo"')}
             </p>
           </div>
 
           {isEnabled && (
             <div className="extra-info-setting-item">
-              <label className="extra-info-setting-label">选择配置</label>
+              <label className="extra-info-setting-label">{t('QQ.ChatInterface.ExtraInfoSettings.select.label', '选择配置')}</label>
               <div className="extra-info-worldbook-selection">
                 {isLoadingWorldBooks ? (
-                  <div className="extra-info-loading-indicator">加载中...</div>
+                  <div className="extra-info-loading-indicator">{t('QQ.ChatInterface.ExtraInfoSettings.select.loading', '加载中...')}</div>
                 ) : (
                   <>
                     <div className="extra-info-worldbook-list">
@@ -170,14 +172,14 @@ export default function ExtraInfoSettings({
                               <div className="extra-info-worldbook-name">{worldBook.name}</div>
                               <div className="extra-info-worldbook-content">{worldBook.content}</div>
                               <div className="extra-info-worldbook-meta">
-                                {new Date(worldBook.updatedAt).toLocaleDateString()}
+                                {new Date(worldBook.updatedAt).toLocaleDateString(locale || 'zh-CN')}
                               </div>
                             </div>
                             <button
                               className="extra-info-delete-btn"
                               onClick={(e) => showDeleteConfirmation(worldBook.id, e)}
                               disabled={deletingId === worldBook.id}
-                              title="删除配置"
+                              title={t('QQ.ChatInterface.ExtraInfoSettings.select.deleteTitle', '删除配置')}
                             >
                               {deletingId === worldBook.id ? (
                                 <div className="extra-info-delete-spinner"></div>
@@ -188,7 +190,7 @@ export default function ExtraInfoSettings({
                           </div>
                         ))
                       ) : (
-                        <div className="extra-info-no-worldbooks">暂无可用配置</div>
+                        <div className="extra-info-no-worldbooks">{t('QQ.ChatInterface.ExtraInfoSettings.select.empty', '暂无可用配置')}</div>
                       )}
                     </div>
                     <button
@@ -196,7 +198,7 @@ export default function ExtraInfoSettings({
                       className="extra-info-create-new-btn"
                       onClick={handleCreateNew}
                     >
-                      ✨ 创建新配置
+                      ✨ {t('QQ.ChatInterface.ExtraInfoSettings.select.createNew', '创建新配置')}
                     </button>
                   </>
                 )}
@@ -206,10 +208,10 @@ export default function ExtraInfoSettings({
           
           {isEnabled && (
             <div className="extra-info-setting-item">
-              <label className="extra-info-setting-label">功能描述</label>
+              <label className="extra-info-setting-label">{t('QQ.ChatInterface.ExtraInfoSettings.description.label', '功能描述')}</label>
               {selectedWorldBookId && (
                 <div className="extra-info-selected-config-info">
-                  <span className="extra-info-selected-badge">✓ 使用现有配置</span>
+                  <span className="extra-info-selected-badge">{t('QQ.ChatInterface.ExtraInfoSettings.description.selectedBadge', '✓ 使用现有配置')}</span>
                   <span className="extra-config-name">
                     {availableWorldBooks.find(wb => wb.id === selectedWorldBookId)?.name}
                   </span>
@@ -218,15 +220,15 @@ export default function ExtraInfoSettings({
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="例如：我希望制作一个状态栏，显示当前的心情、位置和穿着信息"
+                placeholder={t('QQ.ChatInterface.ExtraInfoSettings.description.placeholder', '例如：我希望制作一个状态栏，显示当前的心情、位置和穿着信息')}
                 rows={4}
                 className="extra-info-description-input"
               />
               <p className="extra-info-setting-description">
-                请详细描述你希望AI生成的额外信息内容和样式
+                {t('QQ.ChatInterface.ExtraInfoSettings.description.desc', '请详细描述你希望AI生成的额外信息内容和样式')}
               </p>
               <p className="extra-info-setting-description extra-info-worldbook-info">
-                📝 描述内容将作为世界书内容保存，AI会根据此描述生成相应的HTML
+                {t('QQ.ChatInterface.ExtraInfoSettings.description.worldbookTip', '📝 描述内容将作为世界书内容保存，AI会根据此描述生成相应的HTML')}
               </p>
             </div>
           )}
@@ -235,13 +237,13 @@ export default function ExtraInfoSettings({
         </div>
         
         <div className="extra-info-modal-footer">
-          <button className="extra-info-cancel-btn" onClick={onClose}>取消</button>
+          <button className="extra-info-cancel-btn" onClick={onClose}>{t('QQ.ChatInterface.ExtraInfoSettings.footer.cancel', '取消')}</button>
           <button 
             className="extra-info-save-btn" 
             onClick={handleSave}
             disabled={isEnabled && !description.trim()}
           >
-            保存
+            {t('QQ.ChatInterface.ExtraInfoSettings.footer.save', '保存')}
           </button>
         </div>
       </div>
@@ -252,7 +254,7 @@ export default function ExtraInfoSettings({
           <div className="extra-info-modal-overlay" onClick={() => setShowDeleteConfirm(null)}></div>
           <div className="extra-info-modal-content">
             <div className="extra-info-modal-header">
-              <h3>确认删除</h3>
+              <h3>{t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.title', '确认删除')}</h3>
               <button 
                 className="extra-info-modal-close"
                 onClick={() => setShowDeleteConfirm(null)}
@@ -263,14 +265,14 @@ export default function ExtraInfoSettings({
             <div className="extra-info-modal-body">
               <div className="extra-info-delete-warning">
                 <div className="extra-info-warning-icon">⚠️</div>
-                <h4>确定要删除这个配置吗？</h4>
-                <p>删除后将无法恢复，此操作会同时从世界书中移除该条目。</p>
+                <h4>{t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.messageTitle', '确定要删除这个配置吗？')}</h4>
+                <p>{t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.messageDesc', '删除后将无法恢复，此操作会同时从世界书中移除该条目。')}</p>
                 {(() => {
                   const worldBook = availableWorldBooks.find(wb => wb.id === showDeleteConfirm);
                   return worldBook ? (
                     <div className="extra-info-delete-info">
-                      <p><strong>配置名称：</strong>{worldBook.name}</p>
-                      <p><strong>创建时间：</strong>{new Date(worldBook.createdAt || Date.now()).toLocaleDateString()}</p>
+                      <p><strong>{t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.name', '配置名称：')}</strong>{worldBook.name}</p>
+                      <p><strong>{t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.createdAt', '创建时间：')}</strong>{new Date(worldBook.createdAt || Date.now()).toLocaleDateString(locale || 'zh-CN')}</p>
                     </div>
                   ) : null;
                 })()}
@@ -281,14 +283,14 @@ export default function ExtraInfoSettings({
                 className="extra-info-cancel-btn"
                 onClick={() => setShowDeleteConfirm(null)}
               >
-                取消
+                {t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.cancel', '取消')}
               </button>
               <button 
                 className="extra-info-confirm-delete-btn"
                 onClick={() => handleDeleteWorldBook(showDeleteConfirm)}
                 disabled={deletingId === showDeleteConfirm}
               >
-                {deletingId === showDeleteConfirm ? '删除中...' : '确认删除'}
+                {deletingId === showDeleteConfirm ? t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.deleting', '删除中...') : t('QQ.ChatInterface.ExtraInfoSettings.confirmDelete.confirm', '确认删除')}
               </button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import CharacterPreview from './CharacterPreview';
 import { CharacterParseResult, PreviewCharacter } from './types';
 import { ChatItem } from '../../../types/chat';
 import { presetManager } from '../../../utils/presetManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import './CharacterImportModal.css';
 
 interface CharacterImportModalProps {
@@ -29,6 +30,7 @@ export default function CharacterImportModal({
   apiConfig,
   personalSettings
 }: CharacterImportModalProps) {
+  const { t, locale } = useI18n();
   const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'loading'>('upload');
   const [parseResult, setParseResult] = useState<CharacterParseResult | null>(null);
   const [previewCharacter, setPreviewCharacter] = useState<PreviewCharacter | null>(null);
@@ -50,13 +52,13 @@ export default function CharacterImportModal({
       const result = await CharacterCardParser.parseCharacterCard(file);
       
       if (!result.success) {
-        setError(result.error || '解析失败');
+        setError(result.error || t('QQ.ChatInterface.CharacterImport.CharacterImportModal.errors.parseFailed', '解析失败'));
         setCurrentStep('upload');
         return;
       }
 
       if (!result.character) {
-        setError('未找到有效的角色数据');
+        setError(t('QQ.ChatInterface.CharacterImport.CharacterImportModal.errors.noValidData', '未找到有效的角色数据'));
         setCurrentStep('upload');
         return;
       }
@@ -83,7 +85,7 @@ export default function CharacterImportModal({
       setCurrentStep('preview');
     } catch (error) {
       console.error('处理文件失败:', error);
-      setError(error instanceof Error ? error.message : '处理文件失败');
+      setError(error instanceof Error ? error.message : t('QQ.ChatInterface.CharacterImport.CharacterImportModal.errors.processFailed', '处理文件失败'));
       setCurrentStep('upload');
     } finally {
       setIsProcessing(false);
@@ -147,8 +149,8 @@ export default function CharacterImportModal({
         id: Date.now().toString(),
         name: previewCharacter.name,
         avatar: previewCharacter.avatar,
-        lastMessage: '开始聊天吧！',
-        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        lastMessage: t('QQ.ChatInterface.CharacterImport.CharacterImportModal.defaultMessage', '开始聊天吧！'),
+        timestamp: new Date().toLocaleTimeString(locale || 'zh-CN', { hour: '2-digit', minute: '2-digit' }),
         isGroup: false,
         unreadCount: 0,
         lastReadTimestamp: Date.now(),
@@ -156,7 +158,7 @@ export default function CharacterImportModal({
         persona: combinedPersona,
         settings: {
           aiPersona: combinedPersona,
-          myPersona: personalSettings.userBio || '用户',
+          myPersona: personalSettings.userBio || t('QQ.ChatInterface.CharacterImport.CharacterImportModal.defaultUser', '用户'),
           myNickname: personalSettings.userNickname,
           maxMemory: maxMemory,
           aiAvatar: previewCharacter.avatar,
@@ -184,7 +186,7 @@ export default function CharacterImportModal({
       handleClose();
     } catch (error) {
       console.error('导入角色失败:', error);
-      setError('导入角色失败');
+      setError(t('QQ.ChatInterface.CharacterImport.CharacterImportModal.errors.importFailed', '导入角色失败'));
     }
   };
 
@@ -221,7 +223,7 @@ export default function CharacterImportModal({
       <div className="character-import-modal" onClick={(e) => e.stopPropagation()}>
         {/* 模态框头部 */}
         <div className="modal-header">
-          <h2>导入角色卡片</h2>
+          <h2>{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.title', '导入角色卡片')}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
@@ -235,10 +237,10 @@ export default function CharacterImportModal({
                    onDragLeave={handleDragLeave}
                    onDrop={handleDrop}>
                 <div className="upload-icon">📁</div>
-                <h3>选择 SillyTavern 角色卡片</h3>
-                <p>支持 PNG 格式的角色卡片文件</p>
-                <p className="upload-tip">点击选择文件或拖拽到此处</p>
-                <p className="upload-note">头像会自动压缩优化</p>
+                <h3>{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.upload.title', '选择 SillyTavern 角色卡片')}</h3>
+                <p>{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.upload.supportedFormat', '支持 PNG 格式的角色卡片文件')}</p>
+                <p className="upload-tip">{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.upload.tip', '点击选择文件或拖拽到此处')}</p>
+                <p className="upload-note">{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.upload.note', '头像会自动压缩优化')}</p>
               </div>
               
               <input
@@ -260,8 +262,8 @@ export default function CharacterImportModal({
           {currentStep === 'loading' && (
             <div className="loading-step">
               <div className="loading-spinner"></div>
-              <p>正在解析角色卡片并优化头像...</p>
-              <p className="loading-subtitle">这可能需要几秒钟时间</p>
+              <p>{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.loading.parsing', '正在解析角色卡片并优化头像...')}</p>
+              <p className="loading-subtitle">{t('QQ.ChatInterface.CharacterImport.CharacterImportModal.loading.subtitle', '这可能需要几秒钟时间')}</p>
             </div>
           )}
 
