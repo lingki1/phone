@@ -97,7 +97,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Masculine Style',
     description: 'Deep blue business style, stable and elegant',
     className: 'theme-masculine',
-    category: 'gender',
+    category: 'basic',
     preview: { primary: '#0f1419', secondary: '#1a2332', accent: '#00d4ff' }
   },
   {
@@ -105,7 +105,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Feminine Style',
     description: 'Pink gentle style, elegant and romantic',
     className: 'theme-feminine',
-    category: 'gender',
+    category: 'basic',
     preview: { primary: '#fdf2f8', secondary: '#fce7f3', accent: '#f472b6' }
   },
   {
@@ -113,7 +113,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Anime Style',
     description: 'Purple dreamy style, full of imagination',
     className: 'theme-anime',
-    category: 'style',
+    category: 'basic',
     preview: { 
       primary: '#f3e8ff', 
       secondary: '#e9d5ff', 
@@ -126,7 +126,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Cute Style',
     description: 'Orange lively style, youthful and cute',
     className: 'theme-cute',
-    category: 'style',
+    category: 'basic',
     preview: { primary: '#fff7ed', secondary: '#ffedd5', accent: '#ff8c42' }
   },
   {
@@ -134,7 +134,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Metal Style',
     description: 'Silver-gray tech style, modern and minimalist',
     className: 'theme-metal',
-    category: 'style',
+    category: 'basic',
     preview: { 
       primary: '#f8fafc', 
       secondary: '#e2e8f0', 
@@ -147,7 +147,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Forest Theme',
     description: 'Green natural style, fresh and natural',
     className: 'theme-forest',
-    category: 'nature',
+    category: 'basic',
     preview: { primary: '#f0fdf4', secondary: '#dcfce7', accent: '#16a34a' }
   },
   {
@@ -155,7 +155,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Ocean Theme',
     description: 'Blue-green gradient style, peaceful and deep',
     className: 'theme-ocean',
-    category: 'nature',
+    category: 'basic',
     preview: { 
       primary: '#ecfeff', 
       secondary: '#cffafe', 
@@ -168,7 +168,7 @@ export const AVAILABLE_THEMES: Theme[] = [
     name: 'Sunset Theme',
     description: 'Orange-red gradient style, warm and romantic',
     className: 'theme-sunset',
-    category: 'nature',
+    category: 'basic',
     preview: { 
       primary: '#fef3c7', 
       secondary: '#fde68a', 
@@ -540,9 +540,6 @@ export class ThemeManager {
   public getCategories(): Array<{id: string, name: string}> {
     return [
       { id: 'basic', name: 'Basic Themes' },
-      { id: 'gender', name: 'Gender Styles' },
-      { id: 'style', name: 'Personality Styles' },
-      { id: 'nature', name: 'Nature Themes' },
       { id: 'custom', name: 'Custom Themes' }
     ];
   }

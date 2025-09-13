@@ -1920,6 +1920,10 @@
     "ColorSettingsPage": {
       "title": "Color Settings",
       "loading": "Loading themes...",
+      "categories": {
+        "basic": "Basic Themes",
+        "custom": "Custom Themes"
+      },
       "buttons": {
         "createCustomTheme": "Create Custom Theme",
         "editTheme": "Edit Theme",

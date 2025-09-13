@@ -1920,6 +1920,10 @@
     "ColorSettingsPage": {
       "title": "配色设置",
       "loading": "正在加载主题...",
+      "categories": {
+        "basic": "基础主题",
+        "custom": "自定义主题"
+      },
       "buttons": {
         "createCustomTheme": "新建自定义主题",
         "editTheme": "编辑主题",

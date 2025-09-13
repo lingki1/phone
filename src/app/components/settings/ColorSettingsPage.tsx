@@ -150,7 +150,7 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
             className={`theme-category-btn ${selectedCategory === category.id ? 'active' : ''}`}
             onClick={() => setSelectedCategory(category.id)}
           >
-            {category.name}
+            {t(`Settings.ColorSettingsPage.categories.${category.id}`, category.name)}
           </button>
         ))}
       </div>
