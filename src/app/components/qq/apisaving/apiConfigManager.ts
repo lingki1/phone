@@ -16,7 +16,7 @@ class ApiConfigManagerImpl implements ApiConfigManager {
         isDefault: config.id === localStorage.getItem(DEFAULT_CONFIG_KEY)
       }));
     } catch (error) {
-      console.error('读取API配置存储失败:', error);
+      console.error('Failed to read API configuration storage:', error);
       return [];
     }
   }
@@ -24,14 +24,14 @@ class ApiConfigManagerImpl implements ApiConfigManager {
   async saveConfig(config: Omit<SavedApiConfig, 'id' | 'createdAt'>): Promise<void> {
     const configs = await this.getStorage();
     
-    // 如果是第一个配置，设置为默认
+    // If it is the first configuration, set as default
     if (configs.length === 0) {
       localStorage.setItem(DEFAULT_CONFIG_KEY, 'temp');
     }
 
     await dataManager.saveApiConfigToCollection(config);
     
-    // 如果是第一个配置，获取新保存的配置ID并设置为默认
+    // If it is the first configuration, get the newly saved configuration ID and set as default
     if (configs.length === 0) {
       const newConfigs = await this.getStorage();
       if (newConfigs.length > 0) {
@@ -44,7 +44,7 @@ class ApiConfigManagerImpl implements ApiConfigManager {
     const configs = await this.getStorage();
     const defaultId = localStorage.getItem(DEFAULT_CONFIG_KEY);
     
-    // 确保默认配置标记正确
+    // Ensure default configuration flag is correct
     return configs.map(config => ({
       ...config,
       isDefault: config.id === defaultId
@@ -68,10 +68,10 @@ class ApiConfigManagerImpl implements ApiConfigManager {
     const configExists = configs.some(c => c.id === id);
     
     if (!configExists) {
-      throw new Error('配置不存在');
+      throw new Error('Configuration does not exist');
     }
 
-    // 如果删除的是默认配置，设置第一个为默认
+    // If the deleted configuration is the default, set the first one as default
     const defaultId = localStorage.getItem(DEFAULT_CONFIG_KEY);
     if (defaultId === id && configs.length > 1) {
       const remainingConfigs = configs.filter(c => c.id !== id);
@@ -88,7 +88,7 @@ class ApiConfigManagerImpl implements ApiConfigManager {
     const config = configs.find(c => c.id === id);
     
     if (!config) {
-      throw new Error('配置不存在');
+      throw new Error('Configuration does not exist');
     }
 
     localStorage.setItem(DEFAULT_CONFIG_KEY, id);
@@ -102,5 +102,5 @@ class ApiConfigManagerImpl implements ApiConfigManager {
   }
 }
 
-// 导出单例实例
+// Export singleton instance
 export const apiConfigManager = new ApiConfigManagerImpl();

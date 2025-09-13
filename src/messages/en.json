@@ -940,6 +940,359 @@
           }
         }
       },
+      "Recollection": {
+        "RecollectionPage": {
+          "loading": "Loading...",
+          "title": "Recollections",
+          "count": "{{count}} items",
+          "logs": {
+            "bottomNavClick": "RecollectionPage - Bottom navigation clicked:",
+            "navigateToChat": "RecollectionPage - Triggering navigateToChat event",
+            "navigateToDiscover": "RecollectionPage - Triggering navigateToDiscover event",
+            "navigateToMe": "RecollectionPage - Triggering navigateToMe event"
+          }
+        },
+        "RecollectionList": {
+          "loading": "Loading recollections...",
+          "retry": "Retry",
+          "unknown": "Unknown",
+          "messageCount": "{{count}} messages",
+          "delete": {
+            "title": "Delete Recollection"
+          },
+          "empty": {
+            "title": "No Recollections Yet",
+            "description": "No memory summaries have been generated yet. Go to the chat interface to create your first recollection!"
+          },
+          "confirm": {
+            "title": "Confirm Deletion",
+            "question": "Are you sure you want to delete this recollection?",
+            "warning": "This action cannot be undone and will remove the item from the world book.",
+            "titleLabel": "Recollection Title:",
+            "createdAtLabel": "Created At:",
+            "cancel": "Cancel",
+            "deleting": "Deleting...",
+            "confirm": "Confirm Delete"
+          },
+          "logs": {
+            "loaded": "Loaded recollections: {{count}} items",
+            "deleted": "Recollection deleted:"
+          },
+          "errors": {
+            "loadFailed": "Failed to load recollections:",
+            "loadFailedRetry": "Failed to load recollections, please try again",
+            "cannotDelete": "Cannot delete: Missing item ID",
+            "deleteFailed": "Failed to delete recollection:",
+            "deleteFailedRetry": "Delete failed, please try again"
+          },
+          "success": {
+            "deleted": "Recollection deleted"
+          }
+        },
+        "RecollectionDetail": {
+          "unknown": "Unknown",
+          "defaultTitle": "Recollection Details",
+          "messageCount": "{{count}} messages",
+          "copied": "Content copied to clipboard",
+          "back": {
+            "title": "Back to List"
+          },
+          "copy": {
+            "title": "Copy Content"
+          }
+        },
+        "MemorySummary": {
+          "title": {
+            "generate": "Generate Memory Summary"
+          },
+          "button": "Memory Summary",
+          "header": "Memory Summary",
+          "generating": "Generating memory summary...",
+          "generatingLocked": "Generating in progress, cannot close",
+          "lockedNotice": "Window is locked during generation, please wait patiently",
+          "streamingPreview": "Real-time generation preview:",
+          "retry": "Retry",
+          "resultTitle": "Summary Content:",
+          "processStatus": "Processing Status",
+          "resultLabel": "Result:",
+          "resultBytes": "Completed summary of {{bytes}} bytes of content",
+          "save": "Save",
+          "regenerate": "Regenerate",
+          "complete": "Complete",
+          "startTip1": "Click the \"Generate Summary\" button, and AI will create a beautiful recollection story based on your chat history with {{name}}.",
+          "startTip2": "The summary will be automatically saved to the \"recollection\" category in the world book.",
+          "pickRange": "Select the message range to summarize:",
+          "from": "From",
+          "to": "To",
+          "items": "items",
+          "total": "Total messages: {{total}} items",
+          "rangeStat": "Will summarize messages {{start}} to {{end}} ({{count}} items total)",
+          "generate": "Generate Summary",
+          "close": "Close",
+          "clickToClose": "Click to close",
+          "source": {
+            "online": "[Online]",
+            "story": "[Story]"
+          },
+          "role": {
+            "user": "User"
+          },
+          "logs": {
+            "savedToWorldBook": "Memory summary saved to world book:"
+          },
+          "errors": {
+            "apiConfigRequired": "Please configure API settings first to use the memory summary feature",
+            "noChatRecords": "No chat records found, cannot generate summary",
+            "saveToWorldBookFailed": "Failed to save to world book:",
+            "generateFailed": "Failed to generate memory summary:",
+            "generateFailedRetry": "Failed to generate summary, please try again"
+          },
+          "success": {
+            "saved": "Memory summary has been automatically saved to the world book!"
+          }
+        }
+      },
+      "Me": {
+        "MePage": {
+          "loading": "Loading...",
+          "defaultUser": "User",
+          "defaultBio": "This person is lazy and wrote nothing~",
+          "balance": {
+            "label": "My Balance",
+            "howToGet": "How to Get Balance"
+          },
+          "balanceInfo": {
+            "title": "Virtual Currency Description",
+            "description1": "This is virtual currency. You can chat with AI characters you create, and AI characters will transfer money and give you red packets.",
+            "description2": "This virtual currency can be used for shopping and other functions."
+          },
+          "options": {
+            "personalSettings": {
+              "title": "Personal Settings",
+              "subtitle": "Modify avatar, nickname and personal introduction"
+            },
+            "apiSettings": {
+              "title": "API Settings",
+              "subtitle": "Configure AI connection and model selection"
+            },
+            "colorSettings": {
+              "title": "Color Settings",
+              "subtitle": "Choose your favorite theme colors"
+            },
+            "presetManager": {
+              "title": "AI Preset Management",
+              "subtitle": "Manage AI model parameter configurations"
+            },
+            "dataBackup": {
+              "title": "Data Backup Management",
+              "subtitle": "Import and export all data, including chat records, settings, etc."
+            }
+          },
+          "cheat": {
+            "success": "🎉 Cheat successful! Balance increased by ¥10,000\\nCurrent balance: ¥{{balance}}",
+            "failed": "Cheat failed, please try again"
+          },
+          "apiKeyStatus": {
+            "set": "Set",
+            "notSet": "Not Set"
+          },
+          "logs": {
+            "dataImportDetected": "MePage - Data import event detected, refreshing page data...",
+            "dataImportRefreshComplete": "MePage - Data import refresh completed",
+            "dataClearDetected": "MePage - Data clear event detected, resetting page data...",
+            "dataClearResetComplete": "MePage - Data clear reset completed",
+            "loadApiConfigFromDB": "MePage - Loading API config from database:",
+            "loadApiConfigFromLocalStorage": "MePage - Loading API config from localStorage:",
+            "optionClick": "MePage - Option clicked:",
+            "openApiSettings": "MePage - Opening API settings",
+            "openPersonalSettings": "MePage - Opening personal settings",
+            "openColorSettings": "MePage - Opening color settings",
+            "openPresetManager": "MePage - Opening preset manager",
+            "openDataBackup": "MePage - Opening data backup management",
+            "unknownOption": "MePage - Unknown option:",
+            "saveApiConfig": "MePage - Saving API config:",
+            "apiConfigSavedToDB": "MePage - API config saved to database:",
+            "apiConfigChangedEvent": "MePage - apiConfigChanged event triggered",
+            "apiConfigSavedToLocalStorage": "MePage - API config saved to localStorage",
+            "apiConfigChangedEventLocalStorage": "MePage - apiConfigChanged event triggered (localStorage)",
+            "personalSettingsSaved": "Personal settings saved to database:",
+            "cheatSuccess": "Balance cheat successful, new balance:",
+            "dataBackupOptionClicked": "MePage - Data backup option clicked",
+            "eventObject": "MePage - Event object:",
+            "currentShowDataBackupState": "MePage - Current showDataBackup state:",
+            "handleOptionClickComplete": "MePage - handleOptionClick call completed"
+          }
+        },
+        "PersonalSettingsModal": {
+          "title": "Personal Settings",
+          "avatar": {
+            "label": "User Avatar",
+            "alt": "User Avatar",
+            "clickToUpload": "Click to upload avatar",
+            "uploading": "Uploading...",
+            "tips": "Supports JPG, PNG, GIF formats, size not exceeding 10MB, will be automatically compressed and optimized"
+          },
+          "nickname": {
+            "label": "User Nickname",
+            "placeholder": "Please enter your nickname"
+          },
+          "bio": {
+            "label": "Personal Introduction",
+            "placeholder": "Tell us about yourself..."
+          },
+          "tip": "💡 Tip: User nickname and personal introduction will be injected into system prompts during chat to help AI better understand you.",
+          "buttons": {
+            "saveToList": "Save to List",
+            "updateToList": "Update to List",
+            "cancel": "Cancel",
+            "save": "Save Settings"
+          },
+          "personaList": {
+            "label": "Saved Personas",
+            "empty": "No saved personas",
+            "unnamed": "Unnamed",
+            "avatarAlt": "Avatar",
+            "setActive": "Set as Current",
+            "edit": "Edit",
+            "delete": "Delete"
+          },
+          "errors": {
+            "pleaseSelectImage": "Please select an image file",
+            "imageSizeExceeded": "Image size cannot exceed 10MB",
+            "pleaseSaveToList": "Please save to list first",
+            "pleaseSelectPersona": "Please select a persona from the list first",
+            "personaNotFound": "Selected persona does not exist, please try again",
+            "saveConfigFailed": "Failed to save configuration, please try again",
+            "pleaseEnterNickname": "Please enter user nickname",
+            "saveToListFailed": "Failed to save to list, please try again",
+            "setActiveFailed": "Failed to set as current, please try again",
+            "deleteFailed": "Failed to delete, please try again",
+            "imageProcessFailed": "Image processing failed, please try again"
+          },
+          "success": {
+            "savedToList": "Saved to list and set as current"
+          },
+          "confirm": {
+            "deletePersona": "Confirm to delete this persona?"
+          },
+          "logs": {
+            "loadPersonaListFailed": "Failed to load persona list:",
+            "saveConfigFailed": "Failed to save configuration:",
+            "saveToListFailed": "Failed to save to list:",
+            "setActiveFailed": "Failed to set as current:",
+            "deleteFailed": "Failed to delete:"
+          }
+        },
+        "ApiSettingsModal": {
+          "title": "AI Connection Settings",
+          "labels": {
+            "enterServerOr": "Enter server address or",
+            "apiKey": "API Key",
+            "model": "AI Model"
+          },
+          "placeholders": {
+            "proxy": "Enter your AI service URL, e.g. https://api.openai.com",
+            "key": "Enter your API key starting with sk-",
+            "model": "Click to choose your preferred AI model"
+          },
+          "hints": {
+            "proxy": "No need to append /v1, it will be handled automatically",
+            "key": "Your key is stored securely and won't be leaked",
+            "saveHint": "You can quickly switch between API configs after saving",
+            "modelDiff": "Different models have different features and capabilities",
+            "modelNotInList": "Selected model may not be available. Please refetch"
+          },
+          "buttons": {
+            "saveCurrent": "Save Current Config",
+            "loading": "Loading...",
+            "usePlatform": "Use Built-in AI",
+            "fetching": "Fetching models...",
+            "fetch": "Fetch Models",
+            "cancel": "Cancel",
+            "save": "Save Config"
+          },
+          "status": {
+            "saved": "Saved"
+          },
+          "errors": {
+            "fillProxyAndKey": "Please enter proxy URL and API key first",
+            "fetchModelsFailed": "Failed to fetch models",
+            "unknownError": "Unknown error",
+            "fillAll": "Please complete all API settings",
+            "platformFailed": "Failed to fetch platform config",
+            "noPlatformConfig": "Platform has no built-in config, contact admin",
+            "loadPlatformFailed": "Failed to load platform config"
+          },
+          "success": {
+            "platformApplied": "Platform API applied. Click 'Fetch Models' and choose one you like."
+          },
+          "logs": {
+            "loadSavedModelsFailed": "Failed to load saved model list:",
+            "saveModelsFailed": "Failed to save model list:",
+            "fetchModelsFailed": "Failed to fetch model list:",
+            "loadPlatformFailed": "Failed to load platform configuration:"
+          }
+        },
+        "ApiSaving": {
+          "ApiConfigSelector": {
+            "title": "Saved Configurations",
+            "loading": "Loading configurations...",
+            "empty": "No saved configurations",
+            "hint": "You can save API configurations for quick switching",
+            "defaultBadge": "Default",
+            "setDefault": "Set as Default",
+            "deleteConfig": "Delete Configuration",
+            "errors": {
+              "setDefaultFailed": "Failed to set as default",
+              "deleteFailed": "Failed to delete configuration"
+            },
+            "confirm": {
+              "deleteConfig": "Are you sure you want to delete this configuration?"
+            },
+            "logs": {
+              "loadConfigsFailed": "Failed to load saved configurations:",
+              "setDefaultFailed": "Failed to set default configuration:",
+              "deleteFailed": "Failed to delete configuration:"
+            }
+          },
+          "SaveConfigDialog": {
+            "title": "Save API Configuration",
+            "labels": {
+              "configName": "Configuration Name"
+            },
+            "placeholders": {
+              "configName": "Enter a recognizable name, such as: OpenAI Official, Claude API, etc."
+            },
+            "hints": {
+              "configName": "It is recommended to use meaningful names for easy identification and management"
+            },
+            "preview": {
+              "title": "Current Configuration Preview",
+              "serverAddress": "Server Address:",
+              "apiKey": "API Key:",
+              "aiModel": "AI Model:",
+              "notSet": "Not Set",
+              "notSelected": "Not Selected"
+            },
+            "buttons": {
+              "cancel": "Cancel",
+              "save": "Save Configuration",
+              "saving": "Saving..."
+            },
+            "errors": {
+              "enterConfigName": "Please enter configuration name",
+              "completeApiConfig": "Please complete API configuration first",
+              "saveFailed": "Failed to save configuration, please try again"
+            },
+            "success": {
+              "configSaved": "Configuration saved successfully!"
+            },
+            "logs": {
+              "saveFailed": "Failed to save configuration:"
+            }
+          }
+        }
+      },
       "MemoryManager": {
         "title": "Group Memory Manager",
         "info": "Link each AI member to its 1:1 chat memory so it remembers your relationship in group chats.",
@@ -1162,43 +1515,432 @@
         "me": "Me"
       }
     }
-  }
-  ,
-  "QQ.ApiSettings": {
-    "title": "AI Connection Settings",
-    "fillProxyAndKey": "Please enter proxy URL and API key first",
-    "fetchModelsFailed": "Failed to fetch models",
+  },
+  "Theme": {
+    "CustomThemeEditor": {
+      "title": {
+        "create": "Create Custom Theme",
+        "edit": "Edit Custom Theme"
+      },
+      "buttons": {
+        "preview": "Preview",
+        "cancelPreview": "Cancel Preview",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      },
+      "preview": {
+        "title": "Theme Preview",
+        "aiAssistant": "AI Assistant",
+        "online": "Online",
+        "aiMessage": "Hello! This is the preview effect of AI message",
+        "userMessage": "This is the preview effect of user message",
+        "inputPlaceholder": "Enter message...",
+        "send": "Send"
+      },
+      "basicInfo": {
+        "title": "Basic Information",
+        "themeName": "Theme Name",
+        "themeNamePlaceholder": "Enter theme name",
+        "themeDescription": "Theme Description",
+        "themeDescriptionPlaceholder": "Enter theme description (optional)"
+      },
+      "colorConfig": {
+        "title": "Color Configuration",
+        "reset": "Reset",
+        "backgroundColors": "Background Colors",
+        "primaryBackground": "Primary Background",
+        "secondaryBackground": "Secondary Background",
+        "tertiaryBackground": "Tertiary Background",
+        "textColors": "Text Colors",
+        "primaryText": "Primary Text",
+        "secondaryText": "Secondary Text",
+        "tertiaryText": "Tertiary Text",
+        "accentColors": "Accent Colors",
+        "primaryAccent": "Primary Accent",
+        "accentHover": "Accent Hover",
+        "bubbleStyles": "Bubble Styles",
+        "userBubble": "User Bubble",
+        "aiBubble": "AI Bubble",
+        "backgroundColor": "Background Color",
+        "textColor": "Text Color",
+        "borderRadius": "Border Radius",
+        "standardRadius": "Standard Radius",
+        "fullRadius": "Full Radius",
+        "smallRadius": "Small Radius",
+        "noRadius": "No Radius",
+        "specialColors": "Special Colors",
+        "successColor": "Success Color",
+        "warningColor": "Warning Color",
+        "errorColor": "Error Color",
+        "infoColor": "Info Color"
+      },
+      "errors": {
+        "enterThemeName": "Please enter theme name",
+        "saveFailed": "Failed to save theme, please try again"
+      }
+    },
+    "ThemeIndicator": {
+      "loading": "Switching theme...",
+      "preview": {
+        "title": "Preview Mode",
+        "apply": "Apply",
+        "cancel": "Cancel"
+      },
+      "error": {
+        "title": "Theme switching failed"
+      },
+      "transition": "Switching theme..."
+    },
+    "ThemeProvider": {
+      "loading": "Loading theme...",
+      "error": {
+        "title": "Theme system error occurred",
+        "message": "Automatically switched to default theme, please refresh the page and try again.",
+        "refresh": "Refresh Page"
+      }
+    },
+    "ThemeManager": {
+      "themes": {
+        "default": {
+          "name": "Default White",
+          "description": "Clean and fresh white theme"
+        },
+        "dark": {
+          "name": "Dark Mode",
+          "description": "Eye-friendly dark theme"
+        },
+        "masculine": {
+          "name": "Masculine Style",
+          "description": "Deep blue business style, stable and elegant"
+        },
+        "feminine": {
+          "name": "Feminine Style",
+          "description": "Pink gentle style, elegant and romantic"
+        },
+        "anime": {
+          "name": "Anime Style",
+          "description": "Purple dreamy style, full of imagination"
+        },
+        "cute": {
+          "name": "Cute Style",
+          "description": "Orange lively style, youthful and cute"
+        },
+        "metal": {
+          "name": "Metal Style",
+          "description": "Silver-gray tech style, modern and minimalist"
+        },
+        "forest": {
+          "name": "Forest Theme",
+          "description": "Green natural style, fresh and natural"
+        },
+        "ocean": {
+          "name": "Ocean Theme",
+          "description": "Blue-green gradient style, peaceful and deep"
+        },
+        "sunset": {
+          "name": "Sunset Theme",
+          "description": "Orange-red gradient style, warm and romantic"
+        },
+        "minimal": {
+          "name": "Minimal Theme",
+          "description": "Black and white minimalist style, pure and elegant"
+        }
+      },
+      "categories": {
+        "basic": "Basic Themes",
+        "gender": "Gender Styles",
+        "style": "Personality Styles",
+        "nature": "Nature Themes",
+        "custom": "Custom Themes"
+      },
+      "errors": {
     "unknownError": "Unknown error",
-    "fillAll": "Please complete all API settings",
-    "platformFailed": "Failed to fetch platform config",
-    "noPlatformConfig": "Platform has no built-in config, contact admin",
-    "loadPlatformFailed": "Failed to load platform config",
-    "saveCurrent": "Save Current Config",
-    "saveHint": "You can quickly switch between API configs after saving",
-    "enterServerOr": "Enter server address or",
-    "platformApplied": "Platform API applied. Click 'Fetch Models' and choose one you like.",
+        "themeSwitchFailed": "Theme switching failed"
+      }
+    }
+  },
+  "Preset": {
+    "PresetManagerPage": {
+      "title": "AI Preset Management",
     "loading": "Loading...",
-    "usePlatform": "Use Built-in AI",
-    "placeholder": {
-      "proxy": "Enter your AI service URL, e.g. https://api.openai.com",
-      "key": "Enter your API key starting with sk-",
-      "model": "Click to choose your preferred AI model"
+      "buttons": {
+        "cleanup": "Clean up duplicate default presets",
+        "cleaning": "Cleaning...",
+        "create": "Create New"
+      },
+      "currentBadge": "Currently Using",
+      "categories": {
+        "all": "All",
+        "default": "Default",
+        "custom": "Custom"
+      },
+      "emptyState": {
+        "title": "No Presets",
+        "description": "Create your first AI preset configuration",
+        "createButton": "Create Preset"
+      },
+      "duplicateSuffix": "(Copy)",
+      "errors": {
+        "loadFailed": "Failed to load presets, please try again",
+        "setCurrentFailed": "Failed to set current preset",
+        "createFailed": "Failed to create preset",
+        "createFromTemplateFailed": "Failed to create preset from template",
+        "updateFailed": "Failed to update preset",
+        "deleteFailed": "Failed to delete preset",
+        "cleanupFailed": "Failed to cleanup duplicate presets"
+      },
+      "confirm": {
+        "deletePreset": "Are you sure you want to delete this preset? This action cannot be undone.",
+        "cleanupDuplicates": "Are you sure you want to cleanup duplicate default presets? This will delete duplicate system presets and keep the latest version."
+      }
     },
-    "hint": {
-      "proxy": "No need to append /v1, it will be handled automatically",
-      "key": "Your key is stored securely and won’t be leaked"
-    },
-    "apiKey": "API Key",
-    "model": "AI Model",
-    "saved": "Saved",
-    "modelHint": {
-      "diff": "Different models have different features and capabilities",
-      "notInList": "Selected model may not be available. Please refetch"
-    },
-    "fetching": "Fetching models...",
-    "fetch": "Fetch Models",
+    "CreatePresetModal": {
+      "title": "Create New Preset",
+      "tabs": {
+        "fromTemplate": "Create from Template",
+        "customCreate": "Custom Create"
+      },
+      "templateSection": {
+        "title": "Select Template",
+        "description": "Select a preset template as a starting point, then customize the name",
+        "temperature": "Temperature",
+        "tokens": "Tokens"
+      },
+      "customNameSection": {
+        "title": "Custom Name",
+        "placeholder": "Enter preset name (optional, leave blank to use template name)"
+      },
+      "customSection": {
+        "title": "Create Custom Preset",
+        "description": "Create a brand new preset configuration, detailed parameters can be edited later",
+        "presetName": "Preset Name",
+        "namePlaceholder": "Enter preset name"
+      },
+      "preview": {
+        "title": "Preset Preview",
+        "unnamed": "Unnamed Preset",
+        "customType": "Custom",
+        "description": "Custom preset configuration, detailed parameters can be edited after creation",
+        "temperature": "Temperature",
+        "maxTokens": "Max Tokens"
+      },
+      "buttons": {
     "cancel": "Cancel",
-    "save": "Save Config"
+        "createFromTemplate": "Create from Template",
+        "createPreset": "Create Preset"
+      },
+      "defaultDescription": "Custom preset configuration",
+      "errors": {
+        "selectTemplate": "Please select a template",
+        "templateNotFound": "Template not found",
+        "enterPresetName": "Please enter preset name"
+      }
+    },
+    "PresetEditor": {
+      "title": "Edit Preset",
+      "sections": {
+        "basicInfo": "Basic Information",
+        "coreParams": "Core Parameters",
+        "penaltyParams": "Penalty Parameters",
+        "advancedParams": "Advanced Parameters"
+      },
+      "fields": {
+        "presetName": "Preset Name",
+        "presetNamePlaceholder": "Enter preset name",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the purpose and characteristics of this preset",
+        "temperature": "Temperature",
+        "maxTokens": "Max Tokens",
+        "frequencyPenalty": "Frequency Penalty",
+        "presencePenalty": "Presence Penalty",
+        "responseFormat": "Response Format",
+        "seed": "Random Seed",
+        "optional": "(Optional)",
+        "topKPlaceholder": "Leave blank to use default value",
+        "seedPlaceholder": "Leave blank to use random seed"
+      },
+      "hints": {
+        "temperature": "Controls output randomness, 0-2",
+        "maxTokens": "Limits maximum response length",
+        "topP": "Controls vocabulary selection diversity, 0-1",
+        "frequencyPenalty": "Reduces repeated word usage, -2.0 to 2.0",
+        "presencePenalty": "Reduces new topic introduction, -2.0 to 2.0",
+        "topK": "Limits vocabulary selection range",
+        "seed": "Ensures result reproducibility"
+      },
+      "explanations": {
+        "temperature": "Lower values make output more deterministic, higher values make output more random",
+        "maxTokens": "Controls AI response maximum length, recommended range: 100-63000, 0 means unlimited",
+        "topP": "Controls vocabulary selection diversity, 1.0 means considering all vocabulary",
+        "frequencyPenalty": "Positive values reduce repeated words, negative values increase repeated words",
+        "presencePenalty": "Positive values reduce new topics, negative values encourage exploring new topics",
+        "topK": "Limits the number of vocabulary considered when selecting vocabulary each time",
+        "responseFormat": "Controls AI response format, JSON format is suitable for structured data",
+        "seed": "Set random seed to get reproducible results"
+      },
+      "options": {
+        "textFormat": "Text Format",
+        "jsonFormat": "JSON Format"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "save": "Save Preset",
+        "saving": "Saving..."
+      },
+      "errors": {
+        "saveFailed": "Save failed, please try again"
+      }
+    },
+    "PresetManager": {
+      "templates": {
+        "creative": {
+          "name": "Creative Mode",
+          "description": "High creativity, suitable for creative writing and brainstorming"
+        },
+        "balanced": {
+          "name": "Balanced Mode",
+          "description": "Balanced creativity and consistency, suitable for general conversation"
+        },
+        "precise": {
+          "name": "Precise Mode",
+          "description": "Low creativity, high consistency, suitable for factual answers"
+        },
+        "concise": {
+          "name": "Concise Mode",
+          "description": "Short and concise answers, suitable for quick information retrieval"
+        },
+        "detailed": {
+          "name": "Detailed Mode",
+          "description": "Detailed and comprehensive answers, suitable for in-depth analysis"
+        }
+      },
+      "categories": {
+        "creative": {
+          "name": "Creative",
+          "description": "High creativity presets"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "description": "Balanced presets"
+        },
+        "precise": {
+          "name": "Precise",
+          "description": "Precise presets"
+        },
+        "concise": {
+          "name": "Concise",
+          "description": "Concise presets"
+        },
+        "detailed": {
+          "name": "Detailed",
+          "description": "Detailed presets"
+        },
+        "custom": {
+          "name": "Custom",
+          "description": "User custom presets"
+        }
+      },
+      "validation": {
+        "nameRequired": "Preset name cannot be empty",
+        "temperatureRange": "Temperature value must be between 0-2",
+        "maxTokensRange": "Max tokens must be between 0-63000, 0 means unlimited",
+        "topPRange": "Top P value must be between 0-1",
+        "frequencyPenaltyRange": "Frequency penalty must be between -2.0 to 2.0",
+        "presencePenaltyRange": "Presence penalty must be between -2.0 to 2.0"
+      },
+      "messages": {
+        "cleanupSuccess": "Successfully cleaned up {{count}} duplicate presets: {{presets}}",
+        "noDuplicatesFound": "No duplicate presets found",
+        "cleanupFailed": "Failed to cleanup duplicate presets: {{error}}"
+      }
+    }
+  },
+  "Backup": {
+    "DataBackupManager": {
+      "title": "Data Backup Management",
+      "sections": {
+        "export": {
+          "title": "Export Data",
+          "description": "Export all data as JSON file, including chat records, story mode messages, settings, gift records, etc."
+        },
+        "autoBackup": {
+          "title": "Auto Backup Settings",
+          "description": "Set up scheduled auto backup, will automatically remind you to backup data when the specified time arrives"
+        },
+        "import": {
+          "title": "Import Data",
+          "description": "Restore all data from backup file, will overwrite current data"
+        },
+        "danger": {
+          "title": "Dangerous Operations",
+          "description": "Clear all data, this operation cannot be recovered"
+        }
+      },
+      "buttons": {
+        "export": "Export Data",
+        "exporting": "Exporting...",
+        "importing": "Importing...",
+        "selectFile": "Select File to Import",
+        "setupAutoBackup": "Setup Auto Backup",
+        "hideSettings": "Hide Settings",
+        "testTimer": "Test Timer (5 seconds)",
+        "saveSettings": "Save Settings",
+        "clearAll": "Clear All Data"
+      },
+      "autoBackup": {
+        "status": "Auto Backup Status:",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "nextBackup": "Next Backup Time:",
+        "enable": "Enable Auto Backup",
+        "interval": "Backup Interval:",
+        "units": {
+          "minutes": "Minutes",
+          "hours": "Hours",
+          "days": "Days"
+        }
+      },
+      "errors": {
+        "backupFunctionNotFound": "Auto backup failed: backup function not found",
+        "autoBackupFailed": "Auto backup failed: {{error}}",
+        "unknownError": "Unknown error"
+      },
+      "messages": {
+        "testTimerSuccess": "Test timer working properly!",
+        "autoBackupSuccess": "Auto backup completed! File has been downloaded to your device."
+      },
+      "confirm": {
+        "autoBackupTime": "Auto backup time is up! Do you want to backup data now?",
+        "clearAllData": "Are you sure you want to clear all data? This operation cannot be recovered!"
+      }
+    }
+  },
+  "Settings": {
+    "ColorSettingsPage": {
+      "title": "Color Settings",
+      "loading": "Loading themes...",
+      "buttons": {
+        "createCustomTheme": "Create Custom Theme",
+        "editTheme": "Edit Theme",
+        "deleteTheme": "Delete Theme"
+      },
+      "confirm": {
+        "deleteCustomTheme": "Are you sure you want to delete this custom theme?"
+      }
+    },
+    "ThemePreview": {
+      "mockChatTitle": "Chat Example",
+      "mockAiMessage": "Hello! This is {{themeName}} theme",
+      "mockUserMessage": "Looks great!",
+      "colorTooltips": {
+        "primary": "Primary Background Color",
+        "secondary": "Secondary Background Color",
+        "accent": "Accent Color"
+      },
+      "currentTheme": "Current Theme",
+      "apply": "Apply"
+    }
   }
 }
 

@@ -10,6 +10,7 @@ import PresetManagerPage from '../preset/PresetManagerPage';
 import DataBackupManager from '../backup/DataBackupManager';
 import BottomNavigation from '../BottomNavigation';
 import PersonalSettingsModal from '../PersonalSettingsModal';
+import { useI18n } from '../../i18n/I18nProvider';
 import './MePage.css';
 
 interface PersonalSettings {
@@ -23,10 +24,11 @@ interface MePageProps {
 }
 
 export default function MePage({ onBackToDesktop }: MePageProps) {
+  const { t } = useI18n();
   const _onBackToDesktop = onBackToDesktop; // 暂时保留参数，避免 ESLint 警告
   const [personalSettings, setPersonalSettings] = useState<PersonalSettings>({
     userAvatar: '/avatars/user-avatar.svg',
-    userNickname: '用户',
+    userNickname: t('QQ.ChatInterface.Me.MePage.defaultUser', '用户'),
     userBio: ''
   });
   const [balance, setBalance] = useState<number>(0);
@@ -97,7 +99,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   useEffect(() => {
     const handleDataImported = async () => {
       try {
-        console.log('MePage - 检测到数据导入事件，刷新页面数据...');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.dataImportDetected', 'MePage - 检测到数据导入事件，刷新页面数据...'));
         setIsLoading(true);
         
         // 重新加载所有数据
@@ -125,7 +127,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
           moments: newPostsCount + newCommentsCount
         });
         
-        console.log('MePage - 数据导入后刷新完成');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.dataImportRefreshComplete', 'MePage - 数据导入后刷新完成'));
       } catch (error) {
         console.error('Failed to refresh data after import:', error);
       } finally {
@@ -135,13 +137,13 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
     const handleDataCleared = async () => {
       try {
-        console.log('MePage - 检测到数据清空事件，重置页面数据...');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.dataClearDetected', 'MePage - 检测到数据清空事件，重置页面数据...'));
         setIsLoading(true);
         
         // 重置所有数据到默认状态
         setPersonalSettings({
           userAvatar: '/avatars/user-avatar.svg',
-          userNickname: '用户',
+          userNickname: t('QQ.ChatInterface.Me.MePage.defaultUser', '用户'),
           userBio: ''
         });
         
@@ -154,7 +156,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         
         setNewContentCount({});
         
-        console.log('MePage - 数据清空后重置完成');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.dataClearResetComplete', 'MePage - 数据清空后重置完成'));
       } catch (error) {
         console.error('Failed to reset data after clear:', error);
       } finally {
@@ -169,7 +171,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
       window.removeEventListener('dataImported', handleDataImported);
       window.removeEventListener('dataCleared', handleDataCleared);
     };
-  }, []);
+  }, [t]);
 
   // 加载个人信息和余额
   useEffect(() => {
@@ -188,9 +190,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         // 加载API配置
         try {
           const savedApiConfig = await dataManager.getApiConfig();
-          console.log('MePage - 从数据库加载API配置:', {
+          console.log(t('QQ.ChatInterface.Me.MePage.logs.loadApiConfigFromDB', 'MePage - 从数据库加载API配置:'), {
             proxyUrl: savedApiConfig.proxyUrl,
-            apiKey: savedApiConfig.apiKey ? '已设置' : '未设置',
+            apiKey: savedApiConfig.apiKey ? t('QQ.ChatInterface.Me.MePage.apiKeyStatus.set', '已设置') : t('QQ.ChatInterface.Me.MePage.apiKeyStatus.notSet', '未设置'),
             model: savedApiConfig.model
           });
           setApiConfig(savedApiConfig);
@@ -200,9 +202,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
           const savedApiConfig = localStorage.getItem('apiConfig');
           if (savedApiConfig) {
             const parsedConfig = JSON.parse(savedApiConfig);
-            console.log('MePage - 从localStorage加载API配置:', {
+            console.log(t('QQ.ChatInterface.Me.MePage.logs.loadApiConfigFromLocalStorage', 'MePage - 从localStorage加载API配置:'), {
               proxyUrl: parsedConfig.proxyUrl,
-              apiKey: parsedConfig.apiKey ? '已设置' : '未设置',
+              apiKey: parsedConfig.apiKey ? t('QQ.ChatInterface.Me.MePage.apiKeyStatus.set', '已设置') : t('QQ.ChatInterface.Me.MePage.apiKeyStatus.notSet', '未设置'),
               model: parsedConfig.model
             });
             setApiConfig(parsedConfig);
@@ -228,7 +230,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
     };
 
     loadData();
-  }, []);
+  }, [t]);
 
   // 添加余额刷新功能
   const refreshBalance = async () => {
@@ -255,31 +257,31 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
   // 处理选项点击
   const handleOptionClick = (option: string) => {
-    console.log('MePage - 选项点击:', option);
+    console.log(t('QQ.ChatInterface.Me.MePage.logs.optionClick', 'MePage - 选项点击:'), option);
     
     switch (option) {
       case 'api-settings':
-        console.log('MePage - 打开API设置');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.openApiSettings', 'MePage - 打开API设置'));
         setShowApiSettings(true);
         break;
       case 'personal-settings':
-        console.log('MePage - 打开个人设置');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.openPersonalSettings', 'MePage - 打开个人设置'));
         setShowPersonalSettings(true);
         break;
       case 'color-settings':
-        console.log('MePage - 打开配色设置');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.openColorSettings', 'MePage - 打开配色设置'));
         setCurrentPage('color-settings');
         break;
       case 'preset-manager':
-        console.log('MePage - 打开预设管理');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.openPresetManager', 'MePage - 打开预设管理'));
         setCurrentPage('preset-manager');
         break;
       case 'data-backup':
-        console.log('MePage - 打开数据备份管理');
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.openDataBackup', 'MePage - 打开数据备份管理'));
         setShowDataBackup(true);
         break;
       default:
-        console.log('MePage - 未知选项:', option);
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.unknownOption', 'MePage - 未知选项:'), option);
         break;
     }
   };
@@ -291,9 +293,9 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
 
   // 处理API设置保存
   const handleApiSettingsSave = async (config: { proxyUrl: string; apiKey: string; model: string }) => {
-    console.log('MePage - 保存API配置:', {
+    console.log(t('QQ.ChatInterface.Me.MePage.logs.saveApiConfig', 'MePage - 保存API配置:'), {
       proxyUrl: config.proxyUrl,
-      apiKey: config.apiKey ? '已设置' : '未设置',
+      apiKey: config.apiKey ? t('QQ.ChatInterface.Me.MePage.apiKeyStatus.set', '已设置') : t('QQ.ChatInterface.Me.MePage.apiKeyStatus.notSet', '未设置'),
       model: config.model
     });
     
@@ -303,24 +305,24 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
       // 保存到数据库
       await dataManager.initDB();
       await dataManager.saveApiConfig(config);
-      console.log('MePage - API配置已保存到数据库:', {
+      console.log(t('QQ.ChatInterface.Me.MePage.logs.apiConfigSavedToDB', 'MePage - API配置已保存到数据库:'), {
         proxyUrl: config.proxyUrl,
-        apiKey: config.apiKey ? '已设置' : '未设置',
+        apiKey: config.apiKey ? t('QQ.ChatInterface.Me.MePage.apiKeyStatus.set', '已设置') : t('QQ.ChatInterface.Me.MePage.apiKeyStatus.notSet', '未设置'),
         model: config.model
       });
       
       // 触发API配置变更事件，通知其他组件
       window.dispatchEvent(new CustomEvent('apiConfigChanged'));
-      console.log('MePage - 已触发apiConfigChanged事件');
+      console.log(t('QQ.ChatInterface.Me.MePage.logs.apiConfigChangedEvent', 'MePage - 已触发apiConfigChanged事件'));
     } catch (error) {
       console.error('Failed to save API config to database:', error);
       // 如果数据库保存失败，回退到localStorage
       localStorage.setItem('apiConfig', JSON.stringify(config));
-      console.log('MePage - API配置已保存到localStorage');
+      console.log(t('QQ.ChatInterface.Me.MePage.logs.apiConfigSavedToLocalStorage', 'MePage - API配置已保存到localStorage'));
       
       // 即使保存到localStorage也要触发事件
       window.dispatchEvent(new CustomEvent('apiConfigChanged'));
-      console.log('MePage - 已触发apiConfigChanged事件（localStorage）');
+      console.log(t('QQ.ChatInterface.Me.MePage.logs.apiConfigChangedEventLocalStorage', 'MePage - 已触发apiConfigChanged事件（localStorage）'));
     }
     
     setShowApiSettings(false);
@@ -337,7 +339,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
       // 保存到数据库
       await dataManager.initDB();
       await dataManager.savePersonalSettings(settings);
-      console.log('个人设置已保存到数据库:', settings);
+      console.log(t('QQ.ChatInterface.Me.MePage.logs.personalSettingsSaved', '个人设置已保存到数据库:'), settings);
       
       // 更新本地状态
       setPersonalSettings(settings);
@@ -396,12 +398,12 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
         setBalanceClickCount(0);
         
         // 显示成功提示
-        alert(`🎉 作弊成功！余额已增加 ¥10,000\n当前余额：¥${newBalance.toFixed(2)}`);
+        alert(t('QQ.ChatInterface.Me.MePage.cheat.success', '🎉 作弊成功！余额已增加 ¥10,000\n当前余额：¥{{balance}}').replace('{{balance}}', newBalance.toFixed(2)));
         
-        console.log('余额作弊成功，新余额:', newBalance);
+        console.log(t('QQ.ChatInterface.Me.MePage.logs.cheatSuccess', '余额作弊成功，新余额:'), newBalance);
       } catch (error) {
         console.error('余额作弊失败:', error);
-        alert('作弊失败，请重试');
+        alert(t('QQ.ChatInterface.Me.MePage.cheat.failed', '作弊失败，请重试'));
       }
     }
   };
@@ -424,7 +426,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
   if (isLoading) {
     return (
       <div className="me-page loading">
-        <div className="loading-spinner">加载中...</div>
+        <div className="loading-spinner">{t('QQ.ChatInterface.Me.MePage.loading', '加载中...')}</div>
       </div>
     );
   }
@@ -450,7 +452,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 </div>
                 <div className="me-info">
                   <h2 className="me-nickname">{personalSettings.userNickname}</h2>
-                  <p className="me-bio">{personalSettings.userBio ? (personalSettings.userBio.length > 10 ? personalSettings.userBio.slice(0, 10) + '…' : personalSettings.userBio) : '这个人很懒，什么都没写~'}</p>
+                  <p className="me-bio">{personalSettings.userBio ? (personalSettings.userBio.length > 10 ? personalSettings.userBio.slice(0, 10) + '…' : personalSettings.userBio) : t('QQ.ChatInterface.Me.MePage.defaultBio', '这个人很懒，什么都没写~')}</p>
                 </div>
               </div>
             </div>
@@ -461,7 +463,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
             <div className="balance-card" onClick={handleBalanceClick}>
               <div className="balance-icon">💰</div>
               <div className="balance-info">
-                <div className="balance-label">我的余额</div>
+                <div className="balance-label">{t('QQ.ChatInterface.Me.MePage.balance.label', '我的余额')}</div>
                 <div className="balance-amount">¥ {balance.toFixed(2)}</div>
               </div>
               <div className="balance-action">
@@ -469,7 +471,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                   e.stopPropagation(); // 阻止事件冒泡
                   handleBalanceInfo();
                 }}>
-                  如何获得余额
+                  {t('QQ.ChatInterface.Me.MePage.balance.howToGet', '如何获得余额')}
                 </button>
               </div>
             </div>
@@ -481,7 +483,7 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               <div className="balance-info-modal">
                 <div className="balance-info-content">
                   <div className="balance-info-header">
-                    <h3>虚拟货币说明</h3>
+                    <h3>{t('QQ.ChatInterface.Me.MePage.balanceInfo.title', '虚拟货币说明')}</h3>
                     <button 
                       className="close-btn"
                       onClick={handleBalanceInfo}
@@ -490,8 +492,8 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                     </button>
                   </div>
                   <div className="balance-info-body">
-                    <p>此为虚拟货币，您可以通过与你创建AI角色聊天，AI角色会转账和给你红包。</p>
-                    <p>此虚拟货币可以用于购物等其他功能。</p>
+                    <p>{t('QQ.ChatInterface.Me.MePage.balanceInfo.description1', '此为虚拟货币，您可以通过与你创建AI角色聊天，AI角色会转账和给你红包。')}</p>
+                    <p>{t('QQ.ChatInterface.Me.MePage.balanceInfo.description2', '此虚拟货币可以用于购物等其他功能。')}</p>
                   </div>
                 </div>
               </div>
@@ -507,8 +509,8 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               >
                 <div className="option-icon">👤</div>
                 <div className="option-content">
-                  <div className="option-title">个人设置</div>
-                  <div className="option-subtitle">修改头像、昵称和个人介绍</div>
+                  <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.personalSettings.title', '个人设置')}</div>
+                  <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.personalSettings.subtitle', '修改头像、昵称和个人介绍')}</div>
                 </div>
                 <div className="option-arrow">›</div>
               </div>
@@ -519,8 +521,8 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               >
                 <div className="option-icon">🔧</div>
                 <div className="option-content">
-                  <div className="option-title">API设置</div>
-                  <div className="option-subtitle">配置AI连接和模型选择</div>
+                  <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.apiSettings.title', 'API设置')}</div>
+                  <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.apiSettings.subtitle', '配置AI连接和模型选择')}</div>
                 </div>
                 <div className="option-arrow">›</div>
               </div>
@@ -531,8 +533,8 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               >
                 <div className="option-icon">🎨</div>
                 <div className="option-content">
-                  <div className="option-title">配色设置</div>
-                  <div className="option-subtitle">选择你喜欢的主题配色</div>
+                  <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.colorSettings.title', '配色设置')}</div>
+                  <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.colorSettings.subtitle', '选择你喜欢的主题配色')}</div>
                 </div>
                 <div className="option-arrow">›</div>
               </div>
@@ -543,8 +545,8 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               >
                 <div className="option-icon">⚙️</div>
                 <div className="option-content">
-                  <div className="option-title">AI 预设管理</div>
-                  <div className="option-subtitle">管理 AI 模型的参数配置</div>
+                  <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.presetManager.title', 'AI 预设管理')}</div>
+                  <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.presetManager.subtitle', '管理 AI 模型的参数配置')}</div>
                 </div>
                 <div className="option-arrow">›</div>
               </div>
@@ -552,19 +554,19 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
               <div 
                 className="option-item"
                 onClick={(e) => {
-                  console.log('MePage - 数据备份选项被点击');
-                  console.log('MePage - 事件对象:', e);
-                  console.log('MePage - 当前 showDataBackup 状态:', showDataBackup);
+                  console.log(t('QQ.ChatInterface.Me.MePage.logs.dataBackupOptionClicked', 'MePage - 数据备份选项被点击'));
+                  console.log(t('QQ.ChatInterface.Me.MePage.logs.eventObject', 'MePage - 事件对象:'), e);
+                  console.log(t('QQ.ChatInterface.Me.MePage.logs.currentShowDataBackupState', 'MePage - 当前 showDataBackup 状态:'), showDataBackup);
                   e.stopPropagation();
                   handleOptionClick('data-backup');
-                  console.log('MePage - handleOptionClick 调用完成');
+                  console.log(t('QQ.ChatInterface.Me.MePage.logs.handleOptionClickComplete', 'MePage - handleOptionClick 调用完成'));
                 }}
                 style={{ position: 'relative', zIndex: 1 }}
               >
                 <div className="option-icon">💾</div>
                 <div className="option-content">
-                  <div className="option-title">数据备份管理</div>
-                  <div className="option-subtitle">导入导出所有数据，包括聊天记录、设置等</div>
+                  <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.dataBackup.title', '数据备份管理')}</div>
+                  <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.dataBackup.subtitle', '导入导出所有数据，包括聊天记录、设置等')}</div>
                 </div>
                 <div className="option-arrow">›</div>
               </div>

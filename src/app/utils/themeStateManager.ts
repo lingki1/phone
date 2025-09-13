@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * 主题切换状态管理器
- * 管理主题切换过程中的各种状态
+ * Theme switching state manager
+ * Manages various states during theme switching process
  */
 
 export interface ThemeState {
@@ -36,14 +36,14 @@ export class ThemeStateManager {
   }
 
   /**
-   * 获取当前状态
+   * Get current state
    */
   public getState(): ThemeState {
     return { ...this.state };
   }
 
   /**
-   * 更新状态
+   * Update state
    */
   public setState(updates: Partial<ThemeState>): void {
     this.state = { ...this.state, ...updates };
@@ -51,7 +51,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 订阅状态变化
+   * Subscribe to state changes
    */
   public subscribe(listener: (state: ThemeState) => void): () => void {
     this.listeners.add(listener);
@@ -61,7 +61,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 通知所有监听器
+   * Notify all listeners
    */
   private notifyListeners(): void {
     this.listeners.forEach(listener => {
@@ -74,7 +74,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 开始主题切换
+   * Start theme switching
    */
   public startThemeChange(themeId: string): void {
     this.setState({
@@ -86,7 +86,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 完成主题切换
+   * Complete theme switching
    */
   public completeThemeChange(): void {
     this.setState({
@@ -97,7 +97,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 主题切换失败
+   * Theme switching failed
    */
   public failThemeChange(error: string): void {
     this.setState({
@@ -108,7 +108,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 开始预览模式
+   * Start preview mode
    */
   public startPreview(themeId: string): void {
     this.setState({
@@ -118,7 +118,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 结束预览模式
+   * End preview mode
    */
   public endPreview(): void {
     this.setState({
@@ -128,7 +128,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 清除错误
+   * Clear error
    */
   public clearError(): void {
     this.setState({
@@ -137,7 +137,7 @@ export class ThemeStateManager {
   }
 
   /**
-   * 重置状态
+   * Reset state
    */
   public reset(): void {
     this.state = {
@@ -152,5 +152,5 @@ export class ThemeStateManager {
   }
 }
 
-// 导出单例实例
+// Export singleton instance
 export const themeStateManager = ThemeStateManager.getInstance();

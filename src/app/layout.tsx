@@ -53,22 +53,22 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeErrorBoundary>
-          <ThemeProvider>
-            <NotificationProvider>
-              <AiPendingProvider>
-                <ViewportHandler />
-                <AudioProvider>
-                  <I18nProvider>
+          <I18nProvider>
+            <ThemeProvider>
+              <NotificationProvider>
+                <AiPendingProvider>
+                  <ViewportHandler />
+                  <AudioProvider>
                     {children}
-                  </I18nProvider>
-                  <AudioEventsBridge />
-                  <AudioHelpPortal />
-                  <FloatingAudioButton />
-                  <AudioPlayer />
-                </AudioProvider>
-              </AiPendingProvider>
-            </NotificationProvider>
-          </ThemeProvider>
+                    <AudioEventsBridge />
+                    <AudioHelpPortal />
+                    <FloatingAudioButton />
+                    <AudioPlayer />
+                  </AudioProvider>
+                </AiPendingProvider>
+              </NotificationProvider>
+            </ThemeProvider>
+          </I18nProvider>
         </ThemeErrorBoundary>
       </body>
     </html>

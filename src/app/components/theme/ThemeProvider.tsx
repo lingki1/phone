@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { themeManager } from '../../utils/themeManager';
 import { applyThemeTransition } from '../../utils/themeUtils';
+import { useI18n } from '../i18n/I18nProvider';
 import ThemeMetaUpdater from './ThemeMetaUpdater';
 import ThemeRestorer from './ThemeRestorer';
 import ThemeIndicator from './ThemeIndicator';
@@ -12,13 +13,14 @@ interface ThemeProviderProps {
 }
 
 /**
- * 主题提供者组件
- * 负责在应用启动时初始化主题系统
+ * Theme provider component
+ * Responsible for initializing the theme system when the application starts
  */
 export default function ThemeProvider({ children }: ThemeProviderProps) {
-  // 检查是否已经通过脚本预加载了主题
+  const { t } = useI18n();
+  // Check if theme has been pre-loaded through script
   const [isThemeLoaded, setIsThemeLoaded] = useState(() => {
-    // 如果body已经有主题类或初始化标记，说明已经预加载了
+    // If body already has theme class or initialization mark, it means it has been pre-loaded
     if (typeof window !== 'undefined' && document.body) {
       const hasThemeClass = Array.from(document.body.classList).some(cls => 
         cls.startsWith('theme-') || cls === 'theme-initialized'
@@ -30,7 +32,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 如果已经预加载了主题，就不需要再初始化
+    // If theme has been pre-loaded, no need to initialize again
     if (isThemeLoaded) {
       console.log('Theme already pre-loaded, skipping initialization');
       return;
@@ -38,22 +40,22 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
 
     const initializeTheme = async () => {
       try {
-        // 检查CSS变量支持
+        // Check CSS variables support
         if (!themeManager.isCSSVariablesSupported()) {
           console.warn('CSS variables not supported, theme system may not work properly');
         }
 
-        // 为body元素添加过渡效果
+        // Add transition effects to body element
         if (document.body) {
           applyThemeTransition(document.body);
         }
 
-        // 设置超时机制，防止无限加载
+        // Set timeout mechanism to prevent infinite loading
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('Theme loading timeout')), 3000);
         });
 
-        // 加载保存的主题，带超时保护
+        // Load saved theme with timeout protection
         await Promise.race([
           themeManager.loadSavedTheme(),
           timeoutPromise
@@ -65,12 +67,12 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
         console.error('Failed to initialize theme system:', error);
         setError(error instanceof Error ? error.message : 'Unknown error');
         
-        // 即使初始化失败，也要标记为已加载，使用默认主题
+        // Even if initialization fails, mark as loaded and use default theme
         setIsThemeLoaded(true);
       }
     };
 
-    // 如果没有预加载，则进行初始化
+    // If not pre-loaded, perform initialization
     const timeoutId = setTimeout(initializeTheme, 50);
     
     return () => {
@@ -78,13 +80,13 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     };
   }, [isThemeLoaded]);
 
-  // 监听主题变更事件
+  // Listen to theme change events
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent) => {
       console.log('Theme changed to:', event.detail.themeId);
       
-      // 可以在这里添加主题变更的额外处理逻辑
-      // 比如通知其他组件、记录分析数据等
+      // Additional theme change processing logic can be added here
+      // Such as notifying other components, recording analytics data, etc.
     };
 
     window.addEventListener('themeChanged', handleThemeChange as EventListener);
@@ -97,7 +99,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   // 添加紧急回退机制
   useEffect(() => {
     if (!isThemeLoaded) {
-      // 如果2秒后还没加载完成，强制标记为已加载
+      // If not loaded after 2 seconds, force mark as loaded
       const emergencyTimeout = setTimeout(() => {
         console.warn('Theme loading took too long, forcing completion');
         setIsThemeLoaded(true);
@@ -107,13 +109,13 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [isThemeLoaded]);
 
-  // 如果主题还未加载完成，显示加载状态
+  // If theme has not finished loading, show loading state
   if (!isThemeLoaded) {
     return (
       <div className="theme-loading">
         <div className="theme-loading-spinner">
           <div className="spinner"></div>
-          <p>正在加载主题...</p>
+          <p>{t('Theme.ThemeProvider.loading', '正在加载主题...')}</p>
         </div>
         <style jsx>{`
           .theme-loading {
@@ -159,7 +161,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     );
   }
 
-  // 如果有错误，显示错误信息（但仍然渲染子组件）
+  // If there is an error, show error message (but still render child components)
   if (error) {
     console.warn('Theme system error:', error);
   }
@@ -175,8 +177,8 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
 }
 
 /**
- * 主题错误边界组件
- * 捕获主题相关的错误，防止整个应用崩溃
+ * Theme error boundary component
+ * Catch theme-related errors to prevent the entire application from crashing
  */
 export class ThemeErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -194,7 +196,7 @@ export class ThemeErrorBoundary extends React.Component<
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Theme system error:', error, errorInfo);
     
-    // 尝试重置到默认主题
+    // Try to reset to default theme
     try {
       themeManager.setTheme('default');
     } catch (resetError) {

@@ -6,9 +6,11 @@ import RecollectionList from './RecollectionList';
 import RecollectionDetail from './RecollectionDetail';
 import { WorldBook } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import './RecollectionPage.css';
 
 export default function RecollectionPage() {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRecollection, setSelectedRecollection] = useState<WorldBook | null>(null);
   const [recollections, setRecollections] = useState<WorldBook[]>([]);
@@ -86,19 +88,19 @@ export default function RecollectionPage() {
 
   // 处理底部导航切换
   const handleViewChange = (view: string) => {
-    console.log('RecollectionPage - 底部导航点击:', view);
+    console.log(t('QQ.ChatInterface.Recollection.RecollectionPage.logs.bottomNavClick', 'RecollectionPage - 底部导航点击:'), view);
     
     if (view === 'messages') {
       // 跳转到消息页面
-      console.log('RecollectionPage - 触发navigateToChat事件');
+      console.log(t('QQ.ChatInterface.Recollection.RecollectionPage.logs.navigateToChat', 'RecollectionPage - 触发navigateToChat事件'));
       window.dispatchEvent(new CustomEvent('navigateToChat'));
     } else if (view === 'moments') {
       // 跳转到动态页面
-      console.log('RecollectionPage - 触发navigateToDiscover事件');
+      console.log(t('QQ.ChatInterface.Recollection.RecollectionPage.logs.navigateToDiscover', 'RecollectionPage - 触发navigateToDiscover事件'));
       window.dispatchEvent(new CustomEvent('navigateToDiscover'));
     } else if (view === 'me') {
       // 跳转到个人页面
-      console.log('RecollectionPage - 触发navigateToMe事件');
+      console.log(t('QQ.ChatInterface.Recollection.RecollectionPage.logs.navigateToMe', 'RecollectionPage - 触发navigateToMe事件'));
       window.dispatchEvent(new CustomEvent('navigateToMe'));
     }
     // 'recollection' 已经在当前页面，不需要处理
@@ -124,7 +126,7 @@ export default function RecollectionPage() {
       <div className="recollection-page recollection-loading">
         <div className="recollection-loading-spinner">
           <div className="recollection-spinner"></div>
-          <p>加载中...</p>
+          <p>{t('QQ.ChatInterface.Recollection.RecollectionPage.loading', '加载中...')}</p>
         </div>
       </div>
     );
@@ -143,8 +145,8 @@ export default function RecollectionPage() {
           // 显示回忆列表
           <>
             <div className="recollection-header">
-              <h1>回忆</h1>
-              <span className="recollection-count">共 {recollections.length} 条</span>
+              <h1>{t('QQ.ChatInterface.Recollection.RecollectionPage.title', '回忆')}</h1>
+              <span className="recollection-count">{t('QQ.ChatInterface.Recollection.RecollectionPage.count', '共 {{count}} 条').replace('{{count}}', recollections.length.toString())}</span>
             </div>
             
             <div className="recollection-body">

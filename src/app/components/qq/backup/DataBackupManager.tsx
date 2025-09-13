@@ -6,6 +6,7 @@ import { ChatItem, ApiConfig, WorldBook } from '../../../types/chat';
 import { TransactionRecord } from '../../../types/money';
 import { PresetConfig } from '../../../types/preset';
 import { DiscoverPost, DiscoverComment, DiscoverSettings, DiscoverNotification, DiscoverDraft } from '../../../types/discover';
+import { useI18n } from '../../i18n/I18nProvider';
 import './DataBackupManager.css';
 
 interface BackupData {
@@ -75,7 +76,8 @@ interface DataBackupManagerProps {
 }
 
 export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
-  console.log('DataBackupManager - 组件渲染');
+  const { t } = useI18n();
+  console.log('DataBackupManager - Component rendering');
   
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -112,7 +114,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
         globalBackup();
       } else {
         console.error('全局备份函数未找到');
-        alert('自动备份失败：备份函数未找到');
+        alert(t('Backup.DataBackupManager.errors.backupFunctionNotFound', '自动备份失败：备份函数未找到'));
       }
     };
     
@@ -208,7 +210,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
       console.log('当前时间:', new Date().toLocaleString('zh-CN'));
       
       // 使用全局函数触发备份
-      if (confirm('自动备份时间到了！是否现在进行数据备份？')) {
+      if (confirm(t('Backup.DataBackupManager.confirm.autoBackupTime', '自动备份时间到了！是否现在进行数据备份？'))) {
         console.log('用户确认备份');
         // 直接调用全局备份函数，不通过事件
         const globalBackup = (window as Window & { performGlobalBackup?: typeof performGlobalBackup }).performGlobalBackup;
@@ -249,7 +251,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
     console.log('触发自动备份函数');
     console.log('当前时间:', new Date().toLocaleString('zh-CN'));
     
-    if (confirm('自动备份时间到了！是否现在进行数据备份？')) {
+    if (confirm(t('Backup.DataBackupManager.confirm.autoBackupTime', '自动备份时间到了！是否现在进行数据备份？'))) {
       console.log('用户确认备份');
       handleExportData();
       // 备份完成后重新启动定时器
@@ -315,7 +317,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
     console.log('测试定时器功能');
     const testTimerId = setTimeout(() => {
       console.log('测试定时器触发成功！');
-      alert('测试定时器工作正常！');
+      alert(t('Backup.DataBackupManager.messages.testTimerSuccess', '测试定时器工作正常！'));
     }, 5000); // 5秒后触发
     console.log('测试定时器ID:', testTimerId);
   };
@@ -493,11 +495,11 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
       URL.revokeObjectURL(url);
 
       console.log('全局备份完成，文件已下载');
-      alert('自动备份完成！文件已下载到您的设备。');
+      alert(t('Backup.DataBackupManager.messages.autoBackupSuccess', '自动备份完成！文件已下载到您的设备。'));
 
     } catch (error) {
       console.error('全局备份失败:', error);
-      alert(`自动备份失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      alert(t('Backup.DataBackupManager.errors.autoBackupFailed', '自动备份失败: {{error}}').replace('{{error}}', error instanceof Error ? error.message : t('Backup.DataBackupManager.errors.unknownError', '未知错误')));
     }
   };
 
@@ -923,7 +925,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
   };
 
   const handleClearAllData = async () => {
-    if (!confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+    if (!confirm(t('Backup.DataBackupManager.confirm.clearAllData', '确定要清空所有数据吗？此操作不可恢复！'))) {
       return;
     }
 
@@ -945,14 +947,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
     }
   };
 
-  console.log('DataBackupManager - 渲染模态框');
-  console.log('DataBackupManager - 当前状态:', { isExporting, isImporting, error, success });
+  console.log('DataBackupManager - Rendering modal');
+  console.log('DataBackupManager - Current state:', { isExporting, isImporting, error, success });
   
   return (
     <div className="data-backup-manager" onClick={onClose} style={{ zIndex: 10002 }}>
       <div className="backup-content" onClick={(e) => e.stopPropagation()}>
         <div className="backup-header">
-          <h2>数据备份管理</h2>
+          <h2>{t('Backup.DataBackupManager.title', '数据备份管理')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -971,14 +973,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
 
           <div className="backup-actions">
             <div className="action-section">
-              <h3>导出数据</h3>
-              <p>将所有数据导出为JSON文件，包括聊天记录、剧情模式消息、设置、送礼记录等</p>
+              <h3>{t('Backup.DataBackupManager.sections.export.title', '导出数据')}</h3>
+              <p>{t('Backup.DataBackupManager.sections.export.description', '将所有数据导出为JSON文件，包括聊天记录、剧情模式消息、设置、送礼记录等')}</p>
               <button 
                 className="export-btn"
                 onClick={handleExportData}
                 disabled={isExporting || isImporting}
               >
-                {isExporting ? '导出中...' : '导出数据'}
+                {isExporting ? t('Backup.DataBackupManager.buttons.exporting', '导出中...') : t('Backup.DataBackupManager.buttons.export', '导出数据')}
               </button>
               
               {isExporting && (
@@ -996,20 +998,20 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
             </div>
 
             <div className="action-section">
-              <h3>自动备份设置</h3>
-              <p>设置定时自动备份，到达指定时间后会自动提醒您进行数据备份</p>
+              <h3>{t('Backup.DataBackupManager.sections.autoBackup.title', '自动备份设置')}</h3>
+              <p>{t('Backup.DataBackupManager.sections.autoBackup.description', '设置定时自动备份，到达指定时间后会自动提醒您进行数据备份')}</p>
               
               <div className="auto-backup-status">
                 <div className="status-info">
-                  <span className="status-label">自动备份状态：</span>
+                  <span className="status-label">{t('Backup.DataBackupManager.autoBackup.status', '自动备份状态：')}</span>
                   <span className={`status-value ${autoBackupEnabled ? 'enabled' : 'disabled'}`}>
-                    {autoBackupEnabled ? '已启用' : '已禁用'}
+                    {autoBackupEnabled ? t('Backup.DataBackupManager.autoBackup.enabled', '已启用') : t('Backup.DataBackupManager.autoBackup.disabled', '已禁用')}
                   </span>
                 </div>
                 
                 {autoBackupEnabled && nextBackupTime && (
                   <div className="next-backup-info">
-                    <span className="next-backup-label">下次备份时间：</span>
+                    <span className="next-backup-label">{t('Backup.DataBackupManager.autoBackup.nextBackup', '下次备份时间：')}</span>
                     <span className="next-backup-time">{nextBackupTime}</span>
                   </div>
                 )}
@@ -1021,7 +1023,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                    onClick={() => setShowAutoBackupSettings(!showAutoBackupSettings)}
                    disabled={isExporting || isImporting}
                  >
-                   {showAutoBackupSettings ? '隐藏设置' : '设置自动备份'}
+                   {showAutoBackupSettings ? t('Backup.DataBackupManager.buttons.hideSettings', '隐藏设置') : t('Backup.DataBackupManager.buttons.setupAutoBackup', '设置自动备份')}
                  </button>
                  
                  <button 
@@ -1038,7 +1040,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                      fontSize: '0.9rem'
                    }}
                  >
-                   测试定时器(5秒)
+                   {t('Backup.DataBackupManager.buttons.testTimer', '测试定时器(5秒)')}
                  </button>
                </div>
 
@@ -1052,13 +1054,13 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                          onChange={(e) => setAutoBackupEnabled(e.target.checked)}
                          className="setting-checkbox"
                        />
-                       启用自动备份
+                       {t('Backup.DataBackupManager.autoBackup.enable', '启用自动备份')}
                      </label>
                    </div>
 
                    {autoBackupEnabled && (
                      <div className="setting-item">
-                       <label className="setting-label">备份间隔：</label>
+                       <label className="setting-label">{t('Backup.DataBackupManager.autoBackup.interval', '备份间隔：')}</label>
                        <div className="interval-inputs">
                          <input
                            type="number"
@@ -1073,9 +1075,9 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                            onChange={(e) => setAutoBackupUnit(e.target.value as 'minutes' | 'hours' | 'days')}
                            className="unit-select"
                          >
-                           <option value="minutes">分钟</option>
-                           <option value="hours">小时</option>
-                           <option value="days">天</option>
+                           <option value="minutes">{t('Backup.DataBackupManager.autoBackup.units.minutes', '分钟')}</option>
+                           <option value="hours">{t('Backup.DataBackupManager.autoBackup.units.hours', '小时')}</option>
+                           <option value="days">{t('Backup.DataBackupManager.autoBackup.units.days', '天')}</option>
                          </select>
                        </div>
                      </div>
@@ -1087,7 +1089,7 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
                        onClick={handleSaveAutoBackupSettings}
                        disabled={isExporting || isImporting}
                      >
-                       保存设置
+                       {t('Backup.DataBackupManager.buttons.saveSettings', '保存设置')}
                      </button>
                    </div>
                  </div>
@@ -1095,14 +1097,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
             </div>
 
             <div className="action-section">
-              <h3>导入数据</h3>
-              <p>从备份文件中恢复所有数据，将覆盖当前数据</p>
+              <h3>{t('Backup.DataBackupManager.sections.import.title', '导入数据')}</h3>
+              <p>{t('Backup.DataBackupManager.sections.import.description', '从备份文件中恢复所有数据，将覆盖当前数据')}</p>
               <button 
                 className="import-btn"
                 onClick={triggerFileSelect}
                 disabled={isExporting || isImporting}
               >
-                {isImporting ? '导入中...' : '选择文件导入'}
+                {isImporting ? t('Backup.DataBackupManager.buttons.importing', '导入中...') : t('Backup.DataBackupManager.buttons.selectFile', '选择文件导入')}
               </button>
               
               <input
@@ -1128,14 +1130,14 @@ export default function DataBackupManager({ onClose }: DataBackupManagerProps) {
             </div>
 
             <div className="action-section danger-zone">
-              <h3>危险操作</h3>
-              <p>清空所有数据，此操作不可恢复</p>
+              <h3>{t('Backup.DataBackupManager.sections.danger.title', '危险操作')}</h3>
+              <p>{t('Backup.DataBackupManager.sections.danger.description', '清空所有数据，此操作不可恢复')}</p>
               <button 
                 className="clear-btn"
                 onClick={handleClearAllData}
                 disabled={isExporting || isImporting}
               >
-                清空所有数据
+                {t('Backup.DataBackupManager.buttons.clearAll', '清空所有数据')}
               </button>
             </div>
           </div>

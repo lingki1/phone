@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '../../components/i18n/I18nProvider';
 import './ApiSettingsModal.css';
 import ApiConfigSelector from './apisaving/ApiConfigSelector';
@@ -32,10 +32,10 @@ export default function ApiSettingsModal({
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isLoadingPlatformConfig, setIsLoadingPlatformConfig] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0); // 用于强制刷新选择器
+  const [refreshKey, setRefreshKey] = useState(0); // Force refresh selector
 
-  // 从localStorage加载已保存的模型列表
-  const loadSavedModels = () => {
+  // Load saved model list from localStorage
+  const loadSavedModels = useCallback(() => {
     try {
       const savedModels = localStorage.getItem('savedModels');
       if (savedModels) {
@@ -45,17 +45,17 @@ export default function ApiSettingsModal({
         }
       }
     } catch (error) {
-      console.error('加载已保存的模型列表失败:', error);
+      console.error(t('QQ.ChatInterface.Me.ApiSettingsModal.logs.loadSavedModelsFailed', '加载已保存的模型列表失败:'), error);
     }
     return [];
-  };
+  }, [t]);
 
-  // 保存模型列表到localStorage
+  // Save model list to localStorage
   const saveModelsToStorage = (modelList: string[]) => {
     try {
       localStorage.setItem('savedModels', JSON.stringify(modelList));
     } catch (error) {
-      console.error('保存模型列表失败:', error);
+      console.error(t('QQ.ChatInterface.Me.ApiSettingsModal.logs.saveModelsFailed', '保存模型列表失败:'), error);
     }
   };
 
@@ -63,13 +63,13 @@ export default function ApiSettingsModal({
     if (isVisible) {
       setConfig(currentConfig);
       
-      // 加载已保存的模型列表
+      // Load saved model list
       const savedModels = loadSavedModels();
       setModels(savedModels);
       
-      // 移除全局设置加载，因为相关功能已被删除
+      // Remove global settings loading as related functionality has been removed
     }
-  }, [isVisible, currentConfig]);
+  }, [isVisible, currentConfig, loadSavedModels]);
 
   const handleInputChange = (field: keyof ApiConfig, value: string) => {
     setConfig(prev => ({
@@ -77,19 +77,19 @@ export default function ApiSettingsModal({
       [field]: value
     }));
     
-    // 当用户修改URL或API Key时，清空模型列表
+    // Clear model list when user modifies URL or API Key
     if (field === 'proxyUrl' || field === 'apiKey') {
       setModels([]);
-      // 清空localStorage中的模型列表
+      // Clear model list in localStorage
       localStorage.removeItem('savedModels');
-      // 清空当前选择的模型
+      // Clear currently selected model
       setConfig(prev => ({ ...prev, model: '' }));
     }
   };
 
   const fetchModels = async () => {
     if (!config.proxyUrl || !config.apiKey) {
-      alert(t('QQ.ApiSettings.fillProxyAndKey', '请先填写反代地址和API密钥'));
+      alert(t('QQ.ChatInterface.Me.ApiSettingsModal.errors.fillProxyAndKey', '请先填写反代地址和API密钥'));
       return;
     }
 
@@ -109,22 +109,22 @@ export default function ApiSettingsModal({
       const data = await response.json();
       const modelList = data.data?.map((model: { id: string }) => model.id) || [];
       
-      // 直接使用新获取的模型列表，不合并旧的模型
+      // Use newly fetched model list directly, do not merge with old models
       setModels(modelList);
       saveModelsToStorage(modelList);
       
-      // 如果当前选择的模型不在新列表中，清空选择
+      // If currently selected model is not in new list, clear selection
       if (config.model && !modelList.includes(config.model)) {
         setConfig(prev => ({ ...prev, model: '' }));
       }
       
-      // 如果当前没有选择模型，选择第一个
+      // If no model is currently selected, select the first one
       if (modelList.length > 0 && !config.model) {
         setConfig(prev => ({ ...prev, model: modelList[0] }));
       }
     } catch (error) {
-      console.error('获取模型列表失败:', error);
-      alert(`${t('QQ.ApiSettings.fetchModelsFailed', '获取模型列表失败')}: ${error instanceof Error ? error.message : t('QQ.ApiSettings.unknownError', '未知错误')}`);
+      console.error(t('QQ.ChatInterface.Me.ApiSettingsModal.logs.fetchModelsFailed', '获取模型列表失败:'), error);
+      alert(`${t('QQ.ChatInterface.Me.ApiSettingsModal.errors.fetchModelsFailed', '获取模型列表失败')}: ${error instanceof Error ? error.message : t('QQ.ChatInterface.Me.ApiSettingsModal.errors.unknownError', '未知错误')}`);
     } finally {
       setIsLoadingModels(false);
     }
@@ -132,28 +132,28 @@ export default function ApiSettingsModal({
 
   const handleSave = () => {
     if (!config.proxyUrl || !config.apiKey || !config.model) {
-      alert(t('QQ.ApiSettings.fillAll', '请填写完整的API配置信息'));
+      alert(t('QQ.ChatInterface.Me.ApiSettingsModal.errors.fillAll', '请填写完整的API配置信息'));
       return;
     }
 
-    // 保存API配置
+    // Save API configuration
     onSave(config);
     
-    // 移除全局设置保存，因为相关功能已被删除
+    // Remove global settings save as related functionality has been removed
     
     onClose();
   };
 
   const handleConfigSelect = (savedConfig: SavedApiConfig) => {
-    // 无论是否重复点击，都重新设置配置
-    // 这样可以确保重复点击同一个配置也能正常切换
+    // Always reset configuration regardless of whether it is clicked repeatedly
+    // This ensures that clicking the same configuration repeatedly can also switch normally
     setConfig({
       proxyUrl: savedConfig.proxyUrl,
       apiKey: savedConfig.apiKey,
       model: savedConfig.model
     });
     
-    // 清空模型列表，因为切换了API配置
+    // Clear model list because API configuration has been switched
     setModels([]);
     localStorage.removeItem('savedModels');
   };
@@ -163,13 +163,13 @@ export default function ApiSettingsModal({
   };
 
   const handleSaveConfigSuccess = () => {
-    // 配置保存成功后的回调，强制刷新选择器
+    // Callback after configuration save success, force refresh selector
     setRefreshKey(prev => prev + 1);
   };
 
-  // 移除智能角色活跃模式相关函数，因为功能已被删除
+  // Remove smart character active mode related functions as functionality has been removed
 
-  // 检查当前选择的模型是否在可用模型列表中
+  // Check if currently selected model is in available model list
   const isCurrentModelAvailable = config.model && models.includes(config.model);
 
   const handleUsePlatformConfig = async () => {
@@ -178,23 +178,23 @@ export default function ApiSettingsModal({
       const resp = await fetch('/api/system-api-config');
       const json = await resp.json();
       if (!json?.success) {
-        alert(json?.message || t('QQ.ApiSettings.platformFailed', '获取平台配置失败'));
+        alert(json?.message || t('QQ.ChatInterface.Me.ApiSettingsModal.errors.platformFailed', '获取平台配置失败'));
         return;
       }
       if (!json?.data) {
-        alert(t('QQ.ApiSettings.noPlatformConfig', '平台未提供内置配置，请联系管理员'));
+        alert(t('QQ.ChatInterface.Me.ApiSettingsModal.errors.noPlatformConfig', '平台未提供内置配置，请联系管理员'));
         return;
       }
       const platformProxyUrl = String(json.data.proxyUrl || '/api/server-ai');
       const platformModel = String(json.data.model || '');
-      // 应用平台配置到当前表单；apiKey 使用占位，真实密钥由服务器代理注入
+      // Apply platform configuration to current form; apiKey uses placeholder, real key injected by server proxy
       setConfig({ proxyUrl: platformProxyUrl, apiKey: 'server-proxy', model: platformModel });
-      // 清空并刷新模型列表缓存
+      // Clear and refresh model list cache
       setModels([]);
       localStorage.removeItem('savedModels');
     } catch (e) {
-      console.error('加载平台配置失败:', e);
-      alert(t('QQ.ApiSettings.loadPlatformFailed', '加载平台配置失败'));
+      console.error(t('QQ.ChatInterface.Me.ApiSettingsModal.logs.loadPlatformFailed', '加载平台配置失败:'), e);
+      alert(t('QQ.ChatInterface.Me.ApiSettingsModal.errors.loadPlatformFailed', '加载平台配置失败'));
     } finally {
       setIsLoadingPlatformConfig(false);
     }
@@ -206,29 +206,29 @@ export default function ApiSettingsModal({
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="api-settings-modal">
         <div className="modal-header">
-          <h2>{t('QQ.ApiSettings.title', 'AI 连接配置')}</h2>
+          <h2>{t('QQ.ChatInterface.Me.ApiSettingsModal.title', 'AI 连接配置')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         
         <div className="modal-body">
-          {/* API配置选择器 */}
+          {/* API Configuration Selector */}
           <ApiConfigSelector 
-            key={refreshKey} // 使用refreshKey强制重新渲染
+            key={refreshKey} // Use refreshKey to force re-render
             onConfigSelect={handleConfigSelect}
             currentConfig={config}
           />
           
-          {/* 保存配置按钮 */}
+          {/* Save Configuration Button */}
           <div className="save-config-section">
             <button 
               className="save-config-btn" 
               onClick={handleSaveConfig}
               disabled={!config.proxyUrl || !config.apiKey || !config.model}
             >
-              {t('QQ.ApiSettings.saveCurrent', '保存当前配置')}
+              {t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.saveCurrent', '保存当前配置')}
             </button>
             <small className="save-config-hint">
-              {t('QQ.ApiSettings.saveHint', '保存后可以快速切换不同的API配置')}
+              {t('QQ.ChatInterface.Me.ApiSettingsModal.hints.saveHint', '保存后可以快速切换不同的API配置')}
             </small>
           </div>
 
@@ -236,17 +236,17 @@ export default function ApiSettingsModal({
 
           <div className="form-group">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label htmlFor="proxy-url">{t('QQ.ApiSettings.enterServerOr', '请输入服务器地址 或')}</label>
+              <label htmlFor="proxy-url">{t('QQ.ChatInterface.Me.ApiSettingsModal.labels.enterServerOr', '请输入服务器地址 或')}</label>
               <button 
                 type="button"
                 className="groupmember-platform-config-btn"
                 onClick={async () => {
                   await handleUsePlatformConfig();
-                  alert(t('QQ.ApiSettings.platformApplied', '已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。'));
+                  alert(t('QQ.ChatInterface.Me.ApiSettingsModal.success.platformApplied', '已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。'));
                 }}
                 disabled={isLoadingPlatformConfig}
               >
-                {isLoadingPlatformConfig ? t('QQ.ApiSettings.loading', '加载中...') : t('QQ.ApiSettings.usePlatform', '使用平台内置AI')}
+                {isLoadingPlatformConfig ? t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.loading', '加载中...') : t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.usePlatform', '使用平台内置AI')}
               </button>
             </div>
             <input
@@ -254,42 +254,42 @@ export default function ApiSettingsModal({
               id="proxy-url"
               value={config.proxyUrl}
               onChange={(e) => handleInputChange('proxyUrl', e.target.value)}
-              placeholder={t('QQ.ApiSettings.placeholder.proxy', '输入你的AI服务地址，例如: https://api.openai.com')}
+              placeholder={t('QQ.ChatInterface.Me.ApiSettingsModal.placeholders.proxy', '输入你的AI服务地址，例如: https://api.openai.com')}
             />
-            <small className="field-hint">{t('QQ.ApiSettings.hint.proxy', '不需要添加 /v1 后缀，系统会自动处理')}</small>
+            <small className="field-hint">{t('QQ.ChatInterface.Me.ApiSettingsModal.hints.proxy', '不需要添加 /v1 后缀，系统会自动处理')}</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="api-key">{t('QQ.ApiSettings.apiKey', '访问密钥')}</label>
+            <label htmlFor="api-key">{t('QQ.ChatInterface.Me.ApiSettingsModal.labels.apiKey', '访问密钥')}</label>
             <input
               type="password"
               id="api-key"
               value={config.apiKey}
               onChange={(e) => handleInputChange('apiKey', e.target.value)}
-              placeholder={t('QQ.ApiSettings.placeholder.key', '输入你的API密钥，以 sk- 开头')}
+              placeholder={t('QQ.ChatInterface.Me.ApiSettingsModal.placeholders.key', '输入你的API密钥，以 sk- 开头')}
             />
-            <small className="field-hint">{t('QQ.ApiSettings.hint.key', '密钥会被安全保存，不会泄露给他人')}</small>
+            <small className="field-hint">{t('QQ.ChatInterface.Me.ApiSettingsModal.hints.key', '密钥会被安全保存，不会泄露给他人')}</small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="model-select">{t('QQ.ApiSettings.model', 'AI 模型选择')}</label>
+            <label htmlFor="model-select">{t('QQ.ChatInterface.Me.ApiSettingsModal.labels.model', 'AI 模型选择')}</label>
             <select
               id="model-select"
               value={config.model}
               onChange={(e) => handleInputChange('model', e.target.value)}
             >
-              <option value="">{t('QQ.ApiSettings.placeholder.model', '点击选择你喜欢的AI模型')}</option>
+              <option value="">{t('QQ.ChatInterface.Me.ApiSettingsModal.placeholders.model', '点击选择你喜欢的AI模型')}</option>
               {models.map(model => (
                 <option key={model} value={model}>
                   {model}
-                  {model === config.model && !isCurrentModelAvailable && ` (${t('QQ.ApiSettings.saved', '已保存')})`}
+                  {model === config.model && !isCurrentModelAvailable && ` (${t('QQ.ChatInterface.Me.ApiSettingsModal.status.saved', '已保存')})`}
                 </option>
               ))}
             </select>
             <small className="field-hint">
               {isCurrentModelAvailable 
-                ? t('QQ.ApiSettings.modelHint.diff', '不同模型有不同的特点和能力')
-                : t('QQ.ApiSettings.modelHint.notInList', '当前选择的模型可能不在可用列表中，建议重新获取模型列表')
+                ? t('QQ.ChatInterface.Me.ApiSettingsModal.hints.modelDiff', '不同模型有不同的特点和能力')
+                : t('QQ.ChatInterface.Me.ApiSettingsModal.hints.modelNotInList', '当前选择的模型可能不在可用列表中，建议重新获取模型列表')
               }
             </small>
           </div>
@@ -299,19 +299,19 @@ export default function ApiSettingsModal({
             onClick={fetchModels}
             disabled={isLoadingModels}
           >
-            {isLoadingModels ? t('QQ.ApiSettings.fetching', '正在获取模型列表...') : t('QQ.ApiSettings.fetch', '获取可用模型')}
+            {isLoadingModels ? t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.fetching', '正在获取模型列表...') : t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.fetch', '获取可用模型')}
           </button>
 
 
         </div>
 
         <div className="modal-footer">
-          <button className="cancel-btn" onClick={onClose}>{t('QQ.ApiSettings.cancel', '取消')}</button>
-          <button className="save-btn" onClick={handleSave}>{t('QQ.ApiSettings.save', '保存配置')}</button>
+          <button className="cancel-btn" onClick={onClose}>{t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.cancel', '取消')}</button>
+          <button className="save-btn" onClick={handleSave}>{t('QQ.ChatInterface.Me.ApiSettingsModal.buttons.save', '保存配置')}</button>
         </div>
       </div>
       
-      {/* 保存配置对话框 */}
+      {/* Save Configuration Dialog */}
       <SaveConfigDialog
         isVisible={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}

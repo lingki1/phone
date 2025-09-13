@@ -3,12 +3,12 @@
 import { dataManager } from './dataManager';
 import { PresetConfig, PresetTemplate } from '../types/preset';
 
-// 默认预设模板
+// Default preset templates
 export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   {
     id: 'creative',
-    name: '创意模式',
-    description: '高创造性，适合创意写作和头脑风暴',
+    name: 'Creative Mode',
+    description: 'High creativity, suitable for creative writing and brainstorming',
     category: 'creative',
     config: {
       temperature: 0.9,
@@ -21,8 +21,8 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   },
   {
     id: 'balanced',
-    name: '平衡模式',
-    description: '平衡的创造性和一致性，适合一般对话',
+    name: 'Balanced Mode',
+    description: 'Balanced creativity and consistency, suitable for general conversation',
     category: 'balanced',
     config: {
       temperature: 0.7,
@@ -35,8 +35,8 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   },
   {
     id: 'precise',
-    name: '精确模式',
-    description: '低创造性，高一致性，适合事实性回答',
+    name: 'Precise Mode',
+    description: 'Low creativity, high consistency, suitable for factual answers',
     category: 'precise',
     config: {
       temperature: 0.3,
@@ -49,8 +49,8 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   },
   {
     id: 'concise',
-    name: '简洁模式',
-    description: '简短精炼的回答，适合快速获取信息',
+    name: 'Concise Mode',
+    description: 'Short and concise answers, suitable for quick information retrieval',
     category: 'concise',
     config: {
       temperature: 0.5,
@@ -63,8 +63,8 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   },
   {
     id: 'detailed',
-    name: '详细模式',
-    description: '详细全面的回答，适合深度分析',
+    name: 'Detailed Mode',
+    description: 'Detailed and comprehensive answers, suitable for in-depth analysis',
     category: 'detailed',
     config: {
       temperature: 0.6,
@@ -77,14 +77,14 @@ export const DEFAULT_PRESET_TEMPLATES: PresetTemplate[] = [
   }
 ];
 
-// 预设分类
+// Preset categories
 export const PRESET_CATEGORIES = [
-  { id: 'creative', name: '创意', description: '高创造性预设', icon: '🎨' },
-  { id: 'balanced', name: '平衡', description: '平衡型预设', icon: '⚖️' },
-  { id: 'precise', name: '精确', description: '精确型预设', icon: '🎯' },
-  { id: 'concise', name: '简洁', description: '简洁型预设', icon: '📝' },
-  { id: 'detailed', name: '详细', description: '详细型预设', icon: '📊' },
-  { id: 'custom', name: '自定义', description: '用户自定义预设', icon: '⚙️' }
+  { id: 'creative', name: 'Creative', description: 'High creativity presets', icon: '🎨' },
+  { id: 'balanced', name: 'Balanced', description: 'Balanced presets', icon: '⚖️' },
+  { id: 'precise', name: 'Precise', description: 'Precise presets', icon: '🎯' },
+  { id: 'concise', name: 'Concise', description: 'Concise presets', icon: '📝' },
+  { id: 'detailed', name: 'Detailed', description: 'Detailed presets', icon: '📊' },
+  { id: 'custom', name: 'Custom', description: 'User custom presets', icon: '⚙️' }
 ];
 
 export class PresetManager {
@@ -94,7 +94,7 @@ export class PresetManager {
   private readonly PRESETS_KEY = 'user-presets';
 
   private constructor() {
-    // 私有构造函数，确保单例模式
+    // Private constructor to ensure singleton pattern
   }
 
   public static getInstance(): PresetManager {
@@ -104,7 +104,7 @@ export class PresetManager {
     return PresetManager.instance;
   }
 
-  // 获取所有预设
+  // Get all presets
   public async getAllPresets(): Promise<PresetConfig[]> {
     try {
       await dataManager.initDB();
@@ -112,12 +112,12 @@ export class PresetManager {
       return presets || [];
     } catch (error) {
       console.error('Failed to get presets from database:', error);
-      // 回退到localStorage
+      // Fallback to localStorage
       return this.loadPresetsFromLocalStorage();
     }
   }
 
-  // 获取当前预设
+  // Get current preset
   public async getCurrentPreset(): Promise<PresetConfig | null> {
     if (this.currentPreset) {
       return this.currentPreset;
@@ -130,7 +130,7 @@ export class PresetManager {
         this.currentPreset = presets.find(p => p.id === settings.currentPresetId) || null;
       }
       
-      // 如果没有设置当前预设，使用默认预设
+      // If no current preset is set, use default preset
       if (!this.currentPreset) {
         const presets = await this.getAllPresets();
         this.currentPreset = presets.find(p => p.isDefault) || presets[0] || null;
@@ -143,7 +143,7 @@ export class PresetManager {
     }
   }
 
-  // 设置当前预设
+  // Set current preset
   public async setCurrentPreset(presetId: string): Promise<void> {
     try {
       const presets = await this.getAllPresets();
@@ -155,13 +155,13 @@ export class PresetManager {
 
       this.currentPreset = preset;
       
-      // 保存设置
+      // Save settings
       const settings = this.loadPresetSettingsFromLocalStorage();
       settings.currentPresetId = presetId;
       settings.lastUpdated = Date.now();
       this.savePresetSettingsToLocalStorage(settings);
       
-      // 触发事件
+      // Trigger event
       this.updateAllComponents();
       
       console.log(`Current preset set to: ${preset.name}`);
@@ -171,7 +171,7 @@ export class PresetManager {
     }
   }
 
-  // 创建新预设
+  // Create new preset
   public async createPreset(preset: Omit<PresetConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<PresetConfig> {
     try {
       const newPreset: PresetConfig = {
@@ -197,7 +197,7 @@ export class PresetManager {
     }
   }
 
-  // 更新预设
+  // Update preset
   public async updatePreset(preset: PresetConfig): Promise<void> {
     try {
       const updatedPreset = {
@@ -216,7 +216,7 @@ export class PresetManager {
         this.savePresetsToLocalStorage(presets);
       }
       
-      // 如果更新的是当前预设，也要更新当前预设
+      // If updating current preset, also update current preset
       if (this.currentPreset?.id === preset.id) {
         this.currentPreset = updatedPreset;
       }
@@ -228,7 +228,7 @@ export class PresetManager {
     }
   }
 
-  // 删除预设
+  // Delete preset
   public async deletePreset(presetId: string): Promise<void> {
     try {
       await dataManager.initDB();
@@ -239,7 +239,7 @@ export class PresetManager {
       const filteredPresets = presets.filter(p => p.id !== presetId);
       this.savePresetsToLocalStorage(filteredPresets);
       
-      // 如果删除的是当前预设，重置为默认预设
+      // If deleting current preset, reset to default preset
       if (this.currentPreset?.id === presetId) {
         const defaultPreset = filteredPresets.find(p => p.isDefault) || filteredPresets[0];
         if (defaultPreset) {
@@ -256,18 +256,18 @@ export class PresetManager {
     }
   }
 
-  // 初始化默认预设
+  // Initialize default presets
   public async initializeDefaultPresets(): Promise<void> {
     try {
       const existingPresets = await this.getAllPresets();
       
-      // 检查是否已经存在默认预设（通过名称匹配）
+      // Check if default presets already exist (by name matching)
       const existingPresetNames = existingPresets.map(p => p.name);
       const missingTemplates = DEFAULT_PRESET_TEMPLATES.filter(
         template => !existingPresetNames.includes(template.name)
       );
       
-      // 只为缺失的模板创建预设
+      // Only create presets for missing templates
       if (missingTemplates.length > 0) {
         console.log(`Creating ${missingTemplates.length} missing default presets...`);
         
@@ -287,7 +287,7 @@ export class PresetManager {
         console.log('All default presets already exist, skipping initialization');
       }
       
-      // 检查并修复重复的默认预设
+      // Check and fix duplicate default presets
       await this.cleanupDuplicateDefaultPresets();
     } catch (error) {
       console.error('Failed to initialize default presets:', error);
@@ -295,7 +295,7 @@ export class PresetManager {
     }
   }
 
-  // 清理重复的默认预设
+  // Cleanup duplicate default presets
   private async cleanupDuplicateDefaultPresets(): Promise<void> {
     try {
       const existingPresets = await this.getAllPresets();
@@ -333,7 +333,7 @@ export class PresetManager {
     }
   }
 
-  // 从模板创建预设
+  // Create preset from template
   public async createFromTemplate(templateId: string, customName?: string): Promise<PresetConfig> {
     const template = DEFAULT_PRESET_TEMPLATES.find(t => t.id === templateId);
     if (!template) {
@@ -350,48 +350,48 @@ export class PresetManager {
     return await this.createPreset(preset);
   }
 
-  // 验证预设配置
+  // Validate preset configuration
   public validatePreset(preset: Partial<PresetConfig>): string[] {
     const errors: string[] = [];
 
     if (!preset.name?.trim()) {
-      errors.push('预设名称不能为空');
+      errors.push('Preset name cannot be empty');
     }
 
     if (preset.temperature !== undefined && (preset.temperature < 0 || preset.temperature > 2)) {
-      errors.push('温度值必须在 0-2 之间');
+      errors.push('Temperature value must be between 0-2');
     }
 
     if (preset.maxTokens !== undefined && (preset.maxTokens < 0 || preset.maxTokens > 63000)) {
-      errors.push('最大令牌数必须在 0-63000 之间，0表示无限制');
+      errors.push('Max tokens must be between 0-63000, 0 means unlimited');
     }
 
     if (preset.topP !== undefined && (preset.topP < 0 || preset.topP > 1)) {
-      errors.push('Top P 值必须在 0-1 之间');
+      errors.push('Top P value must be between 0-1');
     }
 
     if (preset.frequencyPenalty !== undefined && (preset.frequencyPenalty < -2 || preset.frequencyPenalty > 2)) {
-      errors.push('频率惩罚必须在 -2.0 到 2.0 之间');
+      errors.push('Frequency penalty must be between -2.0 to 2.0');
     }
 
     if (preset.presencePenalty !== undefined && (preset.presencePenalty < -2 || preset.presencePenalty > 2)) {
-      errors.push('存在惩罚必须在 -2.0 到 2.0 之间');
+      errors.push('Presence penalty must be between -2.0 to 2.0');
     }
 
     return errors;
   }
 
-  // 获取预设模板
+  // Get preset templates
   public getPresetTemplates(): PresetTemplate[] {
     return DEFAULT_PRESET_TEMPLATES;
   }
 
-  // 获取预设分类
+  // Get preset categories
   public getPresetCategories() {
     return PRESET_CATEGORIES;
   }
 
-  // 手动清理重复的默认预设（供用户主动调用）
+  // Manually cleanup duplicate default presets (for user-initiated calls)
   public async cleanupDuplicatePresets(): Promise<{ cleaned: number; message: string }> {
     try {
       const existingPresets = await this.getAllPresets();
@@ -432,18 +432,18 @@ export class PresetManager {
       }
       
       if (totalCleaned > 0) {
-        const message = `成功清理了 ${totalCleaned} 个重复的预设：${cleanedPresets.join(', ')}`;
+        const message = `Successfully cleaned up ${totalCleaned} duplicate presets: ${cleanedPresets.join(', ')}`;
         return { cleaned: totalCleaned, message };
       } else {
-        return { cleaned: 0, message: '没有发现重复的预设' };
+        return { cleaned: 0, message: 'No duplicate presets found' };
       }
     } catch (error) {
       console.error('Failed to cleanup duplicate presets:', error);
-      throw new Error(`清理重复预设失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(`Failed to cleanup duplicate presets: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // 私有方法：从localStorage加载预设
+  // Private method: load presets from localStorage
   private loadPresetsFromLocalStorage(): PresetConfig[] {
     try {
       const presetsData = localStorage.getItem(this.PRESETS_KEY);
@@ -454,7 +454,7 @@ export class PresetManager {
     }
   }
 
-  // 私有方法：保存预设到localStorage
+  // Private method: save presets to localStorage
   private savePresetsToLocalStorage(presets: PresetConfig[]): void {
     try {
       localStorage.setItem(this.PRESETS_KEY, JSON.stringify(presets));
@@ -463,7 +463,7 @@ export class PresetManager {
     }
   }
 
-  // 私有方法：从localStorage加载预设设置
+  // Private method: load presets from localStorage设置
   private loadPresetSettingsFromLocalStorage(): { currentPresetId?: string; lastUpdated?: number } {
     try {
       const settingsData = localStorage.getItem(this.STORAGE_KEY);
@@ -483,14 +483,14 @@ export class PresetManager {
     }
   }
 
-  // 私有方法：更新所有组件
+  // Private method: update all components
   private updateAllComponents(): void {
-    // 触发自定义事件，通知其他组件预设已更改
+    // Trigger custom event to notify other components that preset has changed
     window.dispatchEvent(new CustomEvent('presetChanged', {
       detail: { preset: this.currentPreset }
     }));
   }
 }
 
-// 导出单例实例
+// Export singleton instance
 export const presetManager = PresetManager.getInstance(); 

@@ -78,40 +78,40 @@ export interface UserThemeSettings {
 export const AVAILABLE_THEMES: Theme[] = [
   {
     id: 'default',
-    name: '默认白色',
-    description: '简洁清爽的白色主题',
+    name: 'Default White',
+    description: 'Clean and fresh white theme',
     className: '',
     category: 'basic',
     preview: { primary: '#ffffff', secondary: '#f8f9fa', accent: '#007bff' }
   },
   {
     id: 'dark',
-    name: '深色模式',
-    description: '护眼的深色主题',
+    name: 'Dark Mode',
+    description: 'Eye-friendly dark theme',
     className: 'theme-dark',
     category: 'basic',
     preview: { primary: '#1a1a1a', secondary: '#2d2d2d', accent: '#4dabf7' }
   },
   {
     id: 'masculine',
-    name: '男性风格',
-    description: '深蓝商务风格，稳重大气',
+    name: 'Masculine Style',
+    description: 'Deep blue business style, stable and elegant',
     className: 'theme-masculine',
     category: 'gender',
     preview: { primary: '#0f1419', secondary: '#1a2332', accent: '#00d4ff' }
   },
   {
     id: 'feminine',
-    name: '女性风格',
-    description: '粉色温柔风格，优雅浪漫',
+    name: 'Feminine Style',
+    description: 'Pink gentle style, elegant and romantic',
     className: 'theme-feminine',
     category: 'gender',
     preview: { primary: '#fdf2f8', secondary: '#fce7f3', accent: '#f472b6' }
   },
   {
     id: 'anime',
-    name: '二次元',
-    description: '紫色梦幻风格，充满想象',
+    name: 'Anime Style',
+    description: 'Purple dreamy style, full of imagination',
     className: 'theme-anime',
     category: 'style',
     preview: { 
@@ -123,16 +123,16 @@ export const AVAILABLE_THEMES: Theme[] = [
   },
   {
     id: 'cute',
-    name: '可爱风格',
-    description: '橙色活泼风格，青春可爱',
+    name: 'Cute Style',
+    description: 'Orange lively style, youthful and cute',
     className: 'theme-cute',
     category: 'style',
     preview: { primary: '#fff7ed', secondary: '#ffedd5', accent: '#ff8c42' }
   },
   {
     id: 'metal',
-    name: '金属风格',
-    description: '银灰科技风格，现代简约',
+    name: 'Metal Style',
+    description: 'Silver-gray tech style, modern and minimalist',
     className: 'theme-metal',
     category: 'style',
     preview: { 
@@ -144,16 +144,16 @@ export const AVAILABLE_THEMES: Theme[] = [
   },
   {
     id: 'forest',
-    name: '森林主题',
-    description: '绿色自然风格，清新自然',
+    name: 'Forest Theme',
+    description: 'Green natural style, fresh and natural',
     className: 'theme-forest',
     category: 'nature',
     preview: { primary: '#f0fdf4', secondary: '#dcfce7', accent: '#16a34a' }
   },
   {
     id: 'ocean',
-    name: '海洋主题',
-    description: '蓝绿渐变风格，宁静深邃',
+    name: 'Ocean Theme',
+    description: 'Blue-green gradient style, peaceful and deep',
     className: 'theme-ocean',
     category: 'nature',
     preview: { 
@@ -165,8 +165,8 @@ export const AVAILABLE_THEMES: Theme[] = [
   },
   {
     id: 'sunset',
-    name: '夕阳主题',
-    description: '橙红渐变风格，温暖浪漫',
+    name: 'Sunset Theme',
+    description: 'Orange-red gradient style, warm and romantic',
     className: 'theme-sunset',
     category: 'nature',
     preview: { 
@@ -178,8 +178,8 @@ export const AVAILABLE_THEMES: Theme[] = [
   },
   {
     id: 'minimal',
-    name: '极简主题',
-    description: '黑白简约风格，纯净优雅',
+    name: 'Minimal Theme',
+    description: 'Black and white minimalist style, pure and elegant',
     className: 'theme-minimal',
     category: 'basic',
     preview: { primary: '#ffffff', secondary: '#f9f9f9', accent: '#000000' }
@@ -293,14 +293,14 @@ export class ThemeManager {
       
       console.log(`Theme changed to: ${themeId}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // 主题切换失败状态
       themeStateManager.failThemeChange(errorMessage);
       hideThemeLoading();
       
       console.error('Failed to set theme:', error);
-      showThemeError(`主题切换失败: ${errorMessage}`);
+      showThemeError(`Theme switching failed: ${errorMessage}`);
       
       // 发生错误时回退到默认主题
       if (themeId !== 'default') {
@@ -539,11 +539,11 @@ export class ThemeManager {
    */
   public getCategories(): Array<{id: string, name: string}> {
     return [
-      { id: 'basic', name: '基础主题' },
-      { id: 'gender', name: '性别风格' },
-      { id: 'style', name: '个性风格' },
-      { id: 'nature', name: '自然主题' },
-      { id: 'custom', name: '自定义主题' }
+      { id: 'basic', name: 'Basic Themes' },
+      { id: 'gender', name: 'Gender Styles' },
+      { id: 'style', name: 'Personality Styles' },
+      { id: 'nature', name: 'Nature Themes' },
+      { id: 'custom', name: 'Custom Themes' }
     ];
   }
 
@@ -642,7 +642,7 @@ export class ThemeManager {
         --theme-error-color: ${colors.errorColor};
         --theme-info-color: ${colors.infoColor};
         
-        /* 气泡样式 */
+        /* Bubble styles */
         --theme-user-bubble-bg: ${colors.bubbleStyle.userBubble.bg};
         --theme-user-bubble-text: ${colors.bubbleStyle.userBubble.text};
         --theme-user-bubble-radius: ${colors.bubbleStyle.userBubble.borderRadius};

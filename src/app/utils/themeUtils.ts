@@ -3,11 +3,11 @@
 import { Theme, ThemeVariables } from '../types/theme';
 
 /**
- * 主题工具函数集合
+ * Theme utility functions collection
  */
 
 /**
- * 检查浏览器是否支持CSS变量
+ * Check if browser supports CSS variables
  */
 export function isCSSVariablesSupported(): boolean {
   if (typeof window === 'undefined') return false;
@@ -15,7 +15,7 @@ export function isCSSVariablesSupported(): boolean {
 }
 
 /**
- * 获取CSS变量的值
+ * Get CSS variable value
  */
 export function getCSSVariable(variableName: string): string {
   if (typeof window === 'undefined') return '';
@@ -23,7 +23,7 @@ export function getCSSVariable(variableName: string): string {
 }
 
 /**
- * 设置CSS变量的值
+ * Set CSS variable value
  */
 export function setCSSVariable(variableName: string, value: string): void {
   if (typeof window === 'undefined') return;
@@ -31,7 +31,7 @@ export function setCSSVariable(variableName: string, value: string): void {
 }
 
 /**
- * 批量设置CSS变量
+ * Batch set CSS variables
  */
 export function setCSSVariables(variables: Partial<ThemeVariables>): void {
   if (typeof window === 'undefined') return;
@@ -44,7 +44,7 @@ export function setCSSVariables(variables: Partial<ThemeVariables>): void {
 }
 
 /**
- * 移除CSS变量
+ * Remove CSS variable
  */
 export function removeCSSVariable(variableName: string): void {
   if (typeof window === 'undefined') return;
@@ -52,18 +52,18 @@ export function removeCSSVariable(variableName: string): void {
 }
 
 /**
- * 获取主题的对比度比例
+ * Get theme contrast ratio
  */
 export function getContrastRatio(color1: string, color2: string): number {
-  // 简化的对比度计算，实际项目中可能需要更精确的算法
+  // Simplified contrast calculation, may need more precise algorithm in actual projects
   const getLuminance = (color: string): number => {
-    // 移除#号并转换为RGB
+    // Remove # and convert to RGB
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16) / 255;
     const g = parseInt(hex.substr(2, 2), 16) / 255;
     const b = parseInt(hex.substr(4, 2), 16) / 255;
     
-    // 计算相对亮度
+    // Calculate relative luminance
     const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
   };
@@ -77,17 +77,17 @@ export function getContrastRatio(color1: string, color2: string): number {
 }
 
 /**
- * 检查主题是否符合可访问性标准
+ * Check if theme meets accessibility standards
  */
 export function isThemeAccessible(theme: Theme): boolean {
   const { primary, secondary, accent } = theme.preview;
   
-  // 检查主要颜色组合的对比度
+  // Check contrast of main color combinations
   const primarySecondaryRatio = getContrastRatio(primary, secondary);
   const primaryAccentRatio = getContrastRatio(primary, accent);
   const secondaryAccentRatio = getContrastRatio(secondary, accent);
   
-  // WCAG AA标准要求对比度至少为4.5:1
+  // WCAG AA standard requires contrast ratio of at least 4.5:1
   const minRatio = 4.5;
   
   return primarySecondaryRatio >= minRatio || 
@@ -96,7 +96,7 @@ export function isThemeAccessible(theme: Theme): boolean {
 }
 
 /**
- * 生成主题预览样式
+ * Generate theme preview style
  */
 export function generateThemePreviewStyle(theme: Theme): React.CSSProperties {
   const { primary, secondary, accent, gradient } = theme.preview;
@@ -105,13 +105,13 @@ export function generateThemePreviewStyle(theme: Theme): React.CSSProperties {
     backgroundColor: primary,
     color: getContrastRatio(primary, '#000000') > getContrastRatio(primary, '#ffffff') ? '#000000' : '#ffffff',
     border: `2px solid ${secondary}`,
-    boxShadow: `0 2px 8px ${accent}33`, // 33 为20%透明度的十六进制
+    boxShadow: `0 2px 8px ${accent}33`, // 33 is 20% opacity in hexadecimal
     background: gradient || primary,
   };
 }
 
 /**
- * 获取主题的主色调
+ * Get theme primary color
  */
 export function getThemePrimaryColor(themeId: string): string {
   const themeColorMap: Record<string, string> = {
@@ -132,7 +132,7 @@ export function getThemePrimaryColor(themeId: string): string {
 }
 
 /**
- * 判断主题是否为深色主题
+ * Determine if theme is dark theme
  */
 export function isDarkTheme(theme: Theme): boolean {
   const darkThemes = ['dark', 'masculine'];
@@ -140,7 +140,7 @@ export function isDarkTheme(theme: Theme): boolean {
 }
 
 /**
- * 获取主题的CSS类名
+ * Get theme CSS class name
  */
 export function getThemeClassName(themeId: string): string {
   if (themeId === 'default') return '';
@@ -148,14 +148,14 @@ export function getThemeClassName(themeId: string): string {
 }
 
 /**
- * 创建主题切换的CSS过渡效果
+ * Create CSS transition effect for theme switching
  */
 export function createThemeTransition(duration: number = 300): string {
   return `background-color ${duration}ms ease-in-out, color ${duration}ms ease-in-out, border-color ${duration}ms ease-in-out, box-shadow ${duration}ms ease-in-out`;
 }
 
 /**
- * 检查用户是否偏好减少动画
+ * Check if user prefers reduced motion
  */
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -163,7 +163,7 @@ export function prefersReducedMotion(): boolean {
 }
 
 /**
- * 应用主题过渡效果
+ * Apply theme transition effect
  */
 export function applyThemeTransition(element: HTMLElement, duration?: number): void {
   if (prefersReducedMotion()) return;
@@ -171,14 +171,14 @@ export function applyThemeTransition(element: HTMLElement, duration?: number): v
   const transition = createThemeTransition(duration);
   element.style.transition = transition;
   
-  // 在过渡完成后移除过渡样式，避免影响其他动画
+  // Remove transition style after completion to avoid affecting other animations
   setTimeout(() => {
     element.style.transition = '';
   }, duration || 300);
 }
 
 /**
- * 获取系统偏好的颜色方案
+ * Get system preferred color scheme
  */
 export function getSystemColorScheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light';
@@ -186,7 +186,7 @@ export function getSystemColorScheme(): 'light' | 'dark' {
 }
 
 /**
- * 根据系统偏好推荐主题
+ * Recommend theme based on system preference
  */
 export function getRecommendedTheme(): string {
   const systemScheme = getSystemColorScheme();
@@ -194,22 +194,22 @@ export function getRecommendedTheme(): string {
 }
 
 /**
- * 验证主题ID是否有效
+ * Validate if theme ID is valid
  */
 export function isValidThemeId(themeId: string, availableThemes: Theme[]): boolean {
   return availableThemes.some(theme => theme.id === themeId);
 }
 
 /**
- * 获取主题的友好显示名称
+ * Get theme friendly display name
  */
 export function getThemeDisplayName(themeId: string, availableThemes: Theme[]): string {
   const theme = availableThemes.find(t => t.id === themeId);
-  return theme?.name || '未知主题';
+  return theme?.name || 'Unknown Theme';
 }
 
 /**
- * 生成主题的唯一标识符
+ * Generate unique identifier for theme
  */
 export function generateThemeHash(theme: Theme): string {
   const data = JSON.stringify({
@@ -218,12 +218,12 @@ export function generateThemeHash(theme: Theme): string {
     preview: theme.preview
   });
   
-  // 简单的哈希函数
+  // Simple hash function
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     const char = data.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // 转换为32位整数
+    hash = hash & hash; // Convert to 32-bit integer
   }
   
   return Math.abs(hash).toString(36);

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Theme, CustomThemeColors } from '../../utils/themeManager';
 import { themeManager } from '../../utils/themeManager';
+import { useI18n } from '../i18n/I18nProvider';
 import './CustomThemeEditor.css';
 
 interface CustomThemeEditorProps {
@@ -11,32 +12,32 @@ interface CustomThemeEditorProps {
   editingTheme?: Theme;
 }
 
-// 默认颜色配置
+// Default color configuration
 const DEFAULT_COLORS: CustomThemeColors = {
-  // 背景色
+  // Background colors
   bgPrimary: '#ffffff',
   bgSecondary: '#f8f9fa',
   bgTertiary: '#e9ecef',
   
-  // 文本色
+  // Text colors
   textPrimary: '#1f1f1f',
   textSecondary: '#6c757d',
   textTertiary: '#adb5bd',
   
-  // 强调色
+  // Accent colors
   accentColor: '#007bff',
   accentHover: '#0056b3',
   
-  // 边框色
+  // Border colors
   borderColor: '#dee2e6',
   borderLight: '#e9ecef',
   
-  // 阴影
+  // Shadows
   shadowLight: '0 1px 3px rgba(0, 0, 0, 0.1)',
   shadowMedium: '0 2px 8px rgba(0, 0, 0, 0.15)',
   shadowHeavy: '0 4px 16px rgba(0, 0, 0, 0.2)',
   
-  // 气泡样式
+  // Bubble styles
   bubbleStyle: {
     userBubble: {
       bg: '#007bff',
@@ -50,7 +51,7 @@ const DEFAULT_COLORS: CustomThemeColors = {
     }
   },
   
-  // 特殊元素
+  // Special elements
   successColor: '#28a745',
   warningColor: '#ffc107',
   errorColor: '#dc3545',
@@ -58,13 +59,14 @@ const DEFAULT_COLORS: CustomThemeColors = {
 };
 
 export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: CustomThemeEditorProps) {
+  const { t } = useI18n();
   const [themeName, setThemeName] = useState('');
   const [themeDescription, setThemeDescription] = useState('');
   const [colors, setColors] = useState<CustomThemeColors>(DEFAULT_COLORS);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 初始化编辑模式
+  // Initialize edit mode
   useEffect(() => {
     if (editingTheme) {
       setThemeName(editingTheme.name);
@@ -75,7 +77,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
     }
   }, [editingTheme]);
 
-  // 更新颜色配置
+  // Update color configuration
   const updateColor = (path: string, value: string) => {
     setColors(prev => {
       const newColors = { ...prev };
@@ -91,24 +93,24 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
     });
   };
 
-  // 预览主题
+  // Preview theme
   const handlePreview = () => {
     if (!themeName.trim()) {
-      alert('请输入主题名称');
+      alert(t('Theme.CustomThemeEditor.errors.enterThemeName', '请输入主题名称'));
       return;
     }
     setIsPreviewMode(true);
   };
 
-  // 取消预览
+  // Cancel preview
   const handleCancelPreview = () => {
     setIsPreviewMode(false);
   };
 
-  // 保存主题
+  // Save theme
   const handleSave = async () => {
     if (!themeName.trim()) {
-      alert('请输入主题名称');
+      alert(t('Theme.CustomThemeEditor.errors.enterThemeName', '请输入主题名称'));
       return;
     }
 
@@ -132,7 +134,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
       await themeManager.saveCustomTheme(theme);
       
-      // 保存成功后，触发主题更新事件，让其他组件知道有新主题
+      // After successful save, trigger theme update event to let other components know there is a new theme
       const event = new CustomEvent('customThemeSaved', {
         detail: { theme }
       });
@@ -141,13 +143,13 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
       onSave(theme);
     } catch (error) {
       console.error('Failed to save custom theme:', error);
-      alert('保存主题失败，请重试');
+      alert(t('Theme.CustomThemeEditor.errors.saveFailed', '保存主题失败，请重试'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  // 重置颜色
+  // Reset colors
   const handleReset = () => {
     setColors(DEFAULT_COLORS);
   };
@@ -156,22 +158,22 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
     <div className="groupmember-custom-theme-editor">
       <div className="groupmember-editor-container">
         <div className="groupmember-editor-header">
-          <h2>{editingTheme ? '编辑自定义主题' : '创建自定义主题'}</h2>
+          <h2>{editingTheme ? t('Theme.CustomThemeEditor.title.edit', '编辑自定义主题') : t('Theme.CustomThemeEditor.title.create', '创建自定义主题')}</h2>
           <div className="groupmember-editor-actions">
             <button 
               className="groupmember-preview-btn" 
               onClick={isPreviewMode ? handleCancelPreview : handlePreview}
               disabled={!themeName.trim()}
             >
-              {isPreviewMode ? '取消预览' : '预览'}
+              {isPreviewMode ? t('Theme.CustomThemeEditor.buttons.cancelPreview', '取消预览') : t('Theme.CustomThemeEditor.buttons.preview', '预览')}
             </button>
-            <button className="groupmember-cancel-btn" onClick={onCancel}>取消</button>
+            <button className="groupmember-cancel-btn" onClick={onCancel}>{t('Theme.CustomThemeEditor.buttons.cancel', '取消')}</button>
             <button 
               className="groupmember-save-btn" 
               onClick={handleSave}
               disabled={isSaving || !themeName.trim()}
             >
-              {isSaving ? '保存中...' : '保存'}
+              {isSaving ? t('Theme.CustomThemeEditor.buttons.saving', '保存中...') : t('Theme.CustomThemeEditor.buttons.save', '保存')}
             </button>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
           {/* 预览区域 */}
           {isPreviewMode && (
             <div className="groupmember-preview-section">
-              <h3>主题预览</h3>
+              <h3>{t('Theme.CustomThemeEditor.preview.title', '主题预览')}</h3>
               <div className="groupmember-preview-container">
                 <div 
                   className="groupmember-preview-window"
@@ -214,8 +216,8 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   <div className="groupmember-preview-header">
                     <div className="groupmember-preview-avatar"></div>
                     <div className="groupmember-preview-info">
-                      <div className="groupmember-preview-name">AI助手</div>
-                      <div className="groupmember-preview-status">在线</div>
+                      <div className="groupmember-preview-name">{t('Theme.CustomThemeEditor.preview.aiAssistant', 'AI助手')}</div>
+                      <div className="groupmember-preview-status">{t('Theme.CustomThemeEditor.preview.online', '在线')}</div>
                     </div>
                   </div>
                   
@@ -223,20 +225,20 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                     <div className="groupmember-preview-message groupmember-preview-message-ai">
                       <div className="groupmember-preview-avatar-small"></div>
                       <div className="groupmember-preview-bubble groupmember-preview-bubble-ai">
-                        你好！这是AI消息的预览效果
+                        {t('Theme.CustomThemeEditor.preview.aiMessage', '你好！这是AI消息的预览效果')}
                       </div>
                     </div>
                     
                     <div className="groupmember-preview-message groupmember-preview-message-user">
                       <div className="groupmember-preview-bubble groupmember-preview-bubble-user">
-                        这是用户消息的预览效果
+                        {t('Theme.CustomThemeEditor.preview.userMessage', '这是用户消息的预览效果')}
                       </div>
                     </div>
                   </div>
                   
                   <div className="groupmember-preview-input">
-                    <input type="text" placeholder="输入消息..." />
-                    <button>发送</button>
+                    <input type="text" placeholder={t('Theme.CustomThemeEditor.preview.inputPlaceholder', '输入消息...')} />
+                    <button>{t('Theme.CustomThemeEditor.preview.send', '发送')}</button>
                   </div>
                 </div>
               </div>
@@ -245,25 +247,25 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
           {/* 基本信息 */}
           <div className="groupmember-editor-section">
-            <h3>基本信息</h3>
+            <h3>{t('Theme.CustomThemeEditor.basicInfo.title', '基本信息')}</h3>
             <div className="groupmember-form-group">
-              <label htmlFor="theme-name">主题名称</label>
+              <label htmlFor="theme-name">{t('Theme.CustomThemeEditor.basicInfo.themeName', '主题名称')}</label>
               <input
                 id="theme-name"
                 type="text"
                 value={themeName}
                 onChange={(e) => setThemeName(e.target.value)}
-                placeholder="输入主题名称"
+                placeholder={t('Theme.CustomThemeEditor.basicInfo.themeNamePlaceholder', '输入主题名称')}
                 maxLength={20}
               />
             </div>
             <div className="groupmember-form-group">
-              <label htmlFor="theme-description">主题描述</label>
+              <label htmlFor="theme-description">{t('Theme.CustomThemeEditor.basicInfo.themeDescription', '主题描述')}</label>
               <textarea
                 id="theme-description"
                 value={themeDescription}
                 onChange={(e) => setThemeDescription(e.target.value)}
-                placeholder="输入主题描述（可选）"
+                placeholder={t('Theme.CustomThemeEditor.basicInfo.themeDescriptionPlaceholder', '输入主题描述（可选）')}
                 maxLength={100}
                 rows={2}
               />
@@ -273,16 +275,16 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
           {/* 颜色配置 */}
           <div className="groupmember-editor-section">
             <div className="groupmember-section-header">
-              <h3>颜色配置</h3>
-              <button className="groupmember-reset-btn" onClick={handleReset}>重置</button>
+              <h3>{t('Theme.CustomThemeEditor.colorConfig.title', '颜色配置')}</h3>
+              <button className="groupmember-reset-btn" onClick={handleReset}>{t('Theme.CustomThemeEditor.colorConfig.reset', '重置')}</button>
             </div>
 
             {/* 背景色 */}
             <div className="groupmember-color-group">
-              <h4>背景色</h4>
+              <h4>{t('Theme.CustomThemeEditor.colorConfig.backgroundColors', '背景色')}</h4>
               <div className="groupmember-color-grid">
                 <div className="groupmember-color-item">
-                  <label>主背景</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.primaryBackground', '主背景')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -298,7 +300,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>次背景</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.secondaryBackground', '次背景')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -314,7 +316,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>第三背景</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.tertiaryBackground', '第三背景')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -334,10 +336,10 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
             {/* 文本色 */}
             <div className="groupmember-color-group">
-              <h4>文本色</h4>
+              <h4>{t('Theme.CustomThemeEditor.colorConfig.textColors', '文本色')}</h4>
               <div className="groupmember-color-grid">
                 <div className="groupmember-color-item">
-                  <label>主文本</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.primaryText', '主文本')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -353,7 +355,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>次文本</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.secondaryText', '次文本')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -369,7 +371,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>第三文本</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.tertiaryText', '第三文本')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -389,10 +391,10 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
             {/* 强调色 */}
             <div className="groupmember-color-group">
-              <h4>强调色</h4>
+              <h4>{t('Theme.CustomThemeEditor.colorConfig.accentColors', '强调色')}</h4>
               <div className="groupmember-color-grid">
                 <div className="groupmember-color-item">
-                  <label>主强调色</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.primaryAccent', '主强调色')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -408,7 +410,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>强调色悬停</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.accentHover', '强调色悬停')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -428,13 +430,13 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
             {/* 气泡样式 */}
             <div className="groupmember-color-group">
-              <h4>气泡样式</h4>
+              <h4>{t('Theme.CustomThemeEditor.colorConfig.bubbleStyles', '气泡样式')}</h4>
               <div className="groupmember-bubble-style-group">
                 <div className="groupmember-bubble-style-item">
-                  <h5>用户气泡</h5>
+                  <h5>{t('Theme.CustomThemeEditor.colorConfig.userBubble', '用户气泡')}</h5>
                   <div className="groupmember-color-grid">
                     <div className="groupmember-color-item">
-                      <label>背景色</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.backgroundColor', '背景色')}</label>
                       <div className="groupmember-color-input-group">
                         <input
                           type="color"
@@ -450,7 +452,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                       </div>
                     </div>
                     <div className="groupmember-color-item">
-                      <label>文字色</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.textColor', '文字色')}</label>
                       <div className="groupmember-color-input-group">
                         <input
                           type="color"
@@ -466,25 +468,25 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                       </div>
                     </div>
                     <div className="groupmember-color-item">
-                      <label>圆角样式</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.borderRadius', '圆角样式')}</label>
                       <select
                         value={colors.bubbleStyle.userBubble.borderRadius}
                         onChange={(e) => updateColor('bubbleStyle.userBubble.borderRadius', e.target.value)}
                       >
-                        <option value="18px 18px 4px 18px">标准圆角</option>
-                        <option value="18px">全圆角</option>
-                        <option value="8px">小圆角</option>
-                        <option value="4px">直角</option>
+                        <option value="18px 18px 4px 18px">{t('Theme.CustomThemeEditor.colorConfig.standardRadius', '标准圆角')}</option>
+                        <option value="18px">{t('Theme.CustomThemeEditor.colorConfig.fullRadius', '全圆角')}</option>
+                        <option value="8px">{t('Theme.CustomThemeEditor.colorConfig.smallRadius', '小圆角')}</option>
+                        <option value="4px">{t('Theme.CustomThemeEditor.colorConfig.noRadius', '直角')}</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
                 <div className="groupmember-bubble-style-item">
-                  <h5>AI气泡</h5>
+                  <h5>{t('Theme.CustomThemeEditor.colorConfig.aiBubble', 'AI气泡')}</h5>
                   <div className="groupmember-color-grid">
                     <div className="groupmember-color-item">
-                      <label>背景色</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.backgroundColor', '背景色')}</label>
                       <div className="groupmember-color-input-group">
                         <input
                           type="color"
@@ -500,7 +502,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                       </div>
                     </div>
                     <div className="groupmember-color-item">
-                      <label>文字色</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.textColor', '文字色')}</label>
                       <div className="groupmember-color-input-group">
                         <input
                           type="color"
@@ -516,15 +518,15 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                       </div>
                     </div>
                     <div className="groupmember-color-item">
-                      <label>圆角样式</label>
+                      <label>{t('Theme.CustomThemeEditor.colorConfig.borderRadius', '圆角样式')}</label>
                       <select
                         value={colors.bubbleStyle.aiBubble.borderRadius}
                         onChange={(e) => updateColor('bubbleStyle.aiBubble.borderRadius', e.target.value)}
                       >
-                        <option value="18px 18px 18px 4px">标准圆角</option>
-                        <option value="18px">全圆角</option>
-                        <option value="8px">小圆角</option>
-                        <option value="4px">直角</option>
+                        <option value="18px 18px 18px 4px">{t('Theme.CustomThemeEditor.colorConfig.standardRadius', '标准圆角')}</option>
+                        <option value="18px">{t('Theme.CustomThemeEditor.colorConfig.fullRadius', '全圆角')}</option>
+                        <option value="8px">{t('Theme.CustomThemeEditor.colorConfig.smallRadius', '小圆角')}</option>
+                        <option value="4px">{t('Theme.CustomThemeEditor.colorConfig.noRadius', '直角')}</option>
                       </select>
                     </div>
                   </div>
@@ -534,10 +536,10 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
 
             {/* 特殊颜色 */}
             <div className="groupmember-color-group">
-              <h4>特殊颜色</h4>
+              <h4>{t('Theme.CustomThemeEditor.colorConfig.specialColors', '特殊颜色')}</h4>
               <div className="groupmember-color-grid">
                 <div className="groupmember-color-item">
-                  <label>成功色</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.successColor', '成功色')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -553,7 +555,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>警告色</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.warningColor', '警告色')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -569,7 +571,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>错误色</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.errorColor', '错误色')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"
@@ -585,7 +587,7 @@ export default function CustomThemeEditor({ onSave, onCancel, editingTheme }: Cu
                   </div>
                 </div>
                 <div className="groupmember-color-item">
-                  <label>信息色</label>
+                  <label>{t('Theme.CustomThemeEditor.colorConfig.infoColor', '信息色')}</label>
                   <div className="groupmember-color-input-group">
                     <input
                       type="color"

@@ -940,6 +940,359 @@
           }
         }
       },
+      "Recollection": {
+        "RecollectionPage": {
+          "loading": "加载中...",
+          "title": "回忆",
+          "count": "共 {{count}} 条",
+          "logs": {
+            "bottomNavClick": "RecollectionPage - 底部导航点击:",
+            "navigateToChat": "RecollectionPage - 触发navigateToChat事件",
+            "navigateToDiscover": "RecollectionPage - 触发navigateToDiscover事件",
+            "navigateToMe": "RecollectionPage - 触发navigateToMe事件"
+          }
+        },
+        "RecollectionList": {
+          "loading": "加载回忆中...",
+          "retry": "重新加载",
+          "unknown": "未知",
+          "messageCount": "{{count}} 条消息",
+          "delete": {
+            "title": "删除回忆"
+          },
+          "empty": {
+            "title": "暂无回忆记录",
+            "description": "还没有生成过记忆总结，快去聊天界面生成您的第一份回忆吧！"
+          },
+          "confirm": {
+            "title": "确认删除",
+            "question": "确定要删除这条回忆吗？",
+            "warning": "删除后将无法恢复，此操作会同时从世界书中移除该条目。",
+            "titleLabel": "回忆标题：",
+            "createdAtLabel": "创建时间：",
+            "cancel": "取消",
+            "deleting": "删除中...",
+            "confirm": "确认删除"
+          },
+          "logs": {
+            "loaded": "加载回忆条目: {{count}} 条",
+            "deleted": "回忆条目已删除:"
+          },
+          "errors": {
+            "loadFailed": "加载回忆条目失败:",
+            "loadFailedRetry": "加载回忆条目失败，请重试",
+            "cannotDelete": "无法删除：缺少条目ID",
+            "deleteFailed": "删除回忆条目失败:",
+            "deleteFailedRetry": "删除失败，请重试"
+          },
+          "success": {
+            "deleted": "回忆条目已删除"
+          }
+        },
+        "RecollectionDetail": {
+          "unknown": "未知",
+          "defaultTitle": "回忆详情",
+          "messageCount": "{{count}} 条消息",
+          "copied": "内容已复制到剪贴板",
+          "back": {
+            "title": "返回列表"
+          },
+          "copy": {
+            "title": "复制内容"
+          }
+        },
+        "MemorySummary": {
+          "title": {
+            "generate": "生成记忆总结"
+          },
+          "button": "记忆总结",
+          "header": "记忆总结",
+          "generating": "正在生成记忆总结...",
+          "generatingLocked": "正在生成中，无法关闭",
+          "lockedNotice": "生成过程中窗口已锁定，请耐心等待",
+          "streamingPreview": "实时生成预览：",
+          "retry": "重试",
+          "resultTitle": "总结内容：",
+          "processStatus": "处理状态",
+          "resultLabel": "结果：",
+          "resultBytes": "已把 {{bytes}} 字节内容总结完成",
+          "save": "保存",
+          "regenerate": "重新生成",
+          "complete": "完成",
+          "startTip1": "点击\"生成总结\"按钮，AI将根据您与{{name}}的聊天记录，创作一篇优美的回忆小说。",
+          "startTip2": "总结将自动保存到世界书的\"recollection\"分类中。",
+          "pickRange": "选择要总结的消息范围：",
+          "from": "从",
+          "to": "到",
+          "items": "条",
+          "total": "总消息数：{{total}} 条",
+          "rangeStat": "将总结第 {{start}} 到第 {{end}} 条消息（共 {{count}} 条）",
+          "generate": "生成总结",
+          "close": "关闭",
+          "clickToClose": "点击关闭",
+          "source": {
+            "online": "[线上]",
+            "story": "[剧情]"
+          },
+          "role": {
+            "user": "用户"
+          },
+          "logs": {
+            "savedToWorldBook": "记忆总结已保存到世界书:"
+          },
+          "errors": {
+            "apiConfigRequired": "请先设置API配置才能使用记忆总结功能",
+            "noChatRecords": "没有找到聊天记录，无法生成总结",
+            "saveToWorldBookFailed": "保存到世界书失败:",
+            "generateFailed": "生成记忆总结失败:",
+            "generateFailedRetry": "生成总结失败，请重试"
+          },
+          "success": {
+            "saved": "记忆总结已自动保存到世界书！"
+          }
+        }
+      },
+      "Me": {
+        "MePage": {
+          "loading": "加载中...",
+          "defaultUser": "用户",
+          "defaultBio": "这个人很懒，什么都没写~",
+          "balance": {
+            "label": "我的余额",
+            "howToGet": "如何获得余额"
+          },
+          "balanceInfo": {
+            "title": "虚拟货币说明",
+            "description1": "此为虚拟货币，您可以通过与你创建AI角色聊天，AI角色会转账和给你红包。",
+            "description2": "此虚拟货币可以用于购物等其他功能。"
+          },
+          "options": {
+            "personalSettings": {
+              "title": "个人设置",
+              "subtitle": "修改头像、昵称和个人介绍"
+            },
+            "apiSettings": {
+              "title": "API设置",
+              "subtitle": "配置AI连接和模型选择"
+            },
+            "colorSettings": {
+              "title": "配色设置",
+              "subtitle": "选择你喜欢的主题配色"
+            },
+            "presetManager": {
+              "title": "AI 预设管理",
+              "subtitle": "管理 AI 模型的参数配置"
+            },
+            "dataBackup": {
+              "title": "数据备份管理",
+              "subtitle": "导入导出所有数据，包括聊天记录、设置等"
+            }
+          },
+          "cheat": {
+            "success": "🎉 作弊成功！余额已增加 ¥10,000\\n当前余额：¥{{balance}}",
+            "failed": "作弊失败，请重试"
+          },
+          "apiKeyStatus": {
+            "set": "已设置",
+            "notSet": "未设置"
+          },
+          "logs": {
+            "dataImportDetected": "MePage - 检测到数据导入事件，刷新页面数据...",
+            "dataImportRefreshComplete": "MePage - 数据导入后刷新完成",
+            "dataClearDetected": "MePage - 检测到数据清空事件，重置页面数据...",
+            "dataClearResetComplete": "MePage - 数据清空后重置完成",
+            "loadApiConfigFromDB": "MePage - 从数据库加载API配置:",
+            "loadApiConfigFromLocalStorage": "MePage - 从localStorage加载API配置:",
+            "optionClick": "MePage - 选项点击:",
+            "openApiSettings": "MePage - 打开API设置",
+            "openPersonalSettings": "MePage - 打开个人设置",
+            "openColorSettings": "MePage - 打开配色设置",
+            "openPresetManager": "MePage - 打开预设管理",
+            "openDataBackup": "MePage - 打开数据备份管理",
+            "unknownOption": "MePage - 未知选项:",
+            "saveApiConfig": "MePage - 保存API配置:",
+            "apiConfigSavedToDB": "MePage - API配置已保存到数据库:",
+            "apiConfigChangedEvent": "MePage - 已触发apiConfigChanged事件",
+            "apiConfigSavedToLocalStorage": "MePage - API配置已保存到localStorage",
+            "apiConfigChangedEventLocalStorage": "MePage - 已触发apiConfigChanged事件（localStorage）",
+            "personalSettingsSaved": "个人设置已保存到数据库:",
+            "cheatSuccess": "余额作弊成功，新余额:",
+            "dataBackupOptionClicked": "MePage - 数据备份选项被点击",
+            "eventObject": "MePage - 事件对象:",
+            "currentShowDataBackupState": "MePage - 当前 showDataBackup 状态:",
+            "handleOptionClickComplete": "MePage - handleOptionClick 调用完成"
+          }
+        },
+        "PersonalSettingsModal": {
+          "title": "个人设置",
+          "avatar": {
+            "label": "用户头像",
+            "alt": "用户头像",
+            "clickToUpload": "点击上传头像",
+            "uploading": "上传中...",
+            "tips": "支持 JPG、PNG、GIF 格式，大小不超过 10MB，会自动压缩优化"
+          },
+          "nickname": {
+            "label": "用户昵称",
+            "placeholder": "请输入你的昵称"
+          },
+          "bio": {
+            "label": "个人介绍",
+            "placeholder": "介绍一下你自己吧..."
+          },
+          "tip": "💡 提示：用户昵称和个人介绍会在聊天时注入到系统提示词中，帮助AI更好地了解你。",
+          "buttons": {
+            "saveToList": "保存到列表",
+            "updateToList": "更新到列表",
+            "cancel": "取消",
+            "save": "保存设置"
+          },
+          "personaList": {
+            "label": "已保存的人设",
+            "empty": "暂无保存的人设",
+            "unnamed": "未命名",
+            "avatarAlt": "头像",
+            "setActive": "设为当前",
+            "edit": "编辑",
+            "delete": "删除"
+          },
+          "errors": {
+            "pleaseSelectImage": "请选择图片文件",
+            "imageSizeExceeded": "图片大小不能超过 10MB",
+            "pleaseSaveToList": "请先保存到列表",
+            "pleaseSelectPersona": "请先从列表中选择一个人设",
+            "personaNotFound": "所选人设不存在，请重试",
+            "saveConfigFailed": "保存配置失败，请重试",
+            "pleaseEnterNickname": "请输入用户昵称",
+            "saveToListFailed": "保存到列表失败，请重试",
+            "setActiveFailed": "设为当前失败，请重试",
+            "deleteFailed": "删除失败，请重试",
+            "imageProcessFailed": "图片处理失败，请重试"
+          },
+          "success": {
+            "savedToList": "已保存到列表，并设为当前"
+          },
+          "confirm": {
+            "deletePersona": "确认删除这条人设吗？"
+          },
+          "logs": {
+            "loadPersonaListFailed": "加载人设列表失败:",
+            "saveConfigFailed": "保存配置失败:",
+            "saveToListFailed": "保存到列表失败:",
+            "setActiveFailed": "设为当前失败:",
+            "deleteFailed": "删除失败:"
+          }
+        },
+        "ApiSettingsModal": {
+          "title": "AI 连接配置",
+          "labels": {
+            "enterServerOr": "请输入服务器地址 或",
+            "apiKey": "访问密钥",
+            "model": "AI 模型选择"
+          },
+          "placeholders": {
+            "proxy": "输入你的AI服务地址，例如: https://api.openai.com",
+            "key": "输入你的API密钥，以 sk- 开头",
+            "model": "点击选择你喜欢的AI模型"
+          },
+          "hints": {
+            "proxy": "不需要添加 /v1 后缀，系统会自动处理",
+            "key": "密钥会被安全保存，不会泄露给他人",
+            "saveHint": "保存后可以快速切换不同的API配置",
+            "modelDiff": "不同模型有不同的特点和能力",
+            "modelNotInList": "当前选择的模型可能不在可用列表中，建议重新获取模型列表"
+          },
+          "buttons": {
+            "saveCurrent": "保存当前配置",
+            "loading": "加载中...",
+            "usePlatform": "使用平台内置AI",
+            "fetching": "正在获取模型列表...",
+            "fetch": "获取可用模型",
+            "cancel": "取消",
+            "save": "保存配置"
+          },
+          "status": {
+            "saved": "已保存"
+          },
+          "errors": {
+            "fillProxyAndKey": "请先填写反代地址和API密钥",
+            "fetchModelsFailed": "获取模型列表失败",
+            "unknownError": "未知错误",
+            "fillAll": "请填写完整的API配置信息",
+            "platformFailed": "获取平台配置失败",
+            "noPlatformConfig": "平台未提供内置配置，请联系管理员",
+            "loadPlatformFailed": "加载平台配置失败"
+          },
+          "success": {
+            "platformApplied": "已经为您配置好平台API，请点击\"获取可用模型\"并选择你喜欢的模型。"
+          },
+          "logs": {
+            "loadSavedModelsFailed": "加载已保存的模型列表失败:",
+            "saveModelsFailed": "保存模型列表失败:",
+            "fetchModelsFailed": "获取模型列表失败:",
+            "loadPlatformFailed": "加载平台配置失败:"
+          }
+        },
+        "ApiSaving": {
+          "ApiConfigSelector": {
+            "title": "已保存的配置",
+            "loading": "正在加载配置...",
+            "empty": "暂无已保存的配置",
+            "hint": "配置好API后可以保存以便快速切换",
+            "defaultBadge": "默认",
+            "setDefault": "设为默认",
+            "deleteConfig": "删除配置",
+            "errors": {
+              "setDefaultFailed": "设置默认配置失败",
+              "deleteFailed": "删除配置失败"
+            },
+            "confirm": {
+              "deleteConfig": "确定要删除这个配置吗？"
+            },
+            "logs": {
+              "loadConfigsFailed": "加载已保存的配置失败:",
+              "setDefaultFailed": "设置默认配置失败:",
+              "deleteFailed": "删除配置失败:"
+            }
+          },
+          "SaveConfigDialog": {
+            "title": "保存API配置",
+            "labels": {
+              "configName": "配置名称"
+            },
+            "placeholders": {
+              "configName": "输入一个便于识别的名称，如：OpenAI官方、Claude API等"
+            },
+            "hints": {
+              "configName": "建议使用有意义的名称，便于后续识别和管理"
+            },
+            "preview": {
+              "title": "当前配置预览",
+              "serverAddress": "服务器地址:",
+              "apiKey": "API密钥:",
+              "aiModel": "AI模型:",
+              "notSet": "未设置",
+              "notSelected": "未选择"
+            },
+            "buttons": {
+              "cancel": "取消",
+              "save": "保存配置",
+              "saving": "保存中..."
+            },
+            "errors": {
+              "enterConfigName": "请输入配置名称",
+              "completeApiConfig": "请先完成API配置",
+              "saveFailed": "保存配置失败，请重试"
+            },
+            "success": {
+              "configSaved": "配置保存成功！"
+            },
+            "logs": {
+              "saveFailed": "保存配置失败:"
+            }
+          }
+        }
+      },
       "MemoryManager": {
         "title": "群聊记忆管理",
         "info": "为群聊中的每个AI角色链接对应的单聊记忆，让AI在群聊中保持与你的个人关系记忆。",
@@ -1162,43 +1515,432 @@
         "me": "我"
       }
     }
-  }
-  ,
-  "QQ.ApiSettings": {
-    "title": "AI 连接配置",
-    "fillProxyAndKey": "请先填写反代地址和API密钥",
-    "fetchModelsFailed": "获取模型列表失败",
+  },
+  "Theme": {
+    "CustomThemeEditor": {
+      "title": {
+        "create": "创建自定义主题",
+        "edit": "编辑自定义主题"
+      },
+      "buttons": {
+        "preview": "预览",
+        "cancelPreview": "取消预览",
+        "cancel": "取消",
+        "save": "保存",
+        "saving": "保存中..."
+      },
+      "preview": {
+        "title": "主题预览",
+        "aiAssistant": "AI助手",
+        "online": "在线",
+        "aiMessage": "你好！这是AI消息的预览效果",
+        "userMessage": "这是用户消息的预览效果",
+        "inputPlaceholder": "输入消息...",
+        "send": "发送"
+      },
+      "basicInfo": {
+        "title": "基本信息",
+        "themeName": "主题名称",
+        "themeNamePlaceholder": "输入主题名称",
+        "themeDescription": "主题描述",
+        "themeDescriptionPlaceholder": "输入主题描述（可选）"
+      },
+      "colorConfig": {
+        "title": "颜色配置",
+        "reset": "重置",
+        "backgroundColors": "背景色",
+        "primaryBackground": "主背景",
+        "secondaryBackground": "次背景",
+        "tertiaryBackground": "第三背景",
+        "textColors": "文本色",
+        "primaryText": "主文本",
+        "secondaryText": "次文本",
+        "tertiaryText": "第三文本",
+        "accentColors": "强调色",
+        "primaryAccent": "主强调色",
+        "accentHover": "强调色悬停",
+        "bubbleStyles": "气泡样式",
+        "userBubble": "用户气泡",
+        "aiBubble": "AI气泡",
+        "backgroundColor": "背景色",
+        "textColor": "文字色",
+        "borderRadius": "圆角样式",
+        "standardRadius": "标准圆角",
+        "fullRadius": "全圆角",
+        "smallRadius": "小圆角",
+        "noRadius": "直角",
+        "specialColors": "特殊颜色",
+        "successColor": "成功色",
+        "warningColor": "警告色",
+        "errorColor": "错误色",
+        "infoColor": "信息色"
+      },
+      "errors": {
+        "enterThemeName": "请输入主题名称",
+        "saveFailed": "保存主题失败，请重试"
+      }
+    },
+    "ThemeIndicator": {
+      "loading": "正在切换主题...",
+      "preview": {
+        "title": "预览模式",
+        "apply": "应用",
+        "cancel": "取消"
+      },
+      "error": {
+        "title": "主题切换失败"
+      },
+      "transition": "主题切换中..."
+    },
+    "ThemeProvider": {
+      "loading": "正在加载主题...",
+      "error": {
+        "title": "主题系统出现错误",
+        "message": "已自动切换到默认主题，请刷新页面重试。",
+        "refresh": "刷新页面"
+      }
+    },
+    "ThemeManager": {
+      "themes": {
+        "default": {
+          "name": "默认白色",
+          "description": "简洁清爽的白色主题"
+        },
+        "dark": {
+          "name": "深色模式",
+          "description": "护眼的深色主题"
+        },
+        "masculine": {
+          "name": "男性风格",
+          "description": "深蓝商务风格，稳重大气"
+        },
+        "feminine": {
+          "name": "女性风格",
+          "description": "粉色温柔风格，优雅浪漫"
+        },
+        "anime": {
+          "name": "二次元",
+          "description": "紫色梦幻风格，充满想象"
+        },
+        "cute": {
+          "name": "可爱风格",
+          "description": "橙色活泼风格，青春可爱"
+        },
+        "metal": {
+          "name": "金属风格",
+          "description": "银灰科技风格，现代简约"
+        },
+        "forest": {
+          "name": "森林主题",
+          "description": "绿色自然风格，清新自然"
+        },
+        "ocean": {
+          "name": "海洋主题",
+          "description": "蓝绿渐变风格，宁静深邃"
+        },
+        "sunset": {
+          "name": "夕阳主题",
+          "description": "橙红渐变风格，温暖浪漫"
+        },
+        "minimal": {
+          "name": "极简主题",
+          "description": "黑白简约风格，纯净优雅"
+        }
+      },
+      "categories": {
+        "basic": "基础主题",
+        "gender": "性别风格",
+        "style": "个性风格",
+        "nature": "自然主题",
+        "custom": "自定义主题"
+      },
+      "errors": {
     "unknownError": "未知错误",
-    "fillAll": "请填写完整的API配置信息",
-    "platformFailed": "获取平台配置失败",
-    "noPlatformConfig": "平台未提供内置配置，请联系管理员",
-    "loadPlatformFailed": "加载平台配置失败",
-    "saveCurrent": "保存当前配置",
-    "saveHint": "保存后可以快速切换不同的API配置",
-    "enterServerOr": "请输入服务器地址 或",
-    "platformApplied": "已经为您配置好平台API，请点击“获取可用模型”并选择你喜欢的模型。",
+        "themeSwitchFailed": "主题切换失败"
+      }
+    }
+  },
+  "Preset": {
+    "PresetManagerPage": {
+      "title": "AI 预设管理",
     "loading": "加载中...",
-    "usePlatform": "使用平台内置AI",
-    "placeholder": {
-      "proxy": "输入你的AI服务地址，例如: https://api.openai.com",
-      "key": "输入你的API密钥，以 sk- 开头",
-      "model": "点击选择你喜欢的AI模型"
+      "buttons": {
+        "cleanup": "清理重复的默认预设",
+        "cleaning": "清理中...",
+        "create": "新建"
+      },
+      "currentBadge": "当前使用",
+      "categories": {
+        "all": "全部",
+        "default": "默认",
+        "custom": "自定义"
+      },
+      "emptyState": {
+        "title": "暂无预设",
+        "description": "创建你的第一个 AI 预设配置",
+        "createButton": "创建预设"
+      },
+      "duplicateSuffix": "(副本)",
+      "errors": {
+        "loadFailed": "加载预设失败，请重试",
+        "setCurrentFailed": "设置当前预设失败",
+        "createFailed": "创建预设失败",
+        "createFromTemplateFailed": "从模板创建预设失败",
+        "updateFailed": "更新预设失败",
+        "deleteFailed": "删除预设失败",
+        "cleanupFailed": "清理重复预设失败"
+      },
+      "confirm": {
+        "deletePreset": "确定要删除这个预设吗？此操作不可撤销。",
+        "cleanupDuplicates": "确定要清理重复的默认预设吗？这将删除重复的系统预设，保留最新的版本。"
+      }
     },
-    "hint": {
-      "proxy": "不需要添加 /v1 后缀，系统会自动处理",
-      "key": "密钥会被安全保存，不会泄露给他人"
-    },
-    "apiKey": "访问密钥",
-    "model": "AI 模型选择",
-    "saved": "已保存",
-    "modelHint": {
-      "diff": "不同模型有不同的特点和能力",
-      "notInList": "当前选择的模型可能不在可用列表中，建议重新获取模型列表"
-    },
-    "fetching": "正在获取模型列表...",
-    "fetch": "获取可用模型",
+    "CreatePresetModal": {
+      "title": "创建新预设",
+      "tabs": {
+        "fromTemplate": "从模板创建",
+        "customCreate": "自定义创建"
+      },
+      "templateSection": {
+        "title": "选择模板",
+        "description": "选择一个预设模板作为起点，然后自定义名称",
+        "temperature": "温度",
+        "tokens": "令牌"
+      },
+      "customNameSection": {
+        "title": "自定义名称",
+        "placeholder": "输入预设名称（可选，留空使用模板名称）"
+      },
+      "customSection": {
+        "title": "创建自定义预设",
+        "description": "创建一个全新的预设配置，稍后可以编辑详细参数",
+        "presetName": "预设名称",
+        "namePlaceholder": "输入预设名称"
+      },
+      "preview": {
+        "title": "预设预览",
+        "unnamed": "未命名预设",
+        "customType": "自定义",
+        "description": "自定义预设配置，创建后可编辑详细参数",
+        "temperature": "温度",
+        "maxTokens": "最大令牌"
+      },
+      "buttons": {
     "cancel": "取消",
-    "save": "保存配置"
+        "createFromTemplate": "从模板创建",
+        "createPreset": "创建预设"
+      },
+      "defaultDescription": "自定义预设配置",
+      "errors": {
+        "selectTemplate": "请选择一个模板",
+        "templateNotFound": "模板不存在",
+        "enterPresetName": "请输入预设名称"
+      }
+    },
+    "PresetEditor": {
+      "title": "编辑预设",
+      "sections": {
+        "basicInfo": "基本信息",
+        "coreParams": "核心参数",
+        "penaltyParams": "惩罚参数",
+        "advancedParams": "高级参数"
+      },
+      "fields": {
+        "presetName": "预设名称",
+        "presetNamePlaceholder": "输入预设名称",
+        "description": "描述",
+        "descriptionPlaceholder": "描述这个预设的用途和特点",
+        "temperature": "温度",
+        "maxTokens": "最大令牌数",
+        "frequencyPenalty": "频率惩罚",
+        "presencePenalty": "存在惩罚",
+        "responseFormat": "响应格式",
+        "seed": "随机种子",
+        "optional": "(可选)",
+        "topKPlaceholder": "留空使用默认值",
+        "seedPlaceholder": "留空使用随机种子"
+      },
+      "hints": {
+        "temperature": "控制输出的随机性，0-2",
+        "maxTokens": "限制回复的最大长度",
+        "topP": "控制词汇选择的多样性，0-1",
+        "frequencyPenalty": "减少重复词汇的使用，-2.0 到 2.0",
+        "presencePenalty": "减少新话题的引入，-2.0 到 2.0",
+        "topK": "限制词汇选择范围",
+        "seed": "确保结果的可重现性"
+      },
+      "explanations": {
+        "temperature": "较低的值使输出更确定，较高的值使输出更随机",
+        "maxTokens": "控制AI回复的最大长度，建议范围：100-63000，0表示无限制",
+        "topP": "控制词汇选择的多样性，1.0表示考虑所有词汇",
+        "frequencyPenalty": "正值减少重复词汇，负值增加重复词汇",
+        "presencePenalty": "正值减少新话题，负值鼓励探索新话题",
+        "topK": "限制每次选择词汇时考虑的词汇数量",
+        "responseFormat": "控制AI回复的格式，JSON格式适合结构化数据",
+        "seed": "设置随机种子以获得可重现的结果"
+      },
+      "options": {
+        "textFormat": "文本格式",
+        "jsonFormat": "JSON格式"
+      },
+      "buttons": {
+        "cancel": "取消",
+        "save": "保存预设",
+        "saving": "保存中..."
+      },
+      "errors": {
+        "saveFailed": "保存失败，请重试"
+      }
+    },
+    "PresetManager": {
+      "templates": {
+        "creative": {
+          "name": "创意模式",
+          "description": "高创造性，适合创意写作和头脑风暴"
+        },
+        "balanced": {
+          "name": "平衡模式",
+          "description": "平衡的创造性和一致性，适合一般对话"
+        },
+        "precise": {
+          "name": "精确模式",
+          "description": "低创造性，高一致性，适合事实性回答"
+        },
+        "concise": {
+          "name": "简洁模式",
+          "description": "简短精炼的回答，适合快速获取信息"
+        },
+        "detailed": {
+          "name": "详细模式",
+          "description": "详细全面的回答，适合深度分析"
+        }
+      },
+      "categories": {
+        "creative": {
+          "name": "创意",
+          "description": "高创造性预设"
+        },
+        "balanced": {
+          "name": "平衡",
+          "description": "平衡型预设"
+        },
+        "precise": {
+          "name": "精确",
+          "description": "精确型预设"
+        },
+        "concise": {
+          "name": "简洁",
+          "description": "简洁型预设"
+        },
+        "detailed": {
+          "name": "详细",
+          "description": "详细型预设"
+        },
+        "custom": {
+          "name": "自定义",
+          "description": "用户自定义预设"
+        }
+      },
+      "validation": {
+        "nameRequired": "预设名称不能为空",
+        "temperatureRange": "温度值必须在 0-2 之间",
+        "maxTokensRange": "最大令牌数必须在 0-63000 之间，0表示无限制",
+        "topPRange": "Top P 值必须在 0-1 之间",
+        "frequencyPenaltyRange": "频率惩罚必须在 -2.0 到 2.0 之间",
+        "presencePenaltyRange": "存在惩罚必须在 -2.0 到 2.0 之间"
+      },
+      "messages": {
+        "cleanupSuccess": "成功清理了 {{count}} 个重复的预设：{{presets}}",
+        "noDuplicatesFound": "没有发现重复的预设",
+        "cleanupFailed": "清理重复预设失败: {{error}}"
+      }
+    }
+  },
+  "Backup": {
+    "DataBackupManager": {
+      "title": "数据备份管理",
+      "sections": {
+        "export": {
+          "title": "导出数据",
+          "description": "将所有数据导出为JSON文件，包括聊天记录、剧情模式消息、设置、送礼记录等"
+        },
+        "autoBackup": {
+          "title": "自动备份设置",
+          "description": "设置定时自动备份，到达指定时间后会自动提醒您进行数据备份"
+        },
+        "import": {
+          "title": "导入数据",
+          "description": "从备份文件中恢复所有数据，将覆盖当前数据"
+        },
+        "danger": {
+          "title": "危险操作",
+          "description": "清空所有数据，此操作不可恢复"
+        }
+      },
+      "buttons": {
+        "export": "导出数据",
+        "exporting": "导出中...",
+        "importing": "导入中...",
+        "selectFile": "选择文件导入",
+        "setupAutoBackup": "设置自动备份",
+        "hideSettings": "隐藏设置",
+        "testTimer": "测试定时器(5秒)",
+        "saveSettings": "保存设置",
+        "clearAll": "清空所有数据"
+      },
+      "autoBackup": {
+        "status": "自动备份状态：",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "nextBackup": "下次备份时间：",
+        "enable": "启用自动备份",
+        "interval": "备份间隔：",
+        "units": {
+          "minutes": "分钟",
+          "hours": "小时",
+          "days": "天"
+        }
+      },
+      "errors": {
+        "backupFunctionNotFound": "自动备份失败：备份函数未找到",
+        "autoBackupFailed": "自动备份失败: {{error}}",
+        "unknownError": "未知错误"
+      },
+      "messages": {
+        "testTimerSuccess": "测试定时器工作正常！",
+        "autoBackupSuccess": "自动备份完成！文件已下载到您的设备。"
+      },
+      "confirm": {
+        "autoBackupTime": "自动备份时间到了！是否现在进行数据备份？",
+        "clearAllData": "确定要清空所有数据吗？此操作不可恢复！"
+      }
+    }
+  },
+  "Settings": {
+    "ColorSettingsPage": {
+      "title": "配色设置",
+      "loading": "正在加载主题...",
+      "buttons": {
+        "createCustomTheme": "新建自定义主题",
+        "editTheme": "编辑主题",
+        "deleteTheme": "删除主题"
+      },
+      "confirm": {
+        "deleteCustomTheme": "确定要删除这个自定义主题吗？"
+      }
+    },
+    "ThemePreview": {
+      "mockChatTitle": "聊天示例",
+      "mockAiMessage": "你好！这是 {{themeName}} 主题",
+      "mockUserMessage": "看起来很不错！",
+      "colorTooltips": {
+        "primary": "主背景色",
+        "secondary": "次背景色",
+        "accent": "强调色"
+      },
+      "currentTheme": "当前主题",
+      "apply": "应用"
+    }
   }
 }
 

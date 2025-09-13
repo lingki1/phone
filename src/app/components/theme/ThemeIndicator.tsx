@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { themeStateManager, ThemeState } from '../../utils/themeStateManager';
 import { AVAILABLE_THEMES } from '../../utils/themeManager';
+import { useI18n } from '../i18n/I18nProvider';
 import './ThemeIndicator.css';
 
 /**
- * 主题切换指示器
- * 显示主题切换状态和预览信息
+ * Theme switching indicator
+ * Display theme switching status and preview information
  */
 export default function ThemeIndicator() {
+  const { t } = useI18n();
   const [state, setState] = useState<ThemeState>(themeStateManager.getState());
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function ThemeIndicator() {
     return unsubscribe;
   }, []);
 
-  // 如果没有任何状态需要显示，不渲染组件
+  // If there is no state to display, do not render the component
   if (!state.isLoading && !state.isPreviewMode && !state.error) {
     return null;
   }
@@ -32,7 +34,7 @@ export default function ThemeIndicator() {
       {state.isLoading && (
         <div className="theme-loading-indicator">
           <div className="loading-spinner"></div>
-          <span className="loading-text">正在切换主题...</span>
+          <span className="loading-text">{t('Theme.ThemeIndicator.loading', '正在切换主题...')}</span>
         </div>
       )}
 
@@ -41,7 +43,7 @@ export default function ThemeIndicator() {
         <div className="theme-preview-indicator">
           <div className="preview-icon">👀</div>
           <div className="preview-content">
-            <div className="preview-title">预览模式</div>
+            <div className="preview-title">{t('Theme.ThemeIndicator.preview.title', '预览模式')}</div>
             <div className="preview-theme-name">{previewTheme.name}</div>
           </div>
           <div className="preview-actions">
@@ -54,7 +56,7 @@ export default function ThemeIndicator() {
                 }));
               }}
             >
-              应用
+              {t('Theme.ThemeIndicator.preview.apply', '应用')}
             </button>
             <button 
               className="preview-cancel-btn"
@@ -62,7 +64,7 @@ export default function ThemeIndicator() {
                 window.dispatchEvent(new CustomEvent('cancelPreviewTheme'));
               }}
             >
-              取消
+              {t('Theme.ThemeIndicator.preview.cancel', '取消')}
             </button>
           </div>
         </div>
@@ -73,7 +75,7 @@ export default function ThemeIndicator() {
         <div className="theme-error-indicator">
           <div className="error-icon">⚠️</div>
           <div className="error-content">
-            <div className="error-title">主题切换失败</div>
+            <div className="error-title">{t('Theme.ThemeIndicator.error.title', '主题切换失败')}</div>
             <div className="error-message">{state.error}</div>
           </div>
           <button 
@@ -90,7 +92,7 @@ export default function ThemeIndicator() {
         <div className="theme-transition-overlay">
           <div className="transition-content">
             <div className="transition-spinner"></div>
-            <div className="transition-text">主题切换中...</div>
+            <div className="transition-text">{t('Theme.ThemeIndicator.transition', '主题切换中...')}</div>
           </div>
         </div>
       )}

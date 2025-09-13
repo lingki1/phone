@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { Theme } from '../../utils/themeManager';
 import { themeManager } from '../../utils/themeManager';
+import { useI18n } from '../i18n/I18nProvider';
 import ThemePreview from './ThemePreview';
 import CustomThemeEditor from '../theme/CustomThemeEditor';
 import './ColorSettingsPage.css';
@@ -13,6 +14,7 @@ interface ColorSettingsPageProps {
 }
 
 export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
+  const { t } = useI18n();
   const { 
     currentTheme, 
     allThemes,
@@ -26,14 +28,14 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
   const [showCustomEditor, setShowCustomEditor] = useState(false);
   const [editingTheme, setEditingTheme] = useState<Theme | undefined>(undefined);
 
-  // 监听自定义主题保存事件
+  // Listen to custom theme save events
   useEffect(() => {
     const handleCustomThemeSaved = async () => {
-      // 自动刷新主题列表
+      // Automatically refresh theme list
       await refreshThemes();
-      // 如果当前在自定义主题分类，保持在该分类
+      // If currently in custom theme category, stay in that category
       if (selectedCategory === 'custom') {
-        // 主题列表已刷新，会自动显示新保存的主题
+        // Theme list has been refreshed, will automatically show newly saved theme
       }
     };
 
@@ -44,12 +46,12 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
     };
   }, [refreshThemes, selectedCategory]);
 
-  // 根据分类过滤主题
+  // Filter themes by category
   const getThemesByCategory = (categoryId: string): Theme[] => {
     return allThemes.filter(theme => theme.category === categoryId);
   };
 
-  // 处理主题选择
+  // Handle theme selection
   const handleThemeSelect = async (themeId: string) => {
     try {
       await setTheme(themeId);
@@ -58,28 +60,28 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
     }
   };
 
-  // 处理新建自定义主题
+  // Handle creating new custom theme
   const handleCreateCustomTheme = () => {
     setEditingTheme(undefined);
     setShowCustomEditor(true);
   };
 
-  // 处理编辑自定义主题
+  // Handle editing custom theme
   const handleEditCustomTheme = (theme: Theme) => {
     setEditingTheme(theme);
     setShowCustomEditor(true);
   };
 
-  // 处理保存自定义主题
+  // Handle saving custom theme
   const handleSaveCustomTheme = async (_theme: Theme) => {
     try {
-      // 注意：CustomThemeEditor已经调用了themeManager.saveCustomTheme
-      // 这里不需要重复调用，只需要处理UI更新
+      // Note: CustomThemeEditor has already called themeManager.saveCustomTheme
+      // No need to call again here, just handle UI updates
       
-      // 重新加载主题列表
+      // Reload theme list
       await refreshThemes();
       
-      // 自动切换到自定义主题分类，让用户看到新保存的主题
+      // Automatically switch to custom theme category to let user see newly saved theme
       setSelectedCategory('custom');
       setShowCustomEditor(false);
       setEditingTheme(undefined);
@@ -88,12 +90,12 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
     }
   };
 
-  // 处理删除自定义主题
+  // Handle deleting custom theme
   const handleDeleteCustomTheme = async (themeId: string) => {
-    if (confirm('确定要删除这个自定义主题吗？')) {
+    if (confirm(t('Settings.ColorSettingsPage.confirm.deleteCustomTheme', '确定要删除这个自定义主题吗？'))) {
       try {
         await themeManager.deleteCustomTheme(themeId);
-        // 重新加载主题列表
+        // Reload theme list
         await refreshThemes();
       } catch (error) {
         console.error('Failed to delete custom theme:', error);
@@ -101,7 +103,7 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
     }
   };
 
-  // 处理取消编辑
+  // Handle cancel editing
   const handleCancelEdit = () => {
     setShowCustomEditor(false);
     setEditingTheme(undefined);
@@ -116,11 +118,11 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
               <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="page-title">配色设置</h1>
+          <h1 className="page-title">{t('Settings.ColorSettingsPage.title', '配色设置')}</h1>
         </div>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>正在加载主题...</p>
+          <p>{t('Settings.ColorSettingsPage.loading', '正在加载主题...')}</p>
         </div>
       </div>
     );
@@ -135,7 +137,7 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
             <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <h1 className="page-title">配色设置</h1>
+        <h1 className="page-title">{t('Settings.ColorSettingsPage.title', '配色设置')}</h1>
       </div>
 
 
@@ -163,7 +165,7 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
               onClick={handleCreateCustomTheme}
             >
               <span className="btn-icon">+</span>
-              <span className="btn-text">新建自定义主题</span>
+              <span className="btn-text">{t('Settings.ColorSettingsPage.buttons.createCustomTheme', '新建自定义主题')}</span>
             </button>
           </div>
         )}
@@ -185,14 +187,14 @@ export default function ColorSettingsPage({ onBack }: ColorSettingsPageProps) {
                   <button 
                     className="edit-theme-btn"
                     onClick={() => handleEditCustomTheme(theme)}
-                    title="编辑主题"
+                    title={t('Settings.ColorSettingsPage.buttons.editTheme', '编辑主题')}
                   >
                     ✏️
                   </button>
                   <button 
                     className="delete-theme-btn"
                     onClick={() => handleDeleteCustomTheme(theme.id)}
-                    title="删除主题"
+                    title={t('Settings.ColorSettingsPage.buttons.deleteTheme', '删除主题')}
                   >
                     🗑️
                   </button>

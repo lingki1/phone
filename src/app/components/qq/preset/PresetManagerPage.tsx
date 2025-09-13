@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PresetConfig } from '../../../types/preset';
 import { presetManager, DEFAULT_PRESET_TEMPLATES } from '../../../utils/presetManager';
+import { useI18n } from '../../i18n/I18nProvider';
 import PresetCard from '@/app/components/qq/preset/PresetCard';
 import PresetEditor from '@/app/components/qq/preset/PresetEditor';
 import CreatePresetModal from '@/app/components/qq/preset/CreatePresetModal';
@@ -13,6 +14,7 @@ interface PresetManagerPageProps {
 }
 
 export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
+  const { t } = useI18n();
   const [presets, setPresets] = useState<PresetConfig[]>([]);
   const [currentPreset, setCurrentPreset] = useState<PresetConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,36 +24,36 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isCleaning, setIsCleaning] = useState(false);
 
-  // 加载预设数据
-  useEffect(() => {
-    loadPresets();
-  }, []);
-
-  const loadPresets = async () => {
+  const loadPresets = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // 初始化默认预设（如果还没有的话）
+      // Initialize default presets (if not already done)
       await presetManager.initializeDefaultPresets();
       
-      // 获取所有预设
+      // Get all presets
       const allPresets = await presetManager.getAllPresets();
       setPresets(allPresets);
       
-      // 获取当前预设
+      // Get current preset
       const current = await presetManager.getCurrentPreset();
       setCurrentPreset(current);
       
     } catch (error) {
       console.error('Failed to load presets:', error);
-      setError('加载预设失败，请重试');
+      setError(t('Preset.PresetManagerPage.errors.loadFailed', '加载预设失败，请重试'));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
-  // 设置当前预设
+  // Load preset data
+  useEffect(() => {
+    loadPresets();
+  }, [loadPresets]);
+
+  // Set current preset
   const handleSetCurrentPreset = async (presetId: string) => {
     try {
       await presetManager.setCurrentPreset(presetId);
@@ -59,11 +61,11 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
       setCurrentPreset(current);
     } catch (error) {
       console.error('Failed to set current preset:', error);
-      setError('设置当前预设失败');
+      setError(t('Preset.PresetManagerPage.errors.setCurrentFailed', '设置当前预设失败'));
     }
   };
 
-  // 创建新预设
+  // Create new preset
   const handleCreatePreset = async (presetData: Omit<PresetConfig, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       const newPreset = await presetManager.createPreset(presetData);
@@ -71,41 +73,41 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
       setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create preset:', error);
-      setError('创建预设失败');
+      setError(t('Preset.PresetManagerPage.errors.createFailed', '创建预设失败'));
     }
   };
 
-  // 从模板创建预设
+  // Create preset from template
   const handleCreateFromTemplate = async (templateId: string, customName?: string) => {
     try {
       const newPreset = await presetManager.createFromTemplate(templateId, customName);
       setPresets(prev => [...prev, newPreset]);
     } catch (error) {
       console.error('Failed to create preset from template:', error);
-      setError('从模板创建预设失败');
+      setError(t('Preset.PresetManagerPage.errors.createFromTemplateFailed', '从模板创建预设失败'));
     }
   };
 
-  // 更新预设
+  // Update preset
   const handleUpdatePreset = async (preset: PresetConfig) => {
     try {
       await presetManager.updatePreset(preset);
       setPresets(prev => prev.map(p => p.id === preset.id ? preset : p));
       setEditingPreset(null);
       
-      // 如果更新的是当前预设，也要更新当前预设
+      // If updating current preset, also update current preset
       if (currentPreset?.id === preset.id) {
         setCurrentPreset(preset);
       }
     } catch (error) {
       console.error('Failed to update preset:', error);
-      setError('更新预设失败');
+      setError(t('Preset.PresetManagerPage.errors.updateFailed', '更新预设失败'));
     }
   };
 
-  // 删除预设
+  // Delete preset
   const handleDeletePreset = async (presetId: string) => {
-    if (!confirm('确定要删除这个预设吗？此操作不可撤销。')) {
+    if (!confirm(t('Preset.PresetManagerPage.confirm.deletePreset', '确定要删除这个预设吗？此操作不可撤销。'))) {
       return;
     }
 
@@ -113,20 +115,20 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
       await presetManager.deletePreset(presetId);
       setPresets(prev => prev.filter(p => p.id !== presetId));
       
-      // 如果删除的是当前预设，重新加载当前预设
+      // If deleting current preset, reload current preset
       if (currentPreset?.id === presetId) {
         const current = await presetManager.getCurrentPreset();
         setCurrentPreset(current);
       }
     } catch (error) {
       console.error('Failed to delete preset:', error);
-      setError('删除预设失败');
+      setError(t('Preset.PresetManagerPage.errors.deleteFailed', '删除预设失败'));
     }
   };
 
-  // 清理重复预设
+  // Cleanup duplicate presets
   const handleCleanupDuplicates = async () => {
-    if (!confirm('确定要清理重复的默认预设吗？这将删除重复的系统预设，保留最新的版本。')) {
+    if (!confirm(t('Preset.PresetManagerPage.confirm.cleanupDuplicates', '确定要清理重复的默认预设吗？这将删除重复的系统预设，保留最新的版本。'))) {
       return;
     }
 
@@ -137,7 +139,7 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
       const result = await presetManager.cleanupDuplicatePresets();
       
       if (result.cleaned > 0) {
-        // 重新加载预设列表
+        // Reload preset list
         await loadPresets();
         alert(result.message);
       } else {
@@ -145,20 +147,20 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
       }
     } catch (error) {
       console.error('Failed to cleanup duplicate presets:', error);
-      setError('清理重复预设失败');
+      setError(t('Preset.PresetManagerPage.errors.cleanupFailed', '清理重复预设失败'));
     } finally {
       setIsCleaning(false);
     }
   };
 
-  // 过滤预设
+  // Filter presets
   const filteredPresets = presets.filter(preset => {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'custom') return !preset.isDefault;
     return preset.isDefault;
   });
 
-  // 获取分类统计
+  // Get category statistics
   const getCategoryStats = () => {
     const stats = {
       all: presets.length,
@@ -173,7 +175,7 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
   if (isLoading) {
     return (
       <div className="preset-manager-page loading">
-        <div className="loading-spinner">加载中...</div>
+        <div className="loading-spinner">{t('Preset.PresetManagerPage.loading', '加载中...')}</div>
       </div>
     );
   }
@@ -185,21 +187,21 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
         <button className="header-back-btn" onClick={onBack}>
           <span className="back-icon">‹</span>
         </button>
-        <h1 className="header-title">AI 预设管理</h1>
+        <h1 className="header-title">{t('Preset.PresetManagerPage.title', 'AI 预设管理')}</h1>
         <div className="header-actions">
           <button 
             className="cleanup-btn"
             onClick={handleCleanupDuplicates}
             disabled={isCleaning}
-            title="清理重复的默认预设"
+            title={t('Preset.PresetManagerPage.buttons.cleanup', '清理重复的默认预设')}
           >
-            <span className="btn-text">{isCleaning ? '清理中...' : '清理'}</span>
+            <span className="btn-text">{isCleaning ? t('Preset.PresetManagerPage.buttons.cleaning', '清理中...') : t('Preset.PresetManagerPage.buttons.cleanup', '清理')}</span>
           </button>
           <button 
             className="new-preset-btn"
             onClick={() => setShowCreateModal(true)}
           >
-            <span className="btn-text">新建</span>
+            <span className="btn-text">{t('Preset.PresetManagerPage.buttons.create', '新建')}</span>
           </button>
         </div>
       </div>
@@ -220,7 +222,7 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
               <div className="preset-name">{currentPreset.name}</div>
               <div className="preset-description">{currentPreset.description}</div>
             </div>
-            <div className="preset-badge">当前使用</div>
+            <div className="preset-badge">{t('Preset.PresetManagerPage.currentBadge', '当前使用')}</div>
           </div>
         </div>
       )}
@@ -232,19 +234,19 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
             className={`filter-tab ${selectedCategory === 'all' ? 'active' : ''}`}
             onClick={() => setSelectedCategory('all')}
           >
-            全部 ({categoryStats.all})
+            {t('Preset.PresetManagerPage.categories.all', '全部')} ({categoryStats.all})
           </button>
           <button 
             className={`filter-tab ${selectedCategory === 'default' ? 'active' : ''}`}
             onClick={() => setSelectedCategory('default')}
           >
-            默认 ({categoryStats.default})
+            {t('Preset.PresetManagerPage.categories.default', '默认')} ({categoryStats.default})
           </button>
           <button 
             className={`filter-tab ${selectedCategory === 'custom' ? 'active' : ''}`}
             onClick={() => setSelectedCategory('custom')}
           >
-            自定义 ({categoryStats.custom})
+            {t('Preset.PresetManagerPage.categories.custom', '自定义')} ({categoryStats.custom})
           </button>
         </div>
       </div>
@@ -255,13 +257,13 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
           {filteredPresets.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">⚙️</div>
-              <h3>暂无预设</h3>
-              <p>创建你的第一个 AI 预设配置</p>
+              <h3>{t('Preset.PresetManagerPage.emptyState.title', '暂无预设')}</h3>
+              <p>{t('Preset.PresetManagerPage.emptyState.description', '创建你的第一个 AI 预设配置')}</p>
               <button 
                 className="create-first-btn"
                 onClick={() => setShowCreateModal(true)}
               >
-                创建预设
+                {t('Preset.PresetManagerPage.emptyState.createButton', '创建预设')}
               </button>
             </div>
           ) : (
@@ -273,7 +275,7 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
                 onSetCurrent={() => handleSetCurrentPreset(preset.id)}
                 onEdit={() => setEditingPreset(preset)}
                 onDelete={() => handleDeletePreset(preset.id)}
-                onDuplicate={() => handleCreateFromTemplate('custom', `${preset.name} (副本)`)}
+                onDuplicate={() => handleCreateFromTemplate('custom', `${preset.name} ${t('Preset.PresetManagerPage.duplicateSuffix', '(副本)')}`)}
               />
             ))
           )}
