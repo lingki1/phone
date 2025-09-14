@@ -46,6 +46,10 @@
   width: 100%;
   height: 100%;
   z-index: 1;
+  /* 移除高度限制，让内容完全显示 */
+  min-height: 100%;
+  max-height: none;
+  overflow: visible;
 }
 
 

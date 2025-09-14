@@ -1,4 +1,3 @@
-'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from 'react';
 import Image from 'next/image';
@@ -17,12 +16,15 @@ import { useAiPendingState } from '../async';
 import { getPromptManager, PromptContext } from '../systemprompt';
 import { WorldBookAssociationSwitchModal } from './worldbook';
 import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
-import { StoryModeToggle, StoryModeDisplay } from './storymode';
+import { StoryModeDisplay } from './storymode';
 import { BatchDeleteSelector } from './messageactions';
-import UnicodeEmojiPicker from '../Unicode/UnicodeEmojiPicker';
-import MemorySummary from './recollection/MemorySummary';
+// Emoji picker moved into InputArea
+import InputArea from './inputarea/InputArea';
+// MemorySummary moved into InputArea
 import './ChatInterface.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { parseAiResponse, sanitizeHtml } from '@parse';
+import { InteractiveHtmlSandbox } from './extracustom';
 
 interface ApiConfig {
   proxyUrl: string;
@@ -192,9 +194,9 @@ export default function ChatInterface({
     } catch {}
   }, [chat.id, autoGenerateOnSend]);
   
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
   // 支持从聊天列表跳转定位到指定消息
   useEffect(() => {
     const handler = (e: Event) => {
@@ -1293,61 +1295,7 @@ export default function ChatInterface({
 
 
 
-  // 解析AI回复（参考V0.03文件的强大解析逻辑）
-  const parseAiResponse = (content: string, isStoryMode: boolean = false) => {
-    // 剧情模式不需要解析，直接返回原始内容
-    if (isStoryMode) {
-      console.log("剧情模式：直接返回原始内容，不进行解析");
-      return [{ type: 'text', content: content }];
-    }
-
-    const trimmedContent = content.trim();
-
-    // 方案1：【最优先】尝试作为标准的、单一的JSON数组解析
-    // 这是最理想、最高效的情况
-    if (trimmedContent.startsWith('[') && trimmedContent.endsWith(']')) {
-      try {
-        const parsed = JSON.parse(trimmedContent);
-        if (Array.isArray(parsed)) {
-          console.log("解析成功：标准JSON数组格式。");
-          return parsed;
-        }
-      } catch {
-        // 如果解析失败，说明它虽然看起来像个数组，但内部格式有问题。
-        // 此时我们不报错，而是继续尝试下面的"强力解析"方案。
-        console.warn("标准JSON数组解析失败，将尝试强力解析...");
-      }
-    }
-
-    // 方案2：【强力解析】使用正则表达式，从混乱的字符串中提取出所有独立的JSON对象
-    // 这能完美解决您遇到的 "(Timestamp: ...)[{...}](Timestamp: ...)[{...}]" 这种格式
-    const jsonMatches = trimmedContent.match(/{[^{}]*}/g);
-
-    if (jsonMatches) {
-      const results = [];
-      for (const match of jsonMatches) {
-        try {
-          // 尝试解析每一个被我们"揪"出来的JSON字符串
-          const parsedObject = JSON.parse(match);
-          results.push(parsedObject);
-        } catch {
-          // 如果某个片段不是有效的JSON，就忽略它，继续处理下一个
-          console.warn("跳过一个无效的JSON片段:", match);
-        }
-      }
-
-      // 如果我们成功提取出了至少一个有效的JSON对象，就返回这个结果
-      if (results.length > 0) {
-        console.log("解析成功：通过强力提取模式。");
-        return results;
-      }
-    }
-    
-    // 方案3：【最终备用】如果以上所有方法都失败了，说明AI返回的可能就是纯文本
-    // 我们将原始的、未处理的内容，包装成一个标准的文本消息对象返回，确保程序不会崩溃
-    console.error("所有解析方案均失败！将返回原始文本。");
-    return [{ type: 'text', content: content }];
-  };
+  
 
   // 创建AI消息对象
   // 创建AI消息对象（优化：使用useCallback缓存）
@@ -1577,8 +1525,11 @@ export default function ChatInterface({
 
       case 'extra_info':
         // AI额外信息命令
-        const htmlContent = String(msgData.htmlContent || '');
+        const rawHtmlContent = String(msgData.htmlContent || '');
         const description = String(msgData.description || extraInfoConfig.description);
+        
+        // 在转换阶段统一清洗 HTML 内容
+        const sanitizedHtmlContent = sanitizeHtml(rawHtmlContent);
         
         // 创建额外信息消息
         const extraInfoMessage: Message = {
@@ -1591,7 +1542,7 @@ export default function ChatInterface({
           senderAvatarId: chat.settings.aiAvatar ? `ai_${chat.id}` : undefined,
           isRead: false,
           extraInfoData: {
-            htmlContent,
+            htmlContent: sanitizedHtmlContent,
             description
           }
         };
@@ -2240,27 +2191,22 @@ export default function ChatInterface({
 
       case 'extra_info':
         if (msg.extraInfoData) {
-          // 直接渲染HTML内容，不被气泡包裹
-          try {
-            // 安全地渲染HTML内容
-            const cleanHtml = msg.extraInfoData.htmlContent
-              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-              .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-              .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-              .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
-              .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-              .replace(/javascript:/gi, '');
-            
-            return (
-              <div 
-                className="extra-info-inline"
-                dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          return (
+            <div className="extra-info-inline">
+              <InteractiveHtmlSandbox
+                html={msg.extraInfoData.htmlContent}
+                height={100} // 降低初始高度，减少空白
+                autoSize={true}
+                showBorder={false}
+                minHeight={30} // 降低最小高度
+                onEvent={(name, payload) => {
+                  try {
+                    window.dispatchEvent(new CustomEvent('extraInfoEvent', { detail: { name, payload, chatId: chat.id } }));
+                  } catch {}
+                }}
               />
-            );
-          } catch (error) {
-            console.error('Failed to render extra info HTML:', error);
-            return <span>额外信息渲染失败</span>;
-          }
+            </div>
+          );
         }
         return <span>额外信息加载失败</span>;
       case 'image':
@@ -2626,208 +2572,39 @@ export default function ChatInterface({
         )}
       </div>
 
-      {/* 输入区域 */}
-      <div className="input-container">
-        {/* 引用消息显示 */}
-        {quotedMessage && (
-          <div className="quote-preview">
-            <div className="quote-preview-content">
-              <span className="quote-preview-sender">{quotedMessage.senderName}:</span>
-              <span className="quote-preview-text">{quotedMessage.content}</span>
-            </div>
-            <button className="quote-cancel" onClick={cancelQuote}>×</button>
-          </div>
-        )}
-        
-        {/* @提及列表 */}
-        {showMentionList && chat.isGroup && (
-          <div className="mention-list">
-            {filteredMembers.map(member => (
-              <div 
-                key={member.id}
-                className="mention-item"
-                onClick={() => selectMention(member)}
-              >
-                <Image 
-                  src={member.avatar}
-                  alt={member.groupNickname}
-                  width={24}
-                  height={24}
-                  className="mention-avatar"
-                />
-                <span className="mention-name">{member.groupNickname}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {/* 功能按钮行 */}
-        <div className="action-buttons-row">
-          <div className="action-buttons-left">
-            {/* Unicode表情按钮 */}
-            <div style={{ position: 'relative' }}>
-              <button 
-                ref={emojiButtonRef}
-                className="action-btn unicode-emoji-btn"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                disabled={isLoading || isPending}
-                title={t('QQ.ChatInterface.emoji', '表情')}
-              >
-                <span className="btn-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                    <line x1="9" y1="9" x2="9.01" y2="9"/>
-                    <line x1="15" y1="9" x2="15.01" y2="9"/>
-                  </svg>
-                </span>
-                <span className="btn-text">{t('QQ.ChatInterface.emoji', '表情')}</span>
-              </button>
-              
-              {/* Unicode表情选择器 - 放在按钮容器内 */}
-              <UnicodeEmojiPicker
-                isOpen={showEmojiPicker}
-                onClose={() => setShowEmojiPicker(false)}
-                onEmojiSelect={handleEmojiSelect}
-                triggerRef={emojiButtonRef}
-              />
-            </div>
-            
-            {!isStoryMode && (
-              <button 
-                className="action-btn red-packet-btn"
-                onClick={() => setShowSendRedPacket(true)}
-                disabled={isLoading || isPending}
-                title={t('QQ.ChatInterface.redPacket', '发送红包')}
-              >
-                <span className="btn-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20,12 20,22 4,22 4,12"/>
-                    <rect x="2" y="7" width="20" height="5"/>
-                    <line x1="12" y1="22" x2="12" y2="7"/>
-                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                  </svg>
-                </span>
-                <span className="btn-text">{t('QQ.ChatInterface.redPacketShort', '红包')}</span>
-              </button>
-            )}
-            {/* 预留位置给未来的功能按钮 */}
-          </div>
-          <div className="action-buttons-right">
-            <MemorySummary
-              chat={chat}
-              apiConfig={localApiConfig}
-              onSummaryGenerated={(summary) => {
-                console.log(t('QQ.ChatInterface.MemorySummary.summaryGenerated', '记忆总结已生成:'), summary);
-                // 可以在这里添加通知或其他处理逻辑
-              }}
-            />
-            <StoryModeToggle
-              isStoryMode={isStoryMode}
-              onToggle={handleStoryModeToggle}
-              disabled={isLoading || isPending}
-            />
-            <div className="reply-trigger-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-              <label title={autoGenerateOnSend ? t('QQ.ChatInterface.autoOn', '发送消息后自动调用AI生成回复') : t('QQ.ChatInterface.autoOff', '发送消息后需要点击AI生成按钮')} style={{ display: 'flex', alignItems: 'center', cursor: (isLoading || isPending) ? 'not-allowed' : 'pointer', gap: '6px' }}>
-                <input
-                  type="checkbox"
-                  checked={autoGenerateOnSend}
-                  onChange={(e) => setAutoGenerateOnSend(e.target.checked)}
-                  disabled={isLoading || isPending}
-                />
-                <span style={{ fontSize: '12px', color: '#666' }}>
-                  {autoGenerateOnSend ? t('QQ.ChatInterface.autoGenerate', '发送即生成') : t('QQ.ChatInterface.manualGenerate', '按键生成')}
-                </span>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        {/* 输入框和发送按钮行 */}
-        <div className="input-wrapper">
-          <textarea
-            ref={textareaRef}
-            value={isStoryMode ? storyModeInput : message}
-            onChange={isStoryMode ? handleStoryModeInputChange : handleInputChange}
-            onKeyPress={isStoryMode ? (e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (storyModeInput.trim()) {
-                  handleStoryModeSend(storyModeInput);
-                }
-              }
-            } : handleKeyPress}
-            onFocus={() => {
-              // 手机端输入框聚焦时滚动到视口（剧情模式下禁用，避免干扰消息列表滚动）
-              if (!isStoryMode) {
-                setTimeout(() => {
-                  textareaRef.current?.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                  });
-                }, 300);
-              }
-            }}
-            placeholder={
-              isPending 
-                ? (isStoryMode ? t('QQ.ChatInterface.placeholder.generatingStory', 'AI正在生成剧情中，请稍候...') : t('QQ.ChatInterface.placeholder.generating', 'AI正在回复中，请稍候...'))
-                : (isStoryMode ? t('QQ.ChatInterface.placeholder.story', '继续编写剧情...') : (chat.isGroup ? t('QQ.ChatInterface.placeholder.group', '输入消息，@可提及群成员...') : t('QQ.ChatInterface.placeholder.single', '输入消息...')))
-            }
-            rows={1}
-            disabled={isLoading || isPending}
-            style={{
-              resize: 'none',
-              overflow: 'hidden',
-              minHeight: '32px',
-              maxHeight: '96px'
-            }}
-          />
-          <div className="send-buttons">
-            <button 
-              className="send-btn"
-              onClick={isStoryMode ? () => {
-                // 剧情模式发送逻辑
-                if (storyModeInput.trim()) {
-                  handleStoryModeSend(storyModeInput);
-                }
-              } : handleSendMessage}
-              disabled={isLoading || isPending || (isStoryMode ? !storyModeInput.trim() : !message.trim())}
-              title={isStoryMode ? t('QQ.ChatInterface.title.continue', '继续剧情') : t('QQ.ChatInterface.title.send', '发送消息')}
-            >
-              <span className="btn-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22,2 15,22 11,13 2,9 22,2"/>
-                </svg>
-              </span>
-              <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.continue', '继续') : t('QQ.ChatInterface.send', '发送')}</span>
-            </button>
-            {!autoGenerateOnSend && (
-              <button 
-                className="generate-btn"
-                onClick={isStoryMode ? handleStoryModeGenerate : handleGenerateAI}
-                disabled={isLoading || isPending || !hasNewUserMessage || (isStoryMode ? storyModeMessages.length === 0 : chat.messages.length === 0)}
-                title={
-                  isStoryMode 
-                    ? (hasNewUserMessage ? t('QQ.ChatInterface.title.generateStory', 'AI生成剧情') : t('QQ.ChatInterface.title.needContent', '需要新内容才能生成'))
-                    : (hasNewUserMessage ? t('QQ.ChatInterface.title.generate', '生成AI回复') : t('QQ.ChatInterface.title.needMessage', '需要新消息才能生成回复'))
-                }
-              >
-                <span className="btn-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v6m0 6v6"/>
-                    <path d="M15.5 4.5l-3 3m3 3l-3-3"/>
-                    <path d="M8.5 4.5l3 3m-3 3l3-3"/>
-                  </svg>
-                </span>
-                <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.generate', 'AI生成') : t('QQ.ChatInterface.reply', 'AI回复')}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <InputArea
+        isStoryMode={isStoryMode}
+        message={message}
+        storyModeInput={storyModeInput}
+        isLoading={isLoading}
+        isPending={isPending}
+        autoGenerateOnSend={autoGenerateOnSend}
+        onToggleAutoGenerate={(v) => setAutoGenerateOnSend(v)}
+        onSendMessage={handleSendMessage}
+        onGenerateAI={handleGenerateAI}
+        onStoryModeSend={handleStoryModeSend}
+        onStoryModeGenerate={handleStoryModeGenerate}
+        onStoryModeToggle={handleStoryModeToggle}
+        onMessageChange={handleInputChange}
+        onStoryModeInputChange={handleStoryModeInputChange}
+        onKeyPress={handleKeyPress}
+        quotedMessage={quotedMessage}
+        onCancelQuote={cancelQuote}
+        showMentionList={showMentionList}
+        isGroup={chat.isGroup}
+        filteredMembers={filteredMembers}
+        onSelectMention={selectMention}
+        emojiButtonRef={emojiButtonRef}
+        textareaRef={textareaRef}
+        showEmojiPicker={showEmojiPicker}
+        onToggleEmojiPicker={setShowEmojiPicker}
+        onEmojiSelect={handleEmojiSelect}
+        onOpenSendRedPacket={() => setShowSendRedPacket(true)}
+        chat={chat}
+        apiConfig={localApiConfig}
+        hasNewUserMessage={hasNewUserMessage}
+        storyModeHasMessages={storyModeMessages.length > 0}
+      />
 
       {/* 群成员管理模态框 */}
       {showMemberManager && chat.isGroup && (

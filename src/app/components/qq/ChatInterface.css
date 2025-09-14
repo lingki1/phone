@@ -22,7 +22,7 @@
   flex-direction: column;
   background-color: transparent;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* 改为visible，允许内容溢出显示 */
   /* 确保占满整个父容器 */
   flex: 1 1 auto;
   min-height: 0;
@@ -300,6 +300,9 @@
   scroll-padding-bottom: 0;
   /* 确保初始滚动位置在底部 */
   scroll-snap-type: y proximity;
+  /* 移除高度限制，让内容完全显示 */
+  height: auto !important;
+  max-height: none !important;
 }
 
 /* 消息容器初始化时滚动到底部 */
@@ -573,6 +576,10 @@
   line-height: 1.5;
   word-wrap: break-word;
   max-width: 100%;
+  /* 移除高度限制，让内容完全显示 */
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .user-message .message-bubble {
@@ -2216,11 +2223,19 @@
   /* 重置所有继承的样式 */
   position: relative !important;
   max-width: none !important;
+  /* 移除高度限制 */
+  height: auto !important;
+  max-height: none !important;
+  min-height: auto !important;
+  overflow: visible !important;
 }
 
 .extra-info-inline * {
   /* 重置所有子元素的样式，让HTML内容完全按照设计显示 */
   box-sizing: border-box;
+  /* 确保子元素也没有高度限制 */
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 /* 暗色主题适配 */

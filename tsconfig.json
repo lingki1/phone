@@ -25,7 +25,9 @@
       "@audio/*": ["./src/app/components/audio/*"],
       "@shopping/*": ["./src/app/components/shopping/*"],
       "@chat/*": ["./src/app/components/qq/chat/*"],
-      "@admin/*": ["./src/app/admin/*"]
+      "@admin/*": ["./src/app/admin/*"],
+      "@parse/*": ["./src/app/parse/*"],
+      "@parse": ["./src/app/parse/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

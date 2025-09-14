@@ -15,8 +15,8 @@ interface ExtraInfoDisplayProps {
   chatName: string;
 }
 
-export default function ExtraInfoDisplay({ message, chatName }: ExtraInfoDisplayProps) {
-  const { t, locale } = useI18n();
+export default function ExtraInfoDisplay({ message }: ExtraInfoDisplayProps) {
+  const { t } = useI18n();
   // 安全地渲染HTML内容
   const renderHTMLContent = () => {
     try {
@@ -40,24 +40,11 @@ export default function ExtraInfoDisplay({ message, chatName }: ExtraInfoDisplay
 
   return (
     <div className="extra-info-display">
-      <div className="extra-info-header">
-        <span className="extra-info-label">{t('QQ.ChatInterface.ExtraInfoDisplay.label', '额外信息')}</span>
-        <span className="extra-info-description">{message.description}</span>
-      </div>
-      
+      {/* 只保留内容卡片：移除头部与底部信息区 */}
       <div 
         className="extra-info-content"
         dangerouslySetInnerHTML={{ __html: renderHTMLContent() }}
       />
-      
-      <div className="extra-info-footer">
-        <span className="extra-info-timestamp">
-          {new Date(message.timestamp).toLocaleString(locale || 'zh-CN')}
-        </span>
-        <span className="extra-info-source">
-          {t('QQ.ChatInterface.ExtraInfoDisplay.source', '由 {{name}} 生成').replace('{{name}}', chatName)}
-        </span>
-      </div>
     </div>
   );
 }
