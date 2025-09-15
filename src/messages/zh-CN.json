@@ -10,6 +10,9 @@
     "comingSoon": "开发中",
     "insufficientBalance": "余额不足",
     "greeting": "美好的一天开始了",
+    "install": {
+      "pwa": "安装到桌面"
+    },
     "aria": {
       "creativespace": "我的创意",
       "qq": "聊天",

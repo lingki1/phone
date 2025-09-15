@@ -57,6 +57,11 @@ interface AppTile {
 
 export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isAuthenticated }: DesktopPageProps) {
   const { t, locale } = useI18n();
+  // PWA 安装事件类型声明（在部分浏览器中未内置）
+  interface BeforeInstallPromptEvent extends Event {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+  }
   const MinimalIcon = ({ name }: { name: string }) => {
     const commonProps = { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#000000', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
     switch (name) {
@@ -129,6 +134,9 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // PWA 安装按钮状态
+  const [isInstallAvailable, setIsInstallAvailable] = useState(false);
+  const deferredInstallPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   // 刷新后自动恢复登录：尝试获取用户信息，401 时静默忽略
   useEffect(() => {
     let cancelled = false;
@@ -295,6 +303,42 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     const interval = setInterval(loadAnnouncements, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // 注册 Service Worker 并监听安装事件
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      deferredInstallPrompt.current = e as BeforeInstallPromptEvent;
+      setIsInstallAvailable(true);
+    };
+    const handleAppInstalled = () => {
+      setIsInstallAvailable(false);
+      deferredInstallPrompt.current = null;
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall as EventListener);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall as EventListener);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    try {
+      const promptEvent = deferredInstallPrompt.current;
+      if (!promptEvent) return;
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      if (choice.outcome === 'accepted') {
+        setIsInstallAvailable(false);
+        deferredInstallPrompt.current = null;
+      }
+    } catch (_e) {}
+  };
 
   // 检测是否为移动设备
   const isMobileDevice = () => {
@@ -712,6 +756,16 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
       {/* 状态栏 */}
       <div className="status-bar">
         <div className="status-left">
+          {isInstallAvailable && (
+            <button
+              onClick={handleInstallClick}
+              className="glass-chip"
+              style={{ fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              title={t('Desktop.install.pwa', '安装到桌面')}
+            >
+              {t('Desktop.install.pwa', '安装到桌面')}
+            </button>
+          )}
         </div>
         <div className="status-right">
           {/* 语言下拉 - 紧挨登录按钮左侧 */}
@@ -762,10 +816,10 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
               </div>
             )}
           </div>
-          <span className="battery-icon" title={`${t('Desktop.battery.status', '电池状态')}: ${batteryLevel}% ${isCharging ? t('Desktop.battery.charging', '充电中') : t('Desktop.battery.notCharging', '未充电')}`}>
+          <span className="glass-chip battery-chip" title={`${t('Desktop.battery.status', '电池状态')}: ${batteryLevel}% ${isCharging ? t('Desktop.battery.charging', '充电中') : t('Desktop.battery.notCharging', '未充电')}`}>
             {getBatteryIcon()}
+            <span style={{ fontWeight: 700 }}>{batteryLevel}%</span>
           </span>
-          <span className="battery-percentage">{batteryLevel}%</span>
         </div>
       </div>
 

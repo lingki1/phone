@@ -14,6 +14,12 @@
   transition: all 0.2s ease;
 }
 
+.locale-switcher-select.compact {
+  padding: 4px 22px 4px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
 .locale-switcher-select:hover {
   background: rgba(255, 255, 255, 0.28);
   border-color: rgba(255, 255, 255, 0.55);
@@ -31,11 +37,20 @@
   align-items: center;
 }
 
+.locale-switcher-wrapper.compact {
+  transform: translateZ(0);
+}
+
 .locale-switcher-caret {
   position: absolute;
   right: 10px;
   pointer-events: none;
   color: rgba(17, 24, 39, 0.7);
+}
+
+.locale-switcher-caret.compact {
+  right: 8px;
+  font-size: 10px;
 }
 
 @media (prefers-color-scheme: dark) {

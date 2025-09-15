@@ -42,13 +42,16 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <head>
-        <meta name="apple-mobile-web-app-capable" content="no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Lingki-AI" />
         <meta name="format-detection" content="telephone=no, email=no, address=no" />
-        <meta name="mobile-web-app-capable" content="no" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#007bff" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <ThemeInitScript />
       </head>
       <body>

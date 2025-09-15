@@ -10,6 +10,9 @@
     "comingSoon": "Coming soon",
     "insufficientBalance": "Insufficient balance",
     "greeting": "A beautiful day begins",
+    "install": {
+      "pwa": "Install"
+    },
     "aria": {
       "creativespace": "Creative Space",
       "qq": "Chat",

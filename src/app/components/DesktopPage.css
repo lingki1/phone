@@ -60,6 +60,25 @@
   gap: 12px;
 }
 
+/* 顶部栏通用毛玻璃“贴片” */
+.glass-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+
+.glass-chip:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
 /* authuser: 用户头像与菜单 */
 .authuser-menu {
   position: relative;
@@ -68,24 +87,27 @@
 .authuser-avatar-button {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.18);
   color: #fff;
   font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background .2s ease;
   opacity: 0.95;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 
 .authuser-avatar-button:hover {
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
   opacity: 1;
+  background: rgba(255,255,255,.24);
 }
 
 .authuser-dropdown {
@@ -232,16 +254,10 @@
   transform: scale(1.1);
 }
 
-.signal-icon,
-.wifi-icon,
-.battery-icon {
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.battery-percentage {
-  font-weight: 600;
-  opacity: 0.9;
+.battery-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* 全局搜索区域 */
