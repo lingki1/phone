@@ -193,9 +193,9 @@ export default function PresetManagerPage({ onBack }: PresetManagerPageProps) {
             className="cleanup-btn"
             onClick={handleCleanupDuplicates}
             disabled={isCleaning}
-            title={t('Preset.PresetManagerPage.buttons.cleanup', '清理重复的默认预设')}
+            title={t('Preset.PresetManagerPage.buttons.cleanupTitle', '清理重复的默认预设')}
           >
-            <span className="btn-text">{isCleaning ? t('Preset.PresetManagerPage.buttons.cleaning', '清理中...') : t('Preset.PresetManagerPage.buttons.cleanup', '清理')}</span>
+            <span className="btn-text">{isCleaning ? t('Preset.PresetManagerPage.buttons.cleaning', '清理中...') : t('Preset.PresetManagerPage.buttons.cleanup', 'cleanUp')}</span>
           </button>
           <button 
             className="new-preset-btn"

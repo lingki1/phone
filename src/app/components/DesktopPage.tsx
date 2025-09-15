@@ -470,29 +470,36 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     });
   };
 
-  // 获取电池图标
+  // 获取电池图标（iOS风格）
   const getBatteryIcon = () => {
-    if (isCharging) {
-      if (batteryLevel <= 20) {
-        return '🔌🔴'; // 充电中但电量低
-      } else if (batteryLevel <= 50) {
-        return '🔌🟡'; // 充电中电量中等
-      } else {
-        return '🔌🔋'; // 充电中电量充足
-      }
-    }
-    
-    if (batteryLevel <= 10) {
-      return '🔴'; // 电量极低
-    } else if (batteryLevel <= 20) {
-      return '🟠'; // 电量很低
-    } else if (batteryLevel <= 50) {
-      return '🟡'; // 电量中等
-    } else if (batteryLevel <= 80) {
-      return '🟢'; // 电量良好
-    } else {
-      return '🔋'; // 电量充足
-    }
+    const level = Math.max(0, Math.min(100, batteryLevel));
+    const bodyWidth = 22;
+    const bodyHeight = 12;
+    const tipWidth = 2.5;
+    const tipHeight = 6;
+    const corner = 2.5;
+    const x = 1;
+    const y = 1;
+    const fillMaxWidth = bodyWidth - 4; // 内边距2px
+    const fillWidth = Math.max(0.8, (level / 100) * fillMaxWidth);
+    const fillColor = level <= 20 ? '#ff3b30' : level <= 50 ? '#ffcc00' : '#34c759';
+
+    return (
+      <svg width="30" height="16" viewBox="0 0 30 16" aria-hidden="true">
+        {/* 外框 */}
+        <rect x={x} y={y} rx={corner} ry={corner} width={bodyWidth} height={bodyHeight} fill="none" stroke="currentColor" strokeWidth="1.5"/>
+        {/* 端子 */}
+        <rect x={x + bodyWidth + 0.5} y={y + (bodyHeight - tipHeight) / 2} width={tipWidth} height={tipHeight} rx={1.2} ry={1.2} fill="currentColor"/>
+        {/* 背景填充槽（浅色以体现玻璃感） */}
+        <rect x={x + 2} y={y + 2} width={fillMaxWidth} height={bodyHeight - 4} rx={1.8} ry={1.8} fill="currentColor" opacity="0.12"/>
+        {/* 电量填充 */}
+        <rect x={x + 2} y={y + 2} width={fillWidth} height={bodyHeight - 4} rx={1.8} ry={1.8} fill={fillColor} />
+        {/* 充电闪电标识 */}
+        {isCharging && (
+          <path d="M14 4 l2.5 0 -2 4 2.5 0 -4 6 0.8-4 -2.2 0 z" fill="#ffffff" opacity="0.9" transform="scale(0.7) translate(5,2)"/>
+        )}
+      </svg>
+    );
   };
 
   // 已移除长按拖拽与大小切换功能

@@ -1654,7 +1654,8 @@
       "title": "AI 预设管理",
     "loading": "加载中...",
       "buttons": {
-        "cleanup": "清理重复的默认预设",
+        "cleanupTitle": "清理重复的默认预设",
+        "cleanup": "清理",
         "cleaning": "清理中...",
         "create": "新建"
       },

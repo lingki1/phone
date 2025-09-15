@@ -1654,7 +1654,8 @@
       "title": "AI Preset Management",
     "loading": "Loading...",
       "buttons": {
-        "cleanup": "Clean up duplicate default presets",
+        "cleanupTitle": "Clean up duplicate default presets",
+        "cleanup": "cleanUp",
         "cleaning": "Cleaning...",
         "create": "Create New"
       },

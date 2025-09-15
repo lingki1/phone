@@ -507,7 +507,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 className="option-item"
                 onClick={() => handleOptionClick('personal-settings')}
               >
-                <div className="option-icon">👤</div>
                 <div className="option-content">
                   <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.personalSettings.title', '个人设置')}</div>
                   <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.personalSettings.subtitle', '修改头像、昵称和个人介绍')}</div>
@@ -519,7 +518,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 className="option-item"
                 onClick={() => handleOptionClick('api-settings')}
               >
-                <div className="option-icon">🔧</div>
                 <div className="option-content">
                   <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.apiSettings.title', 'API设置')}</div>
                   <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.apiSettings.subtitle', '配置AI连接和模型选择')}</div>
@@ -531,7 +529,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 className="option-item"
                 onClick={() => handleOptionClick('color-settings')}
               >
-                <div className="option-icon">🎨</div>
                 <div className="option-content">
                   <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.colorSettings.title', '配色设置')}</div>
                   <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.colorSettings.subtitle', '选择你喜欢的主题配色')}</div>
@@ -563,7 +560,6 @@ export default function MePage({ onBackToDesktop }: MePageProps) {
                 }}
                 style={{ position: 'relative', zIndex: 1 }}
               >
-                <div className="option-icon">💾</div>
                 <div className="option-content">
                   <div className="option-title">{t('QQ.ChatInterface.Me.MePage.options.dataBackup.title', '数据备份管理')}</div>
                   <div className="option-subtitle">{t('QQ.ChatInterface.Me.MePage.options.dataBackup.subtitle', '导入导出所有数据，包括聊天记录、设置等')}</div>
