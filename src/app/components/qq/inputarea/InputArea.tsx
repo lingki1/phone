@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useI18n } from '../../i18n/I18nProvider';
 import UnicodeEmojiPicker from '../../Unicode/UnicodeEmojiPicker';
 import MemorySummary from '../recollection/MemorySummary';
-import { StoryModeToggle } from '../storymode';
 import type { ChatItem, GroupMember, QuoteMessage } from '../../../types/chat';
 import './InputArea.css';
 
@@ -184,24 +183,22 @@ export default function InputArea(props: InputAreaProps) {
               console.log(t('QQ.ChatInterface.MemorySummary.summaryGenerated', '记忆总结已生成:'), summary);
             }}
           />
-          <StoryModeToggle
-            isStoryMode={isStoryMode}
-            onToggle={onStoryModeToggle}
+          <button
+            className={`action-btn story-mode-btn ${isStoryMode ? 'active' : ''}`}
+            onClick={onStoryModeToggle}
             disabled={isLoading || isPending}
-          />
-          <div className="reply-trigger-toggle" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
-            <label title={autoGenerateOnSend ? t('QQ.ChatInterface.autoOn', '发送消息后自动调用AI生成回复') : t('QQ.ChatInterface.autoOff', '发送消息后需要点击AI生成按钮')} style={{ display: 'flex', alignItems: 'center', cursor: (isLoading || isPending) ? 'not-allowed' : 'pointer', gap: '6px' }}>
-              <input
-                type="checkbox"
-                checked={autoGenerateOnSend}
-                onChange={(e) => onToggleAutoGenerate(e.target.checked)}
-                disabled={isLoading || isPending}
-              />
-              <span style={{ fontSize: '12px', color: '#666' }}>
-                {autoGenerateOnSend ? t('QQ.ChatInterface.autoGenerate', '发送即生成') : t('QQ.ChatInterface.manualGenerate', '按键生成')}
-              </span>
-            </label>
-          </div>
+            title={isStoryMode ? t('QQ.ChatInterface.StoryToggle.title.toNormal', '切换到普通聊天模式') : t('QQ.ChatInterface.StoryToggle.title.toStory', '切换到剧情模式')}
+          >
+            <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.StoryToggle.text.story', '剧情') : t('QQ.ChatInterface.StoryToggle.text.online', '线上')}</span>
+          </button>
+          <button
+            className={`action-btn instant-reply-btn ${autoGenerateOnSend ? 'active' : ''}`}
+            onClick={() => onToggleAutoGenerate(!autoGenerateOnSend)}
+            disabled={isLoading || isPending}
+            title={autoGenerateOnSend ? t('QQ.ChatInterface.instantReplyOn', 'Instant Reply Mode - AI will automatically generate responses after sending messages') : t('QQ.ChatInterface.instantReplyOff', 'Manual Reply Mode - Click AI Reply button to generate responses')}
+          >
+            <span className="btn-text">{t('QQ.ChatInterface.instantReply', '立刻回复')}</span>
+          </button>
         </div>
       </div>
 
@@ -250,12 +247,6 @@ export default function InputArea(props: InputAreaProps) {
             disabled={isLoading || isPending || (isStoryMode ? !storyModeInput.trim() : !message.trim())}
             title={isStoryMode ? t('QQ.ChatInterface.title.continue', '继续剧情') : t('QQ.ChatInterface.title.send', '发送消息')}
           >
-            <span className="btn-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"/>
-              </svg>
-            </span>
             <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.continue', '继续') : t('QQ.ChatInterface.send', '发送')}</span>
           </button>
           {!autoGenerateOnSend && (
@@ -274,14 +265,6 @@ export default function InputArea(props: InputAreaProps) {
                   : (hasNewUserMessage ? t('QQ.ChatInterface.title.generate', '生成AI回复') : t('QQ.ChatInterface.title.needMessage', '需要新消息才能生成回复'))
               }
             >
-              <span className="btn-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 1v6m0 6v6"/>
-                  <path d="M15.5 4.5l-3 3m3 3l-3-3"/>
-                  <path d="M8.5 4.5l3 3m-3 3l3-3"/>
-                </svg>
-              </span>
               <span className="btn-text">{isStoryMode ? t('QQ.ChatInterface.generate', 'AI生成') : t('QQ.ChatInterface.reply', 'AI回复')}</span>
             </button>
           )}

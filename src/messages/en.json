@@ -143,6 +143,9 @@
         "requestFailed": "API request failed. Check network and proxy settings.",
         "aiFailedPrefix": "AI reply failed"
       },
+      "actions": {
+        "more": "More"
+      },
       "title": {
         "worldBook": "World Book Association",
         "extraInfo": "Extra Info Settings",
@@ -169,6 +172,9 @@
       "autoOff": "Click the button to generate after sending",
       "autoGenerate": "Auto-generate",
       "manualGenerate": "Manual",
+      "instantReply": "Instant Reply",
+      "instantReplyOn": "Instant Reply Mode - AI will automatically generate responses after sending messages",
+      "instantReplyOff": "Manual Reply Mode - Click AI Reply button to generate responses",
       "placeholder": {
         "generatingStory": "AI is generating the story...",
         "generating": "AI is replying...",
@@ -204,15 +210,6 @@
         "loadMore": "Load more story history",
         "loading": "Loading...",
         "loadMoreText": "Load more"
-      },
-      "StoryModeInput": {
-        "title": "Story Writing",
-        "characters": "chars",
-        "continue": "Continue story",
-        "continueText": "Continue",
-        "generateTitle": "AI Generate Story",
-        "needContent": "Need content to generate",
-        "generateText": "AI Generate"
       },
       "MemorySummary": {
         "title": {
@@ -250,7 +247,8 @@
         "empty": "No saved personas",
         "unnamed": "Unnamed",
         "switchFailed": "Failed to switch persona, please try again",
-        "settingsUpdated": "Personal settings updated to database:"
+        "settingsUpdated": "Personal settings updated to database:",
+        "current": "Current persona: "
       },
       "confirm": {
         "deleteMessage": "Are you sure you want to delete this message?",
@@ -1388,15 +1386,6 @@
       "loadMore": "Load more story history",
       "loading": "Loading...",
       "loadMoreText": "Load more"
-    },
-    "ChatInterface.StoryModeInput": {
-      "title": "Story Writing",
-      "characters": "chars",
-      "continue": "Continue story",
-      "continueText": "Continue",
-      "generateTitle": "AI Generate Story",
-      "needContent": "Need content to generate",
-      "generateText": "AI Generate"
     },
     "QQ.StoryMode.MemorySync": {
       "firstConversation": "First conversation",

@@ -13,7 +13,6 @@
 
 ### 2. 剧情模式界面
 - **StoryModeDisplay**: 专门的消息显示组件，采用卡片式布局
-- **StoryModeInput**: 专门的输入组件，支持大文本输入
 - 界面设计更加适合长文本创作
 
 ### 3. 输入体验优化
@@ -35,8 +34,6 @@ storymode/
 ├── index.ts                    # 模块导出
 ├── StoryModeToggle.tsx         # 模式切换按钮
 ├── StoryModeToggle.css         # 切换按钮样式
-├── StoryModeInput.tsx          # 剧情模式输入组件
-├── StoryModeInput.css          # 输入组件样式
 ├── StoryModeDisplay.tsx        # 剧情模式显示组件
 ├── StoryModeDisplay.css        # 显示组件样式
 └── README.md                   # 说明文档

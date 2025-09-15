@@ -435,6 +435,17 @@ function StoryModeDisplay({
           {renderAITypingIndicator()}
         </div>
       )}
+      
+      {/* 一键到底按钮 */}
+      {!shouldAutoScroll && messages.length > 0 && (
+        <button 
+          className="scroll-to-bottom-btn"
+          onClick={() => scrollToBottom(true)}
+          title={t('QQ.ChatInterface.title.scrollToBottom', '滚动到最新消息')}
+        >
+          ↓
+        </button>
+      )}
     </div>
   );
 }

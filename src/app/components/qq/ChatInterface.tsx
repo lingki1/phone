@@ -9,7 +9,7 @@ import SingleChatMemoryManager from './memory/SingleChatMemoryManager';
 import SendRedPacket from './money/SendRedPacket';
 import RedPacketMessage from './money/RedPacketMessage';
 import AiRedPacketResponse from './money/AiRedPacketResponse';
-import { ChatStatusManager, ChatStatusDisplay, ChatStatus } from './chatstatus';
+import { ChatStatusManager, ChatStatus } from './chatstatus';
 import { useExtraInfoManager, ExtraInfoSettings, ExtraInfoConfig } from './extracustom';
 import { ChatBackgroundManager, ChatBackgroundModal } from './chatbackground';
 import { useAiPendingState } from '../async';
@@ -18,6 +18,7 @@ import { WorldBookAssociationSwitchModal } from './worldbook';
 import { MessagePaginationManager, MessageItem, GiftHistory } from './chat';
 import { StoryModeDisplay } from './storymode';
 import { BatchDeleteSelector } from './messageactions';
+import { ChatHeader } from './headfunciton';
 // Emoji picker moved into InputArea
 import InputArea from './inputarea/InputArea';
 // MemorySummary moved into InputArea
@@ -97,9 +98,6 @@ export default function ChatInterface({
   const [showSendRedPacket, setShowSendRedPacket] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [chatBackground, setChatBackground] = useState<string>('');
-  const [personaList, setPersonaList] = useState<Array<{ id: string; userAvatar: string; userNickname: string; userBio: string; isActive?: boolean }>>([]);
-  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
-  const personaMenuRef = useRef<HTMLDivElement>(null);
 
   const [chatOpacity, setChatOpacity] = useState<number>(80);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
@@ -391,11 +389,6 @@ export default function ChatInterface({
         await dataManager.initDB();
         const settings = await dataManager.getPersonalSettings();
         setDbPersonalSettings(settings);
-        // 预加载人设列表
-        try {
-          const all = await dataManager.getAllPersonalSettingsFromCollection();
-          setPersonaList(all);
-        } catch {}
       } catch (error) {
         console.error('Failed to load personal settings from database:', error);
         // 如果数据库加载失败，使用传入的personalSettings作为后备
@@ -410,61 +403,20 @@ export default function ChatInterface({
     loadPersonalSettings();
   }, [personalSettings]);
 
-  // 监听个人设置更新事件以刷新人设列表
+  // 监听个人设置更新事件，实时刷新当前人设（用于整合菜单快速切换人设）
   useEffect(() => {
-    const refreshPersonaList = async () => {
+    const handlePersonalSettingsUpdated = (e: Event) => {
       try {
-        await dataManager.initDB();
-        const all = await dataManager.getAllPersonalSettingsFromCollection();
-        setPersonaList(all);
+        const detail = (e as CustomEvent).detail;
+        if (detail && detail.settings) {
+          setDbPersonalSettings(detail.settings);
+        }
       } catch {}
     };
-    window.addEventListener('personalSettingsUpdated', refreshPersonaList as EventListener);
-    return () => window.removeEventListener('personalSettingsUpdated', refreshPersonaList as EventListener);
+    window.addEventListener('personalSettingsUpdated', handlePersonalSettingsUpdated as EventListener);
+    return () => window.removeEventListener('personalSettingsUpdated', handlePersonalSettingsUpdated as EventListener);
   }, []);
 
-  // 点击外部或按下ESC关闭人设菜单
-  useEffect(() => {
-    if (!showPersonaMenu) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (personaMenuRef.current && !personaMenuRef.current.contains(target)) {
-        setShowPersonaMenu(false);
-      }
-    };
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowPersonaMenu(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEsc);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEsc);
-    };
-  }, [showPersonaMenu]);
-
-  const handleQuickSelectPersona = useCallback(async (id: string) => {
-    try {
-      await dataManager.initDB();
-      await dataManager.setActivePersonalSettings(id);
-      const all = await dataManager.getAllPersonalSettingsFromCollection();
-      setPersonaList(all);
-      const picked = all.find(p => p.id === id);
-      if (picked) {
-        const newSettings = { userAvatar: picked.userAvatar, userNickname: picked.userNickname, userBio: picked.userBio };
-        try {
-          await dataManager.savePersonalSettings(newSettings);
-        } catch {}
-        setDbPersonalSettings(newSettings);
-        // 通知全局
-        window.dispatchEvent(new CustomEvent('personalSettingsUpdated', { detail: { settings: newSettings } }));
-      }
-      setShowPersonaMenu(false);
-    } catch (e) {
-      console.error('快速切换人设失败:', e);
-      alert(t('QQ.ChatInterface.persona.switchFailed', '切换人设失败，请重试'));
-    }
-  }, [t]);
 
   // 加载用户余额
   useEffect(() => {
@@ -2303,156 +2255,20 @@ export default function ChatInterface({
     >
       <div className="chat-interface" style={{ backgroundColor: 'transparent' }}>
       {/* 顶部导航栏 */}
-      <div className="chat-header">
-        <button className="back-btn" onClick={onBack}>‹</button>
-        <div className="chat-info" style={{ position: 'relative' }}>
-          <Image 
-            src={chat.avatar} 
-            alt={chat.name}
-            width={40}
-            height={40}
-            className="chat-avatar"
-            unoptimized={chat.avatar?.startsWith('data:')}
-          />
-          <div className="chat-details">
-            <span className="chat-name">{chat.name}</span>
-            {chat.isGroup && chat.members ? (
-              <span className="chat-status">{`${chat.members.length}人`}</span>
-            ) : (
-              <ChatStatusDisplay status={chatStatus} chatName={chat.name} />
-            )}
-          </div>
-        </div>
-                  <div className="chat-actions" style={{ position: 'relative' }}>
-          <button 
-            className="action-btn"
-            onClick={() => setShowWorldBookAssociationSwitch(true)}
-            title={t('QQ.ChatInterface.title.worldBook', '世界书关联管理')}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0-3-3h7z"/>
-            </svg>
-          </button>
-          
-          <button 
-            className="action-btn"
-            onClick={() => setShowExtraInfoSettings(true)}
-            title={t('QQ.ChatInterface.title.extraInfo', '设置额外信息')}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-          </button>
-          <button 
-            className="action-btn"
-            onClick={() => setShowBackgroundModal(true)}
-            title={t('QQ.ChatInterface.title.chatBackground', '设置聊天背景')}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21,15 16,10 5,21"/>
-            </svg>
-          </button>
-          <button 
-            className="action-btn"
-            onClick={() => setShowGiftHistory(true)}
-            title={t('QQ.ChatInterface.title.giftHistory', '查看礼物记录')}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20,12 20,22 4,22 4,12"/>
-              <rect x="2" y="7" width="20" height="5"/>
-              <line x1="12" y1="22" x2="12" y2="7"/>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-            </svg>
-          </button>
-
-          {/* 快速切换人设 */}
-          <div style={{ position: 'relative' }} ref={personaMenuRef}>
-            <button
-              className="action-btn"
-              onClick={() => setShowPersonaMenu(prev => !prev)}
-              title={t('QQ.ChatInterface.title.switchPersona', '切换人设')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="7" r="4"/>
-                <path d="M5.5 22a6.5 6.5 0 0 1 13 0"/>
-              </svg>
-            </button>
-            {showPersonaMenu && (
-              <div className="mask-persona-dropdown">
-                {personaList.length === 0 ? (
-                  <div className="empty-list">{t('QQ.ChatInterface.persona.empty', '暂无保存的人设')}</div>
-                ) : (
-                  <div className="persona-list mask-persona-list">
-                    {personaList.map(p => (
-                      <div key={p.id} className={`persona-item mask-persona-item ${p.isActive ? 'active' : ''}`} onClick={() => handleQuickSelectPersona(p.id)}>
-                        <div className="persona-main mask-persona-main">
-                          <div className="persona-avatar mask-persona-avatar">
-                            <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')} width={48} height={48} unoptimized={p.userAvatar?.startsWith?.('data:')} />
-                          </div>
-                          <div className="persona-info mask-persona-info">
-                            <div className="persona-title mask-persona-title">
-                              <span className="persona-name mask-persona-name">{p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')}</span>
-                            </div>
-                            <div className="persona-bio mask-persona-bio">{(p.userBio || '').slice(0, 60)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {chat.isGroup ? (
-            <>
-              <button 
-                className="action-btn"
-                onClick={() => setShowMemoryManager(true)}
-                title={t('QQ.ChatInterface.title.memoryManager', '记忆管理')}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14,2 14,8 20,8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10,9 9,9 8,9"/>
-                </svg>
-              </button>
-              <button 
-                className="action-btn"
-                onClick={() => setShowMemberManager(true)}
-                title={t('QQ.ChatInterface.title.groupMemberManager', '群成员管理')}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </button>
-            </>
-          ) : (
-            <button 
-              className="action-btn"
-              onClick={() => setShowSingleChatMemoryManager(true)}
-              title={t('QQ.ChatInterface.title.singleChatMemoryManager', '群聊记忆管理')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14,2 14,8 20,8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10,9 9,9 8,9"/>
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
+      <ChatHeader
+        chat={chat}
+        chatStatus={chatStatus}
+        onBack={onBack}
+        onShowWorldBookAssociationSwitch={() => setShowWorldBookAssociationSwitch(true)}
+        onShowExtraInfoSettings={() => setShowExtraInfoSettings(true)}
+        onShowBackgroundModal={() => setShowBackgroundModal(true)}
+        onShowGiftHistory={() => setShowGiftHistory(true)}
+        onShowMemoryManager={() => setShowMemoryManager(true)}
+        onShowMemberManager={() => setShowMemberManager(true)}
+        onShowSingleChatMemoryManager={() => setShowSingleChatMemoryManager(true)}
+        personalSettings={personalSettings}
+        dbPersonalSettings={dbPersonalSettings}
+      />
 
 
 

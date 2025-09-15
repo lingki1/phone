@@ -406,17 +406,20 @@
 /* 滚动到底部按钮 */
 .scroll-to-bottom-btn {
   position: fixed;
-  bottom: 120px;
-  right: 20px;
+  bottom: 144px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--theme-accent-color, #007bff);
-  color: white;
-  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #333;
   cursor: pointer;
   font-size: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
   z-index: 1000;
   display: flex;
@@ -425,20 +428,19 @@
 }
 
 .scroll-to-bottom-btn:hover {
-  background-color: var(--theme-accent-hover, #0056b3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .scroll-to-bottom-btn:active {
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 /* 移动端滚动按钮调整 */
 @media (max-width: 767px) {
   .scroll-to-bottom-btn {
-    bottom: 100px;
-    right: 15px;
+    bottom: 124px;
     width: 36px;
     height: 36px;
     font-size: 16px;
@@ -447,8 +449,7 @@
 
 @media (max-width: 480px) {
   .scroll-to-bottom-btn {
-    bottom: 90px;
-    right: 12px;
+    bottom: 114px;
     width: 32px;
     height: 32px;
     font-size: 14px;

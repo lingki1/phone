@@ -143,6 +143,9 @@
         "requestFailed": "API请求失败，请检查网络连接和代理设置。",
         "aiFailedPrefix": "AI回复失败"
       },
+      "actions": {
+        "more": "更多"
+      },
       "title": {
         "worldBook": "世界书关联管理",
         "extraInfo": "设置额外信息",
@@ -169,6 +172,9 @@
       "autoOff": "发送消息后需要点击AI生成按钮",
       "autoGenerate": "发送即生成",
       "manualGenerate": "按键生成",
+      "instantReply": "立刻回复",
+      "instantReplyOn": "立刻回复模式 - AI将在发送消息后自动生成回复",
+      "instantReplyOff": "手动回复模式 - 需要点击AI回复按钮生成回复",
       "placeholder": {
         "generatingStory": "AI正在生成剧情中，请稍候...",
         "generating": "AI正在回复中，请稍候...",
@@ -204,15 +210,6 @@
         "loadMore": "加载更多历史剧情",
         "loading": "加载中...",
         "loadMoreText": "加载更多"
-      },
-      "StoryModeInput": {
-        "title": "剧情编写",
-        "characters": "字符",
-        "continue": "继续剧情",
-        "continueText": "继续",
-        "generateTitle": "AI生成剧情",
-        "needContent": "需要新内容才能生成",
-        "generateText": "AI生成"
       },
       "MemorySummary": {
         "title": {
@@ -250,7 +247,8 @@
         "empty": "暂无保存的人设",
         "unnamed": "未命名",
         "switchFailed": "切换人设失败，请重试",
-        "settingsUpdated": "个人设置已更新到数据库:"
+        "settingsUpdated": "个人设置已更新到数据库:",
+        "current": "当前人设："
       },
       "confirm": {
         "deleteMessage": "确定要删除这条消息吗？",
@@ -1388,15 +1386,6 @@
       "loadMore": "加载更多历史剧情",
       "loading": "加载中...",
       "loadMoreText": "加载更多"
-    },
-    "ChatInterface.StoryModeInput": {
-      "title": "剧情编写",
-      "characters": "字符",
-      "continue": "继续剧情",
-      "continueText": "继续",
-      "generateTitle": "AI生成剧情",
-      "needContent": "需要新内容才能生成",
-      "generateText": "AI生成"
     },
     "QQ.StoryMode.MemorySync": {
       "firstConversation": "首次对话",
