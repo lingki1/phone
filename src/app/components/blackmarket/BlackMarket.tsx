@@ -194,6 +194,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{username?: string; role?: string} | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<BlackMarketItem | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // 获取当前用户信息（仅在黑市打开时尝试一次，401静默）
   useEffect(() => {
@@ -441,6 +442,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     }
 
     try {
+      setIsImporting(true);
       // 获取角色文件
       const response = await fetch(item.fileUrl);
       if (!response.ok) {
@@ -540,6 +542,8 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     } catch (error) {
       console.error('导入角色失败:', error);
       alert('导入角色失败，请稍后重试');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -554,6 +558,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     }
 
     try {
+      setIsImporting(true);
       // 使用API端点获取世界书文件内容
       const response = await fetch(`/api/blackmarket/items/${item.id}/content`, {
         method: 'GET',
@@ -641,6 +646,8 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     } catch (error) {
       console.error('导入世界书失败:', error);
       alert('导入世界书失败，请稍后重试');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -660,7 +667,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             <h2>黑市</h2>
           </div>
           <div className="bm-head-actions">
-            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser}>上传</button>
+            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser || isImporting}>上传</button>
           </div>
         </div>
 
@@ -668,25 +675,29 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           <div className="blackmarket-tabs">
             <button
               className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveTab('all')}
+              onClick={() => !isImporting && setActiveTab('all')}
+              disabled={isImporting}
             >
               全部
             </button>
             <button
               className={`tab-button ${activeTab === 'characters' ? 'active' : ''}`}
-              onClick={() => setActiveTab('characters')}
+              onClick={() => !isImporting && setActiveTab('characters')}
+              disabled={isImporting}
             >
               角色卡
             </button>
             <button
               className={`tab-button ${activeTab === 'worldbooks' ? 'active' : ''}`}
-              onClick={() => setActiveTab('worldbooks')}
+              onClick={() => !isImporting && setActiveTab('worldbooks')}
+              disabled={isImporting}
             >
               世界书
             </button>
             <button
               className={`tab-button ${activeTab === 'myuploads' ? 'active' : ''}`}
-              onClick={() => setActiveTab('myuploads')}
+              onClick={() => !isImporting && setActiveTab('myuploads')}
+              disabled={isImporting}
             >
               我的上传
             </button>
@@ -699,8 +710,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
               type="text"
               placeholder="搜索名称、描述、作者或标签..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => !isImporting && setSearchQuery(e.target.value)}
               className="blackmarket-search-input"
+              disabled={isImporting}
             />
           </div>
 
@@ -711,12 +723,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                     key={tag}
                     className={`blackmarket-tag-filter ${selectedTags.includes(tag) ? 'active' : ''}`}
                     onClick={() => {
+                      if (isImporting) return;
                       setSelectedTags(prev =>
                         prev.includes(tag)
                           ? prev.filter(t => t !== tag)
                           : [...prev, tag]
                       );
                     }}
+                    disabled={isImporting}
                   >
                     {tag}
                   </button>
@@ -724,7 +738,8 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                 {getAllTags().length > maxVisibleTags && (
                   <button
                     className="blackmarket-tags-toggle"
-                    onClick={() => setTagsExpanded(!tagsExpanded)}
+                    onClick={() => !isImporting && setTagsExpanded(!tagsExpanded)}
+                    disabled={isImporting}
                   >
                     {tagsExpanded ? '收起' : `展开 (+${getAllTags().length - maxVisibleTags})`}
                   </button>
@@ -739,8 +754,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
                          <select
                value={sortBy}
-               onChange={(e) => setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
+               onChange={(e) => !isImporting && setSortBy(e.target.value as 'date' | 'downloads' | 'name')}
                className="blackmarket-sort-select"
+               disabled={isImporting}
              >
                <option value="date">按时间</option>
                <option value="downloads">按热度</option>
@@ -758,7 +774,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           ) : (
             <div className="blackmarket-items-grid">
               {getFilteredItems().map(item => (
-                <div key={item.id} className={`item-card ${item.type}`} onClick={() => { setDetailItem(item); setDetailOpen(true); }}>
+                <div key={item.id} className={`item-card ${item.type}`} onClick={() => { if (!isImporting) { setDetailItem(item); setDetailOpen(true); } }}>
                   <div className="item-header item-header-media">
                     <div className="item-thumbnail-wrap">
                       {item.thumbnailUrl ? (
@@ -796,12 +812,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                              className="import-button" 
                              onClick={(e) => {
                                e.stopPropagation();
+                               if (isImporting) return;
+                               setIsImporting(true);
                                debouncedHandleImportCharacter(item);
                              }}
                              title="导入到聊天列表"
-                             disabled={isImportingCharacter}
+                             disabled={isImporting || isImportingCharacter}
                            >
-                             {isImportingCharacter ? '导入中...' : '导入'}
+                             {isImporting || isImportingCharacter ? '导入中...' : '导入'}
                            </button>
                          )}
                          {item.type === 'worldbook' && onImportWorldBook && (
@@ -809,12 +827,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                              className="import-button" 
                              onClick={(e) => {
                                e.stopPropagation();
+                               if (isImporting) return;
+                               setIsImporting(true);
                                debouncedHandleImportWorldBook(item);
                              }}
                              title="导入到世界书"
-                             disabled={isImportingWorldBook}
+                             disabled={isImporting || isImportingWorldBook}
                            >
-                             {isImportingWorldBook ? '导入中...' : '导入'}
+                             {isImporting || isImportingWorldBook ? '导入中...' : '导入'}
                            </button>
                          )}
                          {/* 下载按钮已移除 */}
@@ -882,6 +902,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             currentUser?.role === 'admin' || 
             currentUser?.role === 'super_admin'
           ) : false}
+          busy={isImporting}
         />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { ChatItem } from '../../../types/chat';
 import { dataManager } from '../../../utils/dataManager';
 import { useI18n } from '../../i18n/I18nProvider';
 import './IntegratedFunctionMenu.css';
+import { fetchVoicesAndStyles } from '../audio/ttsApi';
 
 interface PersonalSettings {
   userAvatar: string;
@@ -39,9 +40,19 @@ export default function IntegratedFunctionMenu({
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [, setPersonaOpen] = useState(false);
-  const [activePanel, setActivePanel] = useState<'root' | 'persona'>('root');
+  const [activePanel, setActivePanel] = useState<'root' | 'persona' | 'voice'>('root');
   const [personaList, setPersonaList] = useState<Array<{ id: string; userAvatar: string; userNickname: string; userBio: string; isActive?: boolean }>>([]);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [voiceList, setVoiceList] = useState<Record<string, string>>({});
+  const [styleList, setStyleList] = useState<Record<string, string>>({});
+  const [selectedVoice, setSelectedVoice] = useState<string>('zh-CN-XiaoyiNeural');
+  const [selectedStyle, setSelectedStyle] = useState<string>('cheerful');
+
+  // 仅展示中文语音（键以 zh-CN- 开头）；若找不到则回退全部
+  const chineseVoices = useMemo(() => {
+    const zhEntries = Object.entries(voiceList).filter(([k]) => k.startsWith('zh-CN-'));
+    return zhEntries.length > 0 ? Object.fromEntries(zhEntries) : voiceList;
+  }, [voiceList]);
 
   // Load persona list lazily when persona section opens (for performance)
   useEffect(() => {
@@ -55,6 +66,25 @@ export default function IntegratedFunctionMenu({
     };
     load();
   }, [activePanel]);
+
+  // Load TTS lists when menu opens, and init selections from localStorage
+  useEffect(() => {
+    if (!open) return;
+    const loadTts = async () => {
+      try {
+        const { voices, styles } = await fetchVoicesAndStyles();
+        setVoiceList(voices);
+        setStyleList(styles);
+      } catch {}
+      try {
+        const v = localStorage.getItem(`tts_voice_${chat.id}`);
+        const s = localStorage.getItem(`tts_style_${chat.id}`);
+        if (v) setSelectedVoice(v);
+        if (s) setSelectedStyle(s);
+      } catch {}
+    };
+    loadTts();
+  }, [open, chat.id]);
 
   // Close on outside click / ESC
   useEffect(() => {
@@ -126,7 +156,7 @@ export default function IntegratedFunctionMenu({
 
       {open && (
         <div className="ifm-menu" role="menu">
-          <div className={`ifm-panels ${activePanel === 'persona' ? 'persona-active' : 'root-active'}`}>
+          <div className={`ifm-panels ${activePanel !== 'root' ? 'persona-active' : 'root-active'}`}>
             <div className="ifm-panel ifm-panel-root">
               <div className="ifm-actions">
                 <button className="ifm-item" role="menuitem" onClick={() => { setOpen(false); onShowWorldBookAssociationSwitch(); }}>
@@ -224,6 +254,19 @@ export default function IntegratedFunctionMenu({
               </div>
 
               <div className="ifm-section">
+                <button className="ifm-section-toggle" onClick={() => { setActivePanel('voice'); }}>
+                  <div className="ifm-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 1v22"/>
+                      <path d="M17 5v14"/>
+                      <path d="M7 8v8"/>
+                    </svg>
+                  </div>
+                  <div className="ifm-text">
+                    <div className="ifm-label">{t('QQ.ChatInterface.tts.voiceEntry', '{{name}} 的声音选择').replace('{{name}}', chat.name)}</div>
+                  </div>
+                  <div className="ifm-caret">›</div>
+                </button>
                 <button className="ifm-section-toggle" onClick={() => { setActivePanel('persona'); }}>
                   <div className="ifm-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -239,31 +282,89 @@ export default function IntegratedFunctionMenu({
               </div>
             </div>
 
-            <div className="ifm-panel ifm-panel-persona">
-              <div className="ifm-panel-header">
-                <button className="ifm-back" onClick={() => { setActivePanel('root'); }} aria-label="back">‹</button>
-                <div className="ifm-panel-title">{t('QQ.ChatInterface.persona.current', '当前人设：')}{currentUserNickname}</div>
-              </div>
-              <div className="ifm-panel-body">
-                <div className="ifm-persona-list">
-                  {personaList.length === 0 ? (
-                    <div className="ifm-empty">{t('QQ.ChatInterface.persona.empty', '暂无保存的人设')}</div>
-                  ) : (
-                    personaList.map(p => (
-                      <button key={p.id} className={`ifm-persona-item ${p.isActive ? 'active' : ''}`} onClick={() => handleQuickSelectPersona(p.id)}>
-                        <div className="ifm-persona-avatar">
-                          <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || 'P'} width={28} height={28} unoptimized={p.userAvatar?.startsWith?.('data:')} />
-                        </div>
-                        <div className="ifm-persona-text">
-                          <div className="ifm-persona-name">{p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')}</div>
-                          <div className="ifm-persona-bio">{(p.userBio || '').slice(0, 40)}</div>
-                        </div>
-                      </button>
-                    ))
-                  )}
+            {activePanel === 'persona' && (
+              <div className="ifm-panel ifm-panel-persona">
+                <div className="ifm-panel-header">
+                  <button className="ifm-back" onClick={() => { setActivePanel('root'); }} aria-label="back">‹</button>
+                  <div className="ifm-panel-title">{t('QQ.ChatInterface.persona.current', '当前人设：')}{currentUserNickname}</div>
+                </div>
+                <div className="ifm-panel-body">
+                  <div className="ifm-persona-list">
+                    {personaList.length === 0 ? (
+                      <div className="ifm-empty">{t('QQ.ChatInterface.persona.empty', '暂无保存的人设')}</div>
+                    ) : (
+                      personaList.map(p => (
+                        <button key={p.id} className={`ifm-persona-item ${p.isActive ? 'active' : ''}`} onClick={() => handleQuickSelectPersona(p.id)}>
+                          <div className="ifm-persona-avatar">
+                            <Image src={p.userAvatar || '/avatars/user-avatar.svg'} alt={p.userNickname || 'P'} width={28} height={28} unoptimized={p.userAvatar?.startsWith?.('data:')} />
+                          </div>
+                          <div className="ifm-persona-text">
+                            <div className="ifm-persona-name">{p.userNickname || t('QQ.ChatInterface.persona.unnamed', '未命名')}</div>
+                            <div className="ifm-persona-bio">{(p.userBio || '').slice(0, 40)}</div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {activePanel === 'voice' && (
+              <div className="ifm-panel ifm-panel-voice">
+                <div className="ifm-panel-header">
+                  <button className="ifm-back" onClick={() => { setActivePanel('root'); }} aria-label="back">‹</button>
+                  <div className="ifm-panel-title">{t('QQ.ChatInterface.tts.pickVoice', '{{name}} 的声音选择').replace('{{name}}', chat.name)}</div>
+                </div>
+                <div className="ifm-panel-body">
+                  <div className="ifm-tts">
+                    <div className="ifm-tts-row" style={{ display: 'block' }}>
+                      <div className="ifm-tts-label" style={{ marginBottom: 8 }}>{t('QQ.ChatInterface.tts.voice', '人声')}</div>
+                      <div className="ifm-tts-chips">
+                        {Object.entries(chineseVoices).map(([k, v]) => {
+                          const label = t(`QQ.TTS.voiceNames.${k}`, v);
+                          const selected = selectedVoice === k;
+                          return (
+                            <button
+                              key={k}
+                              className={`ifm-tts-chip ${selected ? 'selected' : ''}`}
+                              onClick={() => {
+                                setSelectedVoice(k);
+                                try { localStorage.setItem(`tts_voice_${chat.id}`, k); } catch {}
+                              }}
+                              title={k}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="ifm-tts-row" style={{ display: 'block' }}>
+                      <div className="ifm-tts-label" style={{ marginBottom: 8 }}>{t('QQ.ChatInterface.tts.style', '语气')}</div>
+                      <div className="ifm-tts-chips">
+                        {Object.entries(styleList).map(([k, v]) => {
+                          const selected = selectedStyle === k;
+                          return (
+                            <button
+                              key={k}
+                              className={`ifm-tts-chip ${selected ? 'selected' : ''}`}
+                              onClick={() => {
+                                setSelectedStyle(k);
+                                try { localStorage.setItem(`tts_style_${chat.id}`, k); } catch {}
+                              }}
+                              title={t(`QQ.TTS.styleNames.${k}`, v)}
+                            >
+                              {t(`QQ.TTS.styleNames.${k}`, v)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -26,6 +26,7 @@ import './ChatInterface.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { parseAiResponse, sanitizeHtml } from '@parse';
 import { InteractiveHtmlSandbox } from './extracustom';
+import AudioTTS from './audio/AudioTTS';
 
 interface ApiConfig {
   proxyUrl: string;
@@ -105,6 +106,10 @@ export default function ChatInterface({
   const [showGiftHistory, setShowGiftHistory] = useState(false);
   const [showBatchDelete, setShowBatchDelete] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showTtsModal, setShowTtsModal] = useState(false);
+  const [ttsText] = useState('');
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const [isAnyTtsLoading, setIsAnyTtsLoading] = useState<boolean>(false);
   
   // 剧情模式相关状态
   const [isStoryMode, setIsStoryMode] = useState(false);
@@ -2187,9 +2192,89 @@ export default function ChatInterface({
             {index < String(msg.content || '').split('\n').length - 1 && <br />}
           </React.Fragment>
         ));
-        return <span>{contentWithBreaks}</span>;
+        return (
+          <>
+            <span>{contentWithBreaks}</span>
+            {msg.role === 'assistant' && String(msg.content || '').trim() && (
+              <button
+                className={`tts-play-btn ${playingMessageId === msg.id ? 'loading' : ''}`}
+                style={{ marginLeft: 6 }}
+                disabled={isAnyTtsLoading}
+                title={t('QQ.ChatInterface.title.ttsPlay', '朗读此消息')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  try {
+                    const v = localStorage.getItem(`tts_voice_${chat.id}`) || 'zh-CN-XiaoyiNeural';
+                    const s = localStorage.getItem(`tts_style_${chat.id}`) || 'cheerful';
+                    const text = String(msg.content || '').trim();
+                    if (!text) return;
+                    const el = document.querySelector(`[data-message-id="${CSS.escape(msg.id)}"]`) as HTMLElement | null;
+                    if (el) {
+                      el.classList.add('message--highlight');
+                      el.classList.add('message--blink');
+                      try {
+                        const prevOutline = el.style.outline;
+                        const prevBoxShadow = el.style.boxShadow;
+                        el.setAttribute('data-prev-outline', prevOutline || '');
+                        el.setAttribute('data-prev-shadow', prevBoxShadow || '');
+                        el.style.outline = '2px solid rgba(16,185,129,0.65)';
+                        el.style.boxShadow = '0 0 0 4px rgba(16,185,129,0.25)';
+                      } catch {}
+                    }
+                    setPlayingMessageId(msg.id);
+                    setIsAnyTtsLoading(true);
+                    import('./audio/ttsApi').then(async ({ synthesizeToAudioUrl }) => {
+                      try {
+                        const url = await synthesizeToAudioUrl({ text, role: v, style: s });
+                        const audio = new Audio(url);
+                        const clear = () => {
+                          const node = document.querySelector(`[data-message-id="${CSS.escape(msg.id)}"]`) as HTMLElement | null;
+                          if (node) {
+                            node.classList.remove('message--highlight');
+                            node.classList.remove('message--blink');
+                            try {
+                              const prevOutline = node.getAttribute('data-prev-outline') || '';
+                              const prevShadow = node.getAttribute('data-prev-shadow') || '';
+                              node.style.outline = prevOutline;
+                              node.style.boxShadow = prevShadow;
+                              node.removeAttribute('data-prev-outline');
+                              node.removeAttribute('data-prev-shadow');
+                            } catch {}
+                          }
+                          setPlayingMessageId((id) => (id === msg.id ? null : id));
+                          setIsAnyTtsLoading(false);
+                        };
+                        audio.addEventListener('ended', clear, { once: true });
+                        audio.addEventListener('error', clear, { once: true });
+                        await audio.play();
+                      } catch {
+                        const node = document.querySelector(`[data-message-id="${CSS.escape(msg.id)}"]`) as HTMLElement | null;
+                        if (node) {
+                          node.classList.remove('message--highlight');
+                          node.classList.remove('message--blink');
+                          try {
+                            const prevOutline = node.getAttribute('data-prev-outline') || '';
+                            const prevShadow = node.getAttribute('data-prev-shadow') || '';
+                            node.style.outline = prevOutline;
+                            node.style.boxShadow = prevShadow;
+                            node.removeAttribute('data-prev-outline');
+                            node.removeAttribute('data-prev-shadow');
+                          } catch {}
+                        }
+                        setPlayingMessageId((id) => (id === msg.id ? null : id));
+                        setIsAnyTtsLoading(false);
+                      }
+                    });
+                  } catch {}
+                }}
+              >
+                {playingMessageId === msg.id ? <span className="tts-spinner" aria-hidden="true"></span> : '▶'}
+              </button>
+            )}
+          </>
+        );
     }
-  }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket, chat]);
+  }, [handleImageMessageClick, handleVoiceMessageClick, handleClaimRedPacket, chat, playingMessageId, isAnyTtsLoading, t]);
 
   // 初始化显示的消息（只显示最新的50条）
   useEffect(() => {
@@ -2589,6 +2674,15 @@ export default function ChatInterface({
               extraInfoManager.disableExtraInfo();
             }
           }}
+        />
+      )}
+
+      {/* 文本转语音弹窗 */}
+      {showTtsModal && (
+        <AudioTTS
+          isOpen={showTtsModal}
+          onClose={() => setShowTtsModal(false)}
+          defaultText={ttsText}
         />
       )}
 

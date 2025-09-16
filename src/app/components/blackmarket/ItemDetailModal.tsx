@@ -14,6 +14,7 @@ interface ItemDetailModalProps {
   onImportWorldBook?: (item: BlackMarketItem) => void;
   onDelete?: (item: BlackMarketItem) => void;
   canDelete?: boolean;
+  busy?: boolean;
 }
 
 export default function ItemDetailModal({ 
@@ -24,7 +25,8 @@ export default function ItemDetailModal({
   onImportCharacter, 
   onImportWorldBook,
   onDelete,
-  canDelete = false
+  canDelete = false,
+  busy = false
 }: ItemDetailModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -39,7 +41,7 @@ export default function ItemDetailModal({
   return (
     <div className="bm-detail-modal" role="dialog" aria-modal="true">
       <div className="bm-detail-container">
-        <button className="bm-detail-close" onClick={onClose}>×</button>
+        <button className="bm-detail-close" onClick={onClose} disabled={busy}>×</button>
 
         <div className="bm-detail-grid">
           <div className="bm-detail-media">
@@ -99,32 +101,35 @@ export default function ItemDetailModal({
               {item.type === 'character' && onImportCharacter && (
                 <button 
                   className="import-button" 
-                  onClick={() => onImportCharacter(item)}
+                  onClick={() => { if (!busy) onImportCharacter(item); }}
                   title="导入到聊天列表"
+                  disabled={busy}
                 >
-                  导入
+                  {busy ? '导入中...' : '导入'}
                 </button>
               )}
               {item.type === 'worldbook' && onImportWorldBook && (
                 <button 
                   className="import-button" 
-                  onClick={() => onImportWorldBook(item)}
+                  onClick={() => { if (!busy) onImportWorldBook(item); }}
                   title="导入到世界书"
+                  disabled={busy}
                 >
-                  导入
+                  {busy ? '导入中...' : '导入'}
                 </button>
               )}
               {/* 下载按钮已移除 */}
               {canDelete && onDelete && (
                 <button 
                   className="delete-button" 
-                  onClick={() => onDelete(item)}
+                  onClick={() => { if (!busy) onDelete(item); }}
                   title="删除此内容"
+                  disabled={busy}
                 >
                   删除
                 </button>
               )}
-              <button className="bm-detail-secondary" onClick={onClose}>关闭</button>
+              <button className="bm-detail-secondary" onClick={onClose} disabled={busy}>关闭</button>
             </div>
           </div>
         </div>

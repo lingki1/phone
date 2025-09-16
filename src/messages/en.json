@@ -136,6 +136,12 @@
         "location": "Location",
         "outfit": "Outfit"
       },
+      "tts": {
+        "voiceEntry": "{{name}} Voice Settings",
+        "pickVoice": "{{name}} Voice Settings",
+        "voice": "Voice",
+        "style": "Style"
+      },
       "error": {
         "setupApi": "Please set API configuration first. Configure proxy URL, API key and model in settings.",
         "contentFiltered": "Content filtered by safety policy. Try softer wording or adjust role settings.",
@@ -1353,6 +1359,44 @@
           "save": "Save",
           "cancel": "Cancel"
         }
+      }
+    },
+    "TTS": {
+      "voiceNames": {
+        "zh-CN-XiaoxiaoNeural": "Xiaoxiao (Female · Gentle)",
+        "zh-CN-YunxiNeural": "Yunxi (Male · Bright)",
+        "zh-CN-YunyangNeural": "Yunyang (Male · Sunny)",
+        "zh-CN-XiaoyiNeural": "Xiaoyi (Female · Sweet)",
+        "zh-CN-YunjianNeural": "Yunjian (Male · Steady)",
+        "zh-CN-XiaochenNeural": "Xiaochen (Female · Intellectual)",
+        "zh-CN-XiaohanNeural": "Xiaohan (Female · Elegant)",
+        "zh-CN-XiaomengNeural": "Xiaomeng (Female · Dreamy)",
+        "zh-CN-XiaomoNeural": "Xiaomo (Female · Literary)",
+        "zh-CN-XiaoqiuNeural": "Xiaoqiu (Female · Mature)",
+        "zh-CN-XiaoruiNeural": "Xiaorui (Female · Wise)",
+        "zh-CN-XiaoshuangNeural": "Xiaoshuang (Female · Lively)",
+        "zh-CN-XiaoxuanNeural": "Xiaoxuan (Female · Fresh)",
+        "zh-CN-XiaoyanNeural": "Xiaoyan (Female · Soft)",
+        "zh-CN-XiaoyouNeural": "Xiaoyou (Female · Melodic)",
+        "zh-CN-XiaozhenNeural": "Xiaozhen (Female · Dignified)",
+        "zh-CN-YunfengNeural": "Yunfeng (Male · Magnetic)",
+        "zh-CN-YunhaoNeural": "Yunhao (Male · Bold)",
+        "zh-CN-YunxiaNeural": "Yunxia (Male · Passionate)",
+        "zh-CN-YunyeNeural": "Yunye (Male · Wild)",
+        "zh-CN-YunzeNeural": "Yunze (Male · Deep)"
+      },
+      "styleNames": {
+        "general": "General",
+        "assistant": "Assistant",
+        "chat": "Chat",
+        "customerservice": "Customer Service",
+        "newscast": "Newscast",
+        "affectionate": "Affectionate",
+        "calm": "Calm",
+        "cheerful": "Cheerful",
+        "gentle": "Gentle",
+        "lyrical": "Lyrical",
+        "serious": "Serious"
       }
     },
     "ChatInterface.persona": {

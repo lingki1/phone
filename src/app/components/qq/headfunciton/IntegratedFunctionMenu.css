@@ -1,3 +1,117 @@
+/* TTS glassmorphism styles */
+.ifm-tts { 
+  display: grid;
+  gap: 10px;
+}
+
+.ifm-tts-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(20px);
+}
+
+.ifm-tts-label {
+  color: #111827;
+  font-weight: 600;
+}
+
+.ifm-tts-select {
+  width: 100%;
+  appearance: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  color: #111827;
+  outline: none;
+  transition: box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
+  backdrop-filter: blur(14px);
+}
+
+.ifm-tts-select:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.ifm-tts-select:focus {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.20);
+}
+
+/* Dark theme safety (if menu在深色基底) */
+.ifm-menu.dark .ifm-tts-row {
+  background: rgba(20, 24, 30, 0.30);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.ifm-menu.dark .ifm-tts-select {
+  background: rgba(20, 24, 30, 0.45);
+  color: #e5e7eb;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ifm-menu.dark .ifm-tts-select:hover {
+  background: rgba(20, 24, 30, 0.6);
+}
+
+.ifm-menu.dark .ifm-tts-label {
+  color: #f3f4f6;
+}
+
+/* Chips layout for full list */
+.ifm-tts-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ifm-tts-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(14px);
+  color: #111827;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease, border-color 160ms ease, transform 80ms ease;
+}
+
+.ifm-tts-chip:hover {
+  background: rgba(255,255,255,0.8);
+}
+
+.ifm-tts-chip:active {
+  transform: translateY(1px);
+}
+
+.ifm-tts-chip.selected {
+  border-color: rgba(16,185,129,0.45);
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.20);
+  background: rgba(255,255,255,0.85);
+}
+
+.ifm-menu.dark .ifm-tts-chip {
+  background: rgba(20,24,30,0.45);
+  color: #e5e7eb;
+  border-color: rgba(255,255,255,0.12);
+}
+
+.ifm-menu.dark .ifm-tts-chip:hover {
+  background: rgba(20,24,30,0.65);
+}
+
+.ifm-menu.dark .ifm-tts-chip.selected {
+  border-color: rgba(16,185,129,0.45);
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.20);
+  background: rgba(20,24,30,0.78);
+}
 .ifm-root {
   position: relative;
 }

@@ -1,3 +1,74 @@
+/* TTS play button - minimal single-color */
+.tts-play-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 160ms ease, opacity 160ms ease, transform 80ms ease;
+}
+
+.tts-play-btn:hover {
+  background-color: rgba(0,0,0,0.06);
+}
+
+.tts-play-btn:active {
+  transform: translateY(1px);
+}
+
+.tts-play-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tts-play-btn.loading {
+  background-color: transparent; /* no green background */
+  color: #111827; /* keep mono icon color */
+  display: inline-block; /* avoid flex box wrapper */
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  line-height: 0; /* remove line box height */
+}
+
+@keyframes tts-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tts-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: tts-spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}
+
+/* Highlighter blink while TTS requesting/playing */
+@keyframes msg-blink-outline {
+  0% { outline-color: rgba(16,185,129,0.60); }
+  50% { outline-color: rgba(16,185,129,0.20); }
+  100% { outline-color: rgba(16,185,129,0.60); }
+}
+
+.message--blink {
+  outline: 1px solid rgba(16,185,129,0.60);
+  animation: msg-blink-outline 0.9s ease-in-out infinite;
+  border-radius: 8px; /* softer and smaller */
+}
 .mask-persona-dropdown {
   position: absolute;
   right: 0;
