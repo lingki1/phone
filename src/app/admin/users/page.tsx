@@ -32,6 +32,7 @@ export default function UsersManagementPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [currentUser, setCurrentUser] = useState<{ uid: string; username: string; role: 'super_admin' | 'admin' | 'user'; group: string } | null>(null);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -62,11 +63,33 @@ export default function UsersManagementPage() {
     role: 'user' as 'user' | 'admin' | 'super_admin',
     group: 'default'
   });
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     fetchUsers(page, searchTerm);
     fetchGroups();
   }, [page, searchTerm]);
+
+  // 获取当前登录用户（用于判断是否展示重置密码功能）
+  useEffect(() => {
+    let cancelled = false;
+    const loadCurrentUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && data.user) {
+            setCurrentUser(data.user);
+          }
+        }
+      } catch (_e) {
+        // 忽略
+      }
+    };
+    loadCurrentUser();
+    return () => { cancelled = true; };
+  }, []);
 
   const fetchUsers = async (p = 1, term = '') => {
     try {
@@ -140,12 +163,18 @@ export default function UsersManagementPage() {
     if (!editingUser) return;
 
     try {
+      const payload: { username: string; email: string; role: 'user' | 'admin' | 'super_admin'; group: string; password?: string } = { ...editUser };
+      // 仅超级管理员可重置用户密码
+      if (currentUser?.role === 'super_admin' && newPassword.trim()) {
+        payload.password = newPassword.trim();
+      }
+
       const response = await fetch(`/api/users/${editingUser.uid}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editUser),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -158,6 +187,7 @@ export default function UsersManagementPage() {
           role: 'user',
           group: 'default'
         });
+        setNewPassword('');
         fetchUsers(page);
       } else {
         setError(data.message || '更新用户失败');
@@ -197,6 +227,7 @@ export default function UsersManagementPage() {
       role: user.role,
       group: user.group
     });
+    setNewPassword('');
   };
 
   const getRoleLabel = (role: string) => {
@@ -307,6 +338,19 @@ export default function UsersManagementPage() {
                         onChange={(e) => setEditUser({...editUser, email: e.target.value})}
                       />
                     </div>
+                    {currentUser?.role === 'super_admin' && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700">新密码（仅超级管理员可见）</label>
+                        <input
+                          type="password"
+                          placeholder="重置用户密码（可选）"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">留空则不修改密码</p>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-gray-700">角色</label>
                       <select

@@ -64,6 +64,19 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
       return;
     }
 
+    // 验证邮箱必填与基本格式
+    if (!email.trim()) {
+      setError(t('Auth.register.enterEmail', '请输入邮箱'));
+      setLoading(false);
+      return;
+    }
+    const basicEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!basicEmailRegex.test(email.trim())) {
+      setError(t('Auth.register.emailInvalid', '邮箱格式不正确'));
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -73,7 +86,7 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
         body: JSON.stringify({ 
           username: username.trim(), 
           password: password.trim(), 
-          email: email.trim() || undefined,
+          email: email.trim(),
           activationCode: activationCode.trim() || undefined
         }),
         credentials: 'include'
@@ -162,8 +175,9 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           id="email"
           name="email"
           type="email"
+          required
           className="auth-input"
-          placeholder={t('Auth.placeholder.emailOptional', '请输入邮箱 (可选)')}
+          placeholder={t('Auth.placeholder.emailRequired', '请输入邮箱 (必填)')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />

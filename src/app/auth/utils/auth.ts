@@ -14,7 +14,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
-  email?: string;
+  email: string;
   role?: 'super_admin' | 'admin' | 'user';
   activationCode?: string;
 }
@@ -128,6 +128,24 @@ class AuthService {
         };
       }
 
+      // 校验邮箱必填
+      if (!email || !email.trim()) {
+        return {
+          success: false,
+          message: '邮箱不能为空'
+        };
+      }
+
+      // 基础邮箱格式校验（简单校验）
+      const normalizedEmail = email.trim();
+      const basicEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!basicEmailRegex.test(normalizedEmail)) {
+        return {
+          success: false,
+          message: '邮箱格式不正确'
+        };
+      }
+
       if (username.length < 3 || username.length > 20) {
         return {
           success: false,
@@ -174,7 +192,7 @@ class AuthService {
         password: hashedPassword,
         role,
         group: 'default',
-        email
+        email: normalizedEmail
       });
 
       // 如果需要激活码，则消费该激活码（原子性由UPDATE条件保证）

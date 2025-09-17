@@ -11,6 +11,7 @@ import { ChatItem, WorldBook } from '../types/chat';
 import { useI18n } from '../components/i18n/I18nProvider';
 import { dataManager } from '../utils/dataManager';
 import AuthModal from './auth/AuthModal';
+import ChangePasswordModal from './auth/ChangePasswordModal';
 import CreativeSpace from './creativespace/CreativeSpace';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
@@ -134,6 +135,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
   // PWA 安装按钮状态
   const [isInstallAvailable, setIsInstallAvailable] = useState(false);
   const deferredInstallPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -811,6 +813,9 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
                     ))}
                   </div>
                 </div>
+                <button className="authuser-item" onClick={() => { setIsChangePwdOpen(true); setIsUserMenuOpen(false); }}>
+                  {t('Desktop.user.changePassword', '修改密码')}
+                </button>
                 
                 <button className="authuser-item authuser-logout" onClick={handleLogout}>{t('Desktop.user.logout', '退出登录')}</button>
               </div>
@@ -955,6 +960,14 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
             }
           } catch (_e) {}
           setIsAuthModalOpen(false);
+        }}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePwdOpen}
+        onClose={() => setIsChangePwdOpen(false)}
+        onSuccess={() => {
+          // 可选：修改密码成功后可触发额外操作
         }}
       />
 

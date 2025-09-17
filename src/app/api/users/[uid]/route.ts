@@ -126,8 +126,14 @@ export async function PUT(
       );
     }
 
-    // 如果包含密码，需要加密
+    // 如果包含密码，只有超级管理员可以修改（重置）
     if (body.password) {
+      if (authUser.role !== 'super_admin') {
+        return NextResponse.json(
+          { success: false, message: '只有超级管理员可以重置用户密码' },
+          { status: 403 }
+        );
+      }
       const bcrypt = await import('bcryptjs');
       body.password = await bcrypt.default.hash(body.password, 10);
     }

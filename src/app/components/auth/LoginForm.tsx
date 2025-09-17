@@ -15,6 +15,7 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showRecovery, setShowRecovery] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +129,25 @@ export default function LoginForm({ onSwitchToRegister: _onSwitchToRegister, onL
         {loading && <span className="auth-loading"></span>}
         {loading ? t('Auth.login.submitting', '登录中...') : t('Auth.login.submit', '登录')}
       </button>
+
+      <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <button
+          type="button"
+          className="auth-switch-link"
+          onClick={() => setShowRecovery(v => !v)}
+        >
+          {t('Auth.login.forgotPassword', '找回密码')}
+        </button>
+      </div>
+
+      {showRecovery && (
+        <div className="auth-success" style={{ marginTop: 12 }}>
+          {t(
+            'Auth.login.recoveryInstruction',
+            '请用注册邮箱发送邮件给 ling_ki@live.cn ，附上您的用户名。没绑定邮箱请发送邮件附上内容“用户名和大概注册时间”。'
+          )}
+        </div>
+      )}
     </form>
   );
 }
