@@ -21,6 +21,13 @@ interface ChatMessage {
   isMarked?: boolean; // 是否被标记为待办事项
   markedBy?: string; // 标记者的昵称
   markedAt?: number; // 标记时间
+  // 可选：回复消息
+  replyTo?: {
+    messageId: string; // 被回复的消息ID
+    timestamp: number;
+    senderName: string;
+    content: string;
+  };
 }
 
 interface ChatUser {
@@ -178,7 +185,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nickname, content } = body;
+    const { nickname, content, replyTo } = body;
     
     // 验证输入
     if (!nickname || !content) {
@@ -243,12 +250,13 @@ export async function POST(request: NextRequest) {
     }
     
     // 创建新消息
-    const message = {
+    const message: ChatMessage = {
       id: generateId(),
       nickname: nickname.trim(),
       content: content.trim(),
       timestamp: Date.now(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ...(replyTo && { replyTo })
     };
     
     // 更新用户最后发送时间

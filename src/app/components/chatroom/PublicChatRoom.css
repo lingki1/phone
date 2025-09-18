@@ -504,34 +504,43 @@
   cursor: pointer;
 }
 
-/* 引用块样式 */
-.chatroom-quote-block {
+/* 回复块样式 */
+.chatroom-reply-block {
   background: rgba(0, 0, 0, 0.05);
-  border-left: 3px solid #007AFF;
+  border-left: 3px solid #28a745;
   padding: 8px 12px;
   margin-bottom: 8px;
   border-radius: 0 4px 4px 0;
   font-size: 12px;
 }
 
-.quote-header {
+.reply-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   margin-bottom: 4px;
 }
 
-.quote-nickname {
-  font-weight: 600;
-  color: #007AFF;
+.reply-label {
+  background: #28a745;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
 }
 
-.quote-time {
+.reply-nickname {
+  font-weight: 600;
+  color: #28a745;
+}
+
+.reply-time {
   font-size: 10px;
   color: #666;
 }
 
-.quote-content {
+.reply-content {
   color: #555;
   line-height: 1.4;
 }
@@ -666,22 +675,23 @@
   min-height: 60px;
 }
 
-.chatroom-quote-preview {
+.chatroom-reply-preview {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
+  border-left: 3px solid #28a745;
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 8px;
   font-size: 12px;
-  /* 确保引用预览不会遮挡输入框 */
+  /* 确保回复预览不会遮挡输入框 */
   position: relative;
   z-index: 1;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* 引用预览的取消按钮 */
-.quote-cancel {
+/* 回复预览的取消按钮 */
+.reply-cancel {
   background: none;
   border: none;
   color: #666;
@@ -693,7 +703,7 @@
   float: right;
 }
 
-.quote-cancel:hover {
+.reply-cancel:hover {
   background: rgba(0, 0, 0, 0.1);
   color: #333;
 }

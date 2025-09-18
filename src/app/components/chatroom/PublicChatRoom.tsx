@@ -45,7 +45,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
   const [cooldownTime, setCooldownTime] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isTodoWindowOpen, setIsTodoWindowOpen] = useState(false);
-  const [quotePreview, setQuotePreview] = useState<{ timestamp: number; senderName: string; content: string } | null>(null);
+  const [replyPreview, setReplyPreview] = useState<{ messageId: string; timestamp: number; senderName: string; content: string } | null>(null);
   const [isAdminPickerOpen, setIsAdminPickerOpen] = useState(false);
   const [adminCandidates, setAdminCandidates] = useState<{ id: string; nickname: string }[]>([]);
 
@@ -383,7 +383,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
     }
 
     try {
-      const message = await addMessage(inputMessage.trim(), state.currentUser, quotePreview || undefined);
+      const message = await addMessage(inputMessage.trim(), state.currentUser, replyPreview || undefined);
       
       // 更新本地状态
       setState(prev => ({
@@ -396,7 +396,7 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
       }));
 
       setInputMessage('');
-      setQuotePreview(null);
+      setReplyPreview(null);
       setCooldownTime(30); // 设置30秒冷却时间
       
       // 立即刷新消息以获取最新状态
@@ -678,14 +678,15 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
                       </>
                     )}
                   </div>
-                  <div className="chatroom-message-content" onClick={() => setQuotePreview({ timestamp: message.timestamp, senderName: message.nickname, content: message.content })}>
-                    {message.quote && (
-                      <div className="chatroom-quote-block">
-                        <div className="quote-header">
-                          <span className="quote-nickname">{message.quote.senderName}</span>
-                          <span className="quote-time">{formatTimestamp(message.quote.timestamp)}</span>
+                  <div className="chatroom-message-content" onClick={() => setReplyPreview({ messageId: message.id, timestamp: message.timestamp, senderName: message.nickname, content: message.content })}>
+                    {message.replyTo && (
+                      <div className="chatroom-reply-block">
+                        <div className="reply-header">
+                          <span className="reply-label">回复</span>
+                          <span className="reply-nickname">{message.replyTo.senderName}</span>
+                          <span className="reply-time">{formatTimestamp(message.replyTo.timestamp)}</span>
                         </div>
-                        <div className="quote-content">{message.quote.content}</div>
+                        <div className="reply-content">{message.replyTo.content}</div>
                       </div>
                     )}
                     {message.content}
@@ -722,13 +723,14 @@ export default function PublicChatRoom({ isOpen, onClose }: PublicChatRoomProps)
           )}
           
           <div className="chatroom-input-container">
-            {quotePreview && (
-              <div className="chatroom-quote-preview">
-                <div className="quote-header">
-                  <span className="quote-nickname">{quotePreview.senderName}</span>
-                  <button className="quote-cancel" onClick={() => setQuotePreview(null)} title="取消引用">×</button>
+            {replyPreview && (
+              <div className="chatroom-reply-preview">
+                <div className="reply-header">
+                  <span className="reply-label">回复</span>
+                  <span className="reply-nickname">{replyPreview.senderName}</span>
+                  <button className="reply-cancel" onClick={() => setReplyPreview(null)} title="取消回复">×</button>
                 </div>
-                <div className="quote-content">{quotePreview.content}</div>
+                <div className="reply-content">{replyPreview.content}</div>
               </div>
             )}
             <div className="chatroom-input-row">

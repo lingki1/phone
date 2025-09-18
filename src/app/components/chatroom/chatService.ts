@@ -89,7 +89,7 @@ export async function loadChatData(): Promise<ChatData> {
 }
 
 // 发送新消息到服务器
-export async function addMessage(content: string, user: ChatUser, quote?: { timestamp: number; senderName: string; content: string }): Promise<ChatMessage> {
+export async function addMessage(content: string, user: ChatUser, replyTo?: { messageId: string; timestamp: number; senderName: string; content: string }): Promise<ChatMessage> {
   try {
     const response = await fetch(API_BASE, {
       method: 'POST',
@@ -99,7 +99,7 @@ export async function addMessage(content: string, user: ChatUser, quote?: { time
       body: JSON.stringify({
         nickname: user.nickname,
         content: content.trim(),
-        quote
+        replyTo
       }),
     });
     
