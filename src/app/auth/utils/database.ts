@@ -10,6 +10,7 @@ export interface User {
   password: string;
   role: 'super_admin' | 'admin' | 'user';
   group: string;
+  group_expires_at?: string;
   created_at: string;
   updated_at: string;
   last_login?: string;
@@ -116,6 +117,7 @@ class DatabaseManager {
           password TEXT NOT NULL,
           role TEXT NOT NULL CHECK (role IN ('super_admin', 'admin', 'user')) DEFAULT 'user',
           group_id TEXT NOT NULL DEFAULT 'default',
+          group_expires_at TEXT,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL,
           last_login TEXT,
@@ -123,6 +125,17 @@ class DatabaseManager {
           email TEXT
         )
       `);
+
+      // 兼容旧库：如果缺少 group_expires_at 列则补齐
+      const userCols = await this.all(`PRAGMA table_info(users)`);
+      const hasGroupExpires = (userCols as Array<{ name?: string }>).some(c => String(c?.name || '') === 'group_expires_at');
+      if (!hasGroupExpires) {
+        try {
+          await this.run(`ALTER TABLE users ADD COLUMN group_expires_at TEXT`);
+        } catch (_e) {
+          // 忽略：列已存在或其他非致命错误
+        }
+      }
 
       // 创建用户分组表
       await this.run(`
@@ -335,14 +348,15 @@ class DatabaseManager {
     };
 
     await this.run(`
-      INSERT INTO users (uid, username, password, role, group_id, created_at, updated_at, last_login, avatar, email)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (uid, username, password, role, group_id, group_expires_at, created_at, updated_at, last_login, avatar, email)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       user.uid,
       user.username,
       user.password,
       user.role,
       user.group,
+      user.group_expires_at || null,
       user.created_at,
       user.updated_at,
       user.last_login,

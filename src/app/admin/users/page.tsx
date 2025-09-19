@@ -9,6 +9,7 @@ interface User {
   username: string;
   role: 'super_admin' | 'admin' | 'user';
   group: string;
+  group_expires_at?: string;
   created_at: string;
   last_login?: string;
   email?: string;
@@ -64,7 +65,8 @@ export default function UsersManagementPage() {
     username: '',
     email: '',
     role: 'user' as 'user' | 'admin' | 'super_admin',
-    group: 'default'
+    group: 'default',
+    group_expires_at: ''
   });
   const [newPassword, setNewPassword] = useState('');
 
@@ -194,7 +196,7 @@ export default function UsersManagementPage() {
     if (!editingUser) return;
 
     try {
-      const payload: { username: string; email: string; role: 'user' | 'admin' | 'super_admin'; group: string; password?: string } = { ...editUser };
+    const payload: { username: string; email: string; role: 'user' | 'admin' | 'super_admin'; group: string; group_expires_at?: string; password?: string } = { ...editUser };
       // 仅超级管理员可重置用户密码
       if (currentUser?.role === 'super_admin' && newPassword.trim()) {
         payload.password = newPassword.trim();
@@ -216,7 +218,8 @@ export default function UsersManagementPage() {
           username: '',
           email: '',
           role: 'user',
-          group: 'default'
+          group: 'default',
+          group_expires_at: ''
         });
         setNewPassword('');
         fetchUsers(page);
@@ -256,7 +259,8 @@ export default function UsersManagementPage() {
       username: user.username,
       email: user.email || '',
       role: user.role,
-      group: user.group
+      group: user.group,
+      group_expires_at: user.group_expires_at || ''
     });
     setNewPassword('');
   };
@@ -413,6 +417,16 @@ export default function UsersManagementPage() {
                           <option key={group.id} value={group.id}>{group.name}</option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">分组有效期（可选）</label>
+                      <input
+                        type="datetime-local"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={editUser.group_expires_at || ''}
+                        onChange={(e) => setEditUser({ ...editUser, group_expires_at: e.target.value })}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">到期后用户将自动视为默认分组（显示层面）</p>
                     </div>
                   </div>
                   <div className="flex justify-end space-x-3 mt-4">

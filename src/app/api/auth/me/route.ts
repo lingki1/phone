@@ -35,9 +35,18 @@ export async function GET(request: NextRequest) {
     }
 
     // 返回用户信息（不包含密码，映射 group_id 为 group，并补充 group_name）
-    const raw = user as unknown as (DBUser & { group_id?: string });
-    const { password: _password, group_id, ...rest } = raw;
-    const groupId = group_id ?? raw.group;
+    const raw = user as unknown as (DBUser & { group_id?: string; group_expires_at?: string });
+    const { password: _password, group_id, group_expires_at, ...rest } = raw;
+    const nowTs = Date.now();
+    const expiresTs = raw.group_expires_at ? Date.parse(raw.group_expires_at) : NaN;
+    const isExpired = Number.isFinite(expiresTs) && expiresTs <= nowTs;
+    const groupId = isExpired ? 'default' : (group_id ?? raw.group);
+    // 如已过期，后台写回默认分组（不阻塞）
+    if (isExpired) {
+      try {
+        await databaseManager.updateUser(authUser.uid, { group_id: 'default', group_expires_at: null } as Partial<DBUser> & { group_id?: string; group_expires_at?: string | null });
+      } catch (_e) { /* ignore */ }
+    }
     let groupName = '';
     try {
       if (!groupId) {
@@ -53,7 +62,7 @@ export async function GET(request: NextRequest) {
       groupName = '';
     }
 
-    const userWithoutPassword = { ...rest, group: groupId, group_name: groupName };
+    const userWithoutPassword = { ...rest, group: groupId, group_name: groupName, group_expires_at };
 
     return NextResponse.json({
       success: true,

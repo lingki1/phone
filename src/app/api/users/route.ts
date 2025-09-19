@@ -44,10 +44,27 @@ export async function GET(request: NextRequest) {
     ]);
     
     // 统一响应字段：将 group_id 映射为 group，并移除密码
+    const expiredUids: string[] = [];
     const usersWithoutPassword = (users as DBUser[]).map((u) => {
-      const { password: _password, group_id, ...rest } = u as unknown as DBUser & { group_id?: string };
-      return { ...rest, group: group_id ?? (u as unknown as { group?: string }).group };
+      const { password: _password, group_id, group_expires_at, ...rest } = u as unknown as DBUser & { group_id?: string; group_expires_at?: string };
+      const nowTs = Date.now();
+      const expiresTs = group_expires_at ? Date.parse(group_expires_at) : NaN;
+      const isExpired = Number.isFinite(expiresTs) && expiresTs <= nowTs;
+      if (isExpired && (u as DBUser).uid) {
+        expiredUids.push((u as DBUser).uid);
+      }
+      const effectiveGroup = isExpired ? 'default' : (group_id ?? (u as unknown as { group?: string }).group);
+      return { ...rest, group: effectiveGroup, group_expires_at };
     });
+
+    // 将过期用户写回默认分组（后台清理）
+    if (expiredUids.length > 0) {
+      const updates = expiredUids.map(uid =>
+        databaseManager.updateUser(uid, { group_id: 'default', group_expires_at: null } as Partial<DBUser> & { group_id?: string; group_expires_at?: string | null })
+      );
+      // 不阻塞响应，尽量完成写回
+      await Promise.allSettled(updates);
+    }
 
     return NextResponse.json({
       success: true,

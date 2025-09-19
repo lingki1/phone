@@ -46,9 +46,17 @@ export async function GET(
     }
 
     // 返回用户信息（不包含密码，并将group_id映射为group）
-    const raw = user as unknown as (DBUser & { group_id?: string });
-    const { password: _password, group_id, ...rest } = raw;
-    const userWithoutPassword = { ...rest, group: group_id ?? raw.group };
+    const raw = user as unknown as (DBUser & { group_id?: string; group_expires_at?: string });
+    const { password: _password, group_id, group_expires_at, ...rest } = raw;
+    const nowTs = Date.now();
+    const expiresTs = group_expires_at ? Date.parse(group_expires_at) : NaN;
+    const isExpired = Number.isFinite(expiresTs) && expiresTs <= nowTs;
+    const effectiveGroup = isExpired ? 'default' : (group_id ?? raw.group);
+    // 如果过期则后台写回默认分组
+    if (isExpired) {
+      await databaseManager.updateUser(uid, { group_id: 'default', group_expires_at: null } as Partial<DBUser> & { group_id?: string; group_expires_at?: string | null });
+    }
+    const userWithoutPassword = { ...rest, group: effectiveGroup, group_expires_at };
 
     return NextResponse.json({
       success: true,
@@ -142,7 +150,7 @@ export async function PUT(
     }
 
     // 将 group 映射为数据库字段 group_id
-    const updates = { ...body } as Partial<DBUser> & { group?: string; group_id?: string };
+    const updates = { ...body } as Partial<DBUser> & { group?: string; group_id?: string; group_expires_at?: string };
     if (typeof updates.group !== 'undefined') {
       updates.group_id = updates.group;
       delete (updates as { group?: string }).group;
@@ -160,9 +168,13 @@ export async function PUT(
     }
 
     // 返回用户信息（不包含密码，并将group_id映射为group）
-    const rawUpdated = user as unknown as (DBUser & { group_id?: string });
-    const { password: _password, group_id: updated_group_id, ...updatedRest } = rawUpdated;
-    const userWithoutPassword = { ...updatedRest, group: updated_group_id ?? rawUpdated.group };
+    const rawUpdated = user as unknown as (DBUser & { group_id?: string; group_expires_at?: string });
+    const { password: _password, group_id: updated_group_id, group_expires_at: updated_expires, ...updatedRest } = rawUpdated;
+    const nowTs2 = Date.now();
+    const expiresTs2 = updated_expires ? Date.parse(updated_expires) : NaN;
+    const isExpired2 = Number.isFinite(expiresTs2) && expiresTs2 <= nowTs2;
+    const effectiveGroup2 = isExpired2 ? 'default' : (updated_group_id ?? rawUpdated.group);
+    const userWithoutPassword = { ...updatedRest, group: effectiveGroup2, group_expires_at: updated_expires };
 
     return NextResponse.json({
       success: true,
