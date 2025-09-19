@@ -40,14 +40,17 @@ export async function GET(request: NextRequest) {
     const groupId = group_id ?? raw.group;
     let groupName = '';
     try {
-      if (!groupId || groupId === 'default') {
-        groupName = '默认分组';
+      if (!groupId) {
+        groupName = '';
+      } else if (groupId === 'default') {
+        // 默认分组交由前端做 i18n 显示
+        groupName = '';
       } else {
         const g = await databaseManager.getGroupById(groupId);
-        groupName = g?.name || groupId;
+        groupName = g?.name || '';
       }
     } catch (_e) {
-      groupName = groupId || '';
+      groupName = '';
     }
 
     const userWithoutPassword = { ...rest, group: groupId, group_name: groupName };

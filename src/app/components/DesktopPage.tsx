@@ -748,13 +748,13 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   };
 
   const getUserGroupName = () => {
-    // 优先使用后端直接返回的人类可读名称
-    if (currentUser?.group_name && typeof currentUser.group_name === 'string') {
-      return currentUser.group_name;
-    }
     const groupId: string | undefined = currentUser?.group || currentUser?.group_id;
     if (!groupId) return t('Desktop.user.group.ungrouped', '未分组');
     if (groupId === 'default') return t('Desktop.user.group.default', '默认分组');
+    // 非默认分组再考虑后端提供的可读名称
+    if (currentUser?.group_name && typeof currentUser.group_name === 'string') {
+      return currentUser.group_name;
+    }
     const g = groups.find(g => g.id === groupId);
     return g ? g.name : groupId;
   };
