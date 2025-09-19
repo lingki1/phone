@@ -38,6 +38,7 @@ interface CurrentUser {
   role?: string;
   group?: string;
   group_id?: string;
+  group_name?: string;
 }
 
 interface DesktopPageProps {
@@ -139,6 +140,7 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
   const [isApiSettingsOpen, setIsApiSettingsOpen] = useState(false);
   const [apiConfig, setApiConfig] = useState({ proxyUrl: '', apiKey: '', model: '' });
+  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
   // PWA 安装按钮状态
   const [isInstallAvailable, setIsInstallAvailable] = useState(false);
   const deferredInstallPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -153,6 +155,16 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
           const data = await res.json();
           if (data?.success) {
             setCurrentUser(data.user);
+            // 拉取分组（仅当已登录且可能有权限时；失败则忽略）
+            try {
+              const gres = await fetch('/api/groups', { cache: 'no-store', credentials: 'include' });
+              if (gres.ok) {
+                const gdata = await gres.json();
+                if (gdata?.success && Array.isArray(gdata.groups)) {
+                  setGroups(gdata.groups);
+                }
+              }
+            } catch (_e) { /* ignore */ }
           }
         }
       } catch (_e) {
@@ -736,10 +748,15 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   };
 
   const getUserGroupName = () => {
+    // 优先使用后端直接返回的人类可读名称
+    if (currentUser?.group_name && typeof currentUser.group_name === 'string') {
+      return currentUser.group_name;
+    }
     const groupId: string | undefined = currentUser?.group || currentUser?.group_id;
     if (!groupId) return t('Desktop.user.group.ungrouped', '未分组');
     if (groupId === 'default') return t('Desktop.user.group.default', '默认分组');
-    return groupId;
+    const g = groups.find(g => g.id === groupId);
+    return g ? g.name : groupId;
   };
 
   // 处理背景色变更

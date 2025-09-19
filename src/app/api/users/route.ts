@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
+import type { User as DBUser } from '@/app/auth/utils/database';
 
 // 获取用户列表
 export async function GET(request: NextRequest) {
@@ -42,10 +43,10 @@ export async function GET(request: NextRequest) {
       q ? databaseManager.getUsersBySearchPaged(q, limit, offset) : databaseManager.getUsersPaged(limit, offset)
     ]);
     
-    // 移除密码字段
-    const usersWithoutPassword = users.map(user => {
-      const { password: _password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+    // 统一响应字段：将 group_id 映射为 group，并移除密码
+    const usersWithoutPassword = (users as DBUser[]).map((u) => {
+      const { password: _password, group_id, ...rest } = u as unknown as DBUser & { group_id?: string };
+      return { ...rest, group: group_id ?? (u as unknown as { group?: string }).group };
     });
 
     return NextResponse.json({
@@ -124,12 +125,12 @@ export async function POST(request: NextRequest) {
     });
 
     // 返回用户信息（不包含密码）
-    const { password: _password, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user as DBUser;
 
     return NextResponse.json({
       success: true,
       message: '用户创建成功',
-      user: userWithoutPassword
+      user: { ...userWithoutPassword, group: (user as unknown as { group?: string; group_id?: string }).group ?? (user as unknown as { group?: string; group_id?: string }).group_id }
     }, { status: 201 });
   } catch (error) {
     console.error('Create user API error:', error);

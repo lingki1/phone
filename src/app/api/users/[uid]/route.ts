@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
+import type { User as DBUser } from '@/app/auth/utils/database';
 
 // 获取单个用户信息
 export async function GET(
@@ -44,8 +45,10 @@ export async function GET(
       );
     }
 
-    // 返回用户信息（不包含密码）
-    const { password: _password, ...userWithoutPassword } = user;
+    // 返回用户信息（不包含密码，并将group_id映射为group）
+    const raw = user as unknown as (DBUser & { group_id?: string });
+    const { password: _password, group_id, ...rest } = raw;
+    const userWithoutPassword = { ...rest, group: group_id ?? raw.group };
 
     return NextResponse.json({
       success: true,
@@ -138,7 +141,14 @@ export async function PUT(
       body.password = await bcrypt.default.hash(body.password, 10);
     }
 
-    await databaseManager.updateUser(uid, body);
+    // 将 group 映射为数据库字段 group_id
+    const updates = { ...body } as Partial<DBUser> & { group?: string; group_id?: string };
+    if (typeof updates.group !== 'undefined') {
+      updates.group_id = updates.group;
+      delete (updates as { group?: string }).group;
+    }
+
+    await databaseManager.updateUser(uid, updates as Partial<DBUser>);
 
     // 获取更新后的用户信息
     const user = await databaseManager.getUserByUid(uid);
@@ -149,8 +159,10 @@ export async function PUT(
       );
     }
 
-    // 返回用户信息（不包含密码）
-    const { password: _password, ...userWithoutPassword } = user;
+    // 返回用户信息（不包含密码，并将group_id映射为group）
+    const rawUpdated = user as unknown as (DBUser & { group_id?: string });
+    const { password: _password, group_id: updated_group_id, ...updatedRest } = rawUpdated;
+    const userWithoutPassword = { ...updatedRest, group: updated_group_id ?? rawUpdated.group };
 
     return NextResponse.json({
       success: true,

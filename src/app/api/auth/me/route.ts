@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
+import type { User as DBUser } from '@/app/auth/utils/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,8 +34,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 返回用户信息（不包含密码）
-    const { password: _password, ...userWithoutPassword } = user;
+    // 返回用户信息（不包含密码，映射 group_id 为 group，并补充 group_name）
+    const raw = user as unknown as (DBUser & { group_id?: string });
+    const { password: _password, group_id, ...rest } = raw;
+    const groupId = group_id ?? raw.group;
+    let groupName = '';
+    try {
+      if (!groupId || groupId === 'default') {
+        groupName = '默认分组';
+      } else {
+        const g = await databaseManager.getGroupById(groupId);
+        groupName = g?.name || groupId;
+      }
+    } catch (_e) {
+      groupName = groupId || '';
+    }
+
+    const userWithoutPassword = { ...rest, group: groupId, group_name: groupName };
 
     return NextResponse.json({
       success: true,

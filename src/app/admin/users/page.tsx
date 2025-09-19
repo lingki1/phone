@@ -33,6 +33,9 @@ export default function UsersManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [currentUser, setCurrentUser] = useState<{ uid: string; username: string; role: 'super_admin' | 'admin' | 'user'; group: string } | null>(null);
+  const [showCreateGroupForm, setShowCreateGroupForm] = useState(false);
+  const [newGroup, setNewGroup] = useState({ name: '', description: '' });
+  const [groupError, setGroupError] = useState('');
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -157,6 +160,34 @@ export default function UsersManagementPage() {
     }
   };
 
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGroupError('');
+
+    try {
+      const response = await fetch('/api/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newGroup),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowCreateGroupForm(false);
+        setNewGroup({ name: '', description: '' });
+        fetchGroups();
+      } else {
+        setGroupError(data.message || '创建分组失败');
+      }
+    } catch (error) {
+      console.error('Create group error:', error);
+      setGroupError('网络错误');
+    }
+  };
+
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -240,6 +271,8 @@ export default function UsersManagementPage() {
   };
 
   const getGroupName = (groupId: string) => {
+    if (!groupId) return '未分组';
+    if (groupId === 'default') return '默认分组';
     const group = groups.find(g => g.id === groupId);
     return group ? group.name : groupId;
   };
@@ -286,6 +319,12 @@ export default function UsersManagementPage() {
                 >
                   激活码与注册设置 (Ctrl+S)
                 </Link>
+                <button
+                  onClick={() => setShowCreateGroupForm(true)}
+                  className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  创建分组
+                </button>
                 <button
                   onClick={() => setShowCreateForm(true)}
                   className="dos-btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
@@ -537,6 +576,56 @@ export default function UsersManagementPage() {
                     <button
                       type="button"
                       onClick={() => setShowCreateForm(false)}
+                      className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    >
+                      创建
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 创建分组表单 */}
+        {showCreateGroupForm && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">创建分组</h3>
+                <form onSubmit={handleCreateGroup}>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700">分组名称</label>
+                    <input
+                      type="text"
+                      required
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={newGroup.name}
+                      onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700">描述（可选）</label>
+                    <textarea
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      rows={3}
+                      value={newGroup.description}
+                      onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
+                    />
+                  </div>
+                  {groupError && (
+                    <div className="mb-3 text-sm text-red-600">{groupError}</div>
+                  )}
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => { setShowCreateGroupForm(false); setGroupError(''); }}
                       className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
                       取消
