@@ -29,8 +29,8 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
         const data = await res.json();
         if (data?.success) {
           setRequireActivation(Boolean(data.settings?.register_require_activation));
-          setPurchaseUrl1(String(data.settings?.purchase_url_1 || ''));
-          setPurchaseUrl2(String(data.settings?.purchase_url_2 || ''));
+          setPurchaseUrl1(String(data.settings?.purchase_url_1 || '').trim());
+          setPurchaseUrl2(String(data.settings?.purchase_url_2 || '').trim());
         }
       } catch (_e) {
         // ignore
@@ -185,9 +185,9 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           value={activationCode}
           onChange={(e) => setActivationCode(e.target.value)}
         />
-        {requireActivation && (purchaseUrl1 || purchaseUrl2) && (
+        {requireActivation && ((purchaseUrl1 && purchaseUrl1.trim()) || (purchaseUrl2 && purchaseUrl2.trim())) && (
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            {purchaseUrl1 && (
+            {purchaseUrl1 && purchaseUrl1.trim() && (
               <a
                 href={purchaseUrl1}
                 target="_blank"
@@ -198,7 +198,7 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
                 {t('Auth.register.buyCardCn', '中国用户购卡')}
               </a>
             )}
-            {purchaseUrl2 && (
+            {purchaseUrl2 && purchaseUrl2.trim() && (
               <a
                 href={purchaseUrl2}
                 target="_blank"

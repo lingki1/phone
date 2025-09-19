@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
   const [savingSystemApi, setSavingSystemApi] = useState(false);
   const [codes, setCodes] = useState<ActivationCode[]>([]);
   const [generating, setGenerating] = useState(false);
-  const [generateCount, setGenerateCount] = useState(10);
+  const [generateCountInput, setGenerateCountInput] = useState('10');
   const [lastGeneratedCodes, setLastGeneratedCodes] = useState<string[]>([]);
   const [downloadType, setDownloadType] = useState<'all' | 'used' | 'unused'>('all');
   const [codePage, setCodePage] = useState(1);
@@ -189,10 +189,11 @@ export default function AdminSettingsPage() {
     setGenerating(true);
     setError('');
     try {
+      const count = Math.max(1, Math.min(200, Number(generateCountInput) || 1));
       const res = await fetch('/api/admin/activation-codes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: generateCount })
+        body: JSON.stringify({ count })
       });
       const data = await res.json();
       if (data.success) {
@@ -414,8 +415,9 @@ export default function AdminSettingsPage() {
                 type="number"
                 min={1}
                 max={200}
-                value={generateCount}
-                onChange={(e) => setGenerateCount(Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
+                value={generateCountInput}
+                onChange={(e) => setGenerateCountInput(e.target.value.replace(/[^0-9]/g, ''))}
+                onBlur={(e) => setGenerateCountInput(String(Math.max(1, Math.min(200, Number(e.target.value) || 1))))}
               />
             </div>
             <button
