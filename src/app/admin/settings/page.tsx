@@ -17,6 +17,9 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [requireActivation, setRequireActivation] = useState(false);
+  const [purchaseUrl1, setPurchaseUrl1] = useState('');
+  const [purchaseUrl2, setPurchaseUrl2] = useState('');
+  const [savingRegisterConfig, setSavingRegisterConfig] = useState(false);
   // 平台内置API配置表单状态
   const [sysProxyUrl, setSysProxyUrl] = useState('');
   const [sysApiKey, setSysApiKey] = useState('');
@@ -61,6 +64,8 @@ export default function AdminSettingsPage() {
       const data = await res.json();
       if (data.success) {
         setRequireActivation(Boolean(data.settings?.register_require_activation));
+        setPurchaseUrl1(String(data.settings?.purchase_url_1 || ''));
+        setPurchaseUrl2(String(data.settings?.purchase_url_2 || ''));
       } else {
         setError(data.message || '获取设置失败');
       }
@@ -134,6 +139,34 @@ export default function AdminSettingsPage() {
     } catch (_e) {
       setError('网络错误');
       setRequireActivation(!value);
+    }
+  };
+
+  const handleSaveRegisterConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (savingRegisterConfig) return;
+    setSavingRegisterConfig(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // 可只保存链接，不影响当前开关；若需要同步保存也可加入 register_require_activation: requireActivation
+          purchase_url_1: purchaseUrl1,
+          purchase_url_2: purchaseUrl2
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || '保存失败');
+      } else {
+        alert('注册设置已保存');
+      }
+    } catch (_e) {
+      setError('网络错误');
+    } finally {
+      setSavingRegisterConfig(false);
     }
   };
 
@@ -290,8 +323,8 @@ export default function AdminSettingsPage() {
       </section>
 
       {/* 注册设置区域 */}
-      <section className="bg-white p-6 border border-gray-200 rounded-lg">
-        <h2 className="text-lg font-medium mb-4">注册设置</h2>
+      <section className="bg-white p-6 border border-gray-200 rounded-lg space-y-4">
+        <h2 className="text-lg font-medium">注册设置</h2>
         <label className="inline-flex items-center space-x-2">
           <input
             type="checkbox"
@@ -300,6 +333,41 @@ export default function AdminSettingsPage() {
           />
           <span>注册需要激活码</span>
         </label>
+
+        {requireActivation && (
+          <form className="space-y-3" onSubmit={handleSaveRegisterConfig}>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">国内购卡</label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="url"
+                placeholder="https://example.com/buy-1"
+                value={purchaseUrl1}
+                onChange={(e) => setPurchaseUrl1(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">海外购卡</label>
+              <input
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="url"
+                placeholder="https://example.com/buy-2"
+                value={purchaseUrl2}
+                onChange={(e) => setPurchaseUrl2(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={savingRegisterConfig}
+                className="dos-btn px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+              >
+                {savingRegisterConfig ? '保存中...' : '保存购卡链接'}
+              </button>
+            </div>
+            <div className="text-xs text-gray-500">上述购卡链接将公开给注册页显示为两个按钮。</div>
+          </form>
+        )}
       </section>
 
       {/* 激活码管理区域 */}

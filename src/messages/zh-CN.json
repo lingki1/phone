@@ -49,7 +49,9 @@
         "ungrouped": "未分组",
         "default": "默认分组"
       },
-      "logout": "退出登录"
+      "logout": "退出登录",
+      "changePassword": "修改密码",
+      "settings": "设置"
     },
     "battery": {
       "status": "电池状态",
@@ -64,6 +66,9 @@
       "weibo": "热点",
       "chatroom": "聊天室",
       "creativespace": "我的创意"
+    },
+    "theme": {
+      "background": "背景主题"
     }
   },
   "Home": {
@@ -83,14 +88,17 @@
       "passwordWithRule": "请输入密码 (至少6个字符)",
       "confirmPassword": "请再次输入密码",
       "activationCode": "请输入激活码（若管理员开启需要）",
-      "emailOptional": "请输入邮箱 (可选)"
+      "emailOptional": "请输入邮箱 (可选)",
+      "emailRequired": "请输入邮箱 (必填)"
     },
     "login": {
       "fillUserAndPass": "请填写用户名和密码",
       "success": "登录成功！",
       "fail": "登录失败",
       "submitting": "登录中...",
-      "submit": "登录"
+      "submit": "登录",
+      "forgotPassword": "找回密码",
+      "recoveryInstruction": "请用注册邮箱发送邮件给 ling_ki@live.cn ，附上您的用户名。没绑定邮箱请发送邮件附上内容“用户名和大概注册时间”。"
     },
     "register": {
       "enterUsername": "请输入用户名",
@@ -103,6 +111,8 @@
       "submitting": "注册中...",
       "submit": "注册",
       "activationCode": "激活码",
+      "buyCardCn": "中国购卡",
+      "buyCardIntl": "国际购卡",
       "confirmPassword": "确认密码"
     },
     "modal": {
@@ -1981,6 +1991,125 @@
       },
       "currentTheme": "当前主题",
       "apply": "应用"
+    }
+  },
+  "BlackMarket": {
+    "title": "黑市",
+    "header": { "back": "返回桌面" },
+    "actions": { "upload": "上传" },
+    "tabs": {
+      "all": "全部",
+      "characters": "角色卡",
+      "worldbooks": "世界书",
+      "myuploads": "我的上传"
+    },
+    "search": { "placeholder": "搜索名称、描述、作者或标签..." },
+    "tags": {
+      "collapse": "收起",
+      "expand": "展开 (+{{count}})"
+    },
+    "debug": { "tagsShown": "显示: {{shown}}/{{total}}" },
+    "sort": {
+      "date": "按时间",
+      "downloads": "按热度",
+      "name": "按名称"
+    },
+    "loading": "加载中...",
+    "type": {
+      "character": "角色卡",
+      "worldbook": "世界书"
+    },
+    "import": {
+      "toChat": "导入到聊天列表",
+      "toWorldBook": "导入到世界书",
+      "button": "导入",
+      "importing": "导入中..."
+    },
+    "delete": {
+      "mine": "删除我的内容",
+      "admin": "管理员删除",
+      "this": "删除此内容",
+      "button": "删除"
+    },
+    "empty": {
+      "title": "😔 没有找到相关内容",
+      "hint": "尝试调整搜索条件或上传新的内容"
+    },
+    "detail": {
+      "author": "作者：",
+      "descAria": "描述",
+      "noDesc": "无描述",
+      "close": "关闭"
+    },
+    "upload": {
+      "title": "上传到黑市",
+      "type": {
+        "character": "👤 角色卡 (PNG格式)",
+        "worldbook": "📚 世界书 (JSON格式)"
+      },
+      "dropHere": "拖拽文件到这里或点击选择",
+      "supported": "支持格式：",
+      "png": "PNG图片（角色卡）",
+      "json": "JSON文件（世界书）",
+      "preview": "预览",
+      "fileInfo": "文件信息",
+      "personality": "性格：",
+      "scenario": "场景：",
+      "entryCount": "条目数量：",
+      "theme": "主题：",
+      "nameLabel": "名称 *",
+      "namePlaceholderCharacter": "输入角色名称",
+      "namePlaceholderWorldBook": "输入世界书名称",
+      "descLabel": "描述 *",
+      "descPlaceholder": "详细描述这个内容的特点和用途",
+      "tagsLabel": "标签",
+      "tagsPlaceholder": "添加标签，按回车确认",
+      "addTag": "添加",
+      "cancel": "取消",
+      "upload": "上传",
+      "uploading": "上传中...",
+      "fillAll": "请填写完整信息并选择文件",
+      "starting": "开始上传...",
+      "success": "上传成功！",
+      "failed": "上传失败，请稍后重试"
+    },
+    "worldbook": {
+      "author": "作者：",
+      "entryCount": "条目数量",
+      "downloads": "下载次数",
+      "uploadDate": "上传日期",
+      "theme": "主题设定:",
+      "partialPreview": "部分条目预览:",
+      "moreEntries": "还有 {{count}} 个条目...",
+      "download": "下载世界书"
+    },
+    "alert": {
+      "loginRequired": "请先登录",
+      "noPermission": "您没有权限删除此内容",
+      "deleteSuccess": "删除成功",
+      "deleteFailedWithMessage": "删除失败：{{message}}",
+      "deleteFailed": "删除失败，请稍后重试",
+      "downloadRemoved": "已移除下载功能，请使用“导入”来体验内容",
+      "onlyImportCharacter": "只能导入角色卡",
+      "characterParseFailed": "角色文件解析失败",
+      "characterValidationFailed": "角色数据验证失败: {{message}}",
+      "characterImportSuccess": "角色导入成功！",
+      "importFailed": "导入失败，请稍后重试",
+      "importNotConfigured": "导入功能未配置",
+      "importCharacterFailed": "导入角色失败，请稍后重试",
+      "onlyImportWorldBook": "只能导入世界书",
+      "worldBookNoData": "世界书中没有找到有效的数据",
+      "worldBookImportSuccess": "世界书导入成功！导入了 {{count}} 个条目",
+      "worldBookFormatUnsupported": "不支持的世界书格式，请使用Marinara预设格式或世界书数组格式",
+      "importWorldBookFailed": "导入世界书失败，请稍后重试"
+    },
+    "confirm": {
+      "delete": "您确定要删除 \"{{name}}\" 吗？\n此操作不可撤销！",
+      "deleteWithAuthor": "您确定要删除 \"{{name}}\" 吗？\n作者：{{author}}"
+    },
+    "error": {
+      "fetchCharacter": "无法获取角色文件",
+      "fetchWorldBook": "无法获取世界书文件"
     }
   }
 }

@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import "./ItemDetailModal.css";
 import { BlackMarketItem } from "./types";
+import { useI18n } from "../../components/i18n/I18nProvider";
 
 interface ItemDetailModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ export default function ItemDetailModal({
   canDelete = false,
   busy = false
 }: ItemDetailModalProps) {
+  const { t } = useI18n();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -82,13 +84,13 @@ export default function ItemDetailModal({
           <div className="bm-detail-info">
             <h3 className="bm-detail-title">{item.name}</h3>
             <div className="bm-detail-meta">
-              <span>作者：{item.author}</span>
+              <span>{t('BlackMarket.detail.author', '作者：')}{item.author}</span>
               <span>{new Date(item.uploadDate).toLocaleString()}</span>
               <span>🔥 {item.downloadCount}</span>
             </div>
 
-            <div className="bm-detail-desc" aria-label="描述">
-              {item.description || "无描述"}
+            <div className="bm-detail-desc" aria-label={t('BlackMarket.detail.descAria', '描述')}>
+              {item.description || t('BlackMarket.detail.noDesc', '无描述')}
             </div>
 
             <div className="bm-detail-tags">
@@ -102,20 +104,20 @@ export default function ItemDetailModal({
                 <button 
                   className="import-button" 
                   onClick={() => { if (!busy) onImportCharacter(item); }}
-                  title="导入到聊天列表"
+                  title={t('BlackMarket.import.toChat', '导入到聊天列表')}
                   disabled={busy}
                 >
-                  {busy ? '导入中...' : '导入'}
+                  {busy ? t('BlackMarket.import.importing', '导入中...') : t('BlackMarket.import.button', '导入')}
                 </button>
               )}
               {item.type === 'worldbook' && onImportWorldBook && (
                 <button 
                   className="import-button" 
                   onClick={() => { if (!busy) onImportWorldBook(item); }}
-                  title="导入到世界书"
+                  title={t('BlackMarket.import.toWorldBook', '导入到世界书')}
                   disabled={busy}
                 >
-                  {busy ? '导入中...' : '导入'}
+                  {busy ? t('BlackMarket.import.importing', '导入中...') : t('BlackMarket.import.button', '导入')}
                 </button>
               )}
               {/* 下载按钮已移除 */}
@@ -123,13 +125,13 @@ export default function ItemDetailModal({
                 <button 
                   className="delete-button" 
                   onClick={() => { if (!busy) onDelete(item); }}
-                  title="删除此内容"
+                  title={t('BlackMarket.delete.this', '删除此内容')}
                   disabled={busy}
                 >
-                  删除
+                  {t('BlackMarket.delete.button', '删除')}
                 </button>
               )}
-              <button className="bm-detail-secondary" onClick={onClose} disabled={busy}>关闭</button>
+              <button className="bm-detail-secondary" onClick={onClose} disabled={busy}>{t('BlackMarket.detail.close', '关闭')}</button>
             </div>
           </div>
         </div>

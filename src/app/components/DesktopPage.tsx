@@ -12,6 +12,7 @@ import { useI18n } from '../components/i18n/I18nProvider';
 import { dataManager } from '../utils/dataManager';
 import AuthModal from './auth/AuthModal';
 import ChangePasswordModal from './auth/ChangePasswordModal';
+import ApiSettingsModal from './qq/ApiSettingsModal';
 import CreativeSpace from './creativespace/CreativeSpace';
 
 // 不再需要StoredAnnouncement接口，因为现在使用API
@@ -136,6 +137,8 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
+  const [isApiSettingsOpen, setIsApiSettingsOpen] = useState(false);
+  const [apiConfig, setApiConfig] = useState({ proxyUrl: '', apiKey: '', model: '' });
   // PWA 安装按钮状态
   const [isInstallAvailable, setIsInstallAvailable] = useState(false);
   const deferredInstallPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -340,6 +343,23 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         deferredInstallPrompt.current = null;
       }
     } catch (_e) {}
+  };
+
+  // 打开API设置（与个人中心相同逻辑）
+  const openApiSettings = async () => {
+    try {
+      await dataManager.initDB();
+      const saved = await dataManager.getApiConfig();
+      setApiConfig(saved);
+    } catch (_e) {
+      const saved = localStorage.getItem('apiConfig');
+      if (saved) {
+        try { setApiConfig(JSON.parse(saved)); } catch { /* noop */ }
+      }
+    } finally {
+      setIsUserMenuOpen(false);
+      setIsApiSettingsOpen(true);
+    }
   };
 
   // 检测是否为移动设备
@@ -813,8 +833,11 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
                     ))}
                   </div>
                 </div>
+                <button className="authuser-item" onClick={openApiSettings}>
+                  {t('Desktop.user.settings', '设置')}
+                </button>
                 <button className="authuser-item" onClick={() => { setIsChangePwdOpen(true); setIsUserMenuOpen(false); }}>
-                  {t('Desktop.user.changePassword', '修改密码')}
+                  {t('Desktop.user.changePassword', 'Change Password')}
                 </button>
                 
                 <button className="authuser-item authuser-logout" onClick={handleLogout}>{t('Desktop.user.logout', '退出登录')}</button>
@@ -969,6 +992,23 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
         onSuccess={() => {
           // 可选：修改密码成功后可触发额外操作
         }}
+      />
+
+      <ApiSettingsModal
+        isVisible={isApiSettingsOpen}
+        onClose={() => setIsApiSettingsOpen(false)}
+        onSave={async (cfg) => {
+          try {
+            await dataManager.initDB();
+            await dataManager.saveApiConfig(cfg);
+          } catch (_e) {
+            localStorage.setItem('apiConfig', JSON.stringify(cfg));
+          } finally {
+            setApiConfig(cfg);
+            setIsApiSettingsOpen(false);
+          }
+        }}
+        currentConfig={apiConfig}
       />
 
     </div>

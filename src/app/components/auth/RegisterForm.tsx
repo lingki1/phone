@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '../../components/i18n/I18nProvider';
 
 interface RegisterFormProps {
@@ -18,6 +18,26 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [requireActivation, setRequireActivation] = useState(false);
+  const [purchaseUrl1, setPurchaseUrl1] = useState('');
+  const [purchaseUrl2, setPurchaseUrl2] = useState('');
+
+  useEffect(() => {
+    const loadPublicSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data?.success) {
+          setRequireActivation(Boolean(data.settings?.register_require_activation));
+          setPurchaseUrl1(String(data.settings?.purchase_url_1 || ''));
+          setPurchaseUrl2(String(data.settings?.purchase_url_2 || ''));
+        }
+      } catch (_e) {
+        // ignore
+      }
+    };
+    loadPublicSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +185,32 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           value={activationCode}
           onChange={(e) => setActivationCode(e.target.value)}
         />
+        {requireActivation && (purchaseUrl1 || purchaseUrl2) && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            {purchaseUrl1 && (
+              <a
+                href={purchaseUrl1}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="auth-button"
+                style={{ padding: '6px 10px', fontSize: 12, lineHeight: '20px' }}
+              >
+                {t('Auth.register.buyCardCn', '中国用户购卡')}
+              </a>
+            )}
+            {purchaseUrl2 && (
+              <a
+                href={purchaseUrl2}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="auth-button"
+                style={{ padding: '6px 10px', fontSize: 12, lineHeight: '20px' }}
+              >
+                {t('Auth.register.buyCardIntl', '国际用户购卡')}
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="auth-form-group">
@@ -177,7 +223,7 @@ export default function RegisterForm({ onSwitchToLogin: _onSwitchToLogin, onRegi
           type="email"
           required
           className="auth-input"
-          placeholder={t('Auth.placeholder.emailRequired', '请输入邮箱 (必填)')}
+          placeholder={t('Auth.placeholder.emailRequired', 'Enter email (required)')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />

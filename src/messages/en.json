@@ -49,7 +49,9 @@
         "ungrouped": "Ungrouped",
         "default": "Default"
       },
-      "logout": "Logout"
+      "logout": "Logout",
+      "changePassword": "Change Password",
+      "settings": "Settings"
     },
     "battery": {
       "status": "Battery",
@@ -64,6 +66,9 @@
       "weibo": "Hot",
       "chatroom": "Chat Room",
       "creativespace": "Creative Space"
+    },
+    "theme": {
+      "background": "Background Theme"
     }
   },
   "Home": {
@@ -83,14 +88,17 @@
       "passwordWithRule": "Enter password (at least 6 characters)",
       "confirmPassword": "Re-enter password",
       "activationCode": "Enter activation code (if admin enabled)",
-      "emailOptional": "Enter email (optional)"
+      "emailOptional": "Enter email (optional)",
+      "emailRequired": "Enter email (required)"
     },
     "login": {
       "fillUserAndPass": "Please enter username and password",
       "success": "Login successful!",
       "fail": "Login failed",
       "submitting": "Logging in...",
-      "submit": "Login"
+      "submit": "Login",
+      "forgotPassword": "Forgot password",
+      "recoveryInstruction": "Please send an email from your registered mailbox to ling_ki@live.cn with your username. If you did not bind an email, please send your username and approximate registration time."
     },
     "register": {
       "enterUsername": "Please enter username",
@@ -103,6 +111,8 @@
       "submitting": "Registering...",
       "submit": "Register",
       "activationCode": "Activation Code",
+      "buyCardCn": "CD key(China)",
+      "buyCardIntl": "CD Key(.intl.)",
       "confirmPassword": "Confirm Password"
     },
     "modal": {
@@ -1981,6 +1991,125 @@
       },
       "currentTheme": "Current Theme",
       "apply": "Apply"
+    }
+  },
+  "BlackMarket": {
+    "title": "Black Market",
+    "header": { "back": "Back to desktop" },
+    "actions": { "upload": "Upload" },
+    "tabs": {
+      "all": "All",
+      "characters": "Characters",
+      "worldbooks": "World Books",
+      "myuploads": "My Uploads"
+    },
+    "search": { "placeholder": "Search name, description, author or tags..." },
+    "tags": {
+      "collapse": "Collapse",
+      "expand": "Expand (+{{count}})"
+    },
+    "debug": { "tagsShown": "Showing: {{shown}}/{{total}}" },
+    "sort": {
+      "date": "By time",
+      "downloads": "By heat",
+      "name": "By name"
+    },
+    "loading": "Loading...",
+    "type": {
+      "character": "Character Card",
+      "worldbook": "World Book"
+    },
+    "import": {
+      "toChat": "Import to chat list",
+      "toWorldBook": "Import to world book",
+      "button": "Import",
+      "importing": "Importing..."
+    },
+    "delete": {
+      "mine": "Delete my content",
+      "admin": "Admin delete",
+      "this": "Delete this content",
+      "button": "Delete"
+    },
+    "empty": {
+      "title": "😔 No related content found",
+      "hint": "Try adjusting filters or upload new content"
+    },
+    "detail": {
+      "author": "Author:",
+      "descAria": "Description",
+      "noDesc": "No description",
+      "close": "Close"
+    },
+    "upload": {
+      "title": "Upload to Black Market",
+      "type": {
+        "character": "👤 Character Card (PNG)",
+        "worldbook": "📚 World Book (JSON)"
+      },
+      "dropHere": "Drag file here or click to select",
+      "supported": "Supported:",
+      "png": "PNG image (character card)",
+      "json": "JSON file (world book)",
+      "preview": "Preview",
+      "fileInfo": "File Info",
+      "personality": "Personality:",
+      "scenario": "Scenario:",
+      "entryCount": "Entries:",
+      "theme": "Theme:",
+      "nameLabel": "Name *",
+      "namePlaceholderCharacter": "Enter character name",
+      "namePlaceholderWorldBook": "Enter world book name",
+      "descLabel": "Description *",
+      "descPlaceholder": "Describe the features and usage of this content",
+      "tagsLabel": "Tags",
+      "tagsPlaceholder": "Add tags, press Enter to confirm",
+      "addTag": "Add",
+      "cancel": "Cancel",
+      "upload": "Upload",
+      "uploading": "Uploading...",
+      "fillAll": "Please complete all information and select a file",
+      "starting": "Starting upload...",
+      "success": "Uploaded successfully!",
+      "failed": "Upload failed, please try again later"
+    },
+    "worldbook": {
+      "author": "Author:",
+      "entryCount": "Entries",
+      "downloads": "Downloads",
+      "uploadDate": "Upload Date",
+      "theme": "Theme:",
+      "partialPreview": "Partial entries:",
+      "moreEntries": "{{count}} more entries...",
+      "download": "Download World Book"
+    },
+    "alert": {
+      "loginRequired": "Please login first",
+      "noPermission": "You do not have permission to delete this item",
+      "deleteSuccess": "Deleted successfully",
+      "deleteFailedWithMessage": "Delete failed: {{message}}",
+      "deleteFailed": "Delete failed, please try again later",
+      "downloadRemoved": "Download removed. Please use Import to try content.",
+      "onlyImportCharacter": "Only character cards can be imported",
+      "characterParseFailed": "Failed to parse character file",
+      "characterValidationFailed": "Character validation failed: {{message}}",
+      "characterImportSuccess": "Character imported successfully!",
+      "importFailed": "Import failed, please try again later",
+      "importNotConfigured": "Import not configured",
+      "importCharacterFailed": "Import character failed, please try again later",
+      "onlyImportWorldBook": "Only world books can be imported",
+      "worldBookNoData": "No valid data found in world book",
+      "worldBookImportSuccess": "World book imported! Imported {{count}} entries",
+      "worldBookFormatUnsupported": "Unsupported world book format. Use Marinara preset or world book array format",
+      "importWorldBookFailed": "Import world book failed, please try again later"
+    },
+    "confirm": {
+      "delete": "Are you sure to delete \"{{name}}\"?\nThis action cannot be undone!",
+      "deleteWithAuthor": "Are you sure to delete \"{{name}}\"?\nAuthor: {{author}}"
+    },
+    "error": {
+      "fetchCharacter": "Failed to fetch character file",
+      "fetchWorldBook": "Failed to fetch world book file"
     }
   }
 }

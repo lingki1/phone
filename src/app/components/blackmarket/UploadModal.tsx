@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import './UploadModal.css';
 import { blackMarketService } from './blackMarketService';
+import { useI18n } from '../../components/i18n/I18nProvider';
 
 
 interface UploadStatus {
@@ -20,6 +21,7 @@ interface UploadModalProps {
 type UploadType = 'character' | 'worldbook';
 
 export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
+  const { t } = useI18n();
   const [uploadType, setUploadType] = useState<UploadType>('character');
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
@@ -169,14 +171,14 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
   // 处理上传
   const handleUpload = async () => {
     if (!file || !name.trim() || !description.trim()) {
-      alert('请填写完整信息并选择文件');
+      alert(t('BlackMarket.upload.fillAll', '请填写完整信息并选择文件'));
       return;
     }
 
     setProgress({
       progress: 0,
       status: 'uploading',
-      message: '开始上传...'
+      message: t('BlackMarket.upload.starting', '开始上传...')
     });
 
     try {
@@ -195,7 +197,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
       setProgress({
         progress: 100,
         status: 'complete',
-        message: '上传成功！'
+        message: t('BlackMarket.upload.success', '上传成功！')
       });
 
       setTimeout(() => {
@@ -208,7 +210,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
       setProgress({
         progress: 0,
         status: 'error',
-        message: '上传失败，请稍后重试'
+        message: t('BlackMarket.upload.failed', '上传失败，请稍后重试')
       });
     }
   };
@@ -240,7 +242,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
     <div className="upload-modal">
       <div className="upload-container">
         <div className="upload-header">
-          <h3>📤 上传到黑市</h3>
+          <h3>📤 {t('BlackMarket.upload.title', '上传到黑市')}</h3>
           <button className="upload-close" onClick={handleClose}>×</button>
         </div>
 
@@ -254,7 +256,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
                 checked={uploadType === 'character'}
                 onChange={(e) => setUploadType(e.target.value as UploadType)}
               />
-              👤 角色卡 (PNG格式)
+              {t('BlackMarket.upload.type.character', '👤 角色卡 (PNG格式)')}
             </label>
             <label>
               <input
@@ -263,7 +265,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
                 checked={uploadType === 'worldbook'}
                 onChange={(e) => setUploadType(e.target.value as UploadType)}
               />
-              📚 世界书 (JSON格式)
+              {t('BlackMarket.upload.type.worldbook', '📚 世界书 (JSON格式)')}
             </label>
           </div>
 
@@ -295,9 +297,9 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
                 <div className="drop-icon">
                   {uploadType === 'character' ? '🖼️' : '📄'}
                 </div>
-                <p>拖拽文件到这里或点击选择</p>
+                <p>{t('BlackMarket.upload.dropHere', '拖拽文件到这里或点击选择')}</p>
                 <p className="file-hint">
-                  支持格式：{uploadType === 'character' ? 'PNG图片（角色卡）' : 'JSON文件（世界书）'}
+                  {t('BlackMarket.upload.supported', '支持格式：')}{uploadType === 'character' ? t('BlackMarket.upload.png', 'PNG图片（角色卡）') : t('BlackMarket.upload.json', 'JSON文件（世界书）')}
                 </p>
               </div>
             )}
@@ -322,25 +324,25 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
               {preview.thumbnail && (
                 // 这里使用原生 img 仅用于本地 data URL 预览，Next Image 不支持 data: 源的自动优化
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview.thumbnail} alt="预览" className="preview-image" />
+                <img src={preview.thumbnail} alt={t('BlackMarket.upload.preview', '预览')} className="preview-image" />
               )}
               {preview.metadata && (
                 <div className="metadata-preview">
-                  <h4>文件信息</h4>
+                  <h4>{t('BlackMarket.upload.fileInfo', '文件信息')}</h4>
                   {uploadType === 'character' ? (
                     <div className="character-metadata">
                       {typeof (preview.metadata as Record<string, unknown>).personality === 'string' && (
-                        <p><strong>性格：</strong>{(preview.metadata as Record<string, unknown>).personality as string}</p>
+                        <p><strong>{t('BlackMarket.upload.personality', '性格：')}</strong>{(preview.metadata as Record<string, unknown>).personality as string}</p>
                       )}
                       {typeof (preview.metadata as Record<string, unknown>).scenario === 'string' && (
-                        <p><strong>场景：</strong>{(preview.metadata as Record<string, unknown>).scenario as string}</p>
+                        <p><strong>{t('BlackMarket.upload.scenario', '场景：')}</strong>{(preview.metadata as Record<string, unknown>).scenario as string}</p>
                       )}
                     </div>
                   ) : (
                     <div className="worldbook-metadata">
-                      <p><strong>条目数量：</strong>{(preview.metadata as Record<string, unknown>).entryCount as number}</p>
+                      <p><strong>{t('BlackMarket.upload.entryCount', '条目数量：')}</strong>{(preview.metadata as Record<string, unknown>).entryCount as number}</p>
                       {typeof (preview.metadata as Record<string, unknown>).theme === 'string' && (
-                        <p><strong>主题：</strong>{(preview.metadata as Record<string, unknown>).theme as string}</p>
+                        <p><strong>{t('BlackMarket.upload.theme', '主题：')}</strong>{(preview.metadata as Record<string, unknown>).theme as string}</p>
                       )}
                     </div>
                   )}
@@ -352,35 +354,35 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
           {/* 基本信息 */}
           <div className="form-section">
             <label>
-              名称 *
+              {t('BlackMarket.upload.nameLabel', '名称 *')}
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={`输入${uploadType === 'character' ? '角色' : '世界书'}名称`}
+                placeholder={uploadType === 'character' ? t('BlackMarket.upload.namePlaceholderCharacter', '输入角色名称') : t('BlackMarket.upload.namePlaceholderWorldBook', '输入世界书名称')}
                 maxLength={50}
               />
             </label>
 
             <label>
-              描述 *
+              {t('BlackMarket.upload.descLabel', '描述 *')}
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="详细描述这个内容的特点和用途"
+                placeholder={t('BlackMarket.upload.descPlaceholder', '详细描述这个内容的特点和用途')}
                 rows={4}
                 maxLength={500}
               />
             </label>
 
             <label>
-              标签
+              {t('BlackMarket.upload.tagsLabel', '标签')}
               <div className="tags-input">
                 <input
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  placeholder="添加标签，按回车确认"
+                  placeholder={t('BlackMarket.upload.tagsPlaceholder', '添加标签，按回车确认')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -389,7 +391,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
                   }}
                 />
                 <button type="button" onClick={handleAddTag} disabled={!tagInput.trim()}>
-                  添加
+                  {t('BlackMarket.upload.addTag', '添加')}
                 </button>
               </div>
               <div className="tags-list">

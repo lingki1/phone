@@ -9,6 +9,7 @@ import Image from 'next/image';
 import ItemDetailModal from './ItemDetailModal';
 import { CharacterCardParser } from '../qq/characterimport/CharacterCardParser';
 import { ChatItem, WorldBook } from '../../types/chat';
+import { useI18n } from '../../components/i18n/I18nProvider';
 
 // 防抖动状态hook
 const useDebounceState = <T extends unknown[]>(callback: (...args: T) => void, delay: number) => {
@@ -180,6 +181,7 @@ const detectPresetFormat = (data: unknown): 'marinara' | 'worldbook' | 'unknown'
 };
 
 export default function BlackMarket({ isOpen, onClose, onImportCharacter, onImportWorldBook }: BlackMarketProps) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [items, setItems] = useState<BlackMarketItem[]>([]);
   const [characters, setCharacters] = useState<CharacterCard[]>([]);
@@ -272,7 +274,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     if (e) e.stopPropagation();
     
     if (!currentUser) {
-      alert('请先登录');
+      alert(t('BlackMarket.alert.loginRequired', '请先登录'));
       return;
     }
 
@@ -281,14 +283,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin';
     
     if (!isAuthor && !isAdmin) {
-      alert('您没有权限删除此内容');
+      alert(t('BlackMarket.alert.noPermission', '您没有权限删除此内容'));
       return;
     }
 
     // 确认删除
     const confirmMessage = isAdmin && !isAuthor 
-      ? `您确定要删除 "${item.name}" 吗？\n作者：${item.author}`
-      : `您确定要删除 "${item.name}" 吗？\n此操作不可撤销！`;
+      ? t('BlackMarket.confirm.deleteWithAuthor', `您确定要删除 "${item.name}" 吗？\n作者：${item.author}`)
+      : t('BlackMarket.confirm.delete', `您确定要删除 "${item.name}" 吗？\n此操作不可撤销！`);
     
     if (!confirm(confirmMessage)) {
       return;
@@ -297,14 +299,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     try {
       const result = await blackMarketService.deleteItem(item.id);
       if (result.success) {
-        alert('删除成功');
+        alert(t('BlackMarket.alert.deleteSuccess', '删除成功'));
         loadData(); // 重新加载数据
       } else {
-        alert(`删除失败：${result.message}`);
+        alert(t('BlackMarket.alert.deleteFailedWithMessage', `删除失败：${result.message}`));
       }
     } catch (error) {
       console.error('删除失败:', error);
-      alert('删除失败，请稍后重试');
+      alert(t('BlackMarket.alert.deleteFailed', '删除失败，请稍后重试'));
     }
   };
 
@@ -428,7 +430,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // 取消下载功能
   const handleDownload = async (_item: BlackMarketItem) => {
-    alert('已移除下载功能，请使用“导入”来体验内容');
+    alert(t('BlackMarket.alert.downloadRemoved', '已移除下载功能，请使用“导入”来体验内容'));
   };
 
   // 防抖动的下载处理函数
@@ -437,7 +439,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   // 处理角色导入
   const handleImportCharacter = async (item: BlackMarketItem) => {
     if (item.type !== 'character') {
-      alert('只能导入角色卡');
+      alert(t('BlackMarket.alert.onlyImportCharacter', '只能导入角色卡'));
       return;
     }
 
@@ -446,7 +448,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       // 获取角色文件
       const response = await fetch(item.fileUrl);
       if (!response.ok) {
-        throw new Error('无法获取角色文件');
+        throw new Error(t('BlackMarket.error.fetchCharacter', '无法获取角色文件'));
       }
       
       const blob = await response.blob();
@@ -456,14 +458,14 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       const result = await CharacterCardParser.parseCharacterCard(file);
       
       if (!result.success || !result.character) {
-        alert('角色文件解析失败');
+        alert(t('BlackMarket.alert.characterParseFailed', '角色文件解析失败'));
         return;
       }
 
       // 验证角色数据
       const validationErrors = CharacterCardParser.validateCharacter(result.character);
       if (validationErrors.length > 0) {
-        alert(`角色数据验证失败: ${validationErrors.join(', ')}`);
+        alert(t('BlackMarket.alert.characterValidationFailed', `角色数据验证失败: ${validationErrors.join(', ')}`));
         return;
       }
 
@@ -527,21 +529,21 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
         try {
           await onImportCharacter(newChat);
           console.log('黑市导入 - 导入回调执行成功');
-          alert('角色导入成功！');
+          alert(t('BlackMarket.alert.characterImportSuccess', '角色导入成功！'));
           // 导入成功后增加热度
           await blackMarketService.incrementHeat(item.id);
           loadData();
         } catch (error) {
           console.error('黑市导入 - 导入回调执行失败:', error);
-          alert('导入失败，请稍后重试');
+          alert(t('BlackMarket.alert.importFailed', '导入失败，请稍后重试'));
         }
       } else {
         console.error('黑市导入 - onImportCharacter 未定义');
-        alert('导入功能未配置');
+        alert(t('BlackMarket.alert.importNotConfigured', '导入功能未配置'));
       }
     } catch (error) {
       console.error('导入角色失败:', error);
-      alert('导入角色失败，请稍后重试');
+      alert(t('BlackMarket.alert.importCharacterFailed', '导入角色失败，请稍后重试'));
     } finally {
       setIsImporting(false);
     }
@@ -553,7 +555,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   // 处理世界书导入
   const handleImportWorldBook = async (item: BlackMarketItem) => {
     if (item.type !== 'worldbook') {
-      alert('只能导入世界书');
+      alert(t('BlackMarket.alert.onlyImportWorldBook', '只能导入世界书'));
       return;
     }
 
@@ -568,7 +570,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       });
       
       if (!response.ok) {
-        throw new Error('无法获取世界书文件');
+        throw new Error(t('BlackMarket.error.fetchWorldBook', '无法获取世界书文件'));
       }
       
       const jsonData = await response.json();
@@ -581,7 +583,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
         const worldBooks = convertMarinaraToWorldBooks(jsonData);
         
         if (worldBooks.length === 0) {
-          alert('世界书中没有找到有效的数据');
+          alert(t('BlackMarket.alert.worldBookNoData', '世界书中没有找到有效的数据'));
           return;
         }
 
@@ -596,24 +598,24 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             // 导入第一个世界书（或者可以询问用户选择）
             await onImportWorldBook(worldBooks[0]);
             console.log('黑市导入世界书 - 导入回调执行成功');
-            alert(`世界书导入成功！导入了 ${worldBooks.length} 个条目`);
+            alert(t('BlackMarket.alert.worldBookImportSuccess', `世界书导入成功！导入了 ${worldBooks.length} 个条目`));
             // 导入成功后增加热度
             await blackMarketService.incrementHeat(item.id);
             loadData();
           } catch (error) {
             console.error('黑市导入世界书 - 导入回调执行失败:', error);
-            alert('导入失败，请稍后重试');
+            alert(t('BlackMarket.alert.importFailed', '导入失败，请稍后重试'));
           }
         } else {
           console.error('黑市导入世界书 - onImportWorldBook 未定义');
-          alert('导入功能未配置');
+          alert(t('BlackMarket.alert.importNotConfigured', '导入功能未配置'));
         }
       } else if (format === 'worldbook') {
         // 转换世界书数组格式
         const worldBooks = convertWorldBookArray(jsonData as WorldBookItem[]);
         
         if (worldBooks.length === 0) {
-          alert('世界书中没有找到有效的数据');
+          alert(t('BlackMarket.alert.worldBookNoData', '世界书中没有找到有效的数据'));
           return;
         }
 
@@ -628,24 +630,24 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
             // 导入第一个世界书（或者可以询问用户选择）
             await onImportWorldBook(worldBooks[0]);
             console.log('黑市导入世界书 - 导入回调执行成功');
-            alert(`世界书导入成功！导入了 ${worldBooks.length} 个条目`);
+            alert(t('BlackMarket.alert.worldBookImportSuccess', `世界书导入成功！导入了 ${worldBooks.length} 个条目`));
             // 导入成功后增加热度
             await blackMarketService.incrementHeat(item.id);
             loadData();
           } catch (error) {
             console.error('黑市导入世界书 - 导入回调执行失败:', error);
-            alert('导入失败，请稍后重试');
+            alert(t('BlackMarket.alert.importFailed', '导入失败，请稍后重试'));
           }
         } else {
           console.error('黑市导入世界书 - onImportWorldBook 未定义');
-          alert('导入功能未配置');
+          alert(t('BlackMarket.alert.importNotConfigured', '导入功能未配置'));
         }
       } else {
-        alert('不支持的世界书格式，请使用Marinara预设格式或世界书数组格式');
+        alert(t('BlackMarket.alert.worldBookFormatUnsupported', '不支持的世界书格式，请使用Marinara预设格式或世界书数组格式'));
       }
     } catch (error) {
       console.error('导入世界书失败:', error);
-      alert('导入世界书失败，请稍后重试');
+      alert(t('BlackMarket.alert.importWorldBookFailed', '导入世界书失败，请稍后重试'));
     } finally {
       setIsImporting(false);
     }
@@ -661,13 +663,13 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
       <div className="bm-blackmarket-container">
         <div className="blackmarket-header bm-head">
           <div className="bm-head-left">
-            <button className="blackmarket-back-button" onClick={onClose} title="返回桌面">
+            <button className="blackmarket-back-button" onClick={onClose} title={t('BlackMarket.header.back', '返回桌面')}>
               ← 
             </button>
-            <h2>黑市</h2>
+            <h2>{t('BlackMarket.title', '黑市')}</h2>
           </div>
           <div className="bm-head-actions">
-            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser || isImporting}>上传</button>
+            <button className="blackmarket-upload-button" onClick={() => setIsUploadModalOpen(true)} disabled={!currentUser || isImporting}>{t('BlackMarket.actions.upload', '上传')}</button>
           </div>
         </div>
 
@@ -678,28 +680,28 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
               onClick={() => !isImporting && setActiveTab('all')}
               disabled={isImporting}
             >
-              全部
+              {t('BlackMarket.tabs.all', '全部')}
             </button>
             <button
               className={`tab-button ${activeTab === 'characters' ? 'active' : ''}`}
               onClick={() => !isImporting && setActiveTab('characters')}
               disabled={isImporting}
             >
-              角色卡
+              {t('BlackMarket.tabs.characters', '角色卡')}
             </button>
             <button
               className={`tab-button ${activeTab === 'worldbooks' ? 'active' : ''}`}
               onClick={() => !isImporting && setActiveTab('worldbooks')}
               disabled={isImporting}
             >
-              世界书
+              {t('BlackMarket.tabs.worldbooks', '世界书')}
             </button>
             <button
               className={`tab-button ${activeTab === 'myuploads' ? 'active' : ''}`}
               onClick={() => !isImporting && setActiveTab('myuploads')}
               disabled={isImporting}
             >
-              我的上传
+              {t('BlackMarket.tabs.myuploads', '我的上传')}
             </button>
           </div>
         </div>
@@ -708,7 +710,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           <div className="blackmarket-search-container">
             <input
               type="text"
-              placeholder="搜索名称、描述、作者或标签..."
+              placeholder={t('BlackMarket.search.placeholder', '搜索名称、描述、作者或标签...')}
               value={searchQuery}
               onChange={(e) => !isImporting && setSearchQuery(e.target.value)}
               className="blackmarket-search-input"
@@ -741,13 +743,13 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                     onClick={() => !isImporting && setTagsExpanded(!tagsExpanded)}
                     disabled={isImporting}
                   >
-                    {tagsExpanded ? '收起' : `展开 (+${getAllTags().length - maxVisibleTags})`}
+                    {tagsExpanded ? t('BlackMarket.tags.collapse', '收起') : t('BlackMarket.tags.expand', `展开 (+${getAllTags().length - maxVisibleTags})`)}
                   </button>
                 )}
                 {/* 开发模式调试信息 */}
                 {process.env.NODE_ENV === 'development' && (
                   <span className="blackmarket-debug-info" style={{ fontSize: '10px', color: '#999', marginLeft: '8px' }}>
-                    显示: {Math.min(getAllTags().length, tagsExpanded ? getAllTags().length : maxVisibleTags)}/{getAllTags().length}
+                    {t('BlackMarket.debug.tagsShown', `显示: ${Math.min(getAllTags().length, tagsExpanded ? getAllTags().length : maxVisibleTags)}/${getAllTags().length}`)}
                   </span>
                 )}
               </div>
@@ -758,9 +760,9 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                className="blackmarket-sort-select"
                disabled={isImporting}
              >
-               <option value="date">按时间</option>
-               <option value="downloads">按热度</option>
-               <option value="name">按名称</option>
+               <option value="date">{t('BlackMarket.sort.date', '按时间')}</option>
+               <option value="downloads">{t('BlackMarket.sort.downloads', '按热度')}</option>
+               <option value="name">{t('BlackMarket.sort.name', '按名称')}</option>
              </select>
           </div>
         </div>
@@ -769,7 +771,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
           {loading ? (
             <div className="blackmarket-loading-container">
               <div className="blackmarket-loading-spinner"></div>
-              <p>加载中...</p>
+              <p>{t('BlackMarket.loading', '加载中...')}</p>
             </div>
           ) : (
             <div className="blackmarket-items-grid">
@@ -795,7 +797,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                       <div className="media-top-badge">
                         <div className="item-type-badge">
                           {item.type === 'character' ? '👤' : '📚'} 
-                          {item.type === 'character' ? '角色卡' : '世界书'}
+                          {item.type === 'character' ? t('BlackMarket.type.character', '角色卡') : t('BlackMarket.type.worldbook', '世界书')}
                         </div>
                       </div>
                       
@@ -816,10 +818,10 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                                setIsImporting(true);
                                debouncedHandleImportCharacter(item);
                              }}
-                             title="导入到聊天列表"
+                             title={t('BlackMarket.import.toChat', '导入到聊天列表')}
                              disabled={isImporting || isImportingCharacter}
                            >
-                             {isImporting || isImportingCharacter ? '导入中...' : '导入'}
+                             {isImporting || isImportingCharacter ? t('BlackMarket.import.importing', '导入中...') : t('BlackMarket.import.button', '导入')}
                            </button>
                          )}
                          {item.type === 'worldbook' && onImportWorldBook && (
@@ -831,10 +833,10 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                                setIsImporting(true);
                                debouncedHandleImportWorldBook(item);
                              }}
-                             title="导入到世界书"
+                             title={t('BlackMarket.import.toWorldBook', '导入到世界书')}
                              disabled={isImporting || isImportingWorldBook}
                            >
-                             {isImporting || isImportingWorldBook ? '导入中...' : '导入'}
+                             {isImporting || isImportingWorldBook ? t('BlackMarket.import.importing', '导入中...') : t('BlackMarket.import.button', '导入')}
                            </button>
                          )}
                          {/* 下载按钮已移除 */}
@@ -844,7 +846,7 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
                            <button 
                              className="delete-button" 
                              onClick={(e) => handleDelete(item, e)}
-                             title={currentUser?.username === item.author ? "删除我的内容" : "管理员删除"}
+                             title={currentUser?.username === item.author ? t('BlackMarket.delete.mine', '删除我的内容') : t('BlackMarket.delete.admin', '管理员删除')}
                            >
                              🗑️
                            </button>
@@ -872,8 +874,8 @@ const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
           {!loading && getFilteredItems().length === 0 && (
             <div className="blackmarket-empty-state">
-              <p>😔 没有找到相关内容</p>
-              <p>尝试调整搜索条件或上传新的内容</p>
+              <p>{t('BlackMarket.empty.title', '😔 没有找到相关内容')}</p>
+              <p>{t('BlackMarket.empty.hint', '尝试调整搜索条件或上传新的内容')}</p>
             </div>
           )}
         </div>
