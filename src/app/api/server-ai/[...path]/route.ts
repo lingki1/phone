@@ -24,7 +24,14 @@ async function handle(req: NextRequest) {
           const gidCandidate = (u.group && u.group.trim()) ? u.group : (u.group_id || 'default');
           const expStr = u.group_expires_at ?? undefined;
           const expTs = expStr ? Date.parse(expStr) : NaN;
-          groupId = Number.isFinite(expTs) && expTs <= Date.now() ? 'default' : gidCandidate;
+          const isExpired = Number.isFinite(expTs) && expTs <= Date.now();
+          groupId = isExpired ? 'default' : gidCandidate;
+          // 如已过期，后端持久化回退到 default（不阻塞流程）
+          if (isExpired) {
+            try {
+              await databaseManager.updateUser(authUser.uid, { group_id: 'default', group_expires_at: null } as Partial<DBUser> & { group_id?: string; group_expires_at?: string | null });
+            } catch (_e) { /* ignore */ }
+          }
         } else {
           groupId = authUser.group || 'default';
         }

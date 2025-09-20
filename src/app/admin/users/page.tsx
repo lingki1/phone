@@ -440,7 +440,48 @@ export default function UsersManagementPage() {
                         value={editUser.group_expires_at || ''}
                         onChange={(e) => setEditUser({ ...editUser, group_expires_at: e.target.value })}
                       />
-                      <p className="text-xs text-gray-500 mt-1">到期后用户将自动视为默认分组（显示层面）</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          className="dos-btn px-2 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50"
+                          title="+1天"
+                          onClick={() => {
+                            const d = new Date();
+                            d.setDate(d.getDate() + 1);
+                            const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                            setEditUser({ ...editUser, group_expires_at: val });
+                          }}
+                        >+1天</button>
+                        <button
+                          type="button"
+                          className="dos-btn px-2 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50"
+                          title="+7天"
+                          onClick={() => {
+                            const d = new Date();
+                            d.setDate(d.getDate() + 7);
+                            const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                            setEditUser({ ...editUser, group_expires_at: val });
+                          }}
+                        >+7天</button>
+                        <button
+                          type="button"
+                          className="dos-btn px-2 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50"
+                          title="+30天"
+                          onClick={() => {
+                            const d = new Date();
+                            d.setDate(d.getDate() + 30);
+                            const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                            setEditUser({ ...editUser, group_expires_at: val });
+                          }}
+                        >+30天</button>
+                        <button
+                          type="button"
+                          className="dos-btn px-2 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50"
+                          title="永不过期"
+                          onClick={() => setEditUser({ ...editUser, group_expires_at: '' })}
+                        >永不过期</button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">到期后用户将自动回到默认分组</p>
                     </div>
                   </div>
                   <div className="flex justify-end space-x-3 mt-4">
