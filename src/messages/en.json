@@ -49,6 +49,14 @@
         "ungrouped": "Ungrouped",
         "default": "Default"
       },
+      "refresh": "Refresh",
+      "refreshing": "Refreshing...",
+      "refreshMeta": "Refresh group & quota",
+      "quota": {
+        "remainingPrefix": "Remaining quota: ",
+        "usedToday": "Today used",
+        "unlimited": "Quota: Unlimited"
+      },
       "logout": "Logout",
       "changePassword": "Change Password",
       "settings": "Settings"

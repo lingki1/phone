@@ -63,6 +63,16 @@ npm run dev
 npm run build
 ```
 
+### 环境变量
+
+- `REDIS_CONN_STRING`：Redis 连接串（Docker 默认 `redis://redis:6379/2` 使用 2 号库）。
+
+### 分组每日配额说明
+
+- 在后台分组管理 API（`/api/groups` 与 `/api/groups/[id]`）支持设置 `daily_api_quota`（整数，0 或空表示不限）。
+- 代理路由 `/api/server-ai/**` 会在转发前读取当前登录用户的分组与该分组的配额，并基于 Redis 键 `group:<groupId>:daily:YYYYMMDD` 进行日用量判断；达到上限返回 429。
+- 仅成功转发的请求会计入使用量。
+
 ## 开发说明
 
 该项目完全复刻了原始 HTML 文件中的聊天列表页面设计，包括：
@@ -78,6 +88,7 @@ npm run build
 - [x] 实现剧情模式功能
 - [x] 添加AI输入提示功能
 - [x] 平台内置API配置与服务端代理（/api/admin/system-api-config, /api/system-api-config, /api/server-ai）
+- [x] 按分组的内置API每日使用次数限流（Redis），分组字段：`daily_api_quota`
 - [x] i18n：引入 Provider 与本地消息文件（zh-CN / en）
 - [x] i18n：新增 `src/app/components/i18n/LocaleSwitcher.tsx`
 - [x] i18n：在首页 Desktop 添加语言切换按钮（右上角）

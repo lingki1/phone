@@ -49,6 +49,14 @@
         "ungrouped": "未分组",
         "default": "默认分组"
       },
+      "refresh": "刷新",
+      "refreshing": "刷新中...",
+      "refreshMeta": "刷新用户分组与配额",
+      "quota": {
+        "remainingPrefix": "剩余配额：",
+        "usedToday": "今日已用",
+        "unlimited": "配额：不限"
+      },
       "logout": "退出登录",
       "changePassword": "修改密码",
       "settings": "设置"

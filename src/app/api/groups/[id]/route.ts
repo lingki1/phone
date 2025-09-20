@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
+import { setGroupQuota, clearGroupQuota } from '@/lib/redis';
 
 // 获取单个分组信息
 export async function GET(
@@ -98,7 +99,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, daily_api_quota } = body;
 
     // 验证输入
     if (name && (name.length < 2 || name.length > 50)) {
@@ -130,10 +131,26 @@ export async function PUT(
     }
 
     // 更新分组
-    await databaseManager.updateGroup(id, { name, description });
+    const updates: Record<string, unknown> = {};
+    if (typeof name !== 'undefined') updates.name = name;
+    if (typeof description !== 'undefined') updates.description = description;
+    if (typeof daily_api_quota !== 'undefined') updates.daily_api_quota = Math.max(0, Math.floor(Number(daily_api_quota) || 0));
+    await databaseManager.updateGroup(id, updates);
 
     // 获取更新后的分组信息
     const updatedGroup = await databaseManager.getGroupById(id);
+
+    // 同步 Redis 配额缓存
+    try {
+      const quota = Number(updatedGroup?.daily_api_quota || 0);
+      if (quota > 0) {
+        await setGroupQuota(id, quota);
+      } else {
+        await clearGroupQuota(id);
+      }
+    } catch (_e) {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import authService from '@/app/auth/utils/auth';
 import databaseManager from '@/app/auth/utils/database';
+import { setGroupQuota } from '@/lib/redis';
 
 // 获取分组列表
 export async function GET(request: NextRequest) {
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, daily_api_quota } = body;
 
     // 验证输入
     if (!name) {
@@ -107,8 +108,16 @@ export async function POST(request: NextRequest) {
     const group = await databaseManager.createGroup({
       name,
       description,
+      daily_api_quota: typeof daily_api_quota === 'number' ? Math.max(0, Math.floor(daily_api_quota)) : undefined,
       created_by: authUser.uid
     });
+
+    // 写入 Redis 配额缓存（若可用）
+    try {
+      await setGroupQuota(group.id, group.daily_api_quota);
+    } catch (_e) {
+      // ignore
+    }
 
     return NextResponse.json({
       success: true,

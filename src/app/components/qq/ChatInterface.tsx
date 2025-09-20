@@ -1066,6 +1066,11 @@ export default function ChatInterface({
       });
 
       const data = await response.json();
+      // 针对服务器限流等业务错误做优先判定并直出可读信息
+      if (response.status === 429 || (data && data.success === false && typeof data.message === 'string')) {
+        const limitMsg = String(data?.message || t('QQ.ChatInterface.error.requestFailed', 'API请求失败，请检查网络连接和代理设置。'));
+        throw new Error(`[LIMITED] ${limitMsg}`);
+      }
       
       // 添加详细的API响应调试信息
       console.log('ChatInterface - API响应数据:', {
@@ -1179,7 +1184,10 @@ export default function ChatInterface({
       let errorContent = t('QQ.ChatInterface.error.aiFailed', 'AI回复失败，请检查API配置是否正确。');
       
       if (error instanceof Error) {
-        if (error.message.includes('API服务器错误')) {
+        if (error.message.includes('[LIMITED]')) {
+          // 直接显示服务器返回的业务提示（如配额用尽）
+          errorContent = error.message.replace('[LIMITED]', '').trim() || t('QQ.ChatInterface.error.requestFailed', 'API请求失败，请检查网络连接和代理设置。');
+        } else if (error.message.includes('API服务器错误')) {
           errorContent = `${t('QQ.ChatInterface.error.apiServer', 'AI服务器错误')}: ${error.message.replace('API服务器错误: ', '')}`;
         } else if (error.message.includes('API响应格式错误')) {
           errorContent = t('QQ.ChatInterface.error.responseFormat', 'AI响应格式错误，请检查模型配置。');

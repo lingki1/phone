@@ -1,10 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import databaseManager from '@/app/auth/utils/database';
+import databaseManager, { User as DBUser } from '@/app/auth/utils/database';
+import authService from '@/app/auth/utils/auth';
+import { getUserDailyUsage, incrUserDailyUsage, getGroupQuota } from '@/lib/redis';
 
 export const runtime = 'nodejs';
 
 async function handle(req: NextRequest) {
   await databaseManager.init();
+  // 可选鉴权：识别当前用户与分组
+  const token = req.cookies.get('token')?.value;
+  let groupId: string | null = null;
+  let userId: string | null = null;
+  if (token) {
+    const authUser = await authService.verifyToken(token);
+    if (authUser) {
+      userId = authUser.uid;
+      // 使用数据库中的最新分组，避免 token 中分组信息过期
+      try {
+        const dbUser = await databaseManager.getUserByUid(authUser.uid);
+        if (dbUser) {
+          type DbUserWithOptional = DBUser & { group_id?: string; group_expires_at?: string | null };
+          const u = dbUser as DbUserWithOptional;
+          const gidCandidate = (u.group && u.group.trim()) ? u.group : (u.group_id || 'default');
+          const expStr = u.group_expires_at ?? undefined;
+          const expTs = expStr ? Date.parse(expStr) : NaN;
+          groupId = Number.isFinite(expTs) && expTs <= Date.now() ? 'default' : gidCandidate;
+        } else {
+          groupId = authUser.group || 'default';
+        }
+      } catch {
+        groupId = authUser.group || 'default';
+      }
+    }
+  }
+
+  // 如果能识别分组，做每日配额校验（依赖 Redis 与 DB 中的 daily_api_quota）
+  if (groupId && userId) {
+    try {
+      // 优先读 Redis 缓存中的配额，其次回退 DB
+      let quota = await getGroupQuota(groupId);
+      if (quota == null) {
+        const group = await databaseManager.getGroupById(groupId);
+        quota = Number(group?.daily_api_quota || 0);
+      }
+      if (quota > 0) {
+        const used = await getUserDailyUsage(userId) || 0;
+        if (used >= quota) {
+          return NextResponse.json({ success: false, message: '已达本分组今日内置API使用上限' }, { status: 429 });
+        }
+      }
+    } catch (e) {
+      console.error('quota precheck error:', e);
+    }
+  }
   const cfg = await databaseManager.getSystemApiConfig();
   if (!cfg) {
     return NextResponse.json({ success: false, message: '平台未配置AI服务' }, { status: 503 });
@@ -37,6 +85,22 @@ async function handle(req: NextRequest) {
     const proxyHeaders = new Headers(resp.headers);
     // 安全处理：删除敏感头
     proxyHeaders.delete('set-cookie');
+    // 请求成功后再计数，失败不计（可按需调整）
+    if (groupId && userId) {
+      try {
+        let quota = await getGroupQuota(groupId);
+        if (quota == null) {
+          const group = await databaseManager.getGroupById(groupId);
+          quota = Number(group?.daily_api_quota || 0);
+        }
+        if (quota > 0) {
+          await incrUserDailyUsage(userId);
+        }
+      } catch (e) {
+        console.error('quota post incr error:', e);
+      }
+    }
+
     return new NextResponse(resp.body, {
       status: resp.status,
       statusText: resp.statusText,

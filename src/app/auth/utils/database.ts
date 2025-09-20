@@ -22,6 +22,7 @@ export interface UserGroup {
   id: string;
   name: string;
   description?: string;
+  daily_api_quota?: number;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -143,12 +144,24 @@ class DatabaseManager {
           id TEXT PRIMARY KEY,
           name TEXT UNIQUE NOT NULL,
           description TEXT,
+          daily_api_quota INTEGER,
           created_by TEXT NOT NULL,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL,
           FOREIGN KEY (created_by) REFERENCES users (uid)
         )
       `);
+
+      // 兼容旧库：如果缺少 daily_api_quota 列则补齐
+      const groupCols = await this.all(`PRAGMA table_info(user_groups)`);
+      const hasDailyQuota = (groupCols as Array<{ name?: string }>).some(c => String(c?.name || '') === 'daily_api_quota');
+      if (!hasDailyQuota) {
+        try {
+          await this.run(`ALTER TABLE user_groups ADD COLUMN daily_api_quota INTEGER`);
+        } catch (_e) {
+          // 忽略：列已存在或其他非致命错误
+        }
+      }
 
       // 创建用户会话表
       await this.run(`
@@ -473,12 +486,13 @@ class DatabaseManager {
     };
 
     await this.run(`
-      INSERT INTO user_groups (id, name, description, created_by, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO user_groups (id, name, description, daily_api_quota, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       group.id,
       group.name,
       group.description,
+      typeof group.daily_api_quota === 'number' ? group.daily_api_quota : null,
       group.created_by,
       group.created_at,
       group.updated_at

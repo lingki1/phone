@@ -19,6 +19,7 @@ interface Group {
   id: string;
   name: string;
   description?: string;
+  daily_api_quota?: number;
 }
 
 export default function UsersManagementPage() {
@@ -37,6 +38,8 @@ export default function UsersManagementPage() {
   const [showCreateGroupForm, setShowCreateGroupForm] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '' });
   const [groupError, setGroupError] = useState('');
+  const [showManageGroupForm, setShowManageGroupForm] = useState(false);
+  const [editedGroupQuotas, setEditedGroupQuotas] = useState<Record<string, string>>({});
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -123,6 +126,11 @@ export default function UsersManagementPage() {
       
       if (data.success) {
         setGroups(data.groups);
+        const next: Record<string, string> = {};
+        (data.groups as Group[]).forEach((g: Group) => {
+          next[g.id] = typeof g.daily_api_quota === 'number' ? String(g.daily_api_quota) : '';
+        });
+        setEditedGroupQuotas(next);
       }
     } catch (error) {
       console.error('Fetch groups error:', error);
@@ -323,6 +331,12 @@ export default function UsersManagementPage() {
                 >
                   激活码与注册设置 (Ctrl+S)
                 </Link>
+                <button
+                  onClick={() => { setShowManageGroupForm(true); }}
+                  className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  分组管理
+                </button>
                 <button
                   onClick={() => setShowCreateGroupForm(true)}
                   className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
@@ -652,6 +666,100 @@ export default function UsersManagementPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 分组管理表单 */}
+        {showManageGroupForm && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+              <div className="mt-1">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">分组管理（每日内置 API 次数）</h3>
+                <div className="border border-gray-200 rounded">
+                  <div className="grid grid-cols-5 text-sm font-medium bg-gray-50 border-b">
+                    <div className="p-2">分组名称</div>
+                    <div className="p-2">分组ID</div>
+                    <div className="p-2">描述</div>
+                    <div className="p-2">daily_api_quota</div>
+                    <div className="p-2">操作</div>
+                  </div>
+                  <div className="divide-y max-h-[60vh] overflow-y-auto">
+                    {groups.map((g) => (
+                      <div key={g.id} className="grid grid-cols-5 text-sm items-center">
+                        <div className="p-2">{g.name}</div>
+                        <div className="p-2 font-mono text-xs break-all">{g.id}</div>
+                        <div className="p-2 text-xs text-gray-600 break-words">{g.description || '-'}</div>
+                        <div className="p-2">
+                          <input
+                            type="number"
+                            min={0}
+                            placeholder="0 表示不限制"
+                            className="w-full border border-gray-300 rounded px-2 py-1"
+                            value={editedGroupQuotas[g.id] ?? ''}
+                            onChange={(e) => setEditedGroupQuotas(prev => ({ ...prev, [g.id]: e.target.value.replace(/[^0-9]/g, '') }))}
+                          />
+                        </div>
+                        <div className="p-2 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const raw = editedGroupQuotas[g.id];
+                              const val = Math.max(0, Math.floor(Number(raw || 0)));
+                              try {
+                                const res = await fetch(`/api/groups/${g.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ daily_api_quota: val })
+                                });
+                                const data = await res.json();
+                                if (!data.success) {
+                                  alert(data.message || '保存失败');
+                                  return;
+                                }
+                                await fetchGroups();
+                              } catch (_e) {
+                                alert('网络错误');
+                              }
+                            }}
+                            className="dos-btn px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                          >保存</button>
+                          {g.id !== 'default' && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!confirm('确定要删除该分组吗？该分组下的用户将移动到默认分组。')) return;
+                                try {
+                                  const res = await fetch(`/api/groups/${g.id}`, { method: 'DELETE' });
+                                  const data = await res.json();
+                                  if (!data.success) {
+                                    alert(data.message || '删除失败');
+                                    return;
+                                  }
+                                  await fetchGroups();
+                                } catch (_e) {
+                                  alert('网络错误');
+                                }
+                              }}
+                              className="dos-btn px-3 py-1 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50"
+                            >删除</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {groups.length === 0 && (
+                      <div className="p-3 text-sm text-gray-500">暂无分组</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowManageGroupForm(false)}
+                    className="dos-btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >关闭</button>
+                </div>
               </div>
             </div>
           </div>

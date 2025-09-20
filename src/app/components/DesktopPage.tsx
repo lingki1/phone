@@ -141,6 +141,8 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
   const [isApiSettingsOpen, setIsApiSettingsOpen] = useState(false);
   const [apiConfig, setApiConfig] = useState({ proxyUrl: '', apiKey: '', model: '' });
   const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
+  const [quotaInfo, setQuotaInfo] = useState<{ remaining: number | null; used: number; quota: number; limited: boolean } | null>(null);
+  const [isMetaRefreshing, setIsMetaRefreshing] = useState(false);
   // PWA 安装按钮状态
   const [isInstallAvailable, setIsInstallAvailable] = useState(false);
   const deferredInstallPrompt = useRef<BeforeInstallPromptEvent | null>(null);
@@ -157,14 +159,39 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
             setCurrentUser(data.user);
             // 拉取分组（仅当已登录且可能有权限时；失败则忽略）
             try {
-              const gres = await fetch('/api/groups', { cache: 'no-store', credentials: 'include' });
-              if (gres.ok) {
-                const gdata = await gres.json();
-                if (gdata?.success && Array.isArray(gdata.groups)) {
-                  setGroups(gdata.groups);
+              // 若是管理员视角，拉全量分组；普通用户仅拉自己分组名称
+              const role = String((data.user?.role || 'user'));
+              if (role === 'admin' || role === 'super_admin') {
+                const gres = await fetch('/api/groups', { cache: 'no-store', credentials: 'include' });
+                if (gres.ok) {
+                  const gdata = await gres.json();
+                  if (gdata?.success && Array.isArray(gdata.groups)) {
+                    setGroups(gdata.groups);
+                  }
+                }
+              } else {
+                const mres = await fetch('/api/my-group', { cache: 'no-store', credentials: 'include' });
+                if (mres.ok) {
+                  const mdata = await mres.json();
+                  if (mdata?.success && mdata.data) {
+                    const id = String(mdata.data.id);
+                    const name = String(mdata.data.name);
+                    setGroups([{ id, name }]);
+                    setCurrentUser((prev) => prev ? { ...prev, group: id, group_name: name } : prev);
+                  }
                 }
               }
             } catch (_e) { /* ignore */ }
+          // 拉取配额信息
+          try {
+            const qres = await fetch('/api/server-ai/quota', { cache: 'no-store', credentials: 'include' });
+            if (qres.ok) {
+              const q = await qres.json();
+              if (q?.success && q.data) {
+                setQuotaInfo({ remaining: q.data.remaining, used: q.data.used, quota: q.data.quota, limited: Boolean(q.data.limited) });
+              }
+            }
+          } catch (_e) { /* ignore */ }
           }
         }
       } catch (_e) {
@@ -174,6 +201,64 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
     loadUser();
     return () => { cancelled = true; };
   }, [currentUser]);
+
+  // 打开用户菜单时，刷新配额信息（保证管理员调整配额后即可看到最新）
+  useEffect(() => {
+    const refreshQuota = async () => {
+      try {
+        const qres = await fetch('/api/server-ai/quota', { cache: 'no-store', credentials: 'include' });
+        if (qres.ok) {
+          const q = await qres.json();
+          if (q?.success && q.data) {
+            setQuotaInfo({ remaining: q.data.remaining, used: q.data.used, quota: q.data.quota, limited: Boolean(q.data.limited) });
+          }
+        }
+      } catch (_e) { /* ignore */ }
+    };
+    if (isUserMenuOpen && currentUser) {
+      refreshQuota();
+    }
+  }, [isUserMenuOpen, currentUser]);
+
+  // 手动刷新：拉取当前用户分组名称与今日配额
+  const refreshUserMeta = async () => {
+    if (!currentUser) return;
+    try {
+      setIsMetaRefreshing(true);
+      const role = String((currentUser.role || 'user'));
+      if (role === 'admin' || role === 'super_admin') {
+        const gres = await fetch('/api/groups', { cache: 'no-store', credentials: 'include' });
+        if (gres.ok) {
+          const gdata = await gres.json();
+          if (gdata?.success && Array.isArray(gdata.groups)) {
+            setGroups(gdata.groups);
+          }
+        }
+      } else {
+        const mres = await fetch('/api/my-group', { cache: 'no-store', credentials: 'include' });
+        if (mres.ok) {
+          const mdata = await mres.json();
+          if (mdata?.success && mdata.data) {
+            const id = String(mdata.data.id);
+            const name = String(mdata.data.name);
+            setGroups([{ id, name }]);
+            setCurrentUser((prev) => prev ? { ...prev, group: id, group_name: name } : prev);
+          }
+        }
+      }
+      const qres = await fetch('/api/server-ai/quota', { cache: 'no-store', credentials: 'include' });
+      if (qres.ok) {
+        const q = await qres.json();
+        if (q?.success && q.data) {
+          setQuotaInfo({ remaining: q.data.remaining, used: q.data.used, quota: q.data.quota, limited: Boolean(q.data.limited) });
+        }
+      }
+    } catch (_e) {
+      // ignore
+    } finally {
+      setIsMetaRefreshing(false);
+    }
+  };
   
   const [clickedApp, setClickedApp] = useState<string | null>(null);
   
@@ -831,6 +916,28 @@ export default function DesktopPage({ onOpenApp, onLogout, isAuthenticated: _isA
                   <div className="authuser-name">{currentUser?.username || t('Desktop.user.notLoggedIn', '未登录')}</div>
                   <div className="authuser-meta">{t('Desktop.user.role', '角色：')}{currentUser?.role || 'user'}</div>
                   <div className="authuser-meta">{t('Desktop.user.group.label', '分组：')}{getUserGroupName()}</div>
+                {quotaInfo && (
+                  <div className="authuser-meta">
+                    {quotaInfo.limited
+                      ? `${t('Desktop.user.quota.remainingPrefix', '剩余配额：')}${String(quotaInfo.remaining ?? 0)}（${t('Desktop.user.quota.usedToday', '今日已用')} ${String(quotaInfo.used)} / ${String(quotaInfo.quota)}）`
+                      : t('Desktop.user.quota.unlimited', '配额：不限')}
+                  </div>
+                )}
+                  <div className="authuser-meta">
+                    <button
+                      className="glass-chip"
+                      style={{ cursor: isMetaRefreshing ? 'wait' : 'pointer', padding: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                      aria-label={t('Desktop.user.refreshMeta', '刷新用户分组与配额')}
+                      title={t('Desktop.user.refreshMeta', '刷新用户分组与配额')}
+                      onClick={refreshUserMeta}
+                      disabled={isMetaRefreshing}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: isMetaRefreshing ? 0.5 : 1 }}>
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="21 3 21 9 15 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 
                 {/* 背景色选择器 */}
